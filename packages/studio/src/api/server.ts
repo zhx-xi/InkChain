@@ -109,6 +109,7 @@ import { buildStudioBookConfig } from "./book-create.js";
 import { createRelationsRouter } from "./routes/relations.js";
 import { createVolumesRouter } from "./routes/volumes.js";
 import { createSceneRolesRouter } from "./routes/scene-roles.js";
+import { createCharactersRouter } from "./routes/characters.js";
 
 // -- Pipeline stage definitions per agent type --
 
@@ -5535,6 +5536,10 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // ── Scene Roles CRUD ──
   const sceneRolesRouter = createSceneRolesRouter((id) => state.bookDir(id));
   app.route("/api/v1/books", sceneRolesRouter);
+
+  // ── Character Tier Change ──
+  const charactersRouter = createCharactersRouter((id) => state.bookDir(id));
+  app.route("/api/v1/books", charactersRouter);
 
   // ── Writer's Block Breakthrough (E4 simplified) ──
   // GET  /api/v1/books/:id/writers-block — analyze context and return 3-5 advancement suggestions
