@@ -5536,6 +5536,128 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   const sceneRolesRouter = createSceneRolesRouter((id) => state.bookDir(id));
   app.route("/api/v1/books", sceneRolesRouter);
 
+  // ── Writer's Block Breakthrough (E4 simplified) ──
+  // GET  /api/v1/books/:id/writers-block — analyze context and return 3-5 advancement suggestions
+  app.get("/api/v1/books/:id/writers-block", async (c) => {
+    const id = c.req.param("id");
+    const dir = state.bookDir(id);
+    const { join } = await import("node:path");
+    const { readFile } = await import("node:fs/promises");
+
+    // ── 1. Load story frame ──
+    let storyFrame = "";
+    const framePaths = [
+      join(dir, "story", "outline", "story_frame.md"),
+      join(dir, "story", "story_bible.md"),
+    ];
+    for (const fp of framePaths) {
+      try { storyFrame = await readFile(fp, "utf-8"); break; } catch { /* try next */ }
+    }
+
+    // ── 2. Load character context ──
+    const roleDir = join(dir, "story", "roles");
+    let characters = "";
+    try {
+      const { readdir } = await import("node:fs/promises");
+      const tierDirs = ["主要角色", "次要角色", "major", "minor"];
+      const cards: string[] = [];
+      for (const td of tierDirs) {
+        let entries: string[];
+        try { entries = await readdir(join(roleDir, td)); } catch { continue; }
+        for (const entry of entries) {
+          if (!entry.endsWith(".md")) continue;
+          const content = await readFile(join(roleDir, td, entry), "utf-8").catch(() => "");
+          if (content.trim()) cards.push(`--- ${entry.replace(/\.md$/, "")} (${td}) ---\n${content}`);
+        }
+      }
+      characters = cards.join("\n\n");
+    } catch { characters = "(no character data available)"; }
+
+    // ── 3. Load current chapter state ──
+    let currentState = "";
+    try {
+      currentState = await readFile(join(dir, "story", "state", "current_state.json"), "utf-8");
+    } catch {
+      try { currentState = await readFile(join(dir, "story", "current_state.md"), "utf-8"); } catch { currentState = "(no current state)"; }
+    }
+
+    // ── 4. Load latest chapter content ──
+    let latestChapterContent = "";
+    try {
+      const { readdir } = await import("node:fs/promises");
+      const chaptersDir = join(dir, "story", "chapters");
+      let indexPath = join(chaptersDir, "index.json");
+      let index: { chapters?: Array<{ number: number }> };
+      try { index = JSON.parse(await readFile(indexPath, "utf-8")); } catch { index = { chapters: [] }; }
+      const chapters = (index.chapters ?? []).sort((a, b) => b.number - a.number);
+      if (chapters.length > 0) {
+        const latest = chapters[0].number;
+        try { latestChapterContent = await readFile(join(chaptersDir, `${latest}.md`), "utf-8").then(r => r.substring(0, 3000)); } catch { latestChapterContent = ""; }
+      }
+    } catch { latestChapterContent = ""; }
+
+    // ── 5. Call LLM ──
+    const client = createLLMClient(config.llm);
+    const systemPrompt = `你是一位资深小说创作顾问。你的任务是为一位卡文的作者提供 3-5 条推进建议。
+
+基于提供的故事框架、角色设定和当前写作状态，给出具体的推进方向。
+
+每条建议应包含：
+1. **情节方向** — 故事下一步可以朝哪个方向发展
+2. **角色行为** — 具体角色可以做什么
+3. **冲突点** — 这一方向下的核心冲突或张力
+
+请以 JSON 数组格式返回，每条建议为一个对象：
+{
+  "suggestions": [
+    { "direction": "情节方向标题", "plot": "具体情节描述", "characterAction": "角色行为描述", "conflict": "冲突点描述" }
+  ]
+}
+
+注意：
+- 建议必须基于已有设定，不离谱
+- 每条建议独立可行
+- 使用与用户作品相同的语言
+- 返回**纯 JSON**，不要 markdown 包装`;
+
+    const userPrompt = `## 故事框架 / Story Frame
+${storyFrame.substring(0, 4000) || "(无故事框架)"}
+
+## 角色设定 / Characters
+${characters.substring(0, 4000) || "(无角色数据)"}
+
+## 当前写作状态 / Current State
+${currentState.substring(0, 2000) || "(无状态数据)"}
+
+## 最新章节内容 / Latest Chapter (开头 3000 字)
+${latestChapterContent || "(无已写章节)"}
+
+请基于以上信息，给出 3-5 条推进建议。`;
+
+    try {
+      const response = await chatCompletion(client, config.llm.model, [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ], { temperature: 0.7, maxTokens: 4096 });
+
+      // Parse the response
+      const text = response.content.trim();
+      let suggestions: Array<Record<string, string>> = [];
+      // Try to extract JSON from the response (it might be wrapped in markdown code blocks)
+      const jsonMatch = text.match(/\[\s*\{.*\}\s*\]/s) || text.match(/\{[\s\S]*"suggestions"[\s\S]*\}/s);
+      if (jsonMatch) {
+        try { const parsed = JSON.parse(jsonMatch[0]); suggestions = parsed.suggestions ?? (Array.isArray(parsed) ? parsed : []); } catch { /* fallback */ }
+      }
+      if (suggestions.length === 0) {
+        // Fallback: return raw text
+        suggestions = [{ direction: "建议", plot: text.substring(0, 2000), characterAction: "", conflict: "" }];
+      }
+      return c.json({ suggestions });
+    } catch (err) {
+      return c.json({ error: { code: "LLM_ERROR", message: String(err) } }, 500);
+    }
+  });
+
   return app;
 }
 
