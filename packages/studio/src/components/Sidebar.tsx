@@ -46,6 +46,7 @@ import {
   Clapperboard,
   Rows3,
   Film,
+  Network,
 } from "lucide-react";
 import { InkosLogo } from "./InkosLogo";
 
@@ -84,6 +85,7 @@ interface Nav {
   toImport: (tab?: "chapters" | "canon" | "fanfic" | "spinoff" | "imitation") => void;
   toRadar: () => void;
   toDoctor: () => void;
+  toRelations: (bookId: string) => void;
   toFilmStudio: (id: string) => void;
 }
 
@@ -411,6 +413,14 @@ export function Sidebar({ nav, activePage, sse, t }: {
                           </div>
                         );
                       })}
+                      <button
+                        type="button"
+                        onClick={() => nav.toRelations(book.id)}
+                        className="w-full flex items-center gap-2 pl-9 pr-2 py-1.5 text-[13px] text-muted-foreground/50 hover:text-foreground hover:text-primary transition-colors"
+                      >
+                        <Network size={12} />
+                        <span>关系图谱</span>
+                      </button>
                       <button
                         type="button"
                         onClick={() => void handleCreateSession(book.id)}
