@@ -669,3 +669,10 @@ InkOS 的 agent 运行时构建在 [pi](https://github.com/badlogic/pi-mono)（`
 ## 许可证
 
 [AGPL-3.0](LICENSE)
+
+## 法律与社区
+
+- [隐私政策](PRIVACY.md) — InkOS 如何处理您的数据
+- [服务条款](TERMS.md) — 使用条款与用户责任
+- [安全策略](SECURITY.md) — 安全实践与漏洞报告流程
+- [行为准则](CODE_OF_CONDUCT.md) — 社区参与规范
