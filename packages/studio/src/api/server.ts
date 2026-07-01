@@ -108,6 +108,7 @@ import { ApiError } from "./errors.js";
 import { buildStudioBookConfig } from "./book-create.js";
 import { createRelationsRouter } from "./routes/relations.js";
 import { createVolumesRouter } from "./routes/volumes.js";
+import { createSceneRolesRouter } from "./routes/scene-roles.js";
 
 // -- Pipeline stage definitions per agent type --
 
@@ -2409,15 +2410,18 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       return null;
     }
 
-    // Phase hotfix 3: accept both Chinese and English locale role dirs so
-    // English-layout books (roles/major, roles/minor) are reachable through
-    // Studio. The runtime reader (utils/outline-paths.ts:75) already scans
-    // both — Studio used to drop English books to read-only.
+    // Phase hotfix 3 + R-04: accept all 5 tier directory names (both zh and en
+    // locale) so that roles/主角/王二.md through roles/scene/茶馆老板.md are all
+    // reachable. Must stay in sync with TIER_DIR_MAP in core/src/models/character.ts.
+    const tierDirs = ["主角","重要","次要","客串","一次性",
+                      "protagonist","supporting","guest","one-shot","scene",
+                      "主要角色","次要角色","major","minor"];
+    const tierDirPattern = `roles/(${tierDirs.join("|")})/[^/]+\\.md$`;
     const allowed =
       TRUTH_FLAT_FILES.includes(file)
       || TRUTH_OUTLINE_FILES.includes(file)
       || RUNTIME_DIAGNOSTIC_FILE_RE.test(file)
-      || /^roles\/(主要角色|次要角色|major|minor)\/[^/]+\.md$/.test(file);
+      || new RegExp(tierDirPattern).test(file);
 
     if (!allowed) return null;
 
@@ -3333,12 +3337,22 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       const flatFiles = (await listDir(".")).filter((f) => !f.startsWith("outline") && !f.startsWith("roles"));
       // Phase 5 outline/ files
       const outlineFiles = (await listDir("outline")).map((f) => `outline/${f}`);
-      // Phase 5 roles/主要角色 + roles/次要角色, plus Phase hotfix 3
-      // English-locale equivalents so en-language books are visible.
-      const majorRolesZh = (await listDir("roles/主要角色")).map((f) => `roles/主要角色/${f}`);
-      const minorRolesZh = (await listDir("roles/次要角色")).map((f) => `roles/次要角色/${f}`);
-      const majorRolesEn = (await listDir("roles/major")).map((f) => `roles/major/${f}`);
-      const minorRolesEn = (await listDir("roles/minor")).map((f) => `roles/minor/${f}`);
+      // R-04: Scan all 5 tier directories (zh + en + legacy).
+      const TIER_ROLE_DIRS = [
+        "主角","protagonist",
+        "重要","supporting",
+        "次要","guest",
+        "客串","one-shot",
+        "一次性","scene",
+        // Legacy compatibility
+        "主要角色","major",
+        "次要角色","minor",
+      ];
+      const roleDirFiles: string[] = [];
+      for (const dir of TIER_ROLE_DIRS) {
+        const files = await listDir(`roles/${dir}`);
+        roleDirFiles.push(...files.map((f) => `roles/${dir}/${f}`));
+      }
       const runtimeFiles = (await listDir("runtime"))
         .map((f) => `runtime/${f}`)
         .filter((f) => RUNTIME_DIAGNOSTIC_FILE_RE.test(f));
@@ -3346,10 +3360,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       const all = [
         ...flatFiles,
         ...outlineFiles,
-        ...majorRolesZh,
-        ...minorRolesZh,
-        ...majorRolesEn,
-        ...minorRolesEn,
+        ...roleDirFiles,
         ...runtimeFiles,
       ];
       const described = await Promise.all(all.map(describe));
@@ -5520,6 +5531,10 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // ── Volumes CRUD ──
   const volumesRouter = createVolumesRouter((id) => state.bookDir(id));
   app.route("/api/v1/books", volumesRouter);
+
+  // ── Scene Roles CRUD ──
+  const sceneRolesRouter = createSceneRolesRouter((id) => state.bookDir(id));
+  app.route("/api/v1/books", sceneRolesRouter);
 
   return app;
 }

@@ -215,8 +215,11 @@ export function CharacterSection({ bookId }: CharacterSectionProps) {
   }, [bookId, bookDataVersion]);
 
   // Filter + count by active tab
+  // R-04: Scene-tier roles are hidden from the "全部" (all) view. They only
+  // appear when the "scene" tab is explicitly selected. This avoids cluttering
+  // the global character list with chapter-scoped disposable characters.
   const filteredRoles = useMemo(() => {
-    if (activeTab === "all") return roles;
+    if (activeTab === "all") return roles.filter((r) => r.tier !== "scene");
     return roles.filter((r) => r.tier === activeTab);
   }, [roles, activeTab]);
 
