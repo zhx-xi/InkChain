@@ -14,17 +14,15 @@ import {
   readPersonaConfig,
   listAvailablePersonas,
   savePersonaConfig,
-  type PersonaSummary,
-} from "@actalk/inkos-core/persona/loader.js";
-import {
   PersonaConfigSchema,
   AgentRoleEnum,
   serializePersonaConfig,
   parsePersonaConfig,
   getDefaultPersona,
+  type PersonaSummary,
   type AgentRole,
   type PersonaConfig,
-} from "@actalk/inkos-core/models/persona-config.js";
+} from "@actalk/inkos-core";
 import { readFile, writeFile, readdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
 
