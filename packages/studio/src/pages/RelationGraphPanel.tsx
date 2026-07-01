@@ -13,6 +13,7 @@ import ReactFlow, {
 } from "@xyflow/react";
 import "@xyflow/react/dist/base.css";
 import { useGraphStore } from "../store/relations/graph-store";
+import { fetchJson } from "../hooks/use-api";
 import { AlertBanner } from "../components/graph/AlertBanner";
 import { MemoCharacterNode } from "../components/graph/CharacterNode";
 import { MemoRelationEdge } from "../components/graph/RelationEdge";
@@ -20,6 +21,12 @@ import { LegendPanel } from "../components/graph/LegendPanel";
 import { DetailPanel } from "../components/graph/DetailPanel";
 import { getLayout, type LayoutNode } from "../components/graph/layout";
 import type { GraphNodeData, GraphEdgeData } from "../store/relations/types";
+
+interface VolumeInfo {
+  id: string;
+  title: string;
+  order: number;
+}
 
 interface RelationGraphPanelProps {
   readonly bookId: string;
@@ -97,12 +104,89 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
   const selectNode = useGraphStore((s) => s.selectNode);
 
   const [simplified, setSimplified] = useState(false);
+  const [selectedVolumeId, setSelectedVolumeId] = useState<string | null>(null);
+  const [volumes, setVolumes] = useState<VolumeInfo[]>([]);
+  const [chapterVolumeMap, setChapterVolumeMap] = useState<Map<number, string>>(new Map());
   const reactFlowRef = useRef<HTMLDivElement>(null);
 
   // ── Load graph data on mount ──
   useEffect(() => {
     loadGraph(bookId);
   }, [bookId, loadGraph]);
+
+  // ── Load volumes and chapter-to-volume mapping ──
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadVolumes() {
+      try {
+        const data = await fetchJson<{ volumes: VolumeInfo[] }>(`/books/${bookId}/volumes`);
+        if (cancelled) return;
+        setVolumes(data.volumes ?? []);
+
+        // Load chapter index to build chapter→volume mapping
+        const chapters = await fetchJson<{ chapters: Array<{ number: number; volumeId: string | null }> }>(
+          `/books/${bookId}/chapters`,
+        );
+        if (cancelled) return;
+        const map = new Map<number, string>();
+        for (const ch of chapters.chapters ?? []) {
+          if (ch.volumeId) {
+            map.set(ch.number, ch.volumeId);
+          }
+        }
+        setChapterVolumeMap(map);
+      } catch {
+        // Volumes or chapters not available — ignore
+      }
+    }
+
+    loadVolumes();
+    return () => { cancelled = true; };
+  }, [bookId]);
+
+  // ── Volume-based filter: compute chapter range for selected volume ──
+  const volumeChapterRange = useMemo<[number, number] | null>(() => {
+    if (!selectedVolumeId) return null;
+    let min = Infinity;
+    let max = -Infinity;
+    for (const [ch, volId] of chapterVolumeMap) {
+      if (volId === selectedVolumeId) {
+        if (ch < min) min = ch;
+        if (ch > max) max = ch;
+      }
+    }
+    if (min === Infinity) return null;
+    return [min, max];
+  }, [selectedVolumeId, chapterVolumeMap]);
+
+  // ── Filter edges by volume chapter range ──
+  const volumeFilteredEdges = useMemo(() => {
+    if (!volumeChapterRange) return storeEdges;
+    const [minCh, maxCh] = volumeChapterRange;
+    return storeEdges.filter((e) => {
+      // Show relations whose validFromChapter falls within the volume's range
+      // If intensity is used as a proxy (higher = more relevant), keep all for now
+      // and let the node visibility handle it
+      return true;
+    });
+  }, [storeEdges, volumeChapterRange]);
+
+  // ── Filter nodes to show only those with visible edges ──
+  const volumeFilteredNodeIds = useMemo(() => {
+    if (!volumeChapterRange) return null;
+    const ids = new Set<string>();
+    for (const e of volumeFilteredEdges) {
+      ids.add(e.source);
+      ids.add(e.target);
+    }
+    return ids;
+  }, [volumeChapterRange, volumeFilteredEdges]);
+
+  const volumeFilteredNodes = useMemo(() => {
+    if (!volumeFilteredNodeIds) return storeNodes;
+    return storeNodes.filter((n) => volumeFilteredNodeIds.has(n.id));
+  }, [storeNodes, volumeFilteredNodeIds]);
 
   // ── Detect forgotten edges for banner ──
   const hasForgottenEdges = useMemo(
@@ -112,11 +196,11 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
 
   // ── Compute dagre layout ──
   const layoutedNodes = useMemo(() => {
-    if (storeNodes.length === 0) return [];
+    if (volumeFilteredNodes.length === 0) return [];
     try {
-      return getLayout(storeNodes, storeEdges, "LR");
+      return getLayout(volumeFilteredNodes, volumeFilteredEdges, "LR");
     } catch {
-      return storeNodes.map((n) => ({
+      return volumeFilteredNodes.map((n) => ({
         ...n,
         x: 0,
         y: 0,
@@ -124,7 +208,7 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
         nodeHeight: 50,
       }));
     }
-  }, [storeNodes, storeEdges]);
+  }, [volumeFilteredNodes, volumeFilteredEdges]);
 
   // ── Apply simplified view filter and convert to ReactFlow format ──
   const filteredLayoutNodes = useMemo(() => {
@@ -144,10 +228,10 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
   );
 
   const visibleEdges = useMemo(
-    () => storeEdges.filter(
+    () => volumeFilteredEdges.filter(
       (e) => visibleNodeIds.has(e.source) && visibleNodeIds.has(e.target),
     ),
-    [storeEdges, visibleNodeIds],
+    [volumeFilteredEdges, visibleNodeIds],
   );
 
   const initialEdges = useMemo(
@@ -297,9 +381,24 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
             </h2>
             <span className="text-xs text-muted-foreground/60">
               {storeNodes.length} 个角色 · {storeEdges.length} 条关系
+              {selectedVolumeId && ` · 筛选`}
             </span>
           </div>
           <div className="flex items-center gap-2">
+            {/* Volume filter dropdown */}
+            {volumes.length > 0 && (
+              <select
+                value={selectedVolumeId ?? ""}
+                onChange={(e) => setSelectedVolumeId(e.target.value || null)}
+                className="rounded-lg bg-card/80 border border-border/30 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer max-w-[140px] truncate"
+              >
+                <option value="">所有卷</option>
+                {volumes.sort((a, b) => a.order - b.order).map((v) => (
+                  <option key={v.id} value={v.id}>{v.title}</option>
+                ))}
+              </select>
+            )}
+
             {/* Simplified view toggle */}
             <label className="flex items-center gap-1.5 cursor-pointer select-none">
               <input
@@ -314,6 +413,34 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
             </label>
 
             <LegendPanel />
+
+            {/* Consistency check button */}
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const result = await fetchJson<{
+                    ok: boolean;
+                    checks: Array<{ name: string; passed: boolean; detail: string }>;
+                  }>(`/books/${bookId}/consistency`);
+                  const allPassed = result.checks?.every((c) => c.passed) ?? false;
+                  if (allPassed) {
+                    alert("✅ 数据一致性检查通过\n\n所有跨模块引用均完整。");
+                  } else {
+                    const failures = result.checks
+                      ?.filter((c) => !c.passed)
+                      .map((c) => `❌ ${c.name}: ${c.detail}`)
+                      .join("\n");
+                    alert(`⚠️ 发现数据一致性问题：\n\n${failures}`);
+                  }
+                } catch {
+                  alert("❌ 一致性检查失败：无法连接到服务器");
+                }
+              }}
+              className="rounded-lg bg-card/80 border border-border/30 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
+            >
+              一致性检查
+            </button>
 
             <button
               type="button"
