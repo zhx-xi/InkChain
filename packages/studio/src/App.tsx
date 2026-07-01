@@ -18,6 +18,7 @@ import { StyleManager } from "./pages/StyleManager";
 import { ImportManager } from "./pages/ImportManager";
 import { RadarView } from "./pages/RadarView";
 import { DoctorView } from "./pages/DoctorView";
+import { RelationGraphPanel } from "./pages/RelationGraphPanel";
 import { StoryPlayer } from "./pages/StoryPlayer";
 import { StoryGraphTree } from "./pages/StoryGraphTree";
 const FlowView = lazy(() => import("./pages/FlowView"));
@@ -97,6 +98,7 @@ export function App() {
     toImport: (tab?: "chapters" | "canon" | "fanfic" | "spinoff" | "imitation") => setRoute({ page: "import", ...(tab ? { tab } : {}) }),
     toRadar: () => setRoute({ page: "radar" }),
     toDoctor: () => setRoute({ page: "doctor" }),
+    toRelations: (bookId: string) => setRoute({ page: "relations", bookId }),
     toPlay: (projectId: string) => setRoute({ page: "play", projectId }),
     toFilm: (projectId: string) => setRoute({ page: "film", projectId }),
     toFlow: (projectId: string) => setRoute({ page: "flow", projectId }),
@@ -316,6 +318,9 @@ export function App() {
             <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <RadarView nav={nav} theme={theme} t={t} />
             </div>
+          )}
+          {route.page === "relations" && (
+            <RelationGraphPanel bookId={route.bookId} />
           )}
           {route.page === "doctor" && (
             <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">

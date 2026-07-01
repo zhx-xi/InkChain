@@ -1,10 +1,11 @@
 import { useEffect, useState, useMemo } from "react";
-import { Users, ChevronDown } from "lucide-react";
+import { Users, ChevronDown, Network } from "lucide-react";
 import { useChatStore } from "../../store/chat";
 import { fetchJson } from "../../hooks/use-api";
 import { SidebarCard } from "./SidebarCard";
 import { cn } from "../../lib/utils";
 import { roleFromPath, TIER_CONFIG, type RoleRef, type CharacterTier } from "../../lib/truth-display";
+import { useHashRoute } from "../../hooks/use-hash-route";
 
 // ── 5-tier badge color scheme (kept in sync with TIER_CONFIG in core) ──
 
@@ -168,6 +169,7 @@ export function CharacterSection({ bookId }: CharacterSectionProps) {
   const [legacyChars, setLegacyChars] = useState<CharacterInfo[]>([]);
   const [activeTab, setActiveTab] = useState<CharacterTier | "all">("all");
   const bookDataVersion = useChatStore((s) => s.bookDataVersion);
+  const { setRoute } = useHashRoute();
 
   useEffect(() => {
     let cancelled = false;
@@ -236,6 +238,13 @@ export function CharacterSection({ bookId }: CharacterSectionProps) {
         <div className="space-y-1.5">
           {legacyChars.map((char) => <CharacterCard key={char.name} char={char} />)}
         </div>
+        <button
+          onClick={() => setRoute({ page: "relations", bookId })}
+          className="mt-2 w-full flex items-center gap-2 px-2.5 py-2 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors text-left text-[13px] text-muted-foreground hover:text-foreground"
+        >
+          <Network size={16} className="shrink-0 text-muted-foreground/60" />
+          <span>关系图谱</span>
+        </button>
       </SidebarCard>
     );
   }
@@ -275,6 +284,15 @@ export function CharacterSection({ bookId }: CharacterSectionProps) {
           显示 {filteredRoles.length} / {roles.length} 个角色
         </p>
       )}
+
+      {/* Relation graph entry */}
+      <button
+        onClick={() => setRoute({ page: "relations", bookId })}
+        className="mt-2 w-full flex items-center gap-2 px-2.5 py-2 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors text-left text-[13px] text-muted-foreground hover:text-foreground"
+      >
+        <Network size={16} className="shrink-0 text-muted-foreground/60" />
+        <span>关系图谱</span>
+      </button>
     </SidebarCard>
   );
 }
