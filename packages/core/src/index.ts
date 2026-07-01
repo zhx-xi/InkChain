@@ -28,6 +28,28 @@ export {
 export { type ProjectConfig, type LLMConfig, type NotifyChannel, type DetectionConfig, type QualityGates, type FoundationConfig, type WritingConfig, type AgentLLMOverride, type InputGovernanceMode, ProjectConfigSchema, LLMConfigSchema, AgentLLMOverrideSchema, DetectionConfigSchema, QualityGatesSchema, FoundationConfigSchema, WritingConfigSchema, InputGovernanceModeSchema } from "./models/project.js";
 export { type CurrentState, type ParticleLedger, type PendingHooks, type PendingHook, type LedgerEntry } from "./models/state.js";
 export { type GenreProfile, type ParsedGenreProfile, GenreProfileSchema, parseGenreProfile } from "./models/genre-profile.js";
+export {
+  type PersonaConfig,
+  type PersonaConfigUpdate,
+  type PersonaPreset,
+  type ParsedPersonaConfig,
+  type AgentRole,
+  type BehaviorStyle,
+  type BehaviorConstraint,
+  type DialogueStyle,
+  AgentRoleEnum,
+  BehaviorStyleEnum,
+  BehaviorConstraintSchema,
+  DialogueStyleSchema,
+  PersonaConfigSchema,
+  PersonaConfigUpdateSchema,
+  PersonaPresetSchema,
+  AGENT_ROLE_LABELS,
+  AGENT_ROLE_COLORS,
+  BEHAVIOR_STYLE_COLORS,
+  parsePersonaConfig,
+  serializePersonaConfig,
+} from "./models/persona-config.js";
 export { type BookRules, type ParsedBookRules, BookRulesSchema, parseBookRules, tryParseBookRulesFrontmatter } from "./models/book-rules.js";
 export { type DetectionHistoryEntry, type DetectionStats } from "./models/detection.js";
 export { type StyleProfile } from "./models/style-profile.js";
