@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { fetchJson } from "../../hooks/use-api";
 import { useChatStore } from "../../store/chat";
 import { SidebarCard } from "./SidebarCard";
@@ -9,14 +9,15 @@ interface ChapterMeta {
   title: string;
   status: string;
   wordCount: number;
+  volumeId?: string | null;
 }
 
 const STATUS_INDICATOR: Record<string, { symbol: string; color: string }> = {
-  approved: { symbol: "✓", color: "text-emerald-500" },
-  "ready-for-review": { symbol: "◆", color: "text-amber-500" },
-  drafted: { symbol: "○", color: "text-muted-foreground" },
-  "needs-revision": { symbol: "✕", color: "text-destructive" },
-  imported: { symbol: "◇", color: "text-blue-500" },
+  approved: { symbol: "\u2713", color: "text-emerald-500" },
+  "ready-for-review": { symbol: "\u25C6", color: "text-amber-500" },
+  drafted: { symbol: "\u25CB", color: "text-muted-foreground" },
+  "needs-revision": { symbol: "\u2715", color: "text-destructive" },
+  imported: { symbol: "\u25C7", color: "text-blue-500" },
 };
 
 interface ChaptersSectionProps {
@@ -34,6 +35,21 @@ export function ChaptersSection({ bookId, isZh }: ChaptersSectionProps) {
       .catch(() => setChapters([]));
   }, [bookId, bookDataVersion]);
 
+  const handleDragStart = useCallback((e: React.DragEvent, chapterNumber: number) => {
+    e.dataTransfer.setData("application/x-chapter-number", String(chapterNumber));
+    e.dataTransfer.effectAllowed = "move";
+    // Slight transparency on the drag ghost
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = "0.5";
+    }
+  }, []);
+
+  const handleDragEnd = useCallback((e: React.DragEvent) => {
+    if (e.currentTarget instanceof HTMLElement) {
+      e.currentTarget.style.opacity = "1";
+    }
+  }, []);
+
   return (
     <SidebarCard title={isZh ? "章节" : "Chapters"}>
       {chapters.length === 0 ? (
@@ -43,12 +59,16 @@ export function ChaptersSection({ bookId, isZh }: ChaptersSectionProps) {
       ) : (
         <ul className="space-y-1 max-h-52 overflow-y-auto overflow-x-hidden">
           {chapters.map((ch) => {
-            const ind = STATUS_INDICATOR[ch.status] ?? { symbol: "○", color: "text-muted-foreground" };
+            const ind = STATUS_INDICATOR[ch.status] ?? { symbol: "\u25CB", color: "text-muted-foreground" };
             return (
               <li
                 key={`${ch.number}-${ch.title ?? ""}`}
+                draggable
+                onDragStart={(e) => handleDragStart(e, ch.number)}
+                onDragEnd={handleDragEnd}
                 onClick={() => useChatStore.getState().openChapterArtifact(ch.number)}
-                className="flex items-center gap-2 py-1 text-[15px] leading-6 text-muted-foreground cursor-pointer hover:text-foreground transition-colors rounded px-1 -mx-1 hover:bg-secondary/50">
+                className="flex items-center gap-2 py-1 text-[15px] leading-6 text-muted-foreground cursor-grab active:cursor-grabbing hover:text-foreground transition-colors rounded px-1 -mx-1 hover:bg-secondary/50"
+              >
                 <span className={cn("text-[13px] shrink-0", ind.color)}>{ind.symbol}</span>
                 <span className="truncate flex-1">
                   {String(ch.number).padStart(2, "0")} {ch.title || (isZh ? `第${ch.number}章` : `Chapter ${ch.number}`)}

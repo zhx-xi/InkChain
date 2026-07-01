@@ -267,6 +267,71 @@ export function createVolumesRouter(bookDir: (id: string) => string) {
     return c.json({ volumes: reordered });
   });
 
+  // PATCH /:id/chapters/:num/volume — update a chapter's volumeId
+  router.patch("/:id/chapters/:num/volume", async (c) => {
+    const id = c.req.param("id");
+    const num = parseInt(c.req.param("num"), 10);
+    const dir = bookDir(id);
+    const chaptersDir = join(dir, "story", "chapters");
+    const indexPath = join(chaptersDir, "index.json");
+
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json({ error: { code: "INVALID_JSON", message: "请求体不是有效的 JSON" } }, 400);
+    }
+
+    if (!isRecord(body)) {
+      return c.json({ error: { code: "INVALID_BODY", message: "请求体必须是对象" } }, 400);
+    }
+
+    const volumeId = body.volumeId;
+    if (volumeId !== null && !isString(volumeId)) {
+      return c.json({ error: { code: "VALIDATION_ERROR", message: "volumeId 必须是字符串或 null" } }, 400);
+    }
+
+    // Validate volume exists (if volumeId is not null)
+    if (volumeId !== null) {
+      const volData = await loadVolumes(dir);
+      if (!volData.volumes.some((v) => v.id === volumeId)) {
+        return c.json({ error: { code: "NOT_FOUND", message: `分卷 ${volumeId} 不存在` } }, 404);
+      }
+    }
+
+    // Load chapter index
+    let chapterIndex: { chapters: Array<Record<string, unknown>> };
+    try {
+      const raw = await readFile(indexPath, "utf-8");
+      chapterIndex = JSON.parse(raw) as { chapters: Array<Record<string, unknown>> };
+    } catch {
+      return c.json({ error: { code: "NOT_FOUND", message: "章节索引文件不存在" } }, 404);
+    }
+
+    const chIdx = chapterIndex.chapters.findIndex(
+      (ch) => typeof ch.number === "number" && ch.number === num,
+    );
+    if (chIdx === -1) {
+      return c.json({ error: { code: "NOT_FOUND", message: `章节 ${num} 不存在` } }, 404);
+    }
+
+    // Update volumeId
+    chapterIndex.chapters[chIdx] = {
+      ...chapterIndex.chapters[chIdx],
+      volumeId: volumeId as string | null,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await mkdir(chaptersDir, { recursive: true });
+    await writeFile(indexPath, JSON.stringify(chapterIndex, null, 2), "utf-8");
+
+    return c.json({
+      ok: true,
+      chapterNumber: num,
+      volumeId,
+    });
+  });
+
   // GET /:id/volumes/:volumeId/chapters — list chapters in a volume
   router.get("/:id/volumes/:volumeId/chapters", async (c) => {
     const id = c.req.param("id");
