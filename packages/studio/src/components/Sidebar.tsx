@@ -47,6 +47,7 @@ import {
   Rows3,
   Film,
   Network,
+  Users,
 } from "lucide-react";
 import { InkosLogo } from "./InkosLogo";
 
@@ -87,6 +88,7 @@ interface Nav {
   toDoctor: () => void;
   toRelations: (bookId: string) => void;
   toFilmStudio: (id: string) => void;
+  toAgents: () => void;
 }
 
 export function Sidebar({ nav, activePage, sse, t }: {
@@ -611,6 +613,12 @@ export function Sidebar({ nav, activePage, sse, t }: {
             </span>
           </div>
           <div className="space-y-1">
+            <SidebarItem
+              label="Agent Team"
+              icon={<Users size={16} />}
+              active={activePage === "agents"}
+              onClick={nav.toAgents}
+            />
             <SidebarItem
               label={t("nav.style")}
               icon={<Wand2 size={16} />}
