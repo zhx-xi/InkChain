@@ -1,14 +1,6 @@
+import { memo } from "react";
+import { Handle, Position, type NodeProps } from "@xyflow/react";
 import type { GraphNodeData } from "../../store/relations/types";
-
-export interface CharacterNodeProps {
-  readonly nodeData: GraphNodeData;
-  readonly x: number;
-  readonly y: number;
-  readonly nodeWidth?: number;
-  readonly nodeHeight?: number;
-  readonly isSelected: boolean;
-  readonly onClick: (nodeId: string) => void;
-}
 
 /**
  * Tier-to-color mappings for the character avatar ring and border.
@@ -24,123 +16,81 @@ const TIER_COLORS: Record<string, { ring: string; bg: string; text: string }> = 
 
 const TIER_LABELS: Record<string, string> = {
   protagonist: "主角",
-  supporting: "重要",
-  guest: "次要",
-  one_shot: "客串",
-  scene: "一次性",
+  supporting:  "重要",
+  guest:       "次要",
+  one_shot:    "客串",
+  scene:       "一次性",
 };
 
 const DEFAULT_COLOR = { ring: "#71717a", bg: "rgba(113,113,122,0.12)", text: "#71717a" };
 
+export type CharacterNodeData = GraphNodeData;
+
 /**
- * SVG-based character node component.
- * Renders a rounded-card with a tier-colored circle avatar, character name,
- * and tier label badge.
+ * ReactFlow Custom Node for rendering a character in the relation graph.
+ * Renders a rounded card with a tier-colored avatar circle, character name,
+ * and tier label badge. Includes Handle ports for edge connections.
  */
-export function CharacterNode({
-  nodeData,
-  x,
-  y,
-  nodeWidth = 160,
-  nodeHeight = 50,
-  isSelected,
-  onClick,
-}: CharacterNodeProps) {
-  const color = TIER_COLORS[nodeData.tier] ?? DEFAULT_COLOR;
-  const avatarR = 16;
-  const avatarCx = x - nodeWidth / 2 + avatarR + 12;
-  const avatarCy = y;
+export function CharacterNode({ data, selected }: NodeProps<CharacterNodeData>) {
+  const tier = data.tier ?? "scene";
+  const color = TIER_COLORS[tier] ?? DEFAULT_COLOR;
+  const label = data.label ?? "";
+  const displayLabel = label.length > 8 ? label.slice(0, 8) + "…" : label;
 
   return (
-    <g
-      onClick={() => onClick(nodeData.id)}
-      className="cursor-pointer"
-      style={{ cursor: "pointer" }}
+    <div
+      className="relative flex items-center gap-2.5 px-3 py-2 rounded-lg border transition-all duration-200 cursor-pointer min-w-[140px] shadow-sm hover:shadow-md"
+      style={{
+        backgroundColor: color.bg,
+        borderColor: selected ? color.ring : `${color.ring}55`,
+        borderWidth: selected ? 2 : 1.2,
+        ...(selected ? { boxShadow: `0 0 0 2px ${color.ring}40` } : {}),
+      }}
     >
-      {/* Selection glow ring */}
-      {isSelected && (
-        <rect
-          x={x - nodeWidth / 2 - 4}
-          y={y - nodeHeight / 2 - 4}
-          width={nodeWidth + 8}
-          height={nodeHeight + 8}
-          rx={10}
-          fill="none"
-          stroke={color.ring}
-          strokeWidth={3}
-          strokeOpacity={0.5}
+      {/* Target handle (left side) */}
+      <Handle
+        type="target"
+        position={Position.Left}
+        className="!w-2.5 !h-2.5 !border-2 !bg-background !border-border !shadow-sm"
+      />
+
+      {/* Avatar circle with initial */}
+      <div
+        className="flex items-center justify-center rounded-full shrink-0"
+        style={{
+          width: 32,
+          height: 32,
+          backgroundColor: color.bg,
+          border: `1.5px solid ${color.ring}`,
+        }}
+      >
+        <span className="text-xs font-semibold" style={{ color: color.text }}>
+          {label.charAt(0) || "?"}
+        </span>
+      </div>
+
+      {/* Name and tier badge */}
+      <div className="flex flex-col min-w-0 gap-0.5">
+        <span
+          className="text-sm font-medium leading-tight truncate text-foreground"
+          style={{ maxWidth: 100 }}
+          title={label}
         >
-          <animate
-            attributeName="stroke-opacity"
-            values="0.3;0.6;0.3"
-            dur="2s"
-            repeatCount="indefinite"
-          />
-        </rect>
-      )}
+          {displayLabel}
+        </span>
+        <span className="text-[10px] leading-tight opacity-75" style={{ color: color.text }}>
+          {TIER_LABELS[tier] ?? tier}
+        </span>
+      </div>
 
-      {/* Card body */}
-      <rect
-        x={x - nodeWidth / 2}
-        y={y - nodeHeight / 2}
-        width={nodeWidth}
-        height={nodeHeight}
-        rx={8}
-        fill={color.bg}
-        stroke={isSelected ? color.ring : color.ring}
-        strokeWidth={isSelected ? 2 : 1.2}
-        strokeOpacity={isSelected ? 0.9 : 0.35}
-        className="transition-all duration-200"
+      {/* Source handle (right side) */}
+      <Handle
+        type="source"
+        position={Position.Right}
+        className="!w-2.5 !h-2.5 !border-2 !bg-background !border-border !shadow-sm"
       />
-
-      {/* Tier avatar circle (initials) */}
-      <circle
-        cx={avatarCx}
-        cy={avatarCy}
-        r={avatarR}
-        fill={color.bg}
-        stroke={color.ring}
-        strokeWidth={1.5}
-      />
-      <text
-        x={avatarCx}
-        y={avatarCy}
-        textAnchor="middle"
-        dominantBaseline="central"
-        fill={color.text}
-        fontSize={12}
-        fontWeight={600}
-      >
-        {nodeData.label.charAt(0)}
-      </text>
-
-      {/* Character name */}
-      <text
-        x={avatarCx + avatarR + 8}
-        y={y - 3}
-        textAnchor="start"
-        dominantBaseline="auto"
-        fill="currentColor"
-        fontSize={13}
-        fontWeight={500}
-      >
-        {nodeData.label.length > 8
-          ? nodeData.label.slice(0, 8) + "…"
-          : nodeData.label}
-      </text>
-
-      {/* Tier badge */}
-      <text
-        x={avatarCx + avatarR + 8}
-        y={y + 11}
-        textAnchor="start"
-        dominantBaseline="auto"
-        fill={color.text}
-        fontSize={10}
-        opacity={0.7}
-      >
-        {TIER_LABELS[nodeData.tier] ?? nodeData.tier}
-      </text>
-    </g>
+    </div>
   );
 }
+
+export const MemoCharacterNode = memo(CharacterNode);

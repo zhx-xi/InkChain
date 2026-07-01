@@ -69,7 +69,7 @@ export const BookConfigSchema = z.object({
   writing: z.object({
     reviewMode: z.enum(["auto", "manual"]).optional(),
   }).optional(),
-  volumes: z.array(VolumeSchema).default([]),
+  volumes: z.array(VolumeSchema).default([]).optional(),
 });
 
 export type BookConfig = z.infer<typeof BookConfigSchema>;
