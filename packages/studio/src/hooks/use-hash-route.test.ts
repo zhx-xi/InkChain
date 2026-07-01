@@ -116,6 +116,23 @@ describe("hash route", () => {
   });
 });
 
+describe("relations route", () => {
+  it("parses #/relations/:bookId", () => {
+    expect(parseHash("#/relations/book-123")).toEqual({ page: "relations", bookId: "book-123" });
+  });
+  it("round-trips to hash", () => {
+    expect(routeToHash({ page: "relations", bookId: "book-123" })).toBe("#/relations/book-123");
+  });
+  it("decodes url-encoded bookId", () => {
+    expect(parseHash("#/relations/%E4%B9%9D%E9%BE%99")).toEqual({ page: "relations", bookId: "九龙" });
+  });
+  it("encodes Chinese bookId", () => {
+    const hash = routeToHash({ page: "relations", bookId: "九龙城夜行" });
+    expect(hash).toContain("#/relations/");
+    expect(decodeURIComponent(hash)).toContain("九龙城夜行");
+  });
+});
+
 describe("play route", () => {
   it("parses #/play/:id", () => {
     expect(parseHash("#/play/my-id")).toEqual({ page: "play", projectId: "my-id" });
