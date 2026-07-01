@@ -2,6 +2,16 @@
 export { type BookConfig, type Platform, type Genre, type BookStatus, type FanficMode, BookConfigSchema, PlatformSchema, GenreSchema, BookStatusSchema, FanficModeSchema, normalizePlatformId, normalizePlatformOrOther } from "./models/book.js";
 export { type Volume, type VolumeStatus, VolumeSchema, VolumeStatusSchema } from "./models/volume.js";
 export { CharacterTier, TIER_CONFIGS, TIER_MIGRATION, TIER_DIR_MAP, type TierConfig } from "./models/character.js";
+export {
+  SceneRoleSchema,
+  CreateSceneRoleSchema,
+  UpdateSceneRoleSchema,
+  SceneRolesFileSchema,
+  type SceneRole,
+  type CreateSceneRole,
+  type UpdateSceneRole,
+  type SceneRolesFile,
+} from "./models/scene-role.js";
 export { type ChapterMeta, type ChapterStatus, ChapterMetaSchema, ChapterStatusSchema } from "./models/chapter.js";
 export {
   CharacterRelationSchema,
