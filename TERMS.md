@@ -1,126 +1,64 @@
-# InkOS 服务条款
+# InkOS Terms of Service
 
-**最后更新**：2026-07-01
+> **⚠️ Legal Disclaimer**: This document is provided for informational purposes only and does not constitute legal advice. If you need legal advice, please consult a professional attorney.
 
-## 1. 接受条款
+**Last updated**: 2026-07-01
 
-通过下载、安装或使用 InkOS（以下简称"本软件"），您同意遵守本服务条款。如果您不同意这些条款，请勿使用本软件。
+## 1. Acceptance of Terms
 
-## 2. 软件许可
+By downloading, installing, or using InkOS (hereinafter "the Software"), you agree to these Terms of Service. If you do not agree, do not use the Software.
 
-InkOS 的源代码依据 [GNU Affero General Public License v3.0（AGPL-3.0）](LICENSE) 发布。您可以自由地：
+## 2. Software License
 
-- 使用、复制、修改和分发本软件
-- 将修改版本用于任何目的
-- 获得完整的源代码
+InkOS source code is released under the [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE). You are free to:
 
-**限制**：如果您通过网络提供修改版本的 InkOS 服务，您必须向所有用户提供该修改版本的完整源代码。
+- Use, copy, modify, and distribute the Software
+- Use modified versions for any purpose
+- Obtain the complete source code
 
-完整的许可条款和条件请参阅 [LICENSE](LICENSE) 文件。
+**Restriction**: If you provide modified versions of InkOS as a network service, you must provide the complete corresponding source code to all users. See [AGPL-3.0 §13](https://www.gnu.org/licenses/agpl-3.0.html#section13).
 
-## 3. 用户创作内容的权利
+## 3. User Created Content Rights
 
-**您的创作内容归您所有。** InkOS 对您的写作内容、角色设定、世界观、大纲或任何通过本软件创作的作品**不主张任何权利**。
+**Your creative content belongs to you.** InkOS claims **no rights** to your writing, characters, world-building, outlines, or any works created through the Software.
 
-### AI 辅助创作内容的版权
+## 4. User Responsibilities
 
-AI 辅助创作内容的版权状态在全球范围内仍处于法律发展之中：
+### Legal Use
+- Comply with all applicable laws and regulations
+- Do not use the Software to generate illegal, infringing, discriminatory, harassing, or harmful content
+- Do not use the Software to infringe others' intellectual property rights
 
-- **您的创造性投入是关键**：您对 AI 生成内容的编辑、修改、选择和编排使得最终作品体现您的创作意志
-- 纯 AI 生成内容（无人类创造性参与）在多数司法管辖区不受版权保护
-- 我们建议您在发布作品时，酌情标注 AI 辅助创作的程度
+### API Key Security
+- You are solely responsible for the use and security of third-party AI service API keys you configure
+- You are solely responsible for all fees incurred through your API keys
 
-**InkOS 不对您的创作内容主张任何所有权、使用权或分发权。** 您使用 InkOS 创作的作品，其权利归属由您自行负责，并遵循适用法律。
+## 5. Disclaimers
 
-## 4. 用户责任
+**THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.**
 
-您同意在使用 InkOS 时遵守以下准则：
+To the maximum extent permitted by applicable law, the InkOS copyright holders and contributors:
 
-### 合法使用
-- 遵守您所在地区和适用地区的所有法律法规
-- 不将本软件用于生成违法、侵权、歧视性、骚扰性或有害内容
-- 不将本软件用于侵犯他人知识产权（包括但不限于未经授权的同人作品商业化）
+- Do not warrant that the Software will meet your specific requirements
+- Do not warrant that the Software will be uninterrupted or error-free
+- Do not warrant the accuracy, appropriateness, or originality of AI-generated content
+- Disclaim all implied warranties, including merchantability, fitness for a particular purpose, and non-infringement
 
-### 账户和密钥安全
-- 对您配置的第三方 AI 服务 API 密钥的使用和安全负全部责任
-- 对使用您的 API 密钥产生的所有费用负全部责任
-- 妥善保管 `.inkos/secrets.json` 文件，避免泄露
+## 6. Limitation of Liability
 
-### 第三方服务
-- InkOS 支持与第三方 AI 服务集成。您自行选择使用的第三方服务受其各自的服务条款和隐私政策约束
-- 我们对第三方服务的可用性、安全性、准确性或其数据处理实践不承担责任
+To the maximum extent permitted by applicable law, the InkOS copyright holders, contributors, and maintainers shall not be liable for any direct, indirect, incidental, special, exemplary, or consequential damages arising from the use or inability to use the Software.
 
-## 5. 禁止用途
+## 7. Governing Law
 
-您不得将 InkOS 用于以下目的：
+These terms are governed by the laws of the People's Republic of China.
 
-- 生成或传播违法内容
-- 骚扰、欺凌或伤害他人
-- 冒充他人或实体
-- 传播虚假或误导性信息
-- 侵犯他人知识产权或隐私权
-- 任何违反适用法律的活动
+## 8. Contact
 
-## 6. 免责声明
-
-**本软件按"现状"（AS IS）提供，不提供任何明示或默示的担保。**
-
-在适用法律允许的最大范围内，InkOS 的版权持有者和贡献者：
-
-- 不保证软件的功能会满足您的特定需求
-- 不保证软件的运行不会中断或出错
-- 不保证 AI 生成内容的准确性、适当性或原创性
-- 不承担任何明示或默示的担保，包括但不限于适销性、特定用途适用性和非侵权的默示担保
-
-**AI 生成内容的特别说明**：AI 模型可能产生不准确、不适当或与事实不符的内容。您对使用和发布 AI 生成内容承担全部责任。我们建议您在发布前对 AI 生成内容进行审阅和编辑。
-
-## 7. 责任限制
-
-在适用法律允许的最大范围内，InkOS 的版权持有者、贡献者和维护者对于因使用或无法使用本软件而产生的任何直接、间接、附带、特殊、惩戒性或后果性损害（包括但不限于数据丢失、业务中断、利润损失、隐私泄露或第三方索赔）不承担责任，即使已被告知发生此类损害的可能性。
-
-对于因您使用第三方 AI 服务而产生的任何损失或损害，我们不承担责任。
-
-## 8. 赔偿
-
-您同意赔偿并使 InkOS 的版权持有者、贡献者和维护者免于因以下原因产生的任何索赔、损害、损失或费用（包括合理的律师费）：
-
-- 您违反本条款的行为
-- 您使用本软件创作的内容
-- 您侵犯第三方权利的行为
-
-## 9. 终止
-
-如果您违反本条款的任何规定，您使用本软件的权利将自动终止。终止后，您必须销毁您持有的本软件的所有副本。
-
-## 10. 开源社区参与
-
-InkOS 是一个开源社区项目。参与贡献、提交 Issue 或 Pull Request 时，请遵守 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)。
-
-## 11. 适用法律与争议解决
-
-本条款受中华人民共和国法律管辖。
-
-因本条款引起的或与之相关的争议，应首先通过友好协商解决。协商不成的，任何一方均可向有管辖权的人民法院提起诉讼。
-
-## 12. 条款变更
-
-我们保留随时修改本条款的权利。重大变更将通过以下方式通知：
-
-- GitHub 仓库的 Release Notes
-- 项目沟通渠道
-
-您在该等变更发布后继续使用本软件，即表示您接受修改后的条款。
-
-## 13. 可分割性
-
-如果本条款的任何规定被认定为无效或不可执行，该规定应在必要的最小范围内被修改或删除，其余规定应继续保持完全效力。
-
-## 14. 联系我们
-
-- **一般问题**：[提交 Issue](https://github.com/Narcooo/inkos/issues)
-- **安全问题**：请参阅 [SECURITY.md](SECURITY.md)
-- **法律事务**：通过 GitHub 仓库联系维护者
+- **General issues**: [Open an Issue](https://github.com/zhx-xi/InkChain/issues)
+- **Security issues**: See [SECURITY.md](SECURITY.md)
 
 ---
 
-**感谢您使用 InkOS。祝创作愉快。**
+**Thank you for using InkOS. Happy writing!**
+
+[中文版](zh/TERMS.md) | [Privacy Policy](PRIVACY.md)
