@@ -1,10 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Users, ChevronDown } from "lucide-react";
 import { useChatStore } from "../../store/chat";
 import { fetchJson } from "../../hooks/use-api";
 import { SidebarCard } from "./SidebarCard";
 import { cn } from "../../lib/utils";
-import { roleFromPath, type RoleRef } from "../../lib/truth-display";
+import { roleFromPath, TIER_CONFIG, type RoleRef, type CharacterTier } from "../../lib/truth-display";
+
+// ── 5-tier badge color scheme (kept in sync with TIER_CONFIG in core) ──
+
+const TIER_BADGE: Record<CharacterTier, { label: string; color: string; symbol: string }> = {
+  protagonist: { label: "主角", color: "bg-amber-500/15 text-amber-600 dark:text-amber-400", symbol: "★" },
+  supporting:  { label: "重要", color: "bg-blue-500/15 text-blue-600 dark:text-blue-400", symbol: "★" },
+  guest:       { label: "次要", color: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400", symbol: "●" },
+  one_shot:    { label: "客串", color: "bg-gray-500/15 text-gray-600 dark:text-gray-400", symbol: "●" },
+  scene:       { label: "一次性", color: "bg-zinc-500/15 text-zinc-600 dark:text-zinc-400", symbol: "·" },
+};
+
+// ── Legacy support: character_matrix.md parser ──
 
 interface CharacterInfo {
   name: string;
@@ -52,13 +64,8 @@ function getRoleColor(role: string): string {
   return "bg-zinc-500/15 text-zinc-600 dark:text-zinc-400";
 }
 
-const TIER_BADGE: Record<RoleRef["tier"], { label: string; color: string }> = {
-  major: { label: "主要", color: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
-  minor: { label: "次要", color: "bg-blue-500/15 text-blue-600 dark:text-blue-400" },
-};
+// ── Phase 5 RoleEntry: one file per character ──
 
-// Phase 5 layout: one file per character under roles/. Each entry opens the
-// full (humanized) character sheet — no raw matrix parsing needed.
 function RoleEntry({ role }: { readonly role: RoleRef }) {
   const openArtifact = useChatStore((s) => s.openArtifact);
   const badge = TIER_BADGE[role.tier];
@@ -71,12 +78,15 @@ function RoleEntry({ role }: { readonly role: RoleRef }) {
       <span className="text-[15px] leading-6 font-medium text-foreground font-['SimSun','Songti_SC','STSong',serif] flex-1 truncate">
         {role.name}
       </span>
-      <span className={cn("text-[12px] px-1.5 py-0.5 rounded-full shrink-0", badge.color)}>
+      <span className={cn("text-[12px] px-1.5 py-0.5 rounded-full shrink-0 flex items-center gap-0.5", badge.color)}>
+        <span className="text-[10px]">{badge.symbol}</span>
         {badge.label}
       </span>
     </button>
   );
 }
+
+// ── Legacy CharacterCard (pre-Phase-5) ──
 
 function CharacterCard({ char }: { readonly char: CharacterInfo }) {
   const [expanded, setExpanded] = useState(false);
@@ -122,6 +132,33 @@ function CharacterCard({ char }: { readonly char: CharacterInfo }) {
   );
 }
 
+// ── Tab definitions ──
+
+interface TabItem {
+  readonly id: CharacterTier | "all";
+  readonly label: string;
+}
+
+const TIER_TABS: ReadonlyArray<TabItem> = [
+  { id: "all", label: "全部" },
+  { id: "protagonist", label: "主角" },
+  { id: "supporting", label: "重要" },
+  { id: "guest", label: "次要" },
+  { id: "one_shot", label: "客串" },
+  { id: "scene", label: "一次性" },
+];
+
+// Sort order: protagonist(1) → supporting(2) → guest(3) → one_shot(4) → scene(5)
+const TIER_SORT_ORDER: Record<CharacterTier, number> = {
+  protagonist: 1,
+  supporting: 2,
+  guest: 3,
+  one_shot: 4,
+  scene: 5,
+};
+
+// ── Main component ──
+
 interface CharacterSectionProps {
   readonly bookId: string;
 }
@@ -129,6 +166,7 @@ interface CharacterSectionProps {
 export function CharacterSection({ bookId }: CharacterSectionProps) {
   const [roles, setRoles] = useState<ReadonlyArray<RoleRef>>([]);
   const [legacyChars, setLegacyChars] = useState<CharacterInfo[]>([]);
+  const [activeTab, setActiveTab] = useState<CharacterTier | "all">("all");
   const bookDataVersion = useChatStore((s) => s.bookDataVersion);
 
   useEffect(() => {
@@ -142,9 +180,11 @@ export function CharacterSection({ bookId }: CharacterSectionProps) {
         const roleRefs = data.files
           .map((f) => roleFromPath(f.name))
           .filter((r): r is RoleRef => r !== null)
-          .sort((a, b) =>
-            a.tier === b.tier ? a.name.localeCompare(b.name) : a.tier === "major" ? -1 : 1,
-          );
+          .sort((a, b) => {
+            const orderA = TIER_SORT_ORDER[a.tier];
+            const orderB = TIER_SORT_ORDER[b.tier];
+            return orderA !== orderB ? orderA - orderB : a.name.localeCompare(b.name);
+          });
 
         // Phase 5 books expose one file per character under roles/.
         if (roleRefs.length > 0) {
@@ -172,15 +212,69 @@ export function CharacterSection({ bookId }: CharacterSectionProps) {
     };
   }, [bookId, bookDataVersion]);
 
+  // Filter + count by active tab
+  const filteredRoles = useMemo(() => {
+    if (activeTab === "all") return roles;
+    return roles.filter((r) => r.tier === activeTab);
+  }, [roles, activeTab]);
+
+  // Count per tier for tab badges
+  const tierCounts = useMemo(() => {
+    const counts: Partial<Record<CharacterTier, number>> = {};
+    for (const r of roles) {
+      counts[r.tier] = (counts[r.tier] ?? 0) + 1;
+    }
+    return counts;
+  }, [roles]);
+
   if (roles.length === 0 && legacyChars.length === 0) return null;
+
+  // Legacy view — no tab filtering for character_matrix.md mode
+  if (roles.length === 0) {
+    return (
+      <SidebarCard title="角色">
+        <div className="space-y-1.5">
+          {legacyChars.map((char) => <CharacterCard key={char.name} char={char} />)}
+        </div>
+      </SidebarCard>
+    );
+  }
 
   return (
     <SidebarCard title="角色">
-      <div className="space-y-1.5">
-        {roles.length > 0
-          ? roles.map((role) => <RoleEntry key={role.path} role={role} />)
-          : legacyChars.map((char) => <CharacterCard key={char.name} char={char} />)}
+      {/* Tier tab bar */}
+      <div className="flex gap-1 mb-2 flex-wrap">
+        {TIER_TABS.map((tab) => {
+          const isActive = activeTab === tab.id;
+          const count = tab.id === "all" ? roles.length : (tierCounts[tab.id] ?? 0);
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                "text-[12px] px-2 py-1 rounded-full transition-colors",
+                isActive
+                  ? "bg-primary text-primary-foreground font-medium"
+                  : "bg-secondary/50 text-muted-foreground hover:bg-secondary/80",
+              )}
+            >
+              {tab.label} {count}
+            </button>
+          );
+        })}
       </div>
+
+      {/* Role list */}
+      <div className="space-y-1.5">
+        {filteredRoles.map((role) => <RoleEntry key={role.path} role={role} />)}
+      </div>
+
+      {/* Status bar */}
+      {filteredRoles.length > 0 && (
+        <p className="text-[11px] text-muted-foreground/50 mt-2 px-0.5">
+          显示 {filteredRoles.length} / {roles.length} 个角色
+        </p>
+      )}
     </SidebarCard>
   );
 }

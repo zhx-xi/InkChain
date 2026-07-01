@@ -97,10 +97,10 @@ describe("firstParagraph", () => {
 
 describe("roleFromPath", () => {
   it("parses zh and en role dirs with the right tier", () => {
-    expect(roleFromPath("roles/主要角色/陈烬.md")).toEqual({ path: "roles/主要角色/陈烬.md", name: "陈烬", tier: "major" });
-    expect(roleFromPath("roles/次要角色/朋友乙.md")).toEqual({ path: "roles/次要角色/朋友乙.md", name: "朋友乙", tier: "minor" });
-    expect(roleFromPath("roles/major/Mara.md")).toEqual({ path: "roles/major/Mara.md", name: "Mara", tier: "major" });
-    expect(roleFromPath("roles/minor/Kit.md")).toEqual({ path: "roles/minor/Kit.md", name: "Kit", tier: "minor" });
+    expect(roleFromPath("roles/主要角色/陈烬.md")).toEqual({ path: "roles/主要角色/陈烬.md", name: "陈烬", tier: "supporting" });
+    expect(roleFromPath("roles/次要角色/朋友乙.md")).toEqual({ path: "roles/次要角色/朋友乙.md", name: "朋友乙", tier: "guest" });
+    expect(roleFromPath("roles/major/Mara.md")).toEqual({ path: "roles/major/Mara.md", name: "Mara", tier: "supporting" });
+    expect(roleFromPath("roles/minor/Kit.md")).toEqual({ path: "roles/minor/Kit.md", name: "Kit", tier: "guest" });
   });
 
   it("returns null for non-role paths", () => {

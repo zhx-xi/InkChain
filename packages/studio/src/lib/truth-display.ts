@@ -95,18 +95,56 @@ export function firstParagraph(text: string): string {
   return "";
 }
 
+// ── 5-tier character hierarchy ──
+// Defined locally (not imported from @actalk/inkos-core) to avoid cross-package
+// dependency issues in the frontend bundle. Must be kept in sync with
+// packages/core/src/models/character.ts.
+
+export type CharacterTier = "protagonist" | "supporting" | "guest" | "one_shot" | "scene";
+
+export const TIER_CONFIG: Record<CharacterTier, { label: string; sortOrder: number }> = {
+  protagonist: { label: "主角", sortOrder: 1 },
+  supporting: { label: "重要", sortOrder: 2 },
+  guest: { label: "次要", sortOrder: 3 },
+  one_shot: { label: "客串", sortOrder: 4 },
+  scene: { label: "一次性", sortOrder: 5 },
+} as const;
+
 export interface RoleRef {
   readonly path: string;
   readonly name: string;
-  readonly tier: "major" | "minor";
+  readonly tier: CharacterTier;
 }
+
+// Directory name → tier mapping for roleFromPath resolution.
+const TIER_DIR_MAP: Record<string, CharacterTier> = {
+  // Chinese directory names
+  "主角": "protagonist",
+  "重要": "supporting",
+  "次要": "guest",
+  "客串": "one_shot",
+  "一次性": "scene",
+  // English directory names (new)
+  "protagonist": "protagonist",
+  "supporting": "supporting",
+  "guest": "guest",
+  "one-shot": "one_shot",
+  "scene": "scene",
+  // Legacy directory names (pre-v1.5a compat)
+  "主要角色": "supporting",
+  "次要角色": "guest",
+  "major": "supporting",
+  "minor": "guest",
+};
 
 // Parse a roles/<tier>/<name>.md truth path (zh or en locale dirs) into a
 // character reference. Returns null for any non-role path.
 export function roleFromPath(path: string): RoleRef | null {
-  const m = path.match(/^roles\/(主要角色|次要角色|major|minor)\/(.+)\.md$/);
+  const m = path.match(/^roles\/([^/]+)\/(.+)\.md$/);
   if (!m) return null;
-  const tier = m[1] === "主要角色" || m[1] === "major" ? "major" : "minor";
+  const dir = m[1];
+  const tier = TIER_DIR_MAP[dir];
+  if (!tier) return null;
   return { path, name: m[2], tier };
 }
 

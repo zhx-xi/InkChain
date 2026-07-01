@@ -106,6 +106,7 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { isSafeBookId } from "./safety.js";
 import { ApiError } from "./errors.js";
 import { buildStudioBookConfig } from "./book-create.js";
+import { createRelationsRouter } from "./routes/relations.js";
 
 // -- Pipeline stage definitions per agent type --
 
@@ -5510,6 +5511,10 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     const { rev } = await applyGraphDelta({ projectRoot: root, projectId: id, delta });
     return c.json({ assetRef, rev });
   });
+
+  // ── Relations CRUD ──
+  const relationsRouter = createRelationsRouter((id) => state.bookDir(id));
+  app.route("/api/v1/books", relationsRouter);
 
   return app;
 }
