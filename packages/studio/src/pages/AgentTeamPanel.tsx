@@ -12,6 +12,7 @@ import {
   type AgentStatus,
   type AgentMetadata,
 } from "../components/AgentCard";
+import { PersonaEditPanel } from "../components/PersonaEditPanel";
 import { cn } from "../lib/utils";
 
 // ── Props ──
@@ -55,6 +56,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
   const [isResetting, setIsResetting] = useState(false);
   const [showPresetDropdown, setShowPresetDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingAgent, setEditingAgent] = useState<AgentRole | null>(null);
 
   // Simulate initial loading
   useEffect(() => {
@@ -93,6 +95,14 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
       setIsResetting(false);
     }, 2000);
   }, [isResetting]);
+
+  const handleAgentClick = useCallback((agentRole: AgentRole) => {
+    setEditingAgent(agentRole);
+  }, []);
+
+  const handleClosePanel = useCallback(() => {
+    setEditingAgent(null);
+  }, []);
 
   const getPresetLabel = (id: string): string => {
     return PRESETS.find((p) => p.id === id)?.name ?? "默认预设";
@@ -198,13 +208,14 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
         </div>
       </div>
 
-      {/* Agent Grid */}
+      {/* Agent Grid — clickable cards open Persona edit panel */}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
         {AGENTS.map((agent) => (
           <AgentCard
             key={agent.role}
             agent={agent}
             status={agentStatuses[agent.role]}
+            onClick={() => handleAgentClick(agent.role)}
           />
         ))}
       </div>
@@ -237,12 +248,13 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
         </div>
       </div>
 
-      {/* Future: Agent Config Summary */}
-      <div className="rounded-xl border border-dashed border-border/30 p-6 text-center">
-        <p className="text-sm text-muted-foreground/50">
-          Persona 详细配置（人格/模型路由/Skill 绑定）将在 Per-5 编辑面板中实现
-        </p>
-      </div>
+      {/* Persona Edit Panel (modal) */}
+      {editingAgent && (
+        <PersonaEditPanel
+          agentRole={editingAgent}
+          onClose={handleClosePanel}
+        />
+      )}
     </div>
   );
 }
