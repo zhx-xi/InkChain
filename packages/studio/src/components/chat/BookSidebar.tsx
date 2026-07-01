@@ -12,6 +12,7 @@ import { FoundationSection } from "../sidebar/FoundationSection";
 import { SummarySection } from "../sidebar/SummarySection";
 import { ChaptersSection } from "../sidebar/ChaptersSection";
 import { CharacterSection } from "../sidebar/CharacterSection";
+import { VolumesSection } from "../sidebar/VolumesSection";
 import { FrontmatterCards } from "../sidebar/FrontmatterCards";
 import { PendingHooksView } from "../sidebar/PendingHooksView";
 import {
@@ -251,6 +252,7 @@ function PanelView({ bookId, theme: _theme, t, sse }: BookSidebarProps) {
         </div>
       )}
       <ProgressSection sse={sse} />
+      <VolumesSection bookId={bookId} />
       <ChaptersSection bookId={bookId} isZh={isZh} />
       <CharacterSection bookId={bookId} />
       <FoundationSection bookId={bookId} />
