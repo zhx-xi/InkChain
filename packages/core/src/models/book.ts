@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { VolumeSchema } from "./volume.js";
 
 export const PlatformSchema = z.enum(["tomato", "feilu", "qidian", "other"]);
 export type Platform = z.infer<typeof PlatformSchema>;
@@ -68,6 +69,7 @@ export const BookConfigSchema = z.object({
   writing: z.object({
     reviewMode: z.enum(["auto", "manual"]).optional(),
   }).optional(),
+  volumes: z.array(VolumeSchema).default([]),
 });
 
 export type BookConfig = z.infer<typeof BookConfigSchema>;
