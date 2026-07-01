@@ -19,6 +19,7 @@ import { ImportManager } from "./pages/ImportManager";
 import { RadarView } from "./pages/RadarView";
 import { DoctorView } from "./pages/DoctorView";
 import { RelationGraphPanel } from "./pages/RelationGraphPanel";
+import { AgentTeamPanel } from "./pages/AgentTeamPanel";
 import { StoryPlayer } from "./pages/StoryPlayer";
 import { StoryGraphTree } from "./pages/StoryGraphTree";
 const FlowView = lazy(() => import("./pages/FlowView"));
@@ -104,6 +105,7 @@ export function App() {
     toFlow: (projectId: string) => setRoute({ page: "flow", projectId }),
     toFilmAuthor: (projectId: string) => setRoute({ page: "film-author", projectId }),
     toFilmStudio: (projectId: string) => setRoute({ page: "film-studio", projectId }),
+    toAgents: () => setRoute({ page: "agents" }),
   };
 
   const activeBookId = deriveActiveBookId(route);
@@ -358,6 +360,11 @@ export function App() {
             <Suspense fallback={<div className="p-6 text-sm">加载流程图…</div>}>
               <FlowView projectId={route.projectId} nav={nav} theme={theme} t={t} />
             </Suspense>
+          )}
+          {route.page === "agents" && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <AgentTeamPanel nav={nav} />
+            </div>
           )}
         </main>
       </div>
