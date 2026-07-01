@@ -641,6 +641,30 @@ export function Sidebar({ nav, activePage, sse, t }: {
         </div>
       )}
 
+      {/* AGPL-3.0 License Notice — required by AGPL §5(d) and §13 */}
+      <div className="px-3 py-2 border-t border-border/20">
+        <p className="text-[10px] leading-relaxed text-muted-foreground/40 text-center">
+          InkOS is free software under{' '}
+          <a
+            href="https://www.gnu.org/licenses/agpl-3.0.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-muted-foreground/70 transition-colors"
+          >
+            AGPL-3.0
+          </a>
+          .{' '}
+          <a
+            href="https://github.com/Narcooo/inkos"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:text-muted-foreground/70 transition-colors"
+          >
+            Source code
+          </a>
+        </p>
+      </div>
+
       <Dialog
         open={renameTarget !== null}
         onOpenChange={(open) => {
