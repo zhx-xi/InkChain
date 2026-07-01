@@ -1,13 +1,11 @@
+import { memo } from "react";
+import {
+  BaseEdge,
+  EdgeLabelRenderer,
+  getSmoothStepPath,
+  type EdgeProps,
+} from "@xyflow/react";
 import type { GraphEdgeData } from "../../store/relations/types";
-
-export interface RelationEdgeProps {
-  readonly edge: GraphEdgeData;
-  readonly x1: number;
-  readonly y1: number;
-  readonly x2: number;
-  readonly y2: number;
-  readonly isHighlighted: boolean;
-}
 
 /**
  * Edge color mapping by relation type.
@@ -34,90 +32,97 @@ const RELATION_LABELS: Record<string, string> = {
 
 const DEFAULT_COLOR = "#9ca3af";
 
+export type RelationEdgeData = GraphEdgeData;
+
 /**
- * SVG edge component for a character relation.
- * Draws a line between two positioned nodes with relation-type color,
- * optional dash for forgotten relations, and a centered label.
+ * ReactFlow Custom Edge for rendering a character relation connection.
+ * Draws a smooth-step path with relation-type color, optional dash for
+ * forgotten relations, and a centered label overlay.
  */
 export function RelationEdge({
-  edge,
-  x1,
-  y1,
-  x2,
-  y2,
-  isHighlighted,
-}: RelationEdgeProps) {
-  const color = EDGE_COLORS[edge.relationType] ?? DEFAULT_COLOR;
+  id,
+  source,
+  target,
+  sourceX,
+  sourceY,
+  targetX,
+  targetY,
+  sourcePosition,
+  targetPosition,
+  selected,
+  data,
+}: EdgeProps<RelationEdgeData>) {
+  const color = data?.relationType
+    ? EDGE_COLORS[data.relationType] ?? DEFAULT_COLOR
+    : DEFAULT_COLOR;
+  const isHighlighted = selected;
+  const isForgotten = data?.isForgotten ?? false;
+
   const strokeWidth = isHighlighted ? 2.5 : 1.5;
-  const opacity = edge.isForgotten ? 0.4 : isHighlighted ? 0.9 : 0.65;
+  const opacity = isForgotten ? 0.4 : isHighlighted ? 0.9 : 0.65;
+
+  const [edgePath, labelX, labelY] = getSmoothStepPath({
+    sourceX,
+    sourceY,
+    sourcePosition,
+    targetX,
+    targetY,
+    targetPosition,
+    borderRadius: 8,
+  });
+
+  const label = data?.label
+    ? RELATION_LABELS[data.relationType] ?? data.label
+    : "";
 
   return (
-    <g>
-      {/* Invisible wider click/hover target */}
-      <line
-        x1={x1}
-        y1={y1}
-        x2={x2}
-        y2={y2}
-        stroke="transparent"
-        strokeWidth={12}
+    <>
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        style={{
+          stroke: color,
+          strokeWidth,
+          strokeDasharray: isForgotten ? "8 4" : undefined,
+          strokeLinecap: "round",
+          opacity,
+        }}
       />
 
-      {/* Visible edge line */}
-      <line
-        x1={x1}
-        y1={y1}
-        x2={x2}
-        y2={y2}
-        stroke={color}
-        strokeWidth={strokeWidth}
-        strokeDasharray={edge.isForgotten ? "8 4" : undefined}
-        strokeLinecap="round"
-        opacity={opacity}
-        className="transition-all duration-200"
-      />
-
-      {/* Edge label — positioned at midpoint with a subtle background */}
-      {edge.label && (
-        <>
-          <rect
-            x={(x1 + x2) / 2 - edge.label.length * 4 - 4}
-            y={(y1 + y2) / 2 - 11}
-            width={edge.label.length * 8 + 8}
-            height={18}
-            rx={4}
-            fill="rgba(0,0,0,0.35)"
-            opacity={opacity}
-          />
-          <text
-            x={(x1 + x2) / 2}
-            y={(y1 + y2) / 2 + 4}
-            textAnchor="middle"
-            dominantBaseline="central"
-            fill={color}
-            fontSize={10}
-            fontWeight={500}
-            opacity={opacity}
+      {/* Edge label */}
+      {label && (
+        <EdgeLabelRenderer>
+          <div
+            className="absolute px-2 py-0.5 rounded text-[10px] font-medium leading-tight pointer-events-none"
+            style={{
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              backgroundColor: "rgba(0,0,0,0.35)",
+              color,
+              opacity,
+            }}
           >
-            {RELATION_LABELS[edge.relationType] ?? edge.label}
-          </text>
-        </>
+            {label}
+          </div>
+        </EdgeLabelRenderer>
       )}
 
-      {/* Forgotten marker icon */}
-      {edge.isForgotten && (
-        <text
-          x={(x1 + x2) / 2}
-          y={(y1 + y2) / 2 + 14}
-          textAnchor="middle"
-          dominantBaseline="central"
-          fill="#f59e0b"
-          fontSize={8}
-          opacity={0.7}
-        >
-          已遗忘
-        </text>
+      {/* Forgotten marker */}
+      {isForgotten && (
+        <EdgeLabelRenderer>
+          <div
+            className="absolute px-1.5 py-0.5 rounded text-[9px] font-medium leading-tight pointer-events-none"
+            style={{
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY + 14}px)`,
+              color: "#f59e0b",
+              opacity: 0.7,
+            }}
+          >
+            已遗忘
+          </div>
+        </EdgeLabelRenderer>
       )}
-    </g>
+    </>
   );
 }
+
+export const MemoRelationEdge = memo(RelationEdge);
