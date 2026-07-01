@@ -50,6 +50,16 @@ export {
   parsePersonaConfig,
   serializePersonaConfig,
 } from "./models/persona-config.js";
+export {
+  DEFAULT_PERSONAS,
+  getDefaultPersona,
+  getAllDefaultPersonas,
+  readPersonaConfig,
+  listAvailablePersonas,
+  ensurePersonasDir,
+  savePersonaConfig,
+  type PersonaSummary,
+} from "./persona/index.js";
 export { type BookRules, type ParsedBookRules, BookRulesSchema, parseBookRules, tryParseBookRulesFrontmatter } from "./models/book-rules.js";
 export { type DetectionHistoryEntry, type DetectionStats } from "./models/detection.js";
 export { type StyleProfile } from "./models/style-profile.js";
