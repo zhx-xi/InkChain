@@ -107,6 +107,7 @@ import { isSafeBookId } from "./safety.js";
 import { ApiError } from "./errors.js";
 import { buildStudioBookConfig } from "./book-create.js";
 import { createRelationsRouter } from "./routes/relations.js";
+import { createVolumesRouter } from "./routes/volumes.js";
 
 // -- Pipeline stage definitions per agent type --
 
@@ -5515,6 +5516,10 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // ── Relations CRUD ──
   const relationsRouter = createRelationsRouter((id) => state.bookDir(id));
   app.route("/api/v1/books", relationsRouter);
+
+  // ── Volumes CRUD ──
+  const volumesRouter = createVolumesRouter((id) => state.bookDir(id));
+  app.route("/api/v1/books", volumesRouter);
 
   return app;
 }
