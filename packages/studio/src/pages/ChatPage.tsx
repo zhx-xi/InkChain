@@ -35,6 +35,8 @@ import {
   X,
   Gamepad2,
   Palette,
+  Sparkles,
+  Lightbulb,
 } from "lucide-react";
 import { Shimmer } from "../components/ai-elements/shimmer";
 import {
@@ -423,6 +425,25 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
   const [skillSaving, setSkillSaving] = useState(false);
   const [skillCreateError, setSkillCreateError] = useState<string | null>(null);
   const [showSkillCreate, setShowSkillCreate] = useState(false);
+  // ── Writer's Block Breakthrough ──
+  const [wbSuggestions, setWbSuggestions] = useState<ReadonlyArray<{ direction: string; plot: string; characterAction: string; conflict: string }> | null>(null);
+  const [wbLoading, setWbLoading] = useState(false);
+  const [wbError, setWbError] = useState<string | null>(null);
+  const wbFetch = useCallback(async () => {
+    if (!activeBookId) return;
+    setWbLoading(true);
+    setWbError(null);
+    try {
+      const res = await fetchJson<{ suggestions: ReadonlyArray<{ direction: string; plot: string; characterAction: string; conflict: string }> }>(
+        `/api/v1/books/${encodeURIComponent(activeBookId)}/writers-block`,
+      );
+      setWbSuggestions(res.suggestions);
+    } catch (err) {
+      setWbError(String(err));
+    } finally {
+      setWbLoading(false);
+    }
+  }, [activeBookId]);
   const { data: skillsData, loading: skillsLoading, error: skillsError, refetch: refetchSkills } = useApi<SkillsResponse>("/skills");
   const worldPanelInsetClass = currentSessionKind === "play" && worldPanelOpen ? "lg:pr-[380px]" : "";
   const availableSkills = skillsData?.skills ?? [];
@@ -1029,6 +1050,16 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
                 >
                   <Plus size={16} strokeWidth={2.4} />
                 </button>
+                <button
+                  type="button"
+                  onClick={wbFetch}
+                  disabled={loading || !activeSessionId || wbLoading || !activeBookId}
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border/50 transition-colors disabled:opacity-30 ${wbSuggestions ? "bg-amber-500/15 text-amber-600 border-amber-400/60" : "text-muted-foreground hover:border-amber-400/40 hover:text-amber-600"}`}
+                  title={isZh ? "卡文突破 — AI 分析给出推进建议" : "Writer's block — AI suggestions"}
+                  aria-label={isZh ? "卡文突破" : "Writer's block"}
+                >
+                  {wbLoading ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} strokeWidth={2.2} />}
+                </button>
                 <textarea
                   ref={textareaRef}
                   value={input}
@@ -1134,6 +1165,48 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
                 ) : null}
               </div>
             ) : null}
+            {wbSuggestions && (
+              <div className="border-t border-border/20 px-3 py-3 space-y-2 max-h-[280px] overflow-y-auto">
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] font-semibold text-amber-600 flex items-center gap-1.5">
+                    <Lightbulb size={14} /> {isZh ? "卡文突破建议" : "Writer's block suggestions"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setWbSuggestions(null)}
+                    className="rounded p-0.5 text-muted-foreground hover:text-foreground transition-colors"
+                    aria-label={isZh ? "关闭" : "Close"}
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+                {wbSuggestions.map((s, i) => (
+                  <div key={i} className="rounded-lg border border-border/30 bg-secondary/20 p-2.5 space-y-1">
+                    <div className="text-[13px] leading-5 font-semibold text-foreground">
+                      {i + 1}. {s.direction}
+                    </div>
+                    <p className="text-[13px] leading-5 text-muted-foreground">{s.plot}</p>
+                    {s.characterAction && (
+                      <p className="text-[12px] leading-4 text-muted-foreground/70">
+                        <span className="font-medium">{isZh ? "角色行为：" : "Character: "}</span>{s.characterAction}
+                      </p>
+                    )}
+                    {s.conflict && (
+                      <p className="text-[12px] leading-4 text-muted-foreground/70">
+                        <span className="font-medium">{isZh ? "冲突点：" : "Conflict: "}</span>{s.conflict}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {wbError && (
+              <div className="border-t border-border/20 px-3 py-2">
+                <p className="text-[12px] leading-5 text-destructive/80">
+                  {isZh ? `分析失败：${wbError}` : `Analysis failed: ${wbError}`}
+                </p>
+              </div>
+            )}
           </div>
           {playImageError ? (
             <p className="mt-2 text-right text-[13px] leading-5 text-destructive/80">
