@@ -3,13 +3,14 @@
 // Tabs: Persona (人格编辑) / 模型路由 / Skill 绑定
 
 import { useState, useCallback, useRef } from "react";
-import { X, Save, RotateCcw, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { X, Save, RotateCcw, Loader2, CheckCircle2, AlertCircle, MessageSquare } from "lucide-react";
 import { cn } from "../lib/utils";
 import { PersonaEditTab } from "./PersonaEditTab";
 import { ModelRouteTab } from "./ModelRouteTab";
 import { SkillBindTab } from "./SkillBindTab";
 import { usePersona } from "../hooks/use-persona-api";
 import { AGENTS } from "./AgentCard";
+import { TestDialog } from "./TestDialog";
 import type { PersonaConfig, AgentRole } from "@actalk/inkos-core/models/persona-config.js";
 
 // ── Tab definitions ──
@@ -43,6 +44,8 @@ export function PersonaEditPanel({ agentRole, onClose }: PersonaEditPanelProps) 
   const [activeTab, setActiveTab] = useState("persona");
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [dirty, setDirty] = useState(false);
+  const [showTestDialog, setShowTestDialog] = useState(false);
+  const [testDialogLoading, setTestDialogLoading] = useState(false);
 
   // Load persona data
   const { config, body, loading, error, setConfig, setBody, save, resetToDefault, refetch } = usePersona(agentRole);
@@ -87,6 +90,20 @@ export function PersonaEditPanel({ agentRole, onClose }: PersonaEditPanelProps) 
       setDirty(false);
     }
   }, [resetToDefault]);
+
+  // ── Test Dialog Handler (auto-save then open) ──
+  const handleOpenTestDialog = useCallback(async () => {
+    if (!config) return;
+    // Auto-save if dirty
+    if (dirty) {
+      setTestDialogLoading(true);
+      const ok = await save(config, body);
+      setTestDialogLoading(false);
+      if (!ok) return; // Save failed — don't open test dialog
+      setDirty(false);
+    }
+    setShowTestDialog(true);
+  }, [config, body, dirty, save]);
 
   // ── Keyboard shortcut: Ctrl+S to save ──
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -253,15 +270,33 @@ export function PersonaEditPanel({ agentRole, onClose }: PersonaEditPanelProps) 
 
         {/* ── Footer ── */}
         <div className="flex items-center justify-between gap-3 px-6 py-4 border-t border-border/30">
-          {/* Reset button */}
-          <button
-            type="button"
-            onClick={handleReset}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-destructive/70 hover:text-destructive hover:bg-destructive/5 transition-colors"
-          >
-            <RotateCcw size={14} />
-            <span>重置为默认</span>
-          </button>
+          {/* Left actions */}
+          <div className="flex items-center gap-2">
+            {/* Reset button */}
+            <button
+              type="button"
+              onClick={handleReset}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-destructive/70 hover:text-destructive hover:bg-destructive/5 transition-colors"
+            >
+              <RotateCcw size={14} />
+              <span>重置为默认</span>
+            </button>
+
+            {/* Test dialog button */}
+            <button
+              type="button"
+              onClick={handleOpenTestDialog}
+              disabled={testDialogLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-foreground/70 hover:text-foreground hover:bg-secondary/50 transition-colors disabled:opacity-50"
+            >
+              {testDialogLoading ? (
+                <Loader2 size={14} className="animate-spin" />
+              ) : (
+                <MessageSquare size={14} />
+              )}
+              <span>{testDialogLoading ? "保存中…" : "测试对话"}</span>
+            </button>
+          </div>
 
           {/* Save button */}
           <div className="flex items-center gap-2">
@@ -301,6 +336,20 @@ export function PersonaEditPanel({ agentRole, onClose }: PersonaEditPanelProps) 
           </div>
         </div>
       </div>
+
+      {/* Test Dialog */}
+      {showTestDialog && (
+        <TestDialog
+          agentRole={agentRole}
+          agentLabel={agentLabel}
+          agentIcon={agentIcon}
+          agentColor={agentColor}
+          onClose={() => {
+            setShowTestDialog(false);
+            void refetch(); // Refresh config in case test changed something
+          }}
+        />
+      )}
     </div>
   );
 }

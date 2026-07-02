@@ -12,13 +12,12 @@ interface PersonaListResponse {
 }
 
 interface PersonaGetResponse {
-  readonly config: PersonaConfig;
+  readonly persona: PersonaConfig;
   readonly body: string;
 }
 
 interface PersonaSaveResponse {
-  readonly ok: boolean;
-  readonly config: PersonaConfig;
+  readonly persona: PersonaConfig;
 }
 
 // ── Load a single persona ──
@@ -35,7 +34,7 @@ export function usePersona(agentRole: AgentRole | null) {
     setError(null);
     try {
       const data = await fetchJson<PersonaGetResponse>(`/project/personas/${agentRole}`);
-      setConfig(data.config);
+      setConfig(data.persona);
       setBody(data.body);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -55,8 +54,8 @@ export function usePersona(agentRole: AgentRole | null) {
         config: newConfig,
         body: newBody,
       });
-      if (result.ok) {
-        setConfig(result.config);
+      if (result.persona) {
+        setConfig(result.persona);
         setBody(newBody);
         return true;
       }

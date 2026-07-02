@@ -35,7 +35,7 @@ describe("Personas CRUD API", () => {
 
   beforeEach(() => {
     projectRoot = createTmpProjectRoot();
-    router = createPersonasRouter(projectRoot);
+    router = createPersonasRouter(() => projectRoot);
   });
 
   afterEach(async () => {
