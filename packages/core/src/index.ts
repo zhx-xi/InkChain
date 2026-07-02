@@ -233,6 +233,16 @@ export {
   type GenerationConstraint,
   type ConstraintSeverity,
 } from "./ai/generation-constraints.js";
+export {
+  extractWorldFromText,
+  splitSections,
+  extractEntities,
+  summarizeExtraction,
+  type ExtractedWorld,
+  type ExtractedEntity,
+  type ExtractResult,
+  type ExtractedSection,
+} from "./ai/world-extractor.js";
 export { analyzeStyle } from "./agents/style-analyzer.js";
 export {
   VoiceProfileSchema as CharacterVoiceProfileSchema,
