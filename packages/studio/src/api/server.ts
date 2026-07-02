@@ -2521,6 +2521,127 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     }
   });
 
+  // --- Dashboard Aggregated Data (R-14) ---
+
+  app.get("/api/v1/books/:id/dashboard", async (c) => {
+    const id = c.req.param("id");
+    try {
+      const book = await state.loadBookConfig(id);
+      const chapters = await state.loadChapterIndex(id);
+      const nextChapter = await state.getNextChapterNumber(id);
+      const bookDir = state.bookDir(id);
+      const { join } = await import("node:path");
+      const { readFile, readdir } = await import("node:fs/promises");
+
+      // Chapter / word count stats
+      const totalChapters = nextChapter - 1;
+      const targetChapters = (book as any).targetChapters ?? 0;
+      const totalWords = chapters.reduce((sum: number, ch: any) => sum + (ch.wordCount ?? 0), 0);
+
+      // Characters grouped by tier
+      const TIER_ROLE_DIRS = [
+        "protagonist", "supporting", "guest", "one-shot", "scene",
+        "主角", "重要", "次要", "客串", "一次性",
+        "主要角色", "次要角色", "major", "minor",
+      ];
+      const characters: Array<{ name: string; tier: string; description: string }> = [];
+      const rolesDir = join(bookDir, "story", "roles");
+      for (const dir of TIER_ROLE_DIRS) {
+        try {
+          const files = await readdir(join(rolesDir, dir));
+          for (const file of files) {
+            if (file.endsWith(".md")) {
+              const name = file.replace(/\.md$/, "");
+              let description = "";
+              try {
+                const content = await readFile(join(rolesDir, dir, file), "utf-8");
+                const lines = content.split("\n").filter((l: string) => l.trim() && !l.startsWith("---"));
+                description = lines.slice(0, 3).join(" ").slice(0, 200);
+              } catch { /* ignore */ }
+              characters.push({ name, tier: dir, description });
+            }
+          }
+        } catch { /* directory doesn't exist */ }
+      }
+
+      // Recent timeline events (last 10)
+      let recentEvents: Array<{ id: string; chapter: number; description: string; date?: string }> = [];
+      try {
+        const timelinesRaw = await readFile(join(bookDir, "story", "state", "character_timelines.json"), "utf-8");
+        const timelinesData = JSON.parse(timelinesRaw);
+        const events = (timelinesData.events ?? []).sort((a: any, b: any) => (b.chapter ?? 0) - (a.chapter ?? 0));
+        recentEvents = events.slice(0, 10).map((e: any) => ({
+          id: e.id,
+          chapter: e.chapter ?? 0,
+          description: (e.description ?? "").slice(0, 200),
+          date: e.date,
+        }));
+      } catch { /* no timeline data */ }
+
+      // Relations summary
+      let relationCount = 0;
+      let recentRelations: Array<{ id: string; source: string; target: string; type: string }> = [];
+      try {
+        const relationsRaw = await readFile(join(bookDir, "story", "state", "relations.json"), "utf-8");
+        const relationsData = JSON.parse(relationsRaw);
+        const rels = relationsData.relations ?? [];
+        relationCount = rels.length;
+        recentRelations = rels.slice(-5).map((r: any) => ({
+          id: r.id,
+          source: r.sourceRoleId ?? r.source ?? "",
+          target: r.targetRoleId ?? r.target ?? "",
+          type: r.type ?? r.relationType ?? "unknown",
+        }));
+      } catch { /* no relations data */ }
+
+      // World info
+      const worldId = (book as any).worldId ?? null;
+      let worldSummary: any = null;
+      if (worldId) {
+        try {
+          const { loadWorld } = await import("@actalk/inkos-core");
+          const world: any = await loadWorld(root, worldId as string);
+          if (world) {
+            worldSummary = {
+              id: world.id,
+              name: world.name,
+              dimensions: world.dimensions
+                ? Object.entries(world.dimensions).map(([key, dim]: [string, any]) => ({
+                    name: key,
+                    content: (dim.content ?? dim.description ?? "").slice(0, 100),
+                  }))
+                : [],
+            };
+          }
+        } catch { /* world not found */ }
+      }
+
+      return c.json({
+        book: {
+          id,
+          title: (book as any).title ?? id,
+          genre: (book as any).genre ?? "unknown",
+          status: (book as any).status ?? "active",
+        },
+        stats: {
+          totalChapters,
+          targetChapters,
+          totalWords,
+          chaptersWritten: totalChapters,
+        },
+        characters,
+        recentEvents,
+        relations: {
+          total: relationCount,
+          recent: recentRelations,
+        },
+        world: worldSummary,
+      });
+    } catch {
+      return c.json({ error: `Book "${id}" not found` }, 404);
+    }
+  });
+
   // --- Actions ---
 
   app.post("/api/v1/books/:id/write-next", async (c) => {

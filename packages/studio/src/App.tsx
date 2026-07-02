@@ -27,6 +27,7 @@ import { WorldListPage } from "./pages/WorldListPage";
 import { WorldDetailPage } from "./pages/WorldDetailPage";
 import { WorldGeoVizPanel } from "./pages/WorldGeoVizPanel";
 import { PublishPage } from "./pages/PublishPage";
+import { EditDashboard } from "./pages/EditDashboard";
 import { StoryPlayer } from "./pages/StoryPlayer";
 import { StoryGraphTree } from "./pages/StoryGraphTree";
 const FlowView = lazy(() => import("./pages/FlowView"));
@@ -123,6 +124,7 @@ export function App() {
     toWorldGeoViz: (worldId: string) => setRoute({ page: "world-geoviz", worldId }),
     toWorldCreate: () => setRoute({ page: "world-create" }),
     toPublish: (bookId: string) => setRoute({ page: "publish", bookId }),
+    toEditDashboard: (bookId: string) => setRoute({ page: "edit-dashboard", bookId }),
   };
 
   const activeBookId = deriveActiveBookId(route);
@@ -422,6 +424,11 @@ export function App() {
           {route.page === "publish" && (
             <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <PublishPage bookId={route.bookId} nav={nav} />
+            </div>
+          )}
+          {route.page === "edit-dashboard" && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <EditDashboard bookId={route.bookId} nav={nav} />
             </div>
           )}
         </main>
