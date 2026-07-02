@@ -59,6 +59,7 @@ interface WorldDraft {
   institutions: WorldInstitution[];
   history: WorldHistoryEvent[];
   rules: WorldRule[];
+  [key: string]: unknown;
 }
 
 function emptyDraft(): WorldDraft {

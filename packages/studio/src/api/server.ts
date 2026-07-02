@@ -122,6 +122,7 @@ import { createSessionsRouter } from "./routes/sessions.js";
 import { createRelationExtractionRouter } from "./routes/relation-extraction.js";
 import { createSearchRouter } from "./routes/search.js";
 import { createForeshadowingRouter } from "./routes/foreshadowing.js";
+import { createWorldsRouter } from "./routes/worlds.js";
 import { createPublishRouter } from "./routes/publish.js";
 
 // -- Pipeline stage definitions per agent type --
