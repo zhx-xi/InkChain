@@ -111,6 +111,7 @@ import { createVolumesRouter } from "./routes/volumes.js";
 import { createSceneRolesRouter } from "./routes/scene-roles.js";
 import { createCharactersRouter } from "./routes/characters.js";
 import { createPersonasRouter } from "./routes/personas.js";
+import { createPresetsRouter } from "./routes/presets.js";
 
 // -- Pipeline stage definitions per agent type --
 
@@ -5545,6 +5546,10 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // ── Persona CRUD (project-level) ──
   const personasRouter = createPersonasRouter(() => root);
   app.route("/api/v1/project", personasRouter);
+
+  // ── Persona Presets (Per-6) ──
+  const presetsRouter = createPresetsRouter(() => root);
+  app.route("/api/v1/project", presetsRouter);
 
   // ── Writer's Block Breakthrough (E4 simplified) ──
   // GET  /api/v1/books/:id/writers-block — analyze context and return 3-5 advancement suggestions
