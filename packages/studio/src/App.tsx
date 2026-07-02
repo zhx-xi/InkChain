@@ -25,6 +25,7 @@ import { SkillListPage } from "./pages/SkillListPage";
 import { ForeshadowingPage } from "./pages/ForeshadowingPage";
 import { WorldListPage } from "./pages/WorldListPage";
 import { WorldDetailPage } from "./pages/WorldDetailPage";
+import { WorldGeoVizPanel } from "./pages/WorldGeoVizPanel";
 import { PublishPage } from "./pages/PublishPage";
 import { StoryPlayer } from "./pages/StoryPlayer";
 import { StoryGraphTree } from "./pages/StoryGraphTree";
@@ -119,6 +120,7 @@ export function App() {
     toForeshadowing: () => setRoute({ page: "foreshadowing" }),
     toWorlds: () => setRoute({ page: "worlds" }),
     toWorldDetail: (worldId: string) => setRoute({ page: "world-detail", worldId }),
+    toWorldGeoViz: (worldId: string) => setRoute({ page: "world-geoviz", worldId }),
     toWorldCreate: () => setRoute({ page: "world-create" }),
     toPublish: (bookId: string) => setRoute({ page: "publish", bookId }),
   };
@@ -410,6 +412,11 @@ export function App() {
                 worldId={route.page === "world-detail" ? route.worldId : undefined}
                 nav={nav}
               />
+            </div>
+          )}
+          {route.page === "world-geoviz" && (
+            <div className="w-full h-full fade-in">
+              <WorldGeoVizPanel worldId={route.worldId} nav={nav} />
             </div>
           )}
           {route.page === "publish" && (
