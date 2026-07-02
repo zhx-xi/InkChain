@@ -49,6 +49,7 @@ import {
   Network,
   CalendarDays,
   Users,
+  Archive,
 } from "lucide-react";
 import { InkosLogo } from "./InkosLogo";
 
@@ -91,6 +92,7 @@ interface Nav {
   toTimeline: (bookId: string) => void;
   toFilmStudio: (id: string) => void;
   toAgents: () => void;
+  toArchive: () => void;
 }
 
 export function Sidebar({ nav, activePage, sse, t }: {
@@ -628,6 +630,12 @@ export function Sidebar({ nav, activePage, sse, t }: {
               icon={<Users size={16} />}
               active={activePage === "agents"}
               onClick={nav.toAgents}
+            />
+            <SidebarItem
+              label="会话归档"
+              icon={<Archive size={16} />}
+              active={activePage === "archive"}
+              onClick={nav.toArchive}
             />
             <SidebarItem
               label={t("nav.style")}

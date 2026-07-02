@@ -44,7 +44,7 @@ export interface SearchPanelProps {
 /**
  * Render a text snippet with `<mark>` tags around matched positions.
  */
-function HighlightedText({
+export function HighlightedText({
   text,
   positions,
   className,
