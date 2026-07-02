@@ -214,6 +214,27 @@ export {
   type ConsistencyReport as CRType,
 } from "./ai/consistency-report.js";
 export {
+  analyzeDialogue,
+  analyzeTone,
+  learnStyle,
+  buildStyleConstraints,
+  serializeStyleProfile,
+  summarizeStyleProfile,
+  type EnhancedStyleProfile,
+  type StyleLearningConfig,
+  type DialogueStats,
+  type ToneProfile,
+  type ToneKeyword,
+  DEFAULT_LEARNING_CONFIG,
+} from "./ai/style-learner.js";
+export {
+  profileToConstraints,
+  formatStyleConstraintsSection,
+  type GenerationConstraint,
+  type ConstraintSeverity,
+} from "./ai/generation-constraints.js";
+export { analyzeStyle } from "./agents/style-analyzer.js";
+export {
   VoiceProfileSchema as CharacterVoiceProfileSchema,
   VoiceProfilesFileSchema,
   VOICE_PRESETS,

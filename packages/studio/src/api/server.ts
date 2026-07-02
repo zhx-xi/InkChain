@@ -124,6 +124,7 @@ import { createSearchRouter } from "./routes/search.js";
 import { createForeshadowingRouter } from "./routes/foreshadowing.js";
 import { createWorldsRouter } from "./routes/worlds.js";
 import { createPublishRouter } from "./routes/publish.js";
+import { createStyleProfilesRouter } from "./routes/style-profiles.js";
 import { createConsistencyRouter } from "./routes/consistency.js";
 
 // -- Pipeline stage definitions per agent type --
@@ -5603,6 +5604,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   app.route("/api/worlds", createWorldsRouter(root));
   app.route("/api/foreshadowing", createForeshadowingRouter(root));
   app.route("/api/publish", createPublishRouter(root));
+  app.route("/api/style-profiles", createStyleProfilesRouter(root));
   app.route("/api/consistency", createConsistencyRouter(root));
 
   // ── Writer's Block Breakthrough (E4 simplified) ──
