@@ -217,13 +217,13 @@ export {
   type ConsistencyCheckInput,
   type ChapterContent,
   type CharacterProfile,
-  ISSUE_TYPE_LABELS,
-  ISSUE_SEVERITY_LABELS,
 } from "./ai/consistency-checker.js";
 export {
   createEmptyReport,
   calculateScore,
   buildSummary,
+  ISSUE_TYPE_LABELS,
+  ISSUE_SEVERITY_LABELS,
   type ConsistencyReport as CRType,
 } from "./ai/consistency-report.js";
 export {
