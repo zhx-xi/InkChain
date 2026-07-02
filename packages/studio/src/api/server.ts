@@ -116,6 +116,7 @@ import { createPersonaAIGenRouter } from "./routes/persona-ai-gen.js";
 import { createOutlineRouter } from "./routes/outline.js";
 import { createVoiceProfilesRouter } from "./routes/voice-profiles.js";
 import { createTimelinesRouter } from "./routes/timelines.js";
+import { createSkillsRouter } from "./routes/skills.js";
 import { createSessionTagsRouter } from "./routes/session-tags.js";
 import { createSessionsRouter } from "./routes/sessions.js";
 import { createRelationExtractionRouter } from "./routes/relation-extraction.js";
@@ -5593,6 +5594,8 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // ── Full-Text Search (Ar-2) ──
   const searchRouter = createSearchRouter(() => root);
   app.route("/api/v1/books", searchRouter);
+
+  app.route("/api/skills", createSkillsRouter(root));
 
   // ── Writer's Block Breakthrough (E4 simplified) ──
   // GET  /api/v1/books/:id/writers-block — analyze context and return 3-5 advancement suggestions
