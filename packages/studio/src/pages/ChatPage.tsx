@@ -20,6 +20,10 @@ import {
 } from "../components/ai-elements/reasoning";
 import { ChatMessage } from "../components/chat/ChatMessage";
 import { QuickActions } from "../components/chat/QuickActions";
+import { AgentStatusIndicator, type AgentStatus } from "../components/AgentStatusIndicator";
+import { WritingProgress, type AgentProgressItem } from "../components/WritingProgress";
+import { WritingQuickActions } from "../components/WritingQuickActions";
+import { useNewSSEMessages } from "../hooks/use-sse";
 import { ToolExecutionSteps, type ProposedActionDetails } from "../components/chat/ToolExecutionSteps";
 import { ProjectArtifactDrawer } from "../components/chat/ProjectArtifactDrawer";
 import { PlayHud } from "../components/chat/PlayHud";
@@ -425,6 +429,21 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
   const [skillSaving, setSkillSaving] = useState(false);
   const [skillCreateError, setSkillCreateError] = useState<string | null>(null);
   const [showSkillCreate, setShowSkillCreate] = useState(false);
+  // ── Writing Panel ──
+  const [writingPanelOpen, setWritingPanelOpen] = useState(true);
+  const [agentStatuses, setAgentStatuses] = useState<AgentStatus[]>([
+    { id: "writer", name: "Writer", status: "idle" },
+    { id: "architect", name: "Architect", status: "idle" },
+    { id: "reviser", name: "Reviser", status: "idle" },
+    { id: "auditor", name: "Auditor", status: "idle" },
+  ]);
+  const [writingProgress, setWritingProgress] = useState({
+    currentWordCount: 0,
+    targetWordCount: 5000,
+    chapterNumber: 1,
+    chapterTitle: undefined as string | undefined,
+  });
+  const [agentProgressList, setAgentProgressList] = useState<AgentProgressItem[]>([]);
   // ── Writer's Block Breakthrough ──
   const [wbSuggestions, setWbSuggestions] = useState<ReadonlyArray<{ direction: string; plot: string; characterAction: string; conflict: string }> | null>(null);
   const [wbLoading, setWbLoading] = useState(false);
@@ -542,6 +561,124 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
       setSelectedModel(nextSelection.model, nextSelection.service);
     }
   }, [configuredModelSelection, groupedModels, selectedModel, selectedService, serviceConfigLoaded, setSelectedModel]);
+
+  // ── Derive agent status + writing progress from SSE messages ──
+  const sseMessages = _sse.messages;
+  useNewSSEMessages(sseMessages, useCallback((msg: SSEMessage) => {
+    if (msg.event === "write:start") {
+      setAgentStatuses((prev) =>
+        prev.map((a) => (a.id === "writer" ? { ...a, status: "writing" as const, progress: 0 } : a)),
+      );
+    } else if (msg.event === "write:complete") {
+      setAgentStatuses((prev) =>
+        prev.map((a) => (a.id === "writer" ? { ...a, status: "idle" as const, progress: 100 } : a)),
+      );
+    } else if (msg.event === "write:error") {
+      const data = msg.data as { error?: string } | null;
+      setAgentStatuses((prev) =>
+        prev.map((a) =>
+          a.id === "writer"
+            ? { ...a, status: "error" as const, lastError: data?.error ?? "写作出错" }
+            : a,
+        ),
+      );
+    } else if (msg.event === "audit:start") {
+      setAgentStatuses((prev) =>
+        prev.map((a) => (a.id === "auditor" ? { ...a, status: "thinking" as const, progress: 0 } : a)),
+      );
+    } else if (msg.event === "audit:complete") {
+      setAgentStatuses((prev) =>
+        prev.map((a) => (a.id === "auditor" ? { ...a, status: "idle" as const, progress: 100 } : a)),
+      );
+    } else if (msg.event === "audit:error") {
+      const data = msg.data as { error?: string } | null;
+      setAgentStatuses((prev) =>
+        prev.map((a) =>
+          a.id === "auditor"
+            ? { ...a, status: "error" as const, lastError: data?.error ?? "审计出错" }
+            : a,
+        ),
+      );
+    } else if (msg.event === "revise:start") {
+      setAgentStatuses((prev) =>
+        prev.map((a) => (a.id === "reviser" ? { ...a, status: "writing" as const, progress: 0 } : a)),
+      );
+    } else if (msg.event === "revise:complete") {
+      setAgentStatuses((prev) =>
+        prev.map((a) => (a.id === "reviser" ? { ...a, status: "idle" as const, progress: 100 } : a)),
+      );
+    } else if (msg.event === "revise:error") {
+      const data = msg.data as { error?: string } | null;
+      setAgentStatuses((prev) =>
+        prev.map((a) =>
+          a.id === "reviser"
+            ? { ...a, status: "error" as const, lastError: data?.error ?? "修订出错" }
+            : a,
+        ),
+      );
+    } else if (msg.event === "tool:start") {
+      const data = msg.data as { tool?: string; args?: { agent?: string } } | null;
+      if (data?.tool === "sub_agent") {
+        const agent = data.args?.agent;
+        if (agent && ["writer", "architect", "reviser", "auditor"].includes(agent)) {
+          setAgentStatuses((prev) =>
+            prev.map((a) =>
+              a.id === agent
+                ? { ...a, status: (agent === "writer" || agent === "reviser" ? "writing" : "thinking") as AgentStatus["status"], progress: 0 }
+                : a,
+            ),
+          );
+        }
+      }
+    } else if (msg.event === "tool:end") {
+      const data = msg.data as { tool?: string; isError?: boolean; details?: { error?: string } } | null;
+      if (data?.tool === "sub_agent") {
+        if (data.isError) {
+          setAgentStatuses((prev) =>
+            prev.map((a) =>
+              (a.status === "thinking" || a.status === "writing")
+                ? { ...a, status: "error" as const, lastError: data.details?.error ?? "工具执行出错" }
+                : a,
+            ),
+          );
+        } else {
+          setAgentStatuses((prev) =>
+            prev.map((a) =>
+              (a.status === "thinking" || a.status === "writing")
+                ? { ...a, status: "idle" as const, progress: 100 }
+                : a,
+            ),
+          );
+        }
+      }
+    } else if (msg.event === "llm:progress") {
+      const data = msg.data as { progress?: number; agentId?: string } | null;
+      if (data?.agentId) {
+        setAgentStatuses((prev) =>
+          prev.map((a) =>
+            a.id === data.agentId
+              ? { ...a, progress: Math.min(100, Math.max(0, data.progress ?? a.progress ?? 0)) }
+              : a,
+          ),
+        );
+      }
+    } else if (msg.event === "agent:start") {
+      setAgentStatuses((prev) =>
+        prev.map((a) =>
+          a.status === "idle" ? a
+            : { ...a, status: "thinking" as const, progress: 0 },
+        ),
+      );
+    } else if (msg.event === "agent:complete" || msg.event === "agent:error") {
+      setAgentStatuses((prev) =>
+        prev.map((a) =>
+          a.status === "thinking" || a.status === "writing"
+            ? { ...a, status: "idle" as const }
+            : a,
+        ),
+      );
+    }
+  }, []));
 
   // Auto-resize textarea
   useEffect(() => {
@@ -963,7 +1100,7 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
         )}
       </div>
 
-      {/* Quick actions (only when a book is active) */}
+      {/* Quick actions + Writing panel (only when a book is active) */}
       {hasBook && !showChoicePanel && (
         <div className={`shrink-0 transition-[padding] duration-200 ${worldPanelInsetClass}`}>
           <div className="max-w-3xl mx-auto w-full px-4">
@@ -972,6 +1109,56 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
               disabled={loading || !activeSessionId}
               isZh={isZh}
             />
+
+            {/* Writing panel collapsible section */}
+            <div className="mt-1.5 rounded-xl border border-border/30 bg-card/40">
+              <button
+                type="button"
+                onClick={() => setWritingPanelOpen((v) => !v)}
+                className="w-full flex items-center justify-between px-3 py-2 text-[13px] leading-5 font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <ChevronDown
+                    size={14}
+                    className={`text-muted-foreground transition-transform ${writingPanelOpen ? "" : "-rotate-90"}`}
+                  />
+                  <span>{isZh ? "写作面板" : "Writing Panel"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {agentStatuses.some((a) => a.status === "writing" || a.status === "thinking") && (
+                    <span className="flex items-center gap-1 text-[10px] text-primary">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                      {isZh ? "运行中" : "Active"}
+                    </span>
+                  )}
+                </div>
+              </button>
+
+              {writingPanelOpen && (
+                <div className="px-3 pb-3 space-y-3">
+                  {/* Agent Status Indicators */}
+                  <AgentStatusIndicator agents={agentStatuses} />
+
+                  {/* Writing Quick Actions */}
+                  <WritingQuickActions
+                    onGenerateNext={() => handleQuickAction(isZh ? "写下一节" : "write next section", "write_next")}
+                    onRewriteSelection={() => handleQuickAction(isZh ? "重写当前段落" : "rewrite selection")}
+                    onAdjustParams={() => handleQuickAction(isZh ? "调整写作参数" : "adjust writing params")}
+                    onSwitchPersona={() => handleQuickAction(isZh ? "切换写作视角" : "switch persona")}
+                    disabled={loading || !activeSessionId}
+                  />
+
+                  {/* Writing Progress */}
+                  <WritingProgress
+                    currentWordCount={writingProgress.currentWordCount}
+                    targetWordCount={writingProgress.targetWordCount}
+                    chapterNumber={writingProgress.chapterNumber}
+                    chapterTitle={writingProgress.chapterTitle}
+                    agentProgress={agentProgressList}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
