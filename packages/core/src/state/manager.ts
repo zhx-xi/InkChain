@@ -2,7 +2,14 @@ import { readFile, writeFile, mkdir, readdir, rm, stat, unlink, open } from "nod
 import { join } from "node:path";
 import type { BookConfig } from "../models/book.js";
 import type { ChapterMeta } from "../models/chapter.js";
+import { loadWorld } from "../models/world-store.js";
+import type { WorldConfig } from "../models/world-config.js";
 import { bootstrapStructuredStateFromMarkdown, resolveDurableStoryProgress } from "./state-bootstrap.js";
+
+export interface BookWithWorldContext {
+  readonly config: BookConfig;
+  readonly world: WorldConfig | null;
+}
 
 export class StateManager {
   /** Books actively being written by this process — used for same-process stale lock detection. */
@@ -190,6 +197,18 @@ export class StateManager {
       throw new Error(`book.json is empty for book "${bookId}"`);
     }
     return JSON.parse(raw) as BookConfig;
+  }
+
+  async loadBookConfigWithWorld(bookId: string): Promise<BookWithWorldContext> {
+    const config = await this.loadBookConfig(bookId);
+    if (!config.worldId) {
+      return { config, world: null };
+    }
+    const world = await loadWorld(this.projectRoot, config.worldId);
+    if (!world) {
+      throw new Error(`World "${config.worldId}" linked by book "${bookId}" not found`);
+    }
+    return { config, world };
   }
 
   async saveBookConfig(bookId: string, config: BookConfig): Promise<void> {
