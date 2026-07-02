@@ -358,6 +358,11 @@ export {
   migrateBookSession,
   createAndPersistBookSession,
   SessionAlreadyMigratedError,
+  archiveBookSession,
+  unarchiveBookSession,
+  batchArchiveBookSessions,
+  mergeBookSessions,
+  autoArchiveStaleSessions,
 } from "./interaction/book-session-store.js";
 export {
   appendManualSessionMessages,
