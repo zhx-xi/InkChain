@@ -32,6 +32,10 @@
     "./interactive-film/graph-schema": {
       "types": "./dist/interactive-film/graph-schema.d.ts",
       "import": "./dist/interactive-film/graph-schema.js"
+    },
+    "./models/persona-config": {
+      "types": "./dist/models/persona-config.d.ts",
+      "import": "./dist/models/persona-config.js"
     }
   },
   "files": [
