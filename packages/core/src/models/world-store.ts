@@ -5,7 +5,7 @@
 
 import { access, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { WorldConfigSchema, type WorldConfig, type WorldConfigUpdate } from "./world-config.js";
+import { WorldConfigSchema, type WorldConfig, type WorldConfigUpdate, type WorldSearchResult, type WorldReference, type WorldReferenceCreate, WORLD_DIMENSION_KEYS, worldSearch, checkReferenceBeforeDelete } from "./world-config.js";
 
 const WORLDS_DIR = ".inkos/worlds";
 
@@ -97,5 +97,63 @@ export function createWorld(id: string, name: string, description = ""): WorldCo
     institutions: [],
     history: [],
     rules: [],
+    references: [],
+  };
+}
+
+// ── Search & Reference (Wrld-5) ──
+
+export function searchWorlds(
+  world: WorldConfig,
+  query: string,
+  dimension?: string,
+): WorldSearchResult[] {
+  return worldSearch(world, query, dimension);
+}
+
+export function deleteEntityWithRefCheck(
+  world: WorldConfig,
+  dimension: string,
+  entityId: string,
+): { updated: WorldConfig; refs: ReturnType<typeof checkReferenceBeforeDelete> } {
+  const refs = checkReferenceBeforeDelete(world, dimension, entityId);
+  const updated = {
+    ...world,
+    [dimension]: ((world as Record<string, unknown[]>)[dimension] ?? []).filter(
+      (e: Record<string, unknown>) => e.id !== entityId,
+    ),
+  } as WorldConfig;
+
+  // Also remove references pointing to this entity
+  updated.references = updated.references?.filter(
+    (ref: WorldReference) =>
+      !(ref.sourceId === entityId && ref.sourceDimension === dimension) &&
+      !(ref.targetId === entityId && ref.targetDimension === dimension),
+  ) ?? [];
+
+  return { updated, refs };
+}
+
+export function addWorldReference(
+  world: WorldConfig,
+  ref: WorldReferenceCreate,
+): WorldConfig {
+  const newRef: WorldReference = {
+    ...ref,
+    id: `ref_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+  };
+  return {
+    ...world,
+    references: [...(world.references ?? []), newRef],
+  };
+}
+
+export function removeWorldReference(
+  world: WorldConfig,
+  refId: string,
+): WorldConfig {
+  return {
+    ...world,
+    references: (world.references ?? []).filter((r) => r.id !== refId),
   };
 }

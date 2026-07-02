@@ -26,6 +26,7 @@ export const WorldSettingEntrySchema = z.object({
   type: WorldSettingTypeEnum,
   description: z.string().default(""),
   constraints: z.array(z.string()).default([]),
+  sortIndex: z.number().int().min(0).default(0),
 });
 export type WorldSettingEntry = z.infer<typeof WorldSettingEntrySchema>;
 
@@ -40,6 +41,9 @@ export const WorldRoleSchema = z.object({
   role: WorldRoleKindEnum,
   description: z.string().default(""),
   significance: z.number().int().min(1).max(5).default(3),
+  sortIndex: z.number().int().min(0).default(0),
+  institutionIds: z.array(z.string()).default([]),
+  regionIds: z.array(z.string()).default([]),
 });
 export type WorldRole = z.infer<typeof WorldRoleSchema>;
 
@@ -51,8 +55,33 @@ export const WorldRelationSchema = z.object({
   targetId: z.string().min(1),
   type: z.string().min(1),
   description: z.string().default(""),
+  sortIndex: z.number().int().min(0).default(0),
 });
 export type WorldRelation = z.infer<typeof WorldRelationSchema>;
+
+// ── Cross-entity Reference (Wrld-5) ──
+
+export const WorldReferenceTargetTypeEnum = z.enum(["role", "region", "institution", "event"]);
+export type WorldReferenceTargetType = z.infer<typeof WorldReferenceTargetTypeEnum>;
+
+export const WorldReferenceSchema = z.object({
+  id: z.string().min(1),
+  sourceDimension: z.string().min(1),
+  sourceId: z.string().min(1),
+  targetDimension: z.string().min(1),
+  targetId: z.string().min(1),
+  label: z.string().default(""),
+});
+export type WorldReference = z.infer<typeof WorldReferenceSchema>;
+
+export const WorldReferenceCreateSchema = z.object({
+  sourceDimension: z.string().min(1),
+  sourceId: z.string().min(1),
+  targetDimension: z.string().min(1),
+  targetId: z.string().min(1),
+  label: z.string().default(""),
+});
+export type WorldReferenceCreate = z.infer<typeof WorldReferenceCreateSchema>;
 
 // ── 4. WorldRegion — 地理区域
 
@@ -65,6 +94,7 @@ export const WorldRegionSchema = z.object({
   parentId: z.string().nullable().default(null),
   type: WorldRegionTypeEnum,
   description: z.string().default(""),
+  sortIndex: z.number().int().min(0).default(0),
 });
 export type WorldRegion = z.infer<typeof WorldRegionSchema>;
 
@@ -80,6 +110,8 @@ export const WorldInstitutionSchema = z.object({
   leaderId: z.string().nullable().default(null),
   members: z.array(z.string()).default([]),
   description: z.string().default(""),
+  sortIndex: z.number().int().min(0).default(0),
+  regionId: z.string().nullable().default(null),
 });
 export type WorldInstitution = z.infer<typeof WorldInstitutionSchema>;
 
@@ -92,6 +124,7 @@ export const WorldHistoryEventSchema = z.object({
   description: z.string().default(""),
   affectedRegions: z.array(z.string()).default([]),
   significance: z.number().int().min(1).max(5).default(3),
+  sortIndex: z.number().int().min(0).default(0),
 });
 export type WorldHistoryEvent = z.infer<typeof WorldHistoryEventSchema>;
 
@@ -106,8 +139,19 @@ export const WorldRuleSchema = z.object({
   type: WorldRuleTypeEnum,
   description: z.string().default(""),
   constraints: z.array(z.string()).default([]),
+  sortIndex: z.number().int().min(0).default(0),
 });
 export type WorldRule = z.infer<typeof WorldRuleSchema>;
+
+// ── Search Result ──
+
+export interface WorldSearchResult {
+  dimension: string;
+  entityId: string;
+  entityName: string;
+  snippet: string;
+  field: string;
+}
 
 // ── Root WorldConfig ──
 
@@ -124,6 +168,7 @@ export const WorldConfigSchema = z.object({
   institutions: z.array(WorldInstitutionSchema).default([]),
   history: z.array(WorldHistoryEventSchema).default([]),
   rules: z.array(WorldRuleSchema).default([]),
+  references: z.array(WorldReferenceSchema).default([]),
 });
 export type WorldConfig = z.infer<typeof WorldConfigSchema>;
 
@@ -140,3 +185,101 @@ export const WORLD_DIMENSION_KEYS = [
   "rules",
 ] as const;
 export type WorldDimensionKey = (typeof WORLD_DIMENSION_KEYS)[number];
+
+// ── Search helpers (Wrld-5) ──
+
+const DIMENSION_NAME_MAP: Record<string, string> = {
+  settings: "name",
+  roles: "name",
+  relations: "type",
+  regions: "name",
+  institutions: "name",
+  history: "title",
+  rules: "name",
+};
+
+function getEntityName(dimension: string, entity: Record<string, unknown>): string {
+  if (dimension === "history") return String(entity.title ?? "");
+  if (dimension === "relations") return String(entity.type ?? "");
+  return String(entity.name ?? "");
+}
+
+function getSearchableText(dimension: string, entity: Record<string, unknown>): string {
+  const textParts: string[] = [];
+  for (const [key, val] of Object.entries(entity)) {
+    if (key === "id" || key === "sortIndex") continue;
+    if (typeof val === "string") textParts.push(val);
+    if (Array.isArray(val)) textParts.push(...val.filter((v): v is string => typeof v === "string"));
+  }
+  return textParts.join(" ");
+}
+
+export function worldSearch(
+  world: WorldConfig,
+  query: string,
+  dimension?: string,
+): WorldSearchResult[] {
+  const q = query.toLowerCase().trim();
+  if (!q) return [];
+
+  const results: WorldSearchResult[] = [];
+  const dims = dimension ? [dimension] : WORLD_DIMENSION_KEYS;
+
+  for (const dim of dims) {
+    const entities = (world as Record<string, unknown[]>)[dim] ?? [];
+    for (const entity of entities) {
+      const e = entity as Record<string, unknown>;
+      const text = getSearchableText(dim, e).toLowerCase();
+      if (text.includes(q)) {
+        const name = getEntityName(dim, e);
+        const snippet = text.length > 120
+          ? "..." + text.substring(Math.max(0, text.indexOf(q) - 40), text.indexOf(q) + 80) + "..."
+          : text;
+        results.push({
+          dimension: dim,
+          entityId: String(e.id ?? ""),
+          entityName: name,
+          snippet: snippet.substring(0, 200),
+          field: dim === "history" ? "title" : "name",
+        });
+      }
+    }
+  }
+
+  return results;
+}
+
+export function resolveReferences(
+  world: WorldConfig,
+): { ref: WorldReference; sourceName: string; targetName: string }[] {
+  const nameMap = new Map<string, string>();
+  const idToDim = new Map<string, string>();
+
+  for (const dim of WORLD_DIMENSION_KEYS) {
+    const entities = (world as Record<string, unknown[]>)[dim] ?? [];
+    for (const entity of entities) {
+      const e = entity as Record<string, unknown>;
+      const eid = String(e.id ?? "");
+      nameMap.set(eid, getEntityName(dim, e));
+      idToDim.set(eid, dim);
+    }
+  }
+
+  return (world.references ?? []).map((ref) => ({
+    ref,
+    sourceName: nameMap.get(ref.sourceId) ?? ref.sourceId,
+    targetName: nameMap.get(ref.targetId) ?? ref.targetId,
+  }));
+}
+
+export function checkReferenceBeforeDelete(
+  world: WorldConfig,
+  dimension: string,
+  entityId: string,
+): WorldReference[] {
+  return (world.references ?? []).filter(
+    (ref) =>
+      (ref.sourceDimension === dimension && ref.sourceId === entityId) ||
+      (ref.targetDimension === dimension && ref.targetId === entityId),
+  );
+}

@@ -123,7 +123,12 @@ export {
   WorldInstitutionSchema,
   WorldHistoryEventSchema,
   WorldRuleSchema,
+  WorldReferenceSchema,
+  WorldReferenceCreateSchema,
   WORLD_DIMENSION_KEYS,
+  worldSearch,
+  resolveReferences,
+  checkReferenceBeforeDelete,
   type WorldConfig,
   type WorldConfigUpdate,
   type WorldSettingEntry,
@@ -138,6 +143,10 @@ export {
   type WorldHistoryEvent,
   type WorldRule,
   type WorldRuleType,
+  type WorldReference,
+  type WorldReferenceCreate,
+  type WorldReferenceTargetType,
+  type WorldSearchResult,
   type WorldDimensionKey,
 } from "./models/world-config.js";
 export {
@@ -148,6 +157,10 @@ export {
   applyWorldUpdate,
   createWorld,
   worldPath,
+  searchWorlds,
+  deleteEntityWithRefCheck,
+  addWorldReference,
+  removeWorldReference,
 } from "./models/world-store.js";
 export {
   type Foreshadowing,

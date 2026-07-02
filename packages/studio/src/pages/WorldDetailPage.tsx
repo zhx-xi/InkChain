@@ -11,13 +11,17 @@ import type {
   WorldHistoryEvent,
   WorldRule,
   WorldDimensionKey,
+  WorldSearchResult,
+  WorldReference,
 } from "@actalk/inkos-core/models/world-config.js";
 import {
   WORLD_DIMENSION_KEYS,
   WorldConfigSchema,
   WorldConfigUpdateSchema,
 } from "@actalk/inkos-core/models/world-config.js";
-import { ArrowLeft, Save, Trash2, Plus, BookPlus, X, Globe } from "lucide-react";
+import {
+  ArrowLeft, Save, Trash2, Plus, BookPlus, X, Globe, Search, ChevronUp, ChevronDown, Download, Upload, ListChecks, Check, GripVertical, ChevronRight, ChevronLeft, Link2, ExternalLink, AlertTriangle,
+} from "lucide-react";
 import { cn } from "../lib/utils";
 
 // ── Dimension metadata ──
@@ -32,7 +36,7 @@ const DIMENSION_META: Record<string, { label: string; description: string; color
   rules: { label: "世界规则", description: "物理、魔法、社会、叙事规则", color: "#EF4444" },
 };
 
-// ── Helper: generate short IDs ──
+// ── Helper ──
 
 let _idCounter = 0;
 function genId(): string {
@@ -40,14 +44,33 @@ function genId(): string {
   return `_${Date.now().toString(36)}_${_idCounter}`;
 }
 
+function moveItem<T>(arr: T[], from: number, to: number): T[] {
+  const next = [...arr];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item);
+  return next;
+}
+
+function exportDimension<T extends Record<string, unknown>>(items: T[]): string {
+  return JSON.stringify(items, null, 2);
+}
+
+function importDimension<T extends Record<string, unknown>>(json: string): T[] | null {
+  try {
+    const parsed = JSON.parse(json);
+    if (Array.isArray(parsed)) return parsed as T[];
+    return null;
+  } catch { return null; }
+}
+
 // ── Props ──
 
 interface WorldDetailProps {
-  readonly worldId?: string; // undefined = create mode
+  readonly worldId?: string;
   readonly nav?: { toWorlds: () => void; toBook: (bookId: string) => void; toWorldGeoViz?: (worldId: string) => void };
 }
 
-// ── Entry form state type (mutable during editing) ──
+// ── Draft state ──
 
 interface WorldDraft {
   name: string;
@@ -59,21 +82,12 @@ interface WorldDraft {
   institutions: WorldInstitution[];
   history: WorldHistoryEvent[];
   rules: WorldRule[];
+  references: WorldReference[];
   [key: string]: unknown;
 }
 
 function emptyDraft(): WorldDraft {
-  return {
-    name: "",
-    description: "",
-    settings: [],
-    roles: [],
-    relations: [],
-    regions: [],
-    institutions: [],
-    history: [],
-    rules: [],
-  };
+  return { name: "", description: "", settings: [], roles: [], relations: [], regions: [], institutions: [], history: [], rules: [], references: [] };
 }
 
 function worldToDraft(world: WorldConfig): WorldDraft {
@@ -87,76 +101,405 @@ function worldToDraft(world: WorldConfig): WorldDraft {
     institutions: world.institutions,
     history: world.history,
     rules: world.rules,
+    references: world.references ?? [],
   };
 }
 
-// ── Dimension sub-editors ──
+// ── Search Bar ──
 
-function SettingsEditor({ entries, onChange }: {
-  entries: WorldSettingEntry[];
-  onChange: (v: WorldSettingEntry[]) => void;
+function WorldSearchBar({ worldId, onJump }: {
+  worldId: string;
+  onJump: (dimension: string, entityId: string) => void;
 }) {
-  const update = (i: number, patch: Partial<WorldSettingEntry>) => {
-    const next = entries.map((e, idx) => idx === i ? { ...e, ...patch } : e);
-    onChange(next);
-  };
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<WorldSearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [showResults, setShowResults] = useState(false);
+
+  const doSearch = useCallback(async () => {
+    if (!query.trim()) { setResults([]); return; }
+    setSearching(true);
+    try {
+      const res = await fetchJson(`/api/worlds/${encodeURIComponent(worldId)}/search?q=${encodeURIComponent(query)}`);
+      const data = res as { results: WorldSearchResult[] };
+      setResults(data.results ?? []);
+      setShowResults(true);
+    } catch { /* ignore */ }
+    setSearching(false);
+  }, [query, worldId]);
+
   return (
-    <div className="space-y-3">
-      {entries.map((e, i) => (
-        <div key={e.id} className="rounded-lg border border-border/40 p-3 space-y-2">
-          <div className="flex items-center gap-2">
-            <input value={e.name} onChange={(ev) => update(i, { name: ev.target.value })}
-              className="flex-1 rounded-md border border-border/40 bg-background px-2 py-1 text-sm" placeholder="名称" />
-            <select value={e.type} onChange={(ev) => update(i, { type: ev.target.value as any })}
-              className="rounded-md border border-border/40 bg-background px-2 py-1 text-sm">
-              <option value="物理规则">物理规则</option>
-              <option value="魔法体系">魔法体系</option>
-              <option value="科技水平">科技水平</option>
-              <option value="社会结构">社会结构</option>
-              <option value="文化习俗">文化习俗</option>
-            </select>
-            <button type="button" onClick={() => onChange(entries.filter((_, j) => j !== i))}
-              className="text-muted-foreground/40 hover:text-destructive transition-colors"><X size={14} /></button>
-          </div>
-          <textarea value={e.description} onChange={(ev) => update(i, { description: ev.target.value })}
-            className="w-full rounded-md border border-border/40 bg-background px-2 py-1 text-xs min-h-[60px]" placeholder="描述" />
+    <div className="relative">
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground/50" />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") doSearch(); }}
+            className="w-full rounded-lg border border-border/40 bg-background pl-8 pr-3 py-1.5 text-xs"
+            placeholder="搜索所有维度..."
+          />
         </div>
-      ))}
-      <button type="button" onClick={() => onChange([...entries, { id: genId(), name: "", type: "物理规则", description: "", constraints: [] }])}
-        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"><Plus size={12} /> 添加设定</button>
+        <button type="button" onClick={doSearch} disabled={!query.trim() || searching}
+          className="rounded-lg bg-primary/10 px-3 py-1.5 text-xs text-primary hover:bg-primary/20 disabled:opacity-30">
+          {searching ? "搜索中..." : "搜索"}
+        </button>
+      </div>
+      {showResults && results.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-1 z-30 rounded-xl border border-border/40 bg-card shadow-xl max-h-[300px] overflow-y-auto">
+          {results.map((r, i) => {
+            const meta = DIMENSION_META[r.dimension];
+            return (
+              <button key={`${r.entityId}-${i}`} type="button"
+                onClick={() => { onJump(r.dimension, r.entityId); setShowResults(false); setQuery(""); }}
+                className="w-full flex items-start gap-3 p-3 text-left text-xs hover:bg-muted/30 border-b border-border/20 last:border-b-0 transition-colors">
+                <span className="shrink-0 px-1.5 py-0.5 rounded text-[10px] font-medium"
+                  style={{ backgroundColor: `${meta?.color}20`, color: meta?.color }}>{meta?.label}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="font-medium text-foreground">{r.entityName}</span>
+                  <p className="text-muted-foreground/70 truncate mt-0.5">{r.snippet}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+      {showResults && results.length === 0 && query.trim() && (
+        <div className="absolute top-full left-0 right-0 mt-1 z-30 rounded-xl border border-border/40 bg-card shadow-xl p-4 text-xs text-muted-foreground text-center">
+          未找到匹配结果
+        </div>
+      )}
     </div>
   );
 }
 
-function RolesEditor({ entries, onChange }: {
-  entries: WorldRole[];
-  onChange: (v: WorldRole[]) => void;
+// ── Reference Display ──
+
+function ReferenceDisplay({ dimension, entityId, references, worldDraft }: {
+  dimension: string;
+  entityId: string;
+  references: WorldReference[];
+  worldDraft: WorldDraft;
 }) {
-  const update = (i: number, patch: Partial<WorldRole>) => {
-    const next = entries.map((e, idx) => idx === i ? { ...e, ...patch } : e);
-    onChange(next);
+  const refs = references.filter(
+    (r) => (r.sourceDimension === dimension && r.sourceId === entityId) ||
+           (r.targetDimension === dimension && r.targetId === entityId),
+  );
+  if (refs.length === 0) return null;
+
+  // Build name map from all dimensions
+  const nameMap = new Map<string, string>();
+  for (const dim of WORLD_DIMENSION_KEYS) {
+    const entities = (worldDraft as Record<string, unknown[]>)[dim] ?? [];
+    for (const e of entities) {
+      const record = e as Record<string, unknown>;
+      if (record.id) nameMap.set(String(record.id), (record.name ?? record.title ?? "?") as string);
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1 mt-1.5">
+      {refs.map((ref) => {
+        const isSource = ref.sourceDimension === dimension && ref.sourceId === entityId;
+        const linkedId = isSource ? ref.targetId : ref.sourceId;
+        const linkedDim = isSource ? ref.targetDimension : ref.sourceDimension;
+        const linkedName = nameMap.get(linkedId) ?? linkedId;
+        return (
+          <span key={ref.id} className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-primary/5 border border-primary/10 text-[10px] text-primary/70">
+            <Link2 size={10} />
+            {linkedName}
+            <span className="text-[9px] text-muted-foreground/50">{DIMENSION_META[linkedDim]?.label ?? linkedDim}</span>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Reference Picker ──
+
+function ReferencePicker({ dimension, entityId, worldDraft, onAddRef }: {
+  dimension: string;
+  entityId: string;
+  worldDraft: WorldDraft;
+  onAddRef: (sourceDim: string, sourceId: string, targetDim: string, targetId: string, label: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [targetDim, setTargetDim] = useState(WORLD_DIMENSION_KEYS[0]);
+  const [targetId, setTargetId] = useState("");
+
+  const targets = ((worldDraft as Record<string, unknown[]>)[targetDim] ?? []) as Record<string, unknown>[];
+
+  const handleAdd = () => {
+    if (!targetId) return;
+    onAddRef(dimension, entityId, targetDim, targetId, "");
+    setOpen(false);
+    setTargetId("");
   };
+
+  return (
+    <div className="relative">
+      <button type="button" onClick={() => setOpen(!open)}
+        className="text-[10px] text-muted-foreground/50 hover:text-primary flex items-center gap-0.5">
+        <Link2 size={10} />
+        引用
+      </button>
+      {open && (
+        <div className="absolute top-full left-0 mt-1 z-30 rounded-lg border border-border/40 bg-card shadow-lg p-3 min-w-[240px]">
+          <div className="space-y-2">
+            <select value={targetDim} onChange={(e) => { setTargetDim(e.target.value); setTargetId(""); }}
+              className="w-full rounded-md border border-border/40 bg-background px-2 py-1 text-xs">
+              {WORLD_DIMENSION_KEYS.map((k) => (
+                <option key={k} value={k} disabled={k === dimension}>{DIMENSION_META[k]?.label ?? k}</option>
+              ))}
+            </select>
+            <select value={targetId} onChange={(e) => setTargetId(e.target.value)}
+              className="w-full rounded-md border border-border/40 bg-background px-2 py-1 text-xs">
+              <option value="">选择目标...</option>
+              {targets.map((t) => (
+                <option key={String(t.id)} value={String(t.id)}>{String(t.name ?? t.title ?? "?")}</option>
+              ))}
+            </select>
+            <div className="flex items-center justify-end gap-2">
+              <button type="button" onClick={() => setOpen(false)}
+                className="text-[10px] text-muted-foreground hover:text-foreground">取消</button>
+              <button type="button" onClick={handleAdd} disabled={!targetId}
+                className="px-2 py-0.5 text-[10px] rounded bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-30">
+                添加引用
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Collapsible Card ──
+
+function CollapsibleCard({ title, count, defaultCollapsed, children }: {
+  title: string;
+  count?: number;
+  defaultCollapsed?: boolean;
+  children: React.ReactNode;
+}) {
+  const [collapsed, setCollapsed] = useState(defaultCollapsed ?? false);
+  return (
+    <div className="rounded-lg border border-border/40">
+      <button type="button" onClick={() => setCollapsed(!collapsed)}
+        className="w-full flex items-center justify-between px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors">
+        <span className="flex items-center gap-1.5">
+          {collapsed ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+          {title}
+          {count !== undefined && <span className="text-muted-foreground/50">({count})</span>}
+        </span>
+      </button>
+      {!collapsed && <div className="px-3 pb-3">{children}</div>}
+    </div>
+  );
+}
+
+// ── Drag-reorder buttons ──
+
+function DragButtons({ index, total, onMove }: {
+  index: number;
+  total: number;
+  onMove: (from: number, to: number) => void;
+}) {
+  return (
+    <div className="flex items-center gap-0.5 shrink-0">
+      <button type="button" onClick={() => onMove(index, index - 1)} disabled={index === 0}
+        className="text-muted-foreground/30 hover:text-foreground disabled:opacity-20 disabled:cursor-not-allowed">
+        <ChevronUp size={14} />
+      </button>
+      <button type="button" onClick={() => onMove(index, index + 1)} disabled={index === total - 1}
+        className="text-muted-foreground/30 hover:text-foreground disabled:opacity-20 disabled:cursor-not-allowed">
+        <ChevronDown size={14} />
+      </button>
+    </div>
+  );
+}
+
+// ── Dimension sub-editors (enhanced with drag-reorder, collapse, refs) ──
+
+function SettingsEditor({ entries, onChange, references, worldDraft, onAddRef }: {
+  entries: WorldSettingEntry[];
+  onChange: (v: WorldSettingEntry[]) => void;
+  references: WorldReference[];
+  worldDraft: WorldDraft;
+  onAddRef: (sourceDim: string, sourceId: string, targetDim: string, targetId: string, label: string) => void;
+}) {
+  const [batchMode, setBatchMode] = useState(false);
+  const [batchText, setBatchText] = useState(exportDimension(entries));
+
+  const update = (i: number, patch: Partial<WorldSettingEntry>) => {
+    onChange(entries.map((e, idx) => idx === i ? { ...e, ...patch } : e));
+  };
+
+  const applyBatch = () => {
+    const parsed = importDimension<WorldSettingEntry>(batchText);
+    if (parsed) onChange(parsed.map((e, i) => ({ ...e, sortIndex: i })));
+  };
+
   return (
     <div className="space-y-3">
-      {entries.map((e, i) => (
-        <div key={e.id} className="rounded-lg border border-border/40 p-3 space-y-2">
-          <div className="flex items-center gap-2">
-            <input value={e.name} onChange={(ev) => update(i, { name: ev.target.value })}
-              className="flex-1 rounded-md border border-border/40 bg-background px-2 py-1 text-sm" placeholder="角色名" />
-            <select value={e.role} onChange={(ev) => update(i, { role: ev.target.value as any })}
-              className="rounded-md border border-border/40 bg-background px-2 py-1 text-sm">
-              <option value="主角">主角</option><option value="配角">配角</option><option value="反派">反派</option><option value="中立">中立</option>
-            </select>
-            <input type="number" min={1} max={5} value={e.significance} onChange={(ev) => update(i, { significance: parseInt(ev.target.value) || 3 })}
-              className="w-16 rounded-md border border-border/40 bg-background px-2 py-1 text-xs text-center" title="重要性(1-5)" />
-            <button type="button" onClick={() => onChange(entries.filter((_, j) => j !== i))}
-              className="text-muted-foreground/40 hover:text-destructive"><X size={14} /></button>
+      <div className="flex items-center gap-2 mb-2">
+        <button type="button" onClick={() => { setBatchMode(!batchMode); if (!batchMode) setBatchText(exportDimension(entries)); }}
+          className={cn("inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] transition-colors",
+            batchMode ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}>
+          <ListChecks size={12} />
+          {batchMode ? "编辑中" : "批量编辑"}
+        </button>
+        <button type="button" onClick={() => {
+          const blob = new Blob([exportDimension(entries)], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a"); a.href = url; a.download = `settings.json`; a.click();
+          URL.revokeObjectURL(url);
+        }}
+          className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] text-muted-foreground hover:text-foreground">
+          <Download size={12} />导出
+        </button>
+        <label className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] text-muted-foreground hover:text-foreground cursor-pointer">
+          <Upload size={12} />导入
+          <input type="file" accept=".json" className="hidden" onChange={(e) => {
+            const file = e.target.files?.[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+              const parsed = importDimension<WorldSettingEntry>(reader.result as string);
+              if (parsed) onChange(parsed);
+            };
+            reader.readAsText(file);
+          }} />
+        </label>
+      </div>
+
+      {batchMode ? (
+        <div className="space-y-2">
+          <textarea value={batchText} onChange={(e) => setBatchText(e.target.value)}
+            className="w-full rounded-md border border-border/40 bg-background px-3 py-2 text-xs font-mono min-h-[200px]" />
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => { setBatchMode(false); }}
+              className="px-2 py-1 text-[10px] text-muted-foreground hover:text-foreground">取消</button>
+            <button type="button" onClick={applyBatch}
+              className="px-2 py-1 text-[10px] rounded bg-primary text-primary-foreground hover:opacity-90">
+              <Check size={12} className="inline mr-1" />应用
+            </button>
           </div>
-          <textarea value={e.description} onChange={(ev) => update(i, { description: ev.target.value })}
-            className="w-full rounded-md border border-border/40 bg-background px-2 py-1 text-xs min-h-[60px]" placeholder="描述" />
         </div>
-      ))}
-      <button type="button" onClick={() => onChange([...entries, { id: genId(), name: "", role: "配角", description: "", significance: 3 }])}
+      ) : (
+        entries.map((e, i) => (
+          <CollapsibleCard key={e.id} title={e.name || "(未命名)"} count={i + 1}>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <DragButtons index={i} total={entries.length} onMove={(from, to) => onChange(moveItem(entries, from, to))} />
+                <input value={e.name} onChange={(ev) => update(i, { name: ev.target.value })}
+                  className="flex-1 rounded-md border border-border/40 bg-background px-2 py-1 text-sm" placeholder="名称" />
+                <select value={e.type} onChange={(ev) => update(i, { type: ev.target.value as any })}
+                  className="rounded-md border border-border/40 bg-background px-2 py-1 text-sm">
+                  <option value="物理规则">物理规则</option>
+                  <option value="魔法体系">魔法体系</option>
+                  <option value="科技水平">科技水平</option>
+                  <option value="社会结构">社会结构</option>
+                  <option value="文化习俗">文化习俗</option>
+                </select>
+                <button type="button" onClick={() => onChange(entries.filter((_, j) => j !== i))}
+                  className="text-muted-foreground/40 hover:text-destructive"><X size={14} /></button>
+              </div>
+              <textarea value={e.description} onChange={(ev) => update(i, { description: ev.target.value })}
+                className="w-full rounded-md border border-border/40 bg-background px-2 py-1 text-xs min-h-[60px]" placeholder="描述" />
+              <ReferenceDisplay dimension="settings" entityId={e.id} references={references} worldDraft={worldDraft} />
+            </div>
+          </CollapsibleCard>
+        ))
+      )}
+      <button type="button" onClick={() => onChange([...entries, { id: genId(), name: "", type: "物理规则", description: "", constraints: [], sortIndex: entries.length }])}
+        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><Plus size={12} /> 添加设定</button>
+    </div>
+  );
+}
+
+function RolesEditor({ entries, onChange, references, worldDraft, onAddRef }: {
+  entries: WorldRole[];
+  onChange: (v: WorldRole[]) => void;
+  references: WorldReference[];
+  worldDraft: WorldDraft;
+  onAddRef: (sourceDim: string, sourceId: string, targetDim: string, targetId: string, label: string) => void;
+}) {
+  const [batchMode, setBatchMode] = useState(false);
+  const [batchText, setBatchText] = useState(exportDimension(entries));
+
+  const update = (i: number, patch: Partial<WorldRole>) => {
+    onChange(entries.map((e, idx) => idx === i ? { ...e, ...patch } : e));
+  };
+
+  const applyBatch = () => {
+    const parsed = importDimension<WorldRole>(batchText);
+    if (parsed) onChange(parsed.map((e, i) => ({ ...e, sortIndex: i })));
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2 mb-2">
+        <button type="button" onClick={() => { setBatchMode(!batchMode); if (!batchMode) setBatchText(exportDimension(entries)); }}
+          className={cn("inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] transition-colors",
+            batchMode ? "bg-primary/10 text-primary" : "text-muted-foreground hover:text-foreground")}>
+          <ListChecks size={12} />{batchMode ? "编辑中" : "批量编辑"}
+        </button>
+        <button type="button" onClick={() => {
+          const blob = new Blob([exportDimension(entries)], { type: "application/json" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a"); a.href = url; a.download = `roles.json`; a.click();
+          URL.revokeObjectURL(url);
+        }}
+          className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] text-muted-foreground hover:text-foreground"><Download size={12} />导出</button>
+        <label className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] text-muted-foreground hover:text-foreground cursor-pointer">
+          <Upload size={12} />导入
+          <input type="file" accept=".json" className="hidden" onChange={(e) => {
+            const file = e.target.files?.[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => { const parsed = importDimension<WorldRole>(reader.result as string); if (parsed) onChange(parsed); };
+            reader.readAsText(file);
+          }} />
+        </label>
+      </div>
+
+      {batchMode ? (
+        <div className="space-y-2">
+          <textarea value={batchText} onChange={(e) => setBatchText(e.target.value)}
+            className="w-full rounded-md border border-border/40 bg-background px-3 py-2 text-xs font-mono min-h-[200px]" />
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setBatchMode(false)}
+              className="px-2 py-1 text-[10px] text-muted-foreground">取消</button>
+            <button type="button" onClick={applyBatch}
+              className="px-2 py-1 text-[10px] rounded bg-primary text-primary-foreground"><Check size={12} className="inline mr-1" />应用</button>
+          </div>
+        </div>
+      ) : (
+        entries.map((e, i) => (
+          <CollapsibleCard key={e.id} title={e.name || "(未命名)"} count={i + 1}>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <DragButtons index={i} total={entries.length} onMove={(from, to) => onChange(moveItem(entries, from, to))} />
+                <input value={e.name} onChange={(ev) => update(i, { name: ev.target.value })}
+                  className="flex-1 rounded-md border border-border/40 bg-background px-2 py-1 text-sm" placeholder="角色名" />
+                <select value={e.role} onChange={(ev) => update(i, { role: ev.target.value as any })}
+                  className="rounded-md border border-border/40 bg-background px-2 py-1 text-sm">
+                  <option value="主角">主角</option><option value="配角">配角</option><option value="反派">反派</option><option value="中立">中立</option>
+                </select>
+                <input type="number" min={1} max={5} value={e.significance} onChange={(ev) => update(i, { significance: parseInt(ev.target.value) || 3 })}
+                  className="w-16 rounded-md border border-border/40 bg-background px-2 py-1 text-xs text-center" title="重要性(1-5)" />
+                <button type="button" onClick={() => onChange(entries.filter((_, j) => j !== i))}
+                  className="text-muted-foreground/40 hover:text-destructive"><X size={14} /></button>
+              </div>
+              <textarea value={e.description} onChange={(ev) => update(i, { description: ev.target.value })}
+                className="w-full rounded-md border border-border/40 bg-background px-2 py-1 text-xs min-h-[60px]" placeholder="描述" />
+              <ReferenceDisplay dimension="roles" entityId={e.id} references={references} worldDraft={worldDraft} />
+            </div>
+          </CollapsibleCard>
+        ))
+      )}
+      <button type="button" onClick={() => onChange([...entries, { id: genId(), name: "", role: "配角", description: "", significance: 3, sortIndex: entries.length, institutionIds: [], regionIds: [] }])}
         className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><Plus size={12} /> 添加角色</button>
     </div>
   );
@@ -168,8 +511,7 @@ function RelationsEditor({ entries, allRoles, onChange }: {
   onChange: (v: WorldRelation[]) => void;
 }) {
   const update = (i: number, patch: Partial<WorldRelation>) => {
-    const next = entries.map((e, idx) => idx === i ? { ...e, ...patch } : e);
-    onChange(next);
+    onChange(entries.map((e, idx) => idx === i ? { ...e, ...patch } : e));
   };
   return (
     <div className="space-y-3">
@@ -179,6 +521,7 @@ function RelationsEditor({ entries, allRoles, onChange }: {
       {entries.map((e, i) => (
         <div key={e.id} className="rounded-lg border border-border/40 p-3 space-y-2">
           <div className="flex items-center gap-2">
+            <DragButtons index={i} total={entries.length} onMove={(from, to) => onChange(moveItem(entries, from, to))} />
             <select value={e.sourceId} onChange={(ev) => update(i, { sourceId: ev.target.value })}
               className="flex-1 rounded-md border border-border/40 bg-background px-2 py-1 text-sm">
               <option value="">选择源角色</option>
@@ -201,85 +544,97 @@ function RelationsEditor({ entries, allRoles, onChange }: {
             className="w-full rounded-md border border-border/40 bg-background px-2 py-1 text-xs min-h-[60px]" placeholder="关系描述" />
         </div>
       ))}
-      <button type="button" onClick={() => onChange([...entries, { id: genId(), sourceId: "", targetId: "", type: "", description: "" }])}
+      <button type="button" onClick={() => onChange([...entries, { id: genId(), sourceId: "", targetId: "", type: "", description: "", sortIndex: entries.length }])}
         className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><Plus size={12} /> 添加关系</button>
     </div>
   );
 }
 
-function RegionsEditor({ entries, onChange }: {
+function RegionsEditor({ entries, onChange, references, worldDraft, onAddRef }: {
   entries: WorldRegion[];
   onChange: (v: WorldRegion[]) => void;
+  references: WorldReference[];
+  worldDraft: WorldDraft;
+  onAddRef: (sourceDim: string, sourceId: string, targetDim: string, targetId: string, label: string) => void;
 }) {
   const update = (i: number, patch: Partial<WorldRegion>) => {
-    const next = entries.map((e, idx) => idx === i ? { ...e, ...patch } : e);
-    onChange(next);
+    onChange(entries.map((e, idx) => idx === i ? { ...e, ...patch } : e));
   };
   return (
     <div className="space-y-3">
       {entries.map((e, i) => (
-        <div key={e.id} className="rounded-lg border border-border/40 p-3 space-y-2">
-          <div className="flex items-center gap-2">
-            <input value={e.name} onChange={(ev) => update(i, { name: ev.target.value })}
-              className="flex-1 rounded-md border border-border/40 bg-background px-2 py-1 text-sm" placeholder="区域名" />
-            <select value={e.type} onChange={(ev) => update(i, { type: ev.target.value as any })}
-              className="rounded-md border border-border/40 bg-background px-2 py-1 text-sm">
-              <option value="大陆">大陆</option><option value="国家">国家</option><option value="城市">城市</option><option value="地点">地点</option>
-            </select>
-            <select value={e.parentId ?? ""} onChange={(ev) => update(i, { parentId: ev.target.value || null })}
-              className="rounded-md border border-border/40 bg-background px-2 py-1 text-sm">
-              <option value="">无父区域</option>
-              {entries.filter((r) => r.id !== e.id).map((r) => <option key={r.id} value={r.id}>{r.name || "(未命名)"}</option>)}
-            </select>
-            <button type="button" onClick={() => onChange(entries.filter((_, j) => j !== i))}
-              className="text-muted-foreground/40 hover:text-destructive"><X size={14} /></button>
+        <CollapsibleCard key={e.id} title={e.name || "(未命名)"} count={i + 1}>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <DragButtons index={i} total={entries.length} onMove={(from, to) => onChange(moveItem(entries, from, to))} />
+              <input value={e.name} onChange={(ev) => update(i, { name: ev.target.value })}
+                className="flex-1 rounded-md border border-border/40 bg-background px-2 py-1 text-sm" placeholder="区域名" />
+              <select value={e.type} onChange={(ev) => update(i, { type: ev.target.value as any })}
+                className="rounded-md border border-border/40 bg-background px-2 py-1 text-sm">
+                <option value="大陆">大陆</option><option value="国家">国家</option><option value="城市">城市</option><option value="地点">地点</option>
+              </select>
+              <select value={e.parentId ?? ""} onChange={(ev) => update(i, { parentId: ev.target.value || null })}
+                className="rounded-md border border-border/40 bg-background px-2 py-1 text-sm">
+                <option value="">无父区域</option>
+                {entries.filter((r) => r.id !== e.id).map((r) => <option key={r.id} value={r.id}>{r.name || "(未命名)"}</option>)}
+              </select>
+              <button type="button" onClick={() => onChange(entries.filter((_, j) => j !== i))}
+                className="text-muted-foreground/40 hover:text-destructive"><X size={14} /></button>
+            </div>
+            <textarea value={e.description} onChange={(ev) => update(i, { description: ev.target.value })}
+              className="w-full rounded-md border border-border/40 bg-background px-2 py-1 text-xs min-h-[60px]" placeholder="区域描述" />
+            <ReferenceDisplay dimension="regions" entityId={e.id} references={references} worldDraft={worldDraft} />
           </div>
-          <textarea value={e.description} onChange={(ev) => update(i, { description: ev.target.value })}
-            className="w-full rounded-md border border-border/40 bg-background px-2 py-1 text-xs min-h-[60px]" placeholder="区域描述" />
-        </div>
+        </CollapsibleCard>
       ))}
-      <button type="button" onClick={() => onChange([...entries, { id: genId(), name: "", type: "地点", parentId: null, description: "" }])}
+      <button type="button" onClick={() => onChange([...entries, { id: genId(), name: "", type: "地点", parentId: null, description: "", sortIndex: entries.length }])}
         className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><Plus size={12} /> 添加区域</button>
     </div>
   );
 }
 
-function InstitutionsEditor({ entries, allRoles, onChange }: {
+function InstitutionsEditor({ entries, allRoles, onChange, references, worldDraft, onAddRef }: {
   entries: WorldInstitution[];
   allRoles: WorldRole[];
   onChange: (v: WorldInstitution[]) => void;
+  references: WorldReference[];
+  worldDraft: WorldDraft;
+  onAddRef: (sourceDim: string, sourceId: string, targetDim: string, targetId: string, label: string) => void;
 }) {
   const update = (i: number, patch: Partial<WorldInstitution>) => {
-    const next = entries.map((e, idx) => idx === i ? { ...e, ...patch } : e);
-    onChange(next);
+    onChange(entries.map((e, idx) => idx === i ? { ...e, ...patch } : e));
   };
   return (
     <div className="space-y-3">
       {entries.map((e, i) => (
-        <div key={e.id} className="rounded-lg border border-border/40 p-3 space-y-2">
-          <div className="flex items-center gap-2">
-            <input value={e.name} onChange={(ev) => update(i, { name: ev.target.value })}
-              className="flex-1 rounded-md border border-border/40 bg-background px-2 py-1 text-sm" placeholder="组织名" />
-            <select value={e.type} onChange={(ev) => update(i, { type: ev.target.value as any })}
-              className="rounded-md border border-border/40 bg-background px-2 py-1 text-sm">
-              <option value="宗门">宗门</option><option value="国家">国家</option><option value="组织">组织</option><option value="家族">家族</option>
-            </select>
-            <button type="button" onClick={() => onChange(entries.filter((_, j) => j !== i))}
-              className="text-muted-foreground/40 hover:text-destructive"><X size={14} /></button>
+        <CollapsibleCard key={e.id} title={e.name || "(未命名)"} count={i + 1}>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <DragButtons index={i} total={entries.length} onMove={(from, to) => onChange(moveItem(entries, from, to))} />
+              <input value={e.name} onChange={(ev) => update(i, { name: ev.target.value })}
+                className="flex-1 rounded-md border border-border/40 bg-background px-2 py-1 text-sm" placeholder="组织名" />
+              <select value={e.type} onChange={(ev) => update(i, { type: ev.target.value as any })}
+                className="rounded-md border border-border/40 bg-background px-2 py-1 text-sm">
+                <option value="宗门">宗门</option><option value="国家">国家</option><option value="组织">组织</option><option value="家族">家族</option>
+              </select>
+              <button type="button" onClick={() => onChange(entries.filter((_, j) => j !== i))}
+                className="text-muted-foreground/40 hover:text-destructive"><X size={14} /></button>
+            </div>
+            <div className="flex items-center gap-2">
+              <select value={e.leaderId ?? ""} onChange={(ev) => update(i, { leaderId: ev.target.value || null })}
+                className="flex-1 rounded-md border border-border/40 bg-background px-2 py-1 text-sm">
+                <option value="">选择领袖</option>
+                {allRoles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
+              <span className="text-xs text-muted-foreground/60 shrink-0">成员: {e.members.length}</span>
+            </div>
+            <textarea value={e.description} onChange={(ev) => update(i, { description: ev.target.value })}
+              className="w-full rounded-md border border-border/40 bg-background px-2 py-1 text-xs min-h-[60px]" placeholder="描述" />
+            <ReferenceDisplay dimension="institutions" entityId={e.id} references={references} worldDraft={worldDraft} />
           </div>
-          <div className="flex items-center gap-2">
-            <select value={e.leaderId ?? ""} onChange={(ev) => update(i, { leaderId: ev.target.value || null })}
-              className="flex-1 rounded-md border border-border/40 bg-background px-2 py-1 text-sm">
-              <option value="">选择领袖</option>
-              {allRoles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-            </select>
-            <span className="text-xs text-muted-foreground/60 shrink-0">成员: {e.members.length}</span>
-          </div>
-          <textarea value={e.description} onChange={(ev) => update(i, { description: ev.target.value })}
-            className="w-full rounded-md border border-border/40 bg-background px-2 py-1 text-xs min-h-[60px]" placeholder="描述" />
-        </div>
+        </CollapsibleCard>
       ))}
-      <button type="button" onClick={() => onChange([...entries, { id: genId(), name: "", type: "组织", leaderId: null, members: [], description: "" }])}
+      <button type="button" onClick={() => onChange([...entries, { id: genId(), name: "", type: "组织", leaderId: null, members: [], description: "", sortIndex: entries.length, regionId: null }])}
         className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><Plus size={12} /> 添加组织</button>
     </div>
   );
@@ -290,28 +645,30 @@ function HistoryEditor({ entries, onChange }: {
   onChange: (v: WorldHistoryEvent[]) => void;
 }) {
   const update = (i: number, patch: Partial<WorldHistoryEvent>) => {
-    const next = entries.map((e, idx) => idx === i ? { ...e, ...patch } : e);
-    onChange(next);
+    onChange(entries.map((e, idx) => idx === i ? { ...e, ...patch } : e));
   };
   return (
     <div className="space-y-3">
       {entries.map((e, i) => (
-        <div key={e.id} className="rounded-lg border border-border/40 p-3 space-y-2">
-          <div className="flex items-center gap-2">
-            <input value={e.title} onChange={(ev) => update(i, { title: ev.target.value })}
-              className="flex-1 rounded-md border border-border/40 bg-background px-2 py-1 text-sm" placeholder="事件标题" />
-            <input value={e.timestamp} onChange={(ev) => update(i, { timestamp: ev.target.value })}
-              className="w-28 rounded-md border border-border/40 bg-background px-2 py-1 text-sm" placeholder="时间" />
-            <input type="number" min={1} max={5} value={e.significance} onChange={(ev) => update(i, { significance: parseInt(ev.target.value) || 3 })}
-              className="w-16 rounded-md border border-border/40 bg-background px-2 py-1 text-xs text-center" title="重要性(1-5)" />
-            <button type="button" onClick={() => onChange(entries.filter((_, j) => j !== i))}
-              className="text-muted-foreground/40 hover:text-destructive"><X size={14} /></button>
+        <CollapsibleCard key={e.id} title={e.title || "(未命名事件)"} count={i + 1}>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <DragButtons index={i} total={entries.length} onMove={(from, to) => onChange(moveItem(entries, from, to))} />
+              <input value={e.title} onChange={(ev) => update(i, { title: ev.target.value })}
+                className="flex-1 rounded-md border border-border/40 bg-background px-2 py-1 text-sm" placeholder="事件标题" />
+              <input value={e.timestamp} onChange={(ev) => update(i, { timestamp: ev.target.value })}
+                className="w-28 rounded-md border border-border/40 bg-background px-2 py-1 text-sm" placeholder="时间" />
+              <input type="number" min={1} max={5} value={e.significance} onChange={(ev) => update(i, { significance: parseInt(ev.target.value) || 3 })}
+                className="w-16 rounded-md border border-border/40 bg-background px-2 py-1 text-xs text-center" title="重要性(1-5)" />
+              <button type="button" onClick={() => onChange(entries.filter((_, j) => j !== i))}
+                className="text-muted-foreground/40 hover:text-destructive"><X size={14} /></button>
+            </div>
+            <textarea value={e.description} onChange={(ev) => update(i, { description: ev.target.value })}
+              className="w-full rounded-md border border-border/40 bg-background px-2 py-1 text-xs min-h-[60px]" placeholder="事件描述" />
           </div>
-          <textarea value={e.description} onChange={(ev) => update(i, { description: ev.target.value })}
-            className="w-full rounded-md border border-border/40 bg-background px-2 py-1 text-xs min-h-[60px]" placeholder="事件描述" />
-        </div>
+        </CollapsibleCard>
       ))}
-      <button type="button" onClick={() => onChange([...entries, { id: genId(), title: "", timestamp: "", description: "", affectedRegions: [], significance: 3 }])}
+      <button type="button" onClick={() => onChange([...entries, { id: genId(), title: "", timestamp: "", description: "", affectedRegions: [], significance: 3, sortIndex: entries.length }])}
         className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><Plus size={12} /> 添加历史事件</button>
     </div>
   );
@@ -322,137 +679,130 @@ function RulesEditor({ entries, onChange }: {
   onChange: (v: WorldRule[]) => void;
 }) {
   const update = (i: number, patch: Partial<WorldRule>) => {
-    const next = entries.map((e, idx) => idx === i ? { ...e, ...patch } : e);
-    onChange(next);
+    onChange(entries.map((e, idx) => idx === i ? { ...e, ...patch } : e));
   };
   return (
     <div className="space-y-3">
       {entries.map((e, i) => (
-        <div key={e.id} className="rounded-lg border border-border/40 p-3 space-y-2">
-          <div className="flex items-center gap-2">
-            <input value={e.name} onChange={(ev) => update(i, { name: ev.target.value })}
-              className="flex-1 rounded-md border border-border/40 bg-background px-2 py-1 text-sm" placeholder="规则名" />
-            <select value={e.type} onChange={(ev) => update(i, { type: ev.target.value as any })}
-              className="rounded-md border border-border/40 bg-background px-2 py-1 text-sm">
-              <option value="物理">物理</option><option value="魔法">魔法</option><option value="社会">社会</option><option value="叙事">叙事</option>
-            </select>
-            <button type="button" onClick={() => onChange(entries.filter((_, j) => j !== i))}
-              className="text-muted-foreground/40 hover:text-destructive"><X size={14} /></button>
+        <CollapsibleCard key={e.id} title={e.name || "(未命名)"} count={i + 1}>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <DragButtons index={i} total={entries.length} onMove={(from, to) => onChange(moveItem(entries, from, to))} />
+              <input value={e.name} onChange={(ev) => update(i, { name: ev.target.value })}
+                className="flex-1 rounded-md border border-border/40 bg-background px-2 py-1 text-sm" placeholder="规则名" />
+              <select value={e.type} onChange={(ev) => update(i, { type: ev.target.value as any })}
+                className="rounded-md border border-border/40 bg-background px-2 py-1 text-sm">
+                <option value="物理">物理</option><option value="魔法">魔法</option><option value="社会">社会</option><option value="叙事">叙事</option>
+              </select>
+              <button type="button" onClick={() => onChange(entries.filter((_, j) => j !== i))}
+                className="text-muted-foreground/40 hover:text-destructive"><X size={14} /></button>
+            </div>
+            <textarea value={e.description} onChange={(ev) => update(i, { description: ev.target.value })}
+              className="w-full rounded-md border border-border/40 bg-background px-2 py-1 text-xs min-h-[60px]" placeholder="规则描述" />
           </div>
-          <textarea value={e.description} onChange={(ev) => update(i, { description: ev.target.value })}
-            className="w-full rounded-md border border-border/40 bg-background px-2 py-1 text-xs min-h-[60px]" placeholder="规则描述" />
-        </div>
+        </CollapsibleCard>
       ))}
-      <button type="button" onClick={() => onChange([...entries, { id: genId(), name: "", type: "叙事", description: "", constraints: [] }])}
+      <button type="button" onClick={() => onChange([...entries, { id: genId(), name: "", type: "叙事", description: "", constraints: [], sortIndex: entries.length }])}
         className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"><Plus size={12} /> 添加规则</button>
     </div>
   );
 }
 
-// ── Read-only dimension display ──
+// ── Read-only dimension display (enhanced with refs) ──
 
-function ReadonlyDimension({ dimension, entries, allRoles }: {
+function ReadonlyDimension({ dimension, entries, allRoles, references, worldDraft }: {
   dimension: string;
   entries: unknown[];
   allRoles: WorldRole[];
+  references: WorldReference[];
+  worldDraft: WorldDraft;
 }) {
   const meta = DIMENSION_META[dimension];
   if (!entries || entries.length === 0) {
     return <p className="text-xs text-muted-foreground/50 py-8 text-center italic">暂无{meta?.label ?? dimension}数据</p>;
   }
 
+  const roleMap = new Map(allRoles.map((r) => [r.id, r.name]));
+  const regionMap = new Map((worldDraft.regions ?? []).map((r) => [r.id, r.name]));
+
   if (dimension === "settings") {
     const items = entries as WorldSettingEntry[];
-    return <div className="space-y-2">{
-      items.map((e) => (
-        <div key={e.id} className="rounded-lg border border-border/40 p-3">
-          <div className="flex items-center gap-2 mb-1"><span className="font-medium text-sm">{e.name}</span><span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{e.type}</span></div>
-          <p className="text-xs text-muted-foreground">{e.description || "无描述"}</p>
-        </div>
-      ))
-    }</div>;
+    return <div className="space-y-2">{items.map((e) => (
+      <div key={e.id} className="rounded-lg border border-border/40 p-3">
+        <div className="flex items-center gap-2 mb-1"><span className="font-medium text-sm">{e.name}</span><span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{e.type}</span></div>
+        <p className="text-xs text-muted-foreground">{e.description || "无描述"}</p>
+        <ReferenceDisplay dimension="settings" entityId={e.id} references={references} worldDraft={worldDraft} />
+      </div>
+    ))}</div>;
   }
 
   if (dimension === "roles") {
     const items = entries as WorldRole[];
-    return <div className="space-y-2">{
-      items.map((e) => (
-        <div key={e.id} className="rounded-lg border border-border/40 p-3">
-          <div className="flex items-center gap-2 mb-1"><span className="font-medium text-sm">{e.name}</span><span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{e.role}</span><span className="text-[10px] text-muted-foreground/60">重要性: {e.significance}/5</span></div>
-          <p className="text-xs text-muted-foreground">{e.description || "无描述"}</p>
-        </div>
-      ))
-    }</div>;
+    return <div className="space-y-2">{items.map((e) => (
+      <div key={e.id} className="rounded-lg border border-border/40 p-3">
+        <div className="flex items-center gap-2 mb-1"><span className="font-medium text-sm">{e.name}</span><span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{e.role}</span><span className="text-[10px] text-muted-foreground/60">重要性: {e.significance}/5</span></div>
+        <p className="text-xs text-muted-foreground">{e.description || "无描述"}</p>
+        <ReferenceDisplay dimension="roles" entityId={e.id} references={references} worldDraft={worldDraft} />
+      </div>
+    ))}</div>;
   }
 
   if (dimension === "relations") {
-    const roleMap = new Map(allRoles.map((r) => [r.id, r.name]));
     const items = entries as WorldRelation[];
-    return <div className="space-y-2">{
-      items.map((e) => (
-        <div key={e.id} className="rounded-lg border border-border/40 p-3">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-medium text-sm">{roleMap.get(e.sourceId) || e.sourceId}</span>
-            <span className="text-[10px] text-muted-foreground/60">→ {e.type || "关联"} →</span>
-            <span className="font-medium text-sm">{roleMap.get(e.targetId) || e.targetId}</span>
-          </div>
-          <p className="text-xs text-muted-foreground">{e.description || "无描述"}</p>
+    return <div className="space-y-2">{items.map((e) => (
+      <div key={e.id} className="rounded-lg border border-border/40 p-3">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="font-medium text-sm">{roleMap.get(e.sourceId) || e.sourceId}</span>
+          <span className="text-[10px] text-muted-foreground/60">→ {e.type || "关联"} →</span>
+          <span className="font-medium text-sm">{roleMap.get(e.targetId) || e.targetId}</span>
         </div>
-      ))
-    }</div>;
+        <p className="text-xs text-muted-foreground">{e.description || "无描述"}</p>
+      </div>
+    ))}</div>;
   }
 
   if (dimension === "regions") {
-    const regionMap = new Map((entries as WorldRegion[]).map((r) => [r.id, r.name]));
     const items = entries as WorldRegion[];
-    return <div className="space-y-2">{
-      items.map((e) => (
-        <div key={e.id} className="rounded-lg border border-border/40 p-3">
-          <div className="flex items-center gap-2 mb-1"><span className="font-medium text-sm">{e.name}</span><span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{e.type}</span>{e.parentId && <span className="text-[10px] text-muted-foreground/60">属于: {regionMap.get(e.parentId) || "?"}</span>}</div>
-          <p className="text-xs text-muted-foreground">{e.description || "无描述"}</p>
-        </div>
-      ))
-    }</div>;
+    return <div className="space-y-2">{items.map((e) => (
+      <div key={e.id} className="rounded-lg border border-border/40 p-3">
+        <div className="flex items-center gap-2 mb-1"><span className="font-medium text-sm">{e.name}</span><span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{e.type}</span>{e.parentId && <span className="text-[10px] text-muted-foreground/60">属于: {regionMap.get(e.parentId) || "?"}</span>}</div>
+        <p className="text-xs text-muted-foreground">{e.description || "无描述"}</p>
+        <ReferenceDisplay dimension="regions" entityId={e.id} references={references} worldDraft={worldDraft} />
+      </div>
+    ))}</div>;
   }
 
   if (dimension === "institutions") {
-    const roleMap = new Map(allRoles.map((r) => [r.id, r.name]));
     const items = entries as WorldInstitution[];
-    return <div className="space-y-2">{
-      items.map((e) => (
-        <div key={e.id} className="rounded-lg border border-border/40 p-3">
-          <div className="flex items-center gap-2 mb-1"><span className="font-medium text-sm">{e.name}</span><span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{e.type}</span>{e.leaderId && <span className="text-[10px] text-muted-foreground/60">领袖: {roleMap.get(e.leaderId) || "?"}</span>}</div>
-          <p className="text-xs text-muted-foreground">{e.description || "无描述"}</p>
-        </div>
-      ))
-    }</div>;
+    return <div className="space-y-2">{items.map((e) => (
+      <div key={e.id} className="rounded-lg border border-border/40 p-3">
+        <div className="flex items-center gap-2 mb-1"><span className="font-medium text-sm">{e.name}</span><span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{e.type}</span>{e.leaderId && <span className="text-[10px] text-muted-foreground/60">领袖: {roleMap.get(e.leaderId) || "?"}</span>}</div>
+        <p className="text-xs text-muted-foreground">{e.description || "无描述"}</p>
+        <ReferenceDisplay dimension="institutions" entityId={e.id} references={references} worldDraft={worldDraft} />
+      </div>
+    ))}</div>;
   }
 
   if (dimension === "history") {
     const items = entries as WorldHistoryEvent[];
-    return <div className="space-y-2">{
-      items.map((e) => (
-        <div key={e.id} className="rounded-lg border border-border/40 p-3">
-          <div className="flex items-center gap-2 mb-1"><span className="font-medium text-sm">{e.title}</span><span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">时间: {e.timestamp}</span><span className="text-[10px] text-muted-foreground/60">重要性: {e.significance}/5</span></div>
-          <p className="text-xs text-muted-foreground">{e.description || "无描述"}</p>
-        </div>
-      ))
-    }</div>;
-  }
-
-  // rules
-  const items = entries as WorldRule[];
-  return <div className="space-y-2">{
-    items.map((e) => (
+    return <div className="space-y-2">{items.map((e) => (
       <div key={e.id} className="rounded-lg border border-border/40 p-3">
-        <div className="flex items-center gap-2 mb-1"><span className="font-medium text-sm">{e.name}</span><span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{e.type}</span></div>
+        <div className="flex items-center gap-2 mb-1"><span className="font-medium text-sm">{e.title}</span><span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">时间: {e.timestamp}</span><span className="text-[10px] text-muted-foreground/60">重要性: {e.significance}/5</span></div>
         <p className="text-xs text-muted-foreground">{e.description || "无描述"}</p>
       </div>
-    ))
-  }</div>;
+    ))}</div>;
+  }
+
+  const items = entries as WorldRule[];
+  return <div className="space-y-2">{items.map((e) => (
+    <div key={e.id} className="rounded-lg border border-border/40 p-3">
+      <div className="flex items-center gap-2 mb-1"><span className="font-medium text-sm">{e.name}</span><span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{e.type}</span></div>
+      <p className="text-xs text-muted-foreground">{e.description || "无描述"}</p>
+    </div>
+  ))}</div>;
 }
 
-// ── Create Book Dialog (Issue #83) ──
+// ── Create Book Dialog ──
 
 function CreateBookDialog({ world, onClose, nav }: {
   world: WorldDraft;
@@ -483,7 +833,6 @@ function CreateBookDialog({ world, onClose, nav }: {
       const bookId = `book-${Date.now()}`;
       const now = new Date().toISOString();
 
-      // Create the book
       const bookBody = {
         id: bookId,
         title: bookTitle,
@@ -499,17 +848,13 @@ function CreateBookDialog({ world, onClose, nav }: {
 
       await postApi(`/books/${encodeURIComponent(bookId)}`, bookBody);
 
-      // If full mode or projection mode with selected dimensions, save world context
       if (mode === "full" || selectedDimensions.size > 0) {
         const dims = mode === "full" ? WORLD_DIMENSION_KEYS : Array.from(selectedDimensions);
         const contextData: Record<string, unknown> = {};
         for (const key of dims) {
           contextData[key] = (world as Record<string, unknown>)[key] ?? [];
         }
-        // Save the world dimensions to book's context
-        await postApi(`/books/${encodeURIComponent(bookId)}/writing`, {
-          worldContext: contextData,
-        });
+        await postApi(`/books/${encodeURIComponent(bookId)}/writing`, { worldContext: contextData });
       }
 
       onClose();
@@ -525,14 +870,12 @@ function CreateBookDialog({ world, onClose, nav }: {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
       <div className="bg-card rounded-xl border border-border/60 shadow-xl p-6 w-full max-w-lg mx-4" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold mb-4">从世界创建小说</h2>
-
         <div className="space-y-4">
           <div>
             <label className="text-xs text-muted-foreground block mb-1">小说名称</label>
             <input value={bookTitle} onChange={(e) => setBookTitle(e.target.value)}
               className="w-full rounded-lg border border-border/40 bg-background px-3 py-2 text-sm" placeholder="输入小说名称" />
           </div>
-
           <div>
             <label className="text-xs text-muted-foreground block mb-2">继承模式</label>
             <div className="flex gap-3">
@@ -550,7 +893,6 @@ function CreateBookDialog({ world, onClose, nav }: {
               </button>
             </div>
           </div>
-
           {mode === "projection" && (
             <div>
               <label className="text-xs text-muted-foreground block mb-2">选择要继承的维度</label>
@@ -567,14 +909,12 @@ function CreateBookDialog({ world, onClose, nav }: {
               </div>
             </div>
           )}
-
           {error && <p className="text-xs text-destructive">{error}</p>}
-
           <div className="flex items-center justify-end gap-2 pt-2">
             <button type="button" onClick={onClose}
-              className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">取消</button>
+              className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground">取消</button>
             <button type="button" onClick={handleCreate} disabled={creating || !bookTitle.trim()}
-              className="px-4 py-1.5 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-30">
+              className="px-4 py-1.5 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-30">
               {creating ? "创建中…" : "创建小说"}
             </button>
           </div>
@@ -599,13 +939,19 @@ export function WorldDetailPage({ worldId, nav }: WorldDetailProps) {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [showCreateBook, setShowCreateBook] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteRefWarning, setDeleteRefWarning] = useState<string[]>([]);
 
-  // Initialize draft from loaded data
+  // Initialize draft
   useEffect(() => {
     if (data?.world && !isCreateMode) {
       setDraft(worldToDraft(data.world));
     }
   }, [data, isCreateMode]);
+
+  // Jump to search result
+  const handleJumpToSearchResult = useCallback((dimension: string, entityId: string) => {
+    setActiveTab(dimension);
+  }, []);
 
   const handleSave = useCallback(async () => {
     setSaving(true);
@@ -613,42 +959,38 @@ export function WorldDetailPage({ worldId, nav }: WorldDetailProps) {
     try {
       if (isCreateMode) {
         const now = new Date().toISOString();
-        const worldId = draft.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || `world-${Date.now()}`;
+        const wid = draft.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || `world-${Date.now()}`;
         const fullWorld: WorldConfig = {
-          id: worldId,
+          id: wid,
           name: draft.name,
           description: draft.description,
           createdAt: now,
           updatedAt: now,
-          settings: draft.settings,
-          roles: draft.roles,
-          relations: draft.relations,
-          regions: draft.regions,
-          institutions: draft.institutions,
-          history: draft.history,
-          rules: draft.rules,
+          settings: draft.settings as any,
+          roles: draft.roles as any,
+          relations: draft.relations as any,
+          regions: draft.regions as any,
+          institutions: draft.institutions as any,
+          history: draft.history as any,
+          rules: draft.rules as any,
+          references: draft.references as any,
         };
-        await fetchJson("/api/worlds", {
-          method: "POST",
-          body: JSON.stringify(fullWorld),
-        });
+        await fetchJson("/api/worlds", { method: "POST", body: JSON.stringify(fullWorld) });
         if (nav?.toWorlds) nav.toWorlds();
       } else {
         const update: WorldConfigUpdate = {
           name: draft.name,
           description: draft.description,
-          settings: draft.settings,
-          roles: draft.roles,
-          relations: draft.relations,
-          regions: draft.regions,
-          institutions: draft.institutions,
-          history: draft.history,
-          rules: draft.rules,
+          settings: draft.settings as any,
+          roles: draft.roles as any,
+          relations: draft.relations as any,
+          regions: draft.regions as any,
+          institutions: draft.institutions as any,
+          history: draft.history as any,
+          rules: draft.rules as any,
+          references: draft.references as any,
         };
-        await fetchJson(`/api/worlds/${encodeURIComponent(worldId!)}`, {
-          method: "PUT",
-          body: JSON.stringify(update),
-        });
+        await fetchJson(`/api/worlds/${encodeURIComponent(worldId!)}`, { method: "PUT", body: JSON.stringify(update) });
         setIsEditing(false);
         await refetch();
       }
@@ -669,8 +1011,28 @@ export function WorldDetailPage({ worldId, nav }: WorldDetailProps) {
     }
   }, [worldId, nav]);
 
-  // ── Loading / Error states ──
+  const handleAddRef = useCallback((sourceDim: string, sourceId: string, targetDim: string, targetId: string, label: string) => {
+    const newRef = { id: genId(), sourceDimension: sourceDim, sourceId, targetDimension: targetDim, targetId, label };
+    setDraft((prev) => ({ ...prev, references: [...(prev.references ?? []), newRef] }));
+  }, []);
 
+  const handlePreDeleteCheck = useCallback(async (dimension: string, entityId: string) => {
+    try {
+      const res = await fetchJson(`/api/worlds/${encodeURIComponent(worldId!)}/search?q=${entityId}`);
+      // Client-side ref check
+      const refs = (draft.references ?? []).filter(
+        (r) => (r.sourceDimension === dimension && r.sourceId === entityId) ||
+               (r.targetDimension === dimension && r.targetId === entityId),
+      );
+      if (refs.length > 0) {
+        setDeleteRefWarning(refs.map((r) => `${r.sourceDimension}→${r.targetDimension}`));
+        return false;
+      }
+      return true;
+    } catch { return true; }
+  }, [worldId, draft.references]);
+
+  // Loading / Error states
   if (!isCreateMode && loading) {
     return (
       <div className="space-y-4 animate-pulse">
@@ -707,36 +1069,34 @@ export function WorldDetailPage({ worldId, nav }: WorldDetailProps) {
             )}
           </div>
         </div>
-
         <div className="flex items-center gap-2">
           {!isCreateMode && (
             <>
               <button type="button" onClick={() => setShowCreateBook(true)}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-border/40 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors">
-                <BookPlus size={14} />
-                从该世界创建小说
+                <BookPlus size={14} />从该世界创建小说
               </button>
               {!isEditing ? (
                 <button type="button" onClick={() => setIsEditing(true)}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 transition-opacity">
-                  编辑
-                </button>
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 transition-opacity">编辑</button>
               ) : null}
-              <button type="button" onClick={() => setShowDeleteConfirm(true)}
+              <button type="button" onClick={() => { if (draft.references?.length) setDeleteRefWarning(draft.references.map(r => `${r.sourceDimension}→${r.targetDimension}`)); setShowDeleteConfirm(true); }}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-destructive/30 px-3 py-1.5 text-xs text-destructive hover:bg-destructive/5 transition-colors">
-                <Trash2 size={14} />
-                删除
+                <Trash2 size={14} />删除
               </button>
             </>
           )}
         </div>
       </div>
 
+      {/* Search bar (view mode) */}
+      {!isCreateMode && !isEditing && worldId && (
+        <WorldSearchBar worldId={worldId} onJump={handleJumpToSearchResult} />
+      )}
+
       {/* Save error */}
       {saveError && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
-          {saveError}
-        </div>
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">{saveError}</div>
       )}
 
       {/* Create Mode: Basic Info */}
@@ -789,33 +1149,30 @@ export function WorldDetailPage({ worldId, nav }: WorldDetailProps) {
 
       {/* Tab Content */}
       <div className="min-h-[300px]">
-        {/* GeoViz button for regions tab (view & edit mode) */}
         {activeTab === "regions" && !isCreateMode && worldId && draft.regions.length > 0 && (
           <div className="flex items-center justify-end mb-3">
-            <button
-              type="button"
-              onClick={() => { if (nav?.toWorldGeoViz) nav.toWorldGeoViz(worldId); }}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border/40 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors"
-            >
-              <Globe size={14} />
-              地理可视化
+            <button type="button" onClick={() => { if (nav?.toWorldGeoViz) nav.toWorldGeoViz(worldId); }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border/40 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors">
+              <Globe size={14} />地理可视化
             </button>
           </div>
         )}
         {isEditing ? (
           <>
-            {activeTab === "settings" && <SettingsEditor entries={draft.settings} onChange={(v) => setDraft((prev) => ({ ...prev, settings: v }))} />}
-            {activeTab === "roles" && <RolesEditor entries={draft.roles} onChange={(v) => setDraft((prev) => ({ ...prev, roles: v }))} />}
+            {activeTab === "settings" && <SettingsEditor entries={draft.settings} onChange={(v) => setDraft((prev) => ({ ...prev, settings: v }))} references={draft.references ?? []} worldDraft={draft} onAddRef={handleAddRef} />}
+            {activeTab === "roles" && <RolesEditor entries={draft.roles} onChange={(v) => setDraft((prev) => ({ ...prev, roles: v }))} references={draft.references ?? []} worldDraft={draft} onAddRef={handleAddRef} />}
             {activeTab === "relations" && <RelationsEditor entries={draft.relations} allRoles={draft.roles} onChange={(v) => setDraft((prev) => ({ ...prev, relations: v }))} />}
-            {activeTab === "regions" && <RegionsEditor entries={draft.regions} onChange={(v) => setDraft((prev) => ({ ...prev, regions: v }))} />}
-            {activeTab === "institutions" && <InstitutionsEditor entries={draft.institutions} allRoles={draft.roles} onChange={(v) => setDraft((prev) => ({ ...prev, institutions: v }))} />}
+            {activeTab === "regions" && <RegionsEditor entries={draft.regions} onChange={(v) => setDraft((prev) => ({ ...prev, regions: v }))} references={draft.references ?? []} worldDraft={draft} onAddRef={handleAddRef} />}
+            {activeTab === "institutions" && <InstitutionsEditor entries={draft.institutions} allRoles={draft.roles} onChange={(v) => setDraft((prev) => ({ ...prev, institutions: v }))} references={draft.references ?? []} worldDraft={draft} onAddRef={handleAddRef} />}
             {activeTab === "history" && <HistoryEditor entries={draft.history} onChange={(v) => setDraft((prev) => ({ ...prev, history: v }))} />}
             {activeTab === "rules" && <RulesEditor entries={draft.rules} onChange={(v) => setDraft((prev) => ({ ...prev, rules: v }))} />}
           </>
         ) : (
           <ReadonlyDimension dimension={activeTab}
             entries={(draft as Record<string, unknown[]>)[activeTab] ?? []}
-            allRoles={draft.roles} />
+            allRoles={draft.roles}
+            references={draft.references ?? []}
+            worldDraft={draft} />
         )}
       </div>
 
@@ -824,23 +1181,28 @@ export function WorldDetailPage({ worldId, nav }: WorldDetailProps) {
         <div className="flex items-center justify-end gap-2 pt-4 border-t border-border/40">
           {!isCreateMode && (
             <button type="button" onClick={() => { setIsEditing(false); if (data?.world) setDraft(worldToDraft(data.world)); }}
-              className="px-4 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors">
-              取消
-            </button>
+              className="px-4 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors">取消</button>
           )}
           <button type="button" onClick={handleSave} disabled={saving || !draft.name.trim()}
             className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-30">
-            <Save size={14} />
-            {saving ? "保存中…" : "保存"}
+            <Save size={14} />{saving ? "保存中…" : "保存"}
           </button>
         </div>
       )}
 
-      {/* Delete confirmation */}
+      {/* Delete confirmation with ref warning */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowDeleteConfirm(false)}>
           <div className="bg-card rounded-xl border border-border/60 shadow-xl p-6 w-full max-w-sm mx-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="text-base font-semibold mb-2">确认删除</h3>
+            {deleteRefWarning.length > 0 && (
+              <div className="mb-3 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/30">
+                <div className="flex items-center gap-1.5 text-[11px] text-amber-700 dark:text-amber-400 mb-1">
+                  <AlertTriangle size={12} />引用关系警告
+                </div>
+                <p className="text-[10px] text-amber-600 dark:text-amber-500">存在 {deleteRefWarning.length} 个引用关系，删除后将一并移除。是否继续？</p>
+              </div>
+            )}
             <p className="text-sm text-muted-foreground mb-4">确定要删除"{draft.name}"吗？此操作不可撤销。</p>
             <div className="flex items-center justify-end gap-2">
               <button type="button" onClick={() => setShowDeleteConfirm(false)}
@@ -852,7 +1214,7 @@ export function WorldDetailPage({ worldId, nav }: WorldDetailProps) {
         </div>
       )}
 
-      {/* Create Book Dialog (#83) */}
+      {/* Create Book Dialog */}
       {showCreateBook && (
         <CreateBookDialog world={draft} onClose={() => setShowCreateBook(false)} nav={nav} />
       )}
