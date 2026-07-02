@@ -682,7 +682,14 @@ export { runScriptCreation, runStoryboardCreation, runInteractiveFilmCreation, c
 export { ScriptCreationAgent, StoryboardCreationAgent, InteractiveFilmCreationAgent, renderScriptSpec, renderStoryboardSpec, renderInteractiveFilmSpec, type ScriptCreationInput, type ScriptTargetFormat, type StoryboardCreationInput, type InteractiveFilmCreationInput } from "./agents/script-storyboard.js";
 
 // State
-export { StateManager } from "./state/manager.js";
+export {
+  extractWorldFromBook,
+  type ExtractWorldFromBookInput,
+} from "./models/book-world-extraction.js";
+export {
+  StateManager,
+  type BookWithWorldContext,
+} from "./state/manager.js";
 export { bootstrapStructuredStateFromMarkdown } from "./state/state-bootstrap.js";
 export { renderCurrentStateProjection, renderHooksProjection, renderChapterSummariesProjection } from "./state/state-projections.js";
 export { applyRuntimeStateDelta, type RuntimeStateSnapshot } from "./state/state-reducer.js";
