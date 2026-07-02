@@ -5,6 +5,7 @@ import { fetchJson } from "../hooks/use-api";
 import type { SkillConfig, SkillCategory, TriggerConfig, InjectionConfig, AgentRole } from "@actalk/inkos-core";
 import { SKILL_CATEGORY_LABELS, AGENT_ROLE_LABELS, AgentRoleEnum } from "@actalk/inkos-core";
 import { AGENTS } from "./AgentCard";
+import { TriggerBuilder } from "./TriggerBuilder";
 
 interface ApiSkillResponse {
   readonly config: SkillConfig;
@@ -24,11 +25,6 @@ const INJECTION_TARGET_LABELS: Record<InjectionConfig["target"], string> = {
   system_prompt: "System Prompt",
   user_prompt: "User Prompt",
   context: "Context",
-};
-
-const TRIGGER_TYPE_LABELS: Record<TriggerConfig["type"], string> = {
-  manual: "Manual",
-  condition: "Condition",
 };
 
 function makeEmptySkill(id: string): SkillConfig {
@@ -241,71 +237,11 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft 
                 />
               </section>
 
-              {/* Triggers */}
-              <section className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-[13px] font-medium text-foreground">触发条件</label>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setDraft({ ...draft, triggers: [...draft.triggers, { type: "manual" }] })
-                    }
-                    className="inline-flex items-center gap-1 rounded-md border border-border/50 px-2 py-1 text-[12px] text-muted-foreground hover:bg-secondary/50 transition-colors"
-                  >
-                    <Plus size={12} />
-                    添加
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {draft.triggers.map((trigger, idx) => (
-                    <div key={idx} className="flex items-start gap-2 rounded-lg border border-border/40 bg-card p-3">
-                      <select
-                        value={trigger.type}
-                        onChange={(e) => {
-                          const next = [...draft.triggers];
-                          next[idx] = {
-                            type: e.target.value as TriggerConfig["type"],
-                            ...(e.target.value === "condition" ? { condition: "" } : {}),
-                          } as TriggerConfig;
-                          setDraft({ ...draft, triggers: next });
-                        }}
-                        className="rounded-md border border-border/40 bg-background px-2 py-1.5 text-sm outline-none focus:border-primary/50"
-                      >
-                        {Object.entries(TRIGGER_TYPE_LABELS).map(([value, label]) => (
-                          <option key={value} value={value}>{label}</option>
-                        ))}
-                      </select>
-                      {trigger.type === "condition" && (
-                        <input
-                          type="text"
-                          value={trigger.condition ?? ""}
-                          onChange={(e) => {
-                            const next = [...draft.triggers];
-                            next[idx] = { ...trigger, condition: e.target.value };
-                            setDraft({ ...draft, triggers: next });
-                          }}
-                          placeholder="例如 session.kind === 'book'"
-                          className="flex-1 rounded-md border border-border/40 bg-background px-2 py-1.5 text-sm outline-none focus:border-primary/50"
-                        />
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const next = draft.triggers.filter((_, i) => i !== idx);
-                          setDraft({ ...draft, triggers: next });
-                        }}
-                        className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
-                        aria-label="删除触发器"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  ))}
-                  {draft.triggers.length === 0 && (
-                    <p className="text-xs text-muted-foreground/60">暂无触发条件</p>
-                  )}
-                </div>
-              </section>
+              {/* Triggers — Visual Builder */}
+              <TriggerBuilder
+                triggers={draft.triggers}
+                onChange={(newTriggers) => setDraft({ ...draft, triggers: newTriggers })}
+              />
 
               {/* Injection */}
               <section className="space-y-3">
