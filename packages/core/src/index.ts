@@ -646,6 +646,26 @@ export async function sendWebhook(
   await transport.sendWebhook(config, payload);
 }
 
+// ── Full-Text Search (Ar-2) ──
+export {
+  createSearchIndex,
+  addToIndex,
+  removeFromIndex,
+  search,
+  highlightSnippet,
+  loadSearchIndex,
+  persistSearchIndex,
+  buildIndexFromSessions,
+  rebuildSearchIndex,
+  searchSessions,
+  tokenize,
+  searchIndexPath,
+  type SearchIndex,
+  type SearchDoc,
+  type SearchResult,
+  type SearchMatch,
+} from "./search/search-index.js";
+
 // ── Interactive Film (story graph) ──
 export {
   StoryGraphSchema,
