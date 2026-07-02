@@ -12,6 +12,7 @@
 import { describe, it, expect } from "vitest";
 import { loadSystemPrompt, FALLBACK_PROMPTS, type AgentType } from "../prompt-loader.js";
 import { assembleSystemPromptSync } from "../assemble-system-prompt.js";
+import { SkillConfigSchema } from "../../models/skill-config.js";
 
 const ALL_AGENT_TYPES: ReadonlyArray<AgentType> = [
   "writer",
@@ -89,6 +90,70 @@ describe("assembleSystemPromptSync", () => {
   it("should work correctly with no options", () => {
     const prompt = assembleSystemPromptSync("architect");
     expect(prompt.trim().length).toBeGreaterThan(0);
+  });
+
+  it("injects enabled skills appended to the prompt", () => {
+    const skill = SkillConfigSchema.parse({
+      id: "style-imitation",
+      category: "writing",
+      triggers: [],
+      injection: { mode: "append", target: "system_prompt", priority: 80 },
+      prompt: "Imitate the concise, modern Chinese prose style.",
+    });
+    const prompt = assembleSystemPromptSync("writer", { skills: [skill] });
+    expect(prompt).toContain("## Skill 注入");
+    expect(prompt).toContain("Imitate the concise, modern Chinese prose style.");
+    expect(prompt).toContain("[style-imitation]");
+  });
+
+  it("does not inject disabled skills", () => {
+    const skill = SkillConfigSchema.parse({
+      id: "disabled-skill",
+      category: "writing",
+      enabled: false,
+      prompt: "Should not appear",
+    });
+    const prompt = assembleSystemPromptSync("writer", { skills: [skill] });
+    expect(prompt).not.toContain("Should not appear");
+    expect(prompt).not.toContain("## Skill 注入");
+  });
+
+  it("evaluates manual trigger before injection", () => {
+    const skill = SkillConfigSchema.parse({
+      id: "manual-only",
+      category: "writing",
+      triggers: [{ type: "manual" }],
+      prompt: "Manual content",
+    });
+    const withoutInvocation = assembleSystemPromptSync("writer", { skills: [skill] });
+    expect(withoutInvocation).not.toContain("Manual content");
+
+    const withInvocation = assembleSystemPromptSync("writer", {
+      skills: [skill],
+      skillInjectionContext: { manuallyInvokedSkillIds: new Set(["manual-only"]) },
+    });
+    expect(withInvocation).toContain("Manual content");
+  });
+
+  it("evaluates condition trigger before injection", () => {
+    const skill = SkillConfigSchema.parse({
+      id: "condition-skill",
+      category: "analysis",
+      triggers: [{ type: "condition", condition: "language === 'zh'" }],
+      prompt: "Condition content",
+    });
+    const zh = assembleSystemPromptSync("writer", {
+      skills: [skill],
+      skillInjectionContext: { language: "zh" },
+    });
+    expect(zh).toContain("Condition content");
+
+    const en = assembleSystemPromptSync("writer", {
+      language: "en",
+      skills: [skill],
+      skillInjectionContext: { language: "en" },
+    });
+    expect(en).not.toContain("Condition content");
   });
 });
 

@@ -108,6 +108,7 @@ export const SkillConfigSchema = z.object({
   params: z.record(z.string(), ParamDefSchema).default({}),
   enabled: z.boolean().default(true),
   description: z.string().default(""),
+  prompt: z.string().default(""),
 });
 export type SkillConfig = z.infer<typeof SkillConfigSchema>;
 
