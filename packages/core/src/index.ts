@@ -359,6 +359,11 @@ export {
   migrateBookSession,
   createAndPersistBookSession,
   SessionAlreadyMigratedError,
+  archiveBookSession,
+  unarchiveBookSession,
+  batchArchiveBookSessions,
+  mergeBookSessions,
+  autoArchiveStaleSessions,
 } from "./interaction/book-session-store.js";
 export {
   appendManualSessionMessages,
@@ -369,6 +374,24 @@ export {
   transcriptPath,
   legacyBookSessionPath,
 } from "./interaction/session-transcript.js";
+export {
+  SessionTagSchema,
+  SessionTagsFileSchema,
+  TAG_COLORS,
+  type SessionTag,
+  type SessionTagsFile,
+  type TagColorId,
+  type TagColorHex,
+} from "./interaction/session-tags.js";
+export {
+  loadSessionTags,
+  getSessionTags,
+  addSessionTag,
+  removeSessionTag,
+  listTagsByName,
+  resolveSessionTagsPath,
+  persistSessionTags,
+} from "./interaction/session-tag-store.js";
 export {
   cleanRestoredAgentMessages,
   committedMessageEvents,
