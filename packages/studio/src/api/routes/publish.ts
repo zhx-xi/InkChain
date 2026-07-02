@@ -10,12 +10,13 @@
 //   POST  /api/publish/:bookId/publish          — full publish flow
 
 import { Hono } from "hono";
-import { readFile, readdir } from "node:fs/promises";
-import { join } from "node:path";
+import { readFile, readdir, writeFile, mkdir } from "node:fs/promises";
+import { join, dirname } from "node:path";
 import { existsSync } from "node:fs";
 import { ApiError } from "../errors.js";
 import {
   getAdapter,
+  buildExportArtifact,
   type PublishPlatform,
   type PublishChapter,
   type ValidationWarning,
@@ -344,6 +345,84 @@ export function createPublishRouter(root: string) {
       formatted,
       message: `已成功发布 ${selectedChapters.length} 章到 ${adapter.getName()}`,
     });
+  });
+
+  // ── P2-3: Export Enhancement — EPUB download ──
+  router.get("/:bookId/export-epub", async (c) => {
+    const bookId = c.req.param("bookId");
+
+    const state = {
+      bookDir: (id: string) => join(root, "books", id),
+      loadBookConfig: async (id: string) => {
+        const raw = JSON.parse(await readFile(join(root, "books", id, "book.json"), "utf-8"));
+        return { title: raw.title ?? "Untitled", language: raw.language ?? "zh-CN" };
+      },
+      loadChapterIndex: async (id: string) => {
+        const raw = JSON.parse(await readFile(join(root, "books", id, "chapter_index.json"), "utf-8"));
+        return raw.chapters ?? [];
+      },
+    };
+
+    try {
+      const artifact = await buildExportArtifact(
+        state as never,
+        bookId,
+        { format: "epub" },
+      );
+      return new Response(artifact.payload as Blob, {
+        headers: {
+          "Content-Type": "application/epub+zip",
+          "Content-Disposition": `attachment; filename="${bookId}.epub"`,
+        },
+      });
+    } catch (e) {
+      throw new ApiError(500, "EXPORT_FAILED", e instanceof Error ? e.message : String(e));
+    }
+  });
+
+  // ── P2-3: Export Enhancement — HTML preview ──
+  router.post("/:bookId/preview-html", async (c) => {
+    const bookId = c.req.param("bookId");
+
+    try {
+      const chaptersDir = join(root, "books", bookId, "chapters");
+      const files = await readdir(chaptersDir);
+      const mdFiles = files.filter((f) => f.endsWith(".md")).sort();
+
+      let htmlBody = "";
+      for (const file of mdFiles) {
+        const content = await readFile(join(chaptersDir, file), "utf-8");
+        const title = content.match(/^#\s+(.+)/m)?.[1]?.trim() ?? file;
+        const body = content
+          .split("\n")
+          .filter((l) => !l.startsWith("#"))
+          .map((l) => l.trim())
+          .filter(Boolean)
+          .map((l) => `<p>${l.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>`)
+          .join("\n");
+        htmlBody += `<section class="chapter"><h2>${title}</h2>${body}</section>\n`;
+      }
+
+      const html = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${await state.loadBookConfig(bookId).then((b) => b.title)}</title>
+<style>
+  body { max-width: 720px; margin: 0 auto; padding: 2rem 1rem; font-family: Georgia, "Noto Serif SC", serif; line-height: 1.8; color: #1a1a1a; background: #faf8f5; }
+  h2 { color: #8B3A3A; border-bottom: 1px solid #e0d8d0; padding-bottom: 0.5rem; margin-top: 2.5rem; font-size: 1.3rem; }
+  p { text-indent: 2em; margin: 0.5em 0; }
+  @media (prefers-color-scheme: dark) { body { background: #1a1a1a; color: #e0d8d0; } h2 { color: #c8786a; border-color: #333; } }
+</style>
+</head>
+<body>${htmlBody}</body>
+</html>`;
+
+      return c.html(html);
+    } catch (e) {
+      throw new ApiError(500, "PREVIEW_FAILED", e instanceof Error ? e.message : String(e));
+    }
   });
 
   return router;
