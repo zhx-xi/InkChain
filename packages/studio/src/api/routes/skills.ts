@@ -4,19 +4,24 @@
 // schema from @actalk/inkos-core. Stores files as `.inkos/skills/<id>.json` and
 // merges them with builtin skills from the defaults package.
 //
-// Routes (mounted at /api/skills):
-//   GET    /              — List all skills (project + builtin, ?category=)
-//   GET    /:id           — Get a single merged skill
-//   POST   /              — Create a project-level skill
-//   PUT    /:id           — Update (or override) a project-level skill
-//   DELETE /:id           — Delete project-level skill, revert to builtin if exists
-//   PATCH  /:id/toggle    — Toggle enabled state
+// Version History (Issue #96 — Skill-9):
+//   Before each overwrite, the current file is snapshotted to
+//   `.inkos/skills-versions/<id>/<rev>.json` where rev is an auto-incrementing
+//   integer. A version index file tracks the metadata.
 //
-// All writes are validated with Zod schemas; validation errors return 400 with
-// a flat error detail object.
+// Routes (mounted at /api/skills):
+//   GET    /                         — List all skills (project + builtin, ?category=)
+//   GET    /:id                      — Get a single merged skill
+//   POST   /                         — Create a project-level skill
+//   PUT    /:id                      — Update (or override) a project-level skill
+//   DELETE /:id                      — Delete project-level skill, revert to builtin if exists
+//   PATCH  /:id/toggle               — Toggle enabled state
+//   GET    /:id/versions             — List version history for a project skill
+//   GET    /:id/versions/:rev/diff   — Get version diff (current vs specified rev)
+//   POST   /:id/versions/:rev/restore — Restore a specific version
 
 import { Hono } from "hono";
-import { access, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, rm, writeFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import {
   loadSkillConfigs,
@@ -29,6 +34,8 @@ import {
 import { ApiError } from "../errors.js";
 
 const PROJECT_SKILLS_DIR = ".inkos/skills";
+const SKILL_VERSIONS_DIR = ".inkos/skills-versions";
+const VERSION_KEEP = 20; // max versions to retain
 
 export interface ApiSkillResponse {
   readonly config: SkillConfig;
@@ -38,6 +45,123 @@ export interface ApiSkillResponse {
 
 function projectSkillPath(root: string, id: string): string {
   return join(root, PROJECT_SKILLS_DIR, `${id}.json`);
+}
+
+function skillVersionsDir(root: string, id: string): string {
+  return join(root, SKILL_VERSIONS_DIR, id);
+}
+
+function skillVersionPath(root: string, id: string, rev: number): string {
+  return join(skillVersionsDir(root, id), `${rev}.json`);
+}
+
+interface SkillVersionMeta {
+  rev: number;
+  timestamp: string;
+  id: string;
+}
+
+/**
+ * Snapshot the current skill file before it is overwritten.
+ * Reads the current file, and if it differs from the new config, saves it as a new version.
+ */
+async function snapshotBeforeWrite(root: string, newConfig: SkillConfig): Promise<void> {
+  const current = await loadProjectSkillFile(root, newConfig.id);
+  if (!current) return; // First write — no snapshot needed
+
+  // Skip snapshot if content is identical
+  if (JSON.stringify(current) === JSON.stringify(newConfig)) return;
+
+  const verDir = skillVersionsDir(root, newConfig.id);
+  await mkdir(verDir, { recursive: true });
+
+  // Determine next revision number
+  let maxRev = 0;
+  try {
+    const files = await readdir(verDir);
+    for (const file of files) {
+      if (file.endsWith(".json")) {
+        const num = Number(file.replace(".json", ""));
+        if (!Number.isNaN(num) && num > maxRev) maxRev = num;
+      }
+    }
+  } catch {
+    // Directory just created, no files yet
+  }
+
+  const rev = maxRev + 1;
+  const version: SkillVersionMeta & { config: SkillConfig } = {
+    rev,
+    timestamp: new Date().toISOString(),
+    id: newConfig.id,
+    config: current,
+  };
+
+  await writeFile(skillVersionPath(root, newConfig.id, rev), JSON.stringify(version, null, 2), "utf-8");
+
+  // Prune old versions
+  await pruneVersions(root, newConfig.id);
+}
+
+async function pruneVersions(root: string, id: string): Promise<void> {
+  const verDir = skillVersionsDir(root, id);
+  let files: string[];
+  try {
+    files = await readdir(verDir);
+  } catch {
+    return;
+  }
+
+  const revs: number[] = [];
+  for (const file of files) {
+    if (file.endsWith(".json")) {
+      const num = Number(file.replace(".json", ""));
+      if (!Number.isNaN(num)) revs.push(num);
+    }
+  }
+
+  revs.sort((a, b) => a - b);
+  if (revs.length <= VERSION_KEEP) return;
+
+  const toRemove = revs.slice(0, revs.length - VERSION_KEEP);
+  for (const old of toRemove) {
+    await rm(skillVersionPath(root, id, old), { force: true });
+  }
+}
+
+async function listVersions(root: string, id: string): Promise<SkillVersionMeta[]> {
+  const verDir = skillVersionsDir(root, id);
+  let files: string[];
+  try {
+    files = await readdir(verDir);
+  } catch {
+    return [];
+  }
+
+  const versions: SkillVersionMeta[] = [];
+  for (const file of files) {
+    if (!file.endsWith(".json")) continue;
+    try {
+      const raw = await readFile(join(verDir, file), "utf-8");
+      const parsed = JSON.parse(raw) as SkillVersionMeta;
+      if (parsed.rev !== undefined) versions.push(parsed);
+    } catch {
+      // Skip corrupt version files
+    }
+  }
+
+  versions.sort((a, b) => b.rev - a.rev); // newest first
+  return versions;
+}
+
+async function loadVersion(root: string, id: string, rev: number): Promise<SkillConfig | null> {
+  try {
+    const raw = await readFile(skillVersionPath(root, id, rev), "utf-8");
+    const parsed = JSON.parse(raw) as { config: SkillConfig };
+    return SkillConfigSchema.parse(parsed.config);
+  } catch {
+    return null;
+  }
 }
 
 function toApiSkill(stored: StoredSkillConfig): ApiSkillResponse {
@@ -72,6 +196,9 @@ async function loadProjectSkillFile(root: string, id: string): Promise<SkillConf
 }
 
 async function writeProjectSkill(root: string, config: SkillConfig): Promise<void> {
+  // Snapshot current version before overwriting
+  await snapshotBeforeWrite(root, config);
+
   const dir = join(root, PROJECT_SKILLS_DIR);
   await mkdir(dir, { recursive: true });
   await writeFile(projectSkillPath(root, config.id), JSON.stringify(config, null, 2), "utf-8");
@@ -216,6 +343,49 @@ export function createSkillsRouter(root: string) {
 
     return c.json({
       skill: toApiSkill({ config: updated, source: "project", path: projectSkillPath(root, id) }),
+    });
+  });
+
+  // GET /api/skills/:id/versions — list version history
+  router.get("/:id/versions", async (c) => {
+    const id = validateSkillId(c.req.param("id"));
+    const versions = await listVersions(root, id);
+    return c.json({ versions });
+  });
+
+  // GET /api/skills/:id/versions/:rev — get a specific version
+  router.get("/:id/versions/:rev", async (c) => {
+    const id = validateSkillId(c.req.param("id"));
+    const rev = parseInt(c.req.param("rev"), 10);
+    if (Number.isNaN(rev) || rev < 1) {
+      throw new ApiError(400, "INVALID_REV", "Revision must be a positive integer");
+    }
+
+    const config = await loadVersion(root, id, rev);
+    if (!config) {
+      throw new ApiError(404, "VERSION_NOT_FOUND", `Version ${rev} not found for skill: ${id}`);
+    }
+    return c.json({ version: { rev, config } });
+  });
+
+  // POST /api/skills/:id/versions/:rev/restore — restore a version
+  router.post("/:id/versions/:rev/restore", async (c) => {
+    const id = validateSkillId(c.req.param("id"));
+    const rev = parseInt(c.req.param("rev"), 10);
+    if (Number.isNaN(rev) || rev < 1) {
+      throw new ApiError(400, "INVALID_REV", "Revision must be a positive integer");
+    }
+
+    const config = await loadVersion(root, id, rev);
+    if (!config) {
+      throw new ApiError(404, "VERSION_NOT_FOUND", `Version ${rev} not found for skill: ${id}`);
+    }
+
+    // Restore: overwrite current with the version's config
+    await writeProjectSkill(root, config);
+
+    return c.json({
+      skill: toApiSkill({ config, source: "project", path: projectSkillPath(root, id) }),
     });
   });
 
