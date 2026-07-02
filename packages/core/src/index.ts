@@ -113,7 +113,47 @@ export {
   injectSkillsIntoPrompt,
   filterEnabledSkills,
 } from "./models/skill-injection.js";
-export { type BookRules, type ParsedBookRules, BookRulesSchema, parseBookRules, tryParseBookRulesFrontmatter } from "./models/book-rules.js";
+export {
+  type WorldConfig,
+  type WorldConfigUpdate,
+  type WorldSettingEntry,
+  type WorldSettingType,
+  type WorldRole,
+  type WorldRoleKind,
+  type WorldRelation,
+  type WorldRegion,
+  type WorldRegionType,
+  type WorldInstitution,
+  type WorldInstitutionType,
+  type WorldHistoryEvent,
+  type WorldRule,
+  type WorldRuleType,
+  type WorldDimensionKey,
+  WorldConfigSchema,
+  WorldConfigUpdateSchema,
+  WorldSettingEntrySchema,
+  WorldSettingTypeEnum,
+  WorldRoleSchema,
+  WorldRoleKindEnum,
+  WorldRelationSchema,
+  WorldRegionSchema,
+  WorldRegionTypeEnum,
+  WorldInstitutionSchema,
+  WorldInstitutionTypeEnum,
+  WorldHistoryEventSchema,
+  WorldRuleSchema,
+  WorldRuleTypeEnum,
+  WORLD_DIMENSION_KEYS,
+} from "./models/world-config.js";
+export {
+  listWorlds,
+  loadWorld,
+  saveWorld,
+  deleteWorld,
+  applyWorldUpdate,
+  createWorld,
+  worldPath,
+} from "./models/world-store.js";
 export { type DetectionHistoryEntry, type DetectionStats } from "./models/detection.js";
 export { type StyleProfile } from "./models/style-profile.js";
 export {
