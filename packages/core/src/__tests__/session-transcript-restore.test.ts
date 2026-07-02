@@ -1099,6 +1099,7 @@ describe("session transcript restore", () => {
       timestamp: 1,
       bookId: null,
       title: null,
+      status: "active",
       createdAt: 1,
       updatedAt: 1,
     });
@@ -1170,6 +1171,7 @@ describe("session transcript restore", () => {
       timestamp: 1,
       bookId: "book-a",
       title: null,
+      status: "active",
       createdAt: 1,
       updatedAt: 1,
     });
@@ -1249,6 +1251,7 @@ describe("session transcript restore", () => {
       timestamp: 1,
       bookId: "book-a",
       title: null,
+      status: "active",
       createdAt: 1,
       updatedAt: 1,
     });
@@ -1382,6 +1385,7 @@ describe("session transcript restore", () => {
       timestamp: 1,
       bookId: "book-a",
       title: null,
+      status: "active",
       createdAt: 1,
       updatedAt: 1,
     });
@@ -1450,6 +1454,7 @@ describe("session transcript restore", () => {
       timestamp: 1,
       bookId: "book-a",
       title: null,
+      status: "active",
       createdAt: 1,
       updatedAt: 1,
     });
@@ -1596,6 +1601,7 @@ describe("session transcript restore", () => {
       timestamp: 1,
       bookId: "book-a",
       title: null,
+      status: "active",
       createdAt: 1,
       updatedAt: 1,
     });
@@ -1737,6 +1743,7 @@ describe("session transcript restore", () => {
       sessionKind: "play",
       playMode: "open",
       title: null,
+      status: "active",
       createdAt: 1,
       updatedAt: 1,
     });
@@ -1869,6 +1876,7 @@ describe("session transcript restore", () => {
       sessionKind: "play",
       playMode: "open",
       title: null,
+      status: "active",
       createdAt: 1,
       updatedAt: 1,
     });
