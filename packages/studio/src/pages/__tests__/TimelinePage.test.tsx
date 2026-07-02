@@ -20,12 +20,12 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-// ── Mock the API hook ──
-vi.mock("../../hooks/use-api", () => ({
-  useApi: vi.fn(),
+// ── Mock the useTimelineSegments hook ──
+vi.mock("../../hooks/use-timeline-segments", () => ({
+  useTimelineSegments: vi.fn(),
 }));
 
-import { useApi } from "../../hooks/use-api";
+import { useTimelineSegments } from "../../hooks/use-timeline-segments";
 
 const mockEvents = [
   {
@@ -62,6 +62,27 @@ const mockEvents = [
   },
 ];
 
+function buildDefaultMock(overrides: Record<string, unknown> = {}) {
+  return {
+    volumes: [],
+    selectedVolumeId: null,
+    setSelectedVolumeId: vi.fn(),
+    events: [],
+    allEvents: [],
+    totalFilteredCount: 0,
+    loadedCount: 0,
+    totalCount: 0,
+    hasMore: false,
+    loadMore: vi.fn(),
+    resetPagination: vi.fn(),
+    loading: false,
+    error: null,
+    refetch: vi.fn(),
+    isLightweightMode: false,
+    ...overrides,
+  };
+}
+
 /**
  * Helper: render a React element into a detached container and return utils.
  */
@@ -96,13 +117,9 @@ describe("TimelinePage", () => {
   });
 
   it("shows loading spinner while fetching data", async () => {
-    vi.mocked(useApi).mockReturnValue({
-      data: null,
-      loading: true,
-      error: null,
-      refetch: vi.fn(),
-      mutate: vi.fn(),
-    });
+    vi.mocked(useTimelineSegments).mockReturnValue(
+      buildDefaultMock({ loading: true }) as ReturnType<typeof useTimelineSegments>,
+    );
 
     const { TimelinePage } = await import("../TimelinePage");
     const { querySelector, queryByText, cleanup } = renderIntoContainer(
@@ -115,13 +132,9 @@ describe("TimelinePage", () => {
   });
 
   it("shows error state when API fails", async () => {
-    vi.mocked(useApi).mockReturnValue({
-      data: null,
-      loading: false,
-      error: "Network error",
-      refetch: vi.fn(),
-      mutate: vi.fn(),
-    });
+    vi.mocked(useTimelineSegments).mockReturnValue(
+      buildDefaultMock({ error: "Network error" }) as ReturnType<typeof useTimelineSegments>,
+    );
 
     const { TimelinePage } = await import("../TimelinePage");
     const { queryByText, cleanup } = renderIntoContainer(
@@ -135,13 +148,9 @@ describe("TimelinePage", () => {
   });
 
   it("shows empty state when there are no events", async () => {
-    vi.mocked(useApi).mockReturnValue({
-      data: { events: [] },
-      loading: false,
-      error: null,
-      refetch: vi.fn(),
-      mutate: vi.fn(),
-    });
+    vi.mocked(useTimelineSegments).mockReturnValue(
+      buildDefaultMock() as ReturnType<typeof useTimelineSegments>,
+    );
 
     const { TimelinePage } = await import("../TimelinePage");
     const { queryByText, cleanup } = renderIntoContainer(
@@ -153,13 +162,15 @@ describe("TimelinePage", () => {
   });
 
   it("renders timeline with events and shows header info", async () => {
-    vi.mocked(useApi).mockReturnValue({
-      data: { events: mockEvents },
-      loading: false,
-      error: null,
-      refetch: vi.fn(),
-      mutate: vi.fn(),
-    });
+    vi.mocked(useTimelineSegments).mockReturnValue(
+      buildDefaultMock({
+        events: mockEvents,
+        allEvents: mockEvents,
+        totalFilteredCount: 3,
+        loadedCount: 3,
+        totalCount: 3,
+      }) as ReturnType<typeof useTimelineSegments>,
+    );
 
     const { TimelinePage } = await import("../TimelinePage");
     const { container, queryByText, cleanup } = renderIntoContainer(
