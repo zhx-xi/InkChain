@@ -21,6 +21,11 @@ export {
 export { runAgentSession, evictAgentCache, type AgentSessionConfig, type AgentSessionResult } from "./agent-session.js";
 export { createBookContextTransform } from "./context-transform.js";
 export {
+  extractRelationsFromProse,
+  type RelationProposal,
+  type ExtractionResult,
+} from "./relation-extractor.js";
+export {
   createSetWorldAnchorTool,
   createUpsertCharactersTool,
   createAddVariableTool,

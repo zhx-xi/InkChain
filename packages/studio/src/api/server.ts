@@ -118,6 +118,7 @@ import { createVoiceProfilesRouter } from "./routes/voice-profiles.js";
 import { createTimelinesRouter } from "./routes/timelines.js";
 import { createSessionTagsRouter } from "./routes/session-tags.js";
 import { createSessionsRouter } from "./routes/sessions.js";
+import { createRelationExtractionRouter } from "./routes/relation-extraction.js";
 
 // -- Pipeline stage definitions per agent type --
 
@@ -5536,6 +5537,13 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // ── Relations CRUD ──
   const relationsRouter = createRelationsRouter((id) => state.bookDir(id));
   app.route("/api/v1/books", relationsRouter);
+
+  // ── AI Relation Extraction (AI-1) ──
+  const relationExtractionRouter = createRelationExtractionRouter(
+    (id) => state.bookDir(id),
+    () => root,
+  );
+  app.route("/api/v1/books", relationExtractionRouter);
 
   // ── Volumes CRUD ──
   const volumesRouter = createVolumesRouter((id) => state.bookDir(id));
