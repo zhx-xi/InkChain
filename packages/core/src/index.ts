@@ -170,6 +170,27 @@ export { type BookRules, type ParsedBookRules, BookRulesSchema, parseBookRules, 
 export { type DetectionHistoryEntry, type DetectionStats } from "./models/detection.js";
 export { type StyleProfile } from "./models/style-profile.js";
 export {
+  analyzeDialogue,
+  analyzeTone,
+  learnStyle,
+  buildStyleConstraints,
+  serializeStyleProfile,
+  summarizeStyleProfile,
+  type EnhancedStyleProfile,
+  type StyleLearningConfig,
+  type DialogueStats,
+  type ToneProfile,
+  type ToneKeyword,
+  DEFAULT_LEARNING_CONFIG,
+} from "./ai/style-learner.js";
+export {
+  profileToConstraints,
+  formatStyleConstraintsSection,
+  type GenerationConstraint,
+  type ConstraintSeverity,
+} from "./ai/generation-constraints.js";
+export { analyzeStyle } from "./agents/style-analyzer.js";
+export {
   VoiceProfileSchema as CharacterVoiceProfileSchema,
   VoiceProfilesFileSchema,
   VOICE_PRESETS,
