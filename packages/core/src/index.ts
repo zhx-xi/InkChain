@@ -71,6 +71,41 @@ export {
   type PresetSummary,
   type PresetSource,
 } from "./persona/index.js";
+export {
+  type SkillConfig,
+  type SkillConfigUpdate,
+  type SkillCategory,
+  type TriggerType,
+  type TriggerConfig,
+  type InjectionMode,
+  type InjectionTarget,
+  type InjectionConfig,
+  type ParamType,
+  type ParamDef,
+  type SkillSource,
+  type StoredSkillConfig,
+  SkillCategoryEnum,
+  SkillSourceEnum,
+  TriggerTypeEnum,
+  TriggerConfigSchema,
+  InjectionModeEnum,
+  InjectionTargetEnum,
+  InjectionConfigSchema,
+  ParamTypeEnum,
+  ParamDefSchema,
+  SkillConfigSchema,
+  SkillConfigUpdateSchema,
+  SKILL_CATEGORY_LABELS,
+} from "./models/skill-config.js";
+export {
+  type LoadSkillConfigsInput,
+  type LoadSkillConfigsResult,
+  type SkillLoadDiagnostic,
+  loadSkillConfigs,
+  mergeSkillConfigs,
+  filterByCategory,
+  filterEnabled,
+} from "./models/skill-config-loader.js";
 export { type BookRules, type ParsedBookRules, BookRulesSchema, parseBookRules, tryParseBookRulesFrontmatter } from "./models/book-rules.js";
 export { type DetectionHistoryEntry, type DetectionStats } from "./models/detection.js";
 export { type StyleProfile } from "./models/style-profile.js";

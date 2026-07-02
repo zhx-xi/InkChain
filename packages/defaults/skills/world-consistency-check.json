@@ -1,0 +1,15 @@
+{
+  "id": "world-consistency-check",
+  "category": "world",
+  "triggers": [
+    { "type": "condition", "condition": "session.kind === 'book'" }
+  ],
+  "injection": {
+    "mode": "append",
+    "target": "system_prompt",
+    "priority": 70
+  },
+  "params": {},
+  "enabled": true,
+  "description": "Cross-check new prose against world rules and established facts."
+}

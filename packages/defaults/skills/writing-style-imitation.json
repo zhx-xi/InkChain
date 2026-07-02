@@ -1,0 +1,22 @@
+{
+  "id": "writing-style-imitation",
+  "category": "writing",
+  "triggers": [
+    { "type": "condition", "condition": "session.kind === 'book' && instruction.includes('仿写')" }
+  ],
+  "injection": {
+    "mode": "append",
+    "target": "system_prompt",
+    "priority": 60
+  },
+  "params": {
+    "sourceText": {
+      "key": "sourceText",
+      "label": "Reference text",
+      "type": "string",
+      "required": false
+    }
+  },
+  "enabled": true,
+  "description": "Imitate the reference author's style based on a provided text."
+}
