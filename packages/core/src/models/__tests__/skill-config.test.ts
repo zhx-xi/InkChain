@@ -23,6 +23,7 @@ describe("SkillConfigSchema (Issue #74)", () => {
         params: {},
         enabled: true,
         description: "Imitate the reference author's style.",
+        prompt: "",
       };
       const parsed = SkillConfigSchema.parse(raw);
       expect(parsed.id).toBe("writing-style-imitation");
@@ -82,6 +83,7 @@ describe("SkillConfigSchema (Issue #74)", () => {
         },
         enabled: true,
         description: "Advanced analysis skill.",
+        prompt: "",
       };
       const parsed = SkillConfigSchema.parse(config);
       expect(parsed.triggers).toHaveLength(2);

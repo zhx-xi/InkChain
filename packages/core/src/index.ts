@@ -106,6 +106,13 @@ export {
   filterByCategory,
   filterEnabled,
 } from "./models/skill-config-loader.js";
+export {
+  type SkillInjectionContext,
+  type SkillInjectionResult,
+  shouldInjectSkill,
+  injectSkillsIntoPrompt,
+  filterEnabledSkills,
+} from "./models/skill-injection.js";
 export { type BookRules, type ParsedBookRules, BookRulesSchema, parseBookRules, tryParseBookRulesFrontmatter } from "./models/book-rules.js";
 export { type DetectionHistoryEntry, type DetectionStats } from "./models/detection.js";
 export { type StyleProfile } from "./models/style-profile.js";
