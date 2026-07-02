@@ -11,14 +11,26 @@ import {
   type NodeMouseHandler,
 } from "@xyflow/react";
 import "@xyflow/react/dist/base.css";
-import { useApi } from "../hooks/use-api";
+import { useApi, postApi, putApi, fetchJson } from "../hooks/use-api";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "../components/ui/dialog";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Textarea } from "../components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import { PlusIcon, PencilIcon, Trash2Icon, XIcon } from "lucide-react";
 
 // ── Types ──
 
@@ -64,6 +76,12 @@ const EVENT_TYPE_COLORS: Record<string, { border: string; bg: string; text: stri
 };
 
 const DEFAULT_COLOR = { border: "#6b7280", bg: "rgba(107,114,128,0.10)", text: "#6b7280", label: "其他" };
+
+const EVENT_TYPE_OPTIONS = [
+  { value: "plot", label: "剧情" },
+  { value: "character", label: "角色" },
+  { value: "world", label: "世界观" },
+];
 
 // ── Layout constants ──
 
@@ -162,6 +180,287 @@ const nodeTypes: NodeTypes = {
   characterHeader: MemoCharacterHeaderNode,
 };
 
+// ── EventEditDialog ──
+
+interface EventFormData {
+  title: string;
+  description: string;
+  eventType: string;
+  relatedCharacters: string;
+  chapter: number;
+  importance: number;
+  tags: string;
+}
+
+interface EventEditDialogProps {
+  open: boolean;
+  event: TimelineEvent | null; // null = create mode
+  existingCharacters: string[];
+  onSave: (form: EventFormData, eventId: string | null) => Promise<void>;
+  onCancel: () => void;
+}
+
+function EventEditDialog({ open, event, existingCharacters, onSave, onCancel }: EventEditDialogProps) {
+  const isCreate = event === null;
+
+  const defaultFormData: EventFormData = {
+    title: "",
+    description: "",
+    eventType: "plot",
+    relatedCharacters: "",
+    chapter: 1,
+    importance: 3,
+    tags: "",
+  };
+
+  const [form, setForm] = useState<EventFormData>(() => {
+    if (event) {
+      return {
+        title: event.title,
+        description: event.description,
+        eventType: event.eventType,
+        relatedCharacters: event.relatedCharacters.join(", "),
+        chapter: event.chapter,
+        importance: event.importance,
+        tags: (event.tags ?? []).join(", "),
+      };
+    }
+    return defaultFormData;
+  });
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Reset form when dialog opens/closes or event changes
+  useEffect(() => {
+    if (!open) return;
+    if (event) {
+      setForm({
+        title: event.title,
+        description: event.description,
+        eventType: event.eventType,
+        relatedCharacters: event.relatedCharacters.join(", "),
+        chapter: event.chapter,
+        importance: event.importance,
+        tags: (event.tags ?? []).join(", "),
+      });
+    } else {
+      setForm(defaultFormData);
+    }
+    setError(null);
+    setSaving(false);
+  }, [open, event]);
+
+  const updateField = useCallback(<K extends keyof EventFormData>(field: K, value: EventFormData[K]) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  }, []);
+
+  const handleSubmit = useCallback(async () => {
+    // Validate
+    if (!form.title.trim()) {
+      setError("请输入事件标题");
+      return;
+    }
+    if (form.chapter < 1) {
+      setError("章节号必须大于 0");
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    try {
+      await onSave(form, event?.id ?? null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+      setSaving(false);
+    }
+  }, [form, event, onSave]);
+
+  const quickAddCharacter = useCallback((ch: string) => {
+    setForm((prev) => {
+      const existing = prev.relatedCharacters
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      if (existing.includes(ch)) return prev;
+      const next = [...existing, ch].join(", ");
+      return { ...prev, relatedCharacters: next };
+    });
+  }, []);
+
+  const removeCharacter = useCallback((ch: string) => {
+    setForm((prev) => {
+      const filtered = prev.relatedCharacters
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s !== ch);
+      return { ...prev, relatedCharacters: filtered.join(", ") };
+    });
+  }, []);
+
+  return (
+    <Dialog open={open} onOpenChange={(open) => { if (!open) onCancel(); }}>
+      <DialogContent className="sm:max-w-[520px]" showCloseButton>
+        <DialogHeader>
+          <DialogTitle className="text-base">
+            {isCreate ? "新增事件" : "编辑事件"}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 py-2">
+          {/* Title */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground/80">标题</label>
+            <Input
+              placeholder="事件标题"
+              value={form.title}
+              onChange={(e) => updateField("title", e.target.value)}
+            />
+          </div>
+
+          {/* Description */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground/80">描述</label>
+            <Textarea
+              placeholder="事件描述"
+              value={form.description}
+              onChange={(e) => updateField("description", e.target.value)}
+            />
+          </div>
+
+          {/* Event type + chapter row */}
+          <div className="flex items-start gap-3">
+            <div className="flex-1 space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground/80">事件类型</label>
+              <Select
+                value={form.eventType}
+                onValueChange={(v) => updateField("eventType", v ?? "plot")}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {EVENT_TYPE_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      <span className="flex items-center gap-2">
+                        <span
+                          className="w-2 h-2 rounded-full"
+                          style={{ backgroundColor: EVENT_TYPE_COLORS[opt.value]?.border ?? DEFAULT_COLOR.border }}
+                        />
+                        {opt.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-[100px] space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground/80">章节</label>
+              <Input
+                type="number"
+                min={1}
+                placeholder="章节"
+                value={form.chapter}
+                onChange={(e) => updateField("chapter", Math.max(1, parseInt(e.target.value, 10) || 1))}
+              />
+            </div>
+          </div>
+
+          {/* Importance (star rating) */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground/80">重要性</label>
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => updateField("importance", star)}
+                  className={`text-lg transition-colors hover:scale-110 active:scale-95 ${
+                    star <= form.importance
+                      ? "text-amber-400"
+                      : "text-muted-foreground/20"
+                  }`}
+                  title={`${star} 星`}
+                >
+                  {star <= form.importance ? "★" : "☆"}
+                </button>
+              ))}
+              <span className="text-xs text-muted-foreground/50 ml-2">
+                {["", "微不足道", "次要", "普通", "重要", "核心"][form.importance] ?? ""}
+              </span>
+            </div>
+          </div>
+
+          {/* Related characters */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground/80">关联角色</label>
+            <Input
+              placeholder="用逗号分隔多个角色名"
+              value={form.relatedCharacters}
+              onChange={(e) => updateField("relatedCharacters", e.target.value)}
+            />
+            {/* Quick-add existing characters */}
+            {existingCharacters.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
+                {existingCharacters.map((ch) => {
+                  const alreadyAdded = form.relatedCharacters
+                    .split(",")
+                    .map((s) => s.trim())
+                    .includes(ch);
+                  return alreadyAdded ? (
+                    <button
+                      key={ch}
+                      type="button"
+                      onClick={() => removeCharacter(ch)}
+                      className="inline-flex items-center gap-0.5 text-[11px] bg-primary/10 text-primary/80 px-1.5 py-0.5 rounded-full hover:bg-primary/20 transition-colors"
+                    >
+                      {ch}
+                      <XIcon className="size-2.5" />
+                    </button>
+                  ) : (
+                    <button
+                      key={ch}
+                      type="button"
+                      onClick={() => quickAddCharacter(ch)}
+                      className="text-[11px] bg-secondary/50 text-muted-foreground px-1.5 py-0.5 rounded-full hover:bg-secondary/80 transition-colors"
+                    >
+                      + {ch}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Tags */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-muted-foreground/80">标签</label>
+            <Input
+              placeholder="用逗号分隔多个标签"
+              value={form.tags}
+              onChange={(e) => updateField("tags", e.target.value)}
+            />
+          </div>
+
+          {/* Error */}
+          {error && (
+            <p className="text-xs text-destructive">{error}</p>
+          )}
+        </div>
+
+        <DialogFooter className="flex items-center justify-end gap-2 pt-2">
+          <Button variant="outline" onClick={onCancel} disabled={saving}>
+            取消
+          </Button>
+          <Button onClick={handleSubmit} disabled={saving}>
+            {saving ? "保存中…" : isCreate ? "创建" : "保存"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ── Props ──
 
 interface TimelinePageProps {
@@ -179,6 +478,21 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
 
   // Detail dialog state
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{
+    event: TimelineEvent;
+    x: number;
+    y: number;
+  } | null>(null);
+
+  // Edit dialog state
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<TimelineEvent | null>(null);
+
+  // Delete confirmation state
+  const [deleteConfirmEvent, setDeleteConfirmEvent] = useState<TimelineEvent | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   // ── Compute unique chapters and characters ──
   const events = data?.events ?? [];
@@ -353,6 +667,136 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
     [events],
   );
 
+  // ── Node double-click handler: open edit dialog ──
+  const onNodeDoubleClick: NodeMouseHandler = useCallback(
+    (_event, node) => {
+      if (node.type !== "timelineEvent") return;
+      const edata = node.data as unknown as TimelineNodeData;
+      const event = events.find((e) => e.id === edata.id);
+      if (event) {
+        setContextMenu(null);
+        setEditingEvent(event);
+        setEditDialogOpen(true);
+      }
+    },
+    [events],
+  );
+
+  // ── Node right-click handler: show context menu ──
+  const onNodeContextMenu: NodeMouseHandler = useCallback(
+    (event, node) => {
+      if (node.type !== "timelineEvent") return;
+      event.preventDefault();
+      const edata = node.data as unknown as TimelineNodeData;
+      const ev = events.find((e) => e.id === edata.id);
+      if (ev) {
+        setContextMenu({
+          event: ev,
+          x: event.clientX,
+          y: event.clientY,
+        });
+      }
+    },
+    [events],
+  );
+
+  // ── Close context menu ──
+  const closeContextMenu = useCallback(() => {
+    setContextMenu(null);
+  }, []);
+
+  // ── Open edit dialog from context menu ──
+  const handleContextMenuEdit = useCallback(() => {
+    if (!contextMenu) return;
+    setEditingEvent(contextMenu.event);
+    setEditDialogOpen(true);
+    closeContextMenu();
+  }, [contextMenu, closeContextMenu]);
+
+  // ── Open create dialog ──
+  const handleCreateEvent = useCallback(() => {
+    setEditingEvent(null);
+    setEditDialogOpen(true);
+  }, []);
+
+  // ── Handle delete from context menu ──
+  const handleContextMenuDelete = useCallback(() => {
+    if (!contextMenu) return;
+    setDeleteConfirmEvent(contextMenu.event);
+    closeContextMenu();
+  }, [contextMenu, closeContextMenu]);
+
+  // ── Confirm delete ──
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteConfirmEvent) return;
+    setDeleting(true);
+    try {
+      await fetchJson<{ deleted: boolean }>(
+        `/books/${bookId}/timelines/${deleteConfirmEvent.id}`,
+        { method: "DELETE" },
+      );
+      setDeleteConfirmEvent(null);
+      void refetch();
+    } catch (e) {
+      // Silently handle — the refetch will surface any issues
+      setDeleteConfirmEvent(null);
+      void refetch();
+    } finally {
+      setDeleting(false);
+    }
+  }, [deleteConfirmEvent, bookId, refetch]);
+
+  // ── Handle save (create or update) ──
+  const handleSaveEvent = useCallback(
+    async (form: EventFormData, eventId: string | null) => {
+      // Parse relatedCharacters and tags from comma-separated strings
+      const relatedCharacters = form.relatedCharacters
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const tags = form.tags
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const body = {
+        timestamp: new Date().toISOString(),
+        eventType: form.eventType,
+        title: form.title.trim(),
+        description: form.description.trim(),
+        relatedCharacters,
+        chapter: form.chapter,
+        importance: form.importance,
+        ...(tags.length > 0 ? { tags } : {}),
+      };
+
+      if (eventId === null) {
+        // Create
+        await postApi<{ event: TimelineEvent }>(
+          `/books/${bookId}/timelines`,
+          body,
+        );
+      } else {
+        // Update — send full body (PUT uses partial merge)
+        await putApi<{ event: TimelineEvent }>(
+          `/books/${bookId}/timelines/${eventId}`,
+          body,
+        );
+      }
+
+      setEditDialogOpen(false);
+      setEditingEvent(null);
+      void refetch();
+    },
+    [bookId, refetch],
+  );
+
+  // ── Cancel edit ──
+  const handleCancelEdit = useCallback(() => {
+    setEditDialogOpen(false);
+    setEditingEvent(null);
+  }, []);
+
   const closeDialog = useCallback(() => {
     setSelectedEvent(null);
   }, []);
@@ -440,7 +884,11 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
             />
           </svg>
           <p className="text-sm text-muted-foreground">暂无时间线事件</p>
-          <p className="text-xs text-muted-foreground/60">在写作过程中事件将自动生成</p>
+          <p className="text-xs text-muted-foreground/60 mb-2">开始添加第一个事件吧</p>
+          <Button onClick={handleCreateEvent}>
+            <PlusIcon className="size-4" />
+            新增事件
+          </Button>
         </div>
       </div>
     );
@@ -493,6 +941,16 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
                 </div>
               ))}
             </div>
+
+            {/* Add event button */}
+            <Button
+              variant="default"
+              size="icon-sm"
+              onClick={handleCreateEvent}
+              title="新增事件"
+            >
+              <PlusIcon className="size-4" />
+            </Button>
           </div>
         </div>
 
@@ -503,6 +961,8 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
             edges={[]}
             onNodesChange={onNodesChange}
             onNodeClick={onNodeClick}
+            onNodeDoubleClick={onNodeDoubleClick}
+            onNodeContextMenu={onNodeContextMenu}
             nodeTypes={nodeTypes}
             fitView
             fitViewOptions={{ padding: 0.3 }}
@@ -614,6 +1074,83 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
                 </div>
               )}
             </div>
+          </DialogContent>
+        )}
+      </Dialog>
+
+      {/* Event edit dialog */}
+      <EventEditDialog
+        open={editDialogOpen}
+        event={editingEvent}
+        existingCharacters={uniqueCharacters}
+        onSave={handleSaveEvent}
+        onCancel={handleCancelEdit}
+      />
+
+      {/* Context menu overlay */}
+      {contextMenu && (
+        <div
+          className="fixed inset-0 z-50"
+          onClick={closeContextMenu}
+          onContextMenu={(e) => { e.preventDefault(); closeContextMenu(); }}
+        >
+          <div
+            className="absolute min-w-[140px] bg-popover rounded-lg shadow-lg ring-1 ring-foreground/10 p-1 animate-in fade-in zoom-in-95 origin-top-left"
+            style={{ left: contextMenu.x, top: contextMenu.y }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Edit */}
+            <button
+              type="button"
+              onClick={handleContextMenuEdit}
+              className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              <PencilIcon className="size-3.5 text-muted-foreground" />
+              编辑
+            </button>
+
+            {/* Delete */}
+            <button
+              type="button"
+              onClick={handleContextMenuDelete}
+              className="flex items-center gap-2 w-full rounded-md px-2 py-1.5 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+            >
+              <Trash2Icon className="size-3.5" />
+              删除
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation dialog */}
+      <Dialog
+        open={deleteConfirmEvent !== null}
+        onOpenChange={(open) => { if (!open) setDeleteConfirmEvent(null); }}
+      >
+        {deleteConfirmEvent && (
+          <DialogContent className="sm:max-w-[380px]" showCloseButton>
+            <DialogHeader>
+              <DialogTitle className="text-base">确认删除</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              确认删除事件「{deleteConfirmEvent.title}」？此操作不可撤销。
+            </p>
+            <DialogFooter className="flex items-center justify-end gap-2 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setDeleteConfirmEvent(null)}
+                disabled={deleting}
+              >
+                取消
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={handleConfirmDelete}
+                disabled={deleting}
+              >
+                {deleting ? "删除中…" : "确认删除"}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         )}
       </Dialog>
