@@ -18,7 +18,7 @@ import {
   deleteVoiceProfile,
   listVoicePresets,
   getVoicePreset,
-  VoiceProfileSchema,
+  CharacterVoiceProfileSchema,
 } from "@actalk/inkos-core";
 
 export function createVoiceProfilesRouter(getProjectRoot: () => string): Hono {
@@ -124,7 +124,7 @@ export function createVoiceProfilesRouter(getProjectRoot: () => string): Hono {
       // Merge with defaults via VoiceProfileSchema
       const now = Date.now();
       const bodyRecord = body as Record<string, unknown>;
-      const parsed = VoiceProfileSchema.safeParse({
+      const parsed = CharacterVoiceProfileSchema.safeParse({
         characterId,
         speechStyle: bodyRecord.speechStyle ?? "现代口语",
         personality: bodyRecord.personality ?? [],

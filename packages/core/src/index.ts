@@ -74,10 +74,10 @@ export { type BookRules, type ParsedBookRules, BookRulesSchema, parseBookRules, 
 export { type DetectionHistoryEntry, type DetectionStats } from "./models/detection.js";
 export { type StyleProfile } from "./models/style-profile.js";
 export {
-  VoiceProfileSchema,
+  VoiceProfileSchema as CharacterVoiceProfileSchema,
   VoiceProfilesFileSchema,
   VOICE_PRESETS,
-  type VoiceProfile,
+  type VoiceProfile as CharacterVoiceProfile,
   type VoiceProfilesFile,
 } from "./models/voice-profile.js";
 export {
