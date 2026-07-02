@@ -4,7 +4,7 @@
 // Builds a character voice profile from character descriptions + persona settings,
 // then manages multi-turn dialogue state.
 
-import type { CharacterVoiceProfile } from "../models/voice-profile.js";
+import type { VoiceProfile as CharacterVoiceProfile } from "../models/voice-profile.js";
 
 // ── Dialogue Config ──
 

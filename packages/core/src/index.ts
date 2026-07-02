@@ -210,21 +210,20 @@ export {
 } from "./ai/relation-labeler.js";
 export {
   checkConsistency,
-  type ConsistencyReport,
-  type ConsistencyIssue,
-  type IssueType,
-  type IssueSeverity,
   type ConsistencyCheckInput,
   type ChapterContent,
   type CharacterProfile,
-  ISSUE_TYPE_LABELS,
-  ISSUE_SEVERITY_LABELS,
 } from "./ai/consistency-checker.js";
 export {
   createEmptyReport,
   calculateScore,
   buildSummary,
-  type ConsistencyReport as CRType,
+  ISSUE_TYPE_LABELS,
+  ISSUE_SEVERITY_LABELS,
+  type ConsistencyReport,
+  type ConsistencyIssue,
+  type IssueType,
+  type IssueSeverity,
 } from "./ai/consistency-report.js";
 export {
   analyzeDialogue,
