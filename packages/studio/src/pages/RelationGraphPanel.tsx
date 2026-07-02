@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { cn } from "@/lib/utils";
 import {
   ReactFlow,
   Controls,
@@ -15,11 +16,13 @@ import {
 import "@xyflow/react/dist/base.css";
 import { useGraphStore } from "../store/relations/graph-store";
 import { fetchJson } from "../hooks/use-api";
+import { Sparkles } from "lucide-react";
 import { AlertBanner } from "../components/graph/AlertBanner";
 import { MemoCharacterNode } from "../components/graph/CharacterNode";
 import { MemoRelationEdge } from "../components/graph/RelationEdge";
 import { LegendPanel } from "../components/graph/LegendPanel";
 import { DetailPanel } from "../components/graph/DetailPanel";
+import { RelationExtractionReviewPanel } from "../components/RelationExtractionReviewPanel";
 import { getLayout, type LayoutNode } from "../components/graph/layout";
 import type { GraphNodeData, GraphEdgeData } from "../store/relations/types";
 
@@ -108,6 +111,7 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
   const [selectedVolumeId, setSelectedVolumeId] = useState<string | null>(null);
   const [volumes, setVolumes] = useState<VolumeInfo[]>([]);
   const [chapterVolumeMap, setChapterVolumeMap] = useState<Map<number, string>>(new Map());
+  const [showExtraction, setShowExtraction] = useState(false);
   const reactFlowRef = useRef<HTMLDivElement>(null);
 
   // ── Load graph data on mount ──
@@ -415,6 +419,21 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
 
             <LegendPanel />
 
+            {/* AI Relation Extraction button */}
+            <button
+              type="button"
+              onClick={() => setShowExtraction(!showExtraction)}
+              className={cn(
+                "rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
+                showExtraction
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card/80 border-border/30 text-muted-foreground hover:text-foreground hover:bg-card",
+              )}
+            >
+              <Sparkles size={14} className="inline mr-1" />
+              AI 提取
+            </button>
+
             {/* Consistency check button */}
             <button
               type="button"
@@ -527,6 +546,16 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
           onClose={() => selectNode(null)}
           className="border-l border-border/20"
         />
+      )}
+
+      {/* AI Relation Extraction panel (renders beside the graph when toggled) */}
+      {showExtraction && !selectedNode && (
+        <div className="w-96 shrink-0 border-l border-border/20 overflow-y-auto">
+          <RelationExtractionReviewPanel
+            bookId={bookId}
+            onClose={() => setShowExtraction(false)}
+          />
+        </div>
       )}
     </div>
   );

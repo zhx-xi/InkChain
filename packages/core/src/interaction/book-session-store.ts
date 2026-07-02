@@ -140,6 +140,7 @@ export interface BookSessionSummary {
   readonly title: string | null;
   readonly status: "active" | "archived";
   readonly messageCount: number;
+  readonly archivedAt?: number;
   readonly createdAt: number;
   readonly updatedAt: number;
 }
@@ -182,6 +183,7 @@ export async function listBookSessions(
           title: session.title,
           status: session.status,
           messageCount: session.messages.length,
+          archivedAt: session.archivedAt,
           createdAt: session.createdAt,
           updatedAt: session.updatedAt,
         };

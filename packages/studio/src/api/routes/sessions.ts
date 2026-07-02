@@ -19,7 +19,37 @@ import {
   batchArchiveBookSessions,
   mergeBookSessions,
   autoArchiveStaleSessions,
+  loadSessionTags,
 } from "@actalk/inkos-core";
+import type { SessionTag } from "@actalk/inkos-core";
+
+/**
+ * Transform a BookSessionSummary to a client-friendly SessionListItem.
+ * Maps sessionId → id, adds date strings, and includes tags.
+ */
+function toSessionListItem(
+  summary: {
+    readonly sessionId: string;
+    readonly title: string | null;
+    readonly status: "active" | "archived";
+    readonly messageCount: number;
+    readonly archivedAt?: number;
+    readonly createdAt: number;
+    readonly updatedAt: number;
+  },
+  tags: SessionTag[],
+) {
+  return {
+    id: summary.sessionId,
+    title: summary.title ?? "（无标题）",
+    status: summary.status,
+    messageCount: summary.messageCount,
+    archivedAt: summary.archivedAt != null ? new Date(summary.archivedAt).toISOString() : undefined,
+    createdAt: new Date(summary.createdAt).toISOString(),
+    updatedAt: new Date(summary.updatedAt).toISOString(),
+    tags: tags.map((t) => ({ id: t.id, name: t.name, color: t.color })),
+  };
+}
 
 export function createSessionsRouter(getProjectRoot: () => string): Hono {
   const app = new Hono();
@@ -33,7 +63,16 @@ export function createSessionsRouter(getProjectRoot: () => string): Hono {
         ? statusQuery
         : undefined;
       const summaries = await listBookSessions(root, undefined, status);
-      return c.json({ sessions: summaries });
+
+      // Load tags for all returned sessions
+      const allTags = await loadSessionTags(root);
+      const tagsBySession = allTags.tags ?? {};
+
+      const sessions = summaries.map((s) =>
+        toSessionListItem(s, tagsBySession[s.sessionId] ?? []),
+      );
+
+      return c.json({ sessions });
     } catch (e) {
       return c.json({
         error: { code: "INTERNAL_ERROR", message: `获取会话列表失败: ${e instanceof Error ? e.message : String(e)}` },
