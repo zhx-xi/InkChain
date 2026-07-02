@@ -29,3 +29,7 @@ worlds/
 inkos.json
 prompt/
 CLAUDE.md
+
+# Test output artifacts
+packages/studio/*test-output*
+packages/studio/vitest-output.json
