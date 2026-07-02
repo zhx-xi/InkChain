@@ -17,6 +17,7 @@ interface SkillEditSheetProps {
   readonly isOpen: boolean;
   readonly onClose: () => void;
   readonly onSaved?: () => void;
+  readonly createDraft?: Partial<SkillConfig>;
 }
 
 const INJECTION_TARGET_LABELS: Record<InjectionConfig["target"], string> = {
@@ -44,7 +45,7 @@ function makeEmptySkill(id: string): SkillConfig {
   };
 }
 
-export function SkillEditSheet({ skillId, isOpen, onClose, onSaved }: SkillEditSheetProps) {
+export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft }: SkillEditSheetProps) {
   const [original, setOriginal] = useState<SkillConfig | null>(null);
   const [draft, setDraft] = useState<SkillConfig | null>(null);
   const [loading, setLoading] = useState(false);
@@ -52,12 +53,32 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved }: SkillEditS
   const [error, setError] = useState<string | null>(null);
   const [agentQuery, setAgentQuery] = useState("");
 
+  const isCreateMode = skillId === "__create__";
+
   useEffect(() => {
     if (!isOpen || !skillId) {
       setOriginal(null);
       setDraft(null);
       setError(null);
       setAgentQuery("");
+      return;
+    }
+
+    // Create mode: initialize draft from createDraft
+    if (isCreateMode) {
+      const newSkill: SkillConfig = {
+        id: createDraft?.id || `skill-${Date.now()}`,
+        category: (createDraft?.category as SkillCategory) || "utility",
+        triggers: createDraft?.triggers ?? [],
+        injection: createDraft?.injection ?? { mode: "append", target: "system_prompt", priority: 50 },
+        params: createDraft?.params ?? {},
+        enabled: true,
+        description: createDraft?.description || "",
+        prompt: createDraft?.prompt || "",
+        agents: [],
+      };
+      setOriginal(newSkill);
+      setDraft(newSkill);
       return;
     }
 
@@ -81,7 +102,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved }: SkillEditS
     return () => {
       cancelled = true;
     };
-  }, [isOpen, skillId]);
+  }, [isOpen, skillId, createDraft, isCreateMode]);
 
   const hasChanges = useMemo(() => {
     if (!original || !draft) return false;
@@ -96,25 +117,36 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved }: SkillEditS
   }, [hasChanges, onClose]);
 
   const handleSave = useCallback(async () => {
-    if (!draft || !skillId) return;
+    if (!draft) return;
     setSaving(true);
     setError(null);
     try {
-      const update = {
-        category: draft.category,
-        triggers: draft.triggers,
-        injection: draft.injection,
-        params: draft.params,
-        enabled: draft.enabled,
-        description: draft.description,
-        prompt: draft.prompt,
-        agents: draft.agents,
-      };
-      await fetchJson<{ skill: ApiSkillResponse }>(`/api/skills/${encodeURIComponent(skillId)}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(update),
-      });
+      if (isCreateMode) {
+        // POST for create
+        await fetchJson<{ skill: ApiSkillResponse }>("/api/skills", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(draft),
+        });
+      } else {
+        // PUT for update
+        if (!skillId) return;
+        const update = {
+          category: draft.category,
+          triggers: draft.triggers,
+          injection: draft.injection,
+          params: draft.params,
+          enabled: draft.enabled,
+          description: draft.description,
+          prompt: draft.prompt,
+          agents: draft.agents,
+        };
+        await fetchJson<{ skill: ApiSkillResponse }>(`/api/skills/${encodeURIComponent(skillId)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(update),
+        });
+      }
       setOriginal(draft);
       onSaved?.();
       onClose();
@@ -123,7 +155,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved }: SkillEditS
     } finally {
       setSaving(false);
     }
-  }, [draft, skillId, onSaved, onClose]);
+  }, [draft, skillId, onSaved, onClose, isCreateMode]);
 
   useEffect(() => {
     if (!isOpen) return;
