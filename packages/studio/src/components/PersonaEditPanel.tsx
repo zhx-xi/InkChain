@@ -211,7 +211,8 @@ export function PersonaEditPanel({ agentRole, onClose }: PersonaEditPanelProps) 
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-muted-foreground/40 hover:text-foreground hover:bg-secondary/50 transition-colors"
+            className="p-1.5 rounded-lg text-muted-foreground/70 hover:text-foreground hover:bg-secondary/50 transition-colors"
+            aria-label="关闭"
           >
             <X size={18} />
           </button>
