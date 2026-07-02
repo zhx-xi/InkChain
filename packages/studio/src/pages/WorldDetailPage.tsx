@@ -11,13 +11,13 @@ import type {
   WorldHistoryEvent,
   WorldRule,
   WorldDimensionKey,
-} from "@actalk/inkos-core";
+} from "@actalk/inkos-core/models/world-config.js";
 import {
   WORLD_DIMENSION_KEYS,
   WorldConfigSchema,
   WorldConfigUpdateSchema,
-} from "@actalk/inkos-core";
-import { ArrowLeft, Save, Trash2, Plus, BookPlus, X } from "lucide-react";
+} from "@actalk/inkos-core/models/world-config.js";
+import { ArrowLeft, Save, Trash2, Plus, BookPlus, X, Globe } from "lucide-react";
 import { cn } from "../lib/utils";
 
 // ── Dimension metadata ──
@@ -44,7 +44,7 @@ function genId(): string {
 
 interface WorldDetailProps {
   readonly worldId?: string; // undefined = create mode
-  readonly nav?: { toWorlds: () => void; toBook: (bookId: string) => void };
+  readonly nav?: { toWorlds: () => void; toBook: (bookId: string) => void; toWorldGeoViz?: (worldId: string) => void };
 }
 
 // ── Entry form state type (mutable during editing) ──
@@ -789,6 +789,19 @@ export function WorldDetailPage({ worldId, nav }: WorldDetailProps) {
 
       {/* Tab Content */}
       <div className="min-h-[300px]">
+        {/* GeoViz button for regions tab (view & edit mode) */}
+        {activeTab === "regions" && !isCreateMode && worldId && draft.regions.length > 0 && (
+          <div className="flex items-center justify-end mb-3">
+            <button
+              type="button"
+              onClick={() => { if (nav?.toWorldGeoViz) nav.toWorldGeoViz(worldId); }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border/40 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors"
+            >
+              <Globe size={14} />
+              地理可视化
+            </button>
+          </div>
+        )}
         {isEditing ? (
           <>
             {activeTab === "settings" && <SettingsEditor entries={draft.settings} onChange={(v) => setDraft((prev) => ({ ...prev, settings: v }))} />}

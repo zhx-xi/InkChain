@@ -36,6 +36,18 @@
     "./models/persona-config": {
       "types": "./dist/models/persona-config.d.ts",
       "import": "./dist/models/persona-config.js"
+    },
+    "./models/skill-config": {
+      "types": "./dist/models/skill-config.d.ts",
+      "import": "./dist/models/skill-config.js"
+    },
+    "./models/foreshadowing": {
+      "types": "./dist/models/foreshadowing.d.ts",
+      "import": "./dist/models/foreshadowing.js"
+    },
+    "./models/world-config": {
+      "types": "./dist/models/world-config.d.ts",
+      "import": "./dist/models/world-config.js"
     }
   },
   "files": [
