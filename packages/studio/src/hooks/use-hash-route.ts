@@ -25,6 +25,7 @@ export type HashRoute =
   | { page: "film-author"; projectId: string }
   | { page: "film-studio"; projectId: string }
   | { page: "relations"; bookId: string }
+  | { page: "timeline"; bookId: string }
   | { page: "agents" };
 
 function parseHash(hash: string): HashRoute {
@@ -67,6 +68,9 @@ function parseHash(hash: string): HashRoute {
   const relationsMatch = path.match(/^relations\/([^/]+)$/);
   if (relationsMatch) return { page: "relations", bookId: decodeURIComponent(relationsMatch[1]) };
 
+  const timelineMatch = path.match(/^timeline\/([^/]+)$/);
+  if (timelineMatch) return { page: "timeline", bookId: decodeURIComponent(timelineMatch[1]) };
+
   return { page: "dashboard" };
 }
 
@@ -87,6 +91,7 @@ function routeToHash(route: HashRoute): string {
     case "film-author": return `#/film-author/${encodeURIComponent(route.projectId)}`;
     case "film-studio": return `#/studio/film/${encodeURIComponent(route.projectId)}`;
     case "relations": return `#/relations/${encodeURIComponent(route.bookId)}`;
+    case "timeline": return `#/timeline/${encodeURIComponent(route.bookId)}`;
     case "agents": return "#/agents";
     default: return "";
   }
@@ -94,7 +99,7 @@ function routeToHash(route: HashRoute): string {
 
 export { parseHash, routeToHash }; // for testing
 
-const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "agents"]);
+const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents"]);
 
 export function useHashRoute() {
   const [route, setRouteState] = useState<HashRoute>(() => parseHash(window.location.hash));

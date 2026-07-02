@@ -19,6 +19,7 @@ import { ImportManager } from "./pages/ImportManager";
 import { RadarView } from "./pages/RadarView";
 import { DoctorView } from "./pages/DoctorView";
 import { RelationGraphPanel } from "./pages/RelationGraphPanel";
+import { TimelinePage } from "./pages/TimelinePage";
 import { AgentTeamPanel } from "./pages/AgentTeamPanel";
 import { StoryPlayer } from "./pages/StoryPlayer";
 import { StoryGraphTree } from "./pages/StoryGraphTree";
@@ -100,6 +101,7 @@ export function App() {
     toRadar: () => setRoute({ page: "radar" }),
     toDoctor: () => setRoute({ page: "doctor" }),
     toRelations: (bookId: string) => setRoute({ page: "relations", bookId }),
+    toTimeline: (bookId: string) => setRoute({ page: "timeline", bookId }),
     toPlay: (projectId: string) => setRoute({ page: "play", projectId }),
     toFilm: (projectId: string) => setRoute({ page: "film", projectId }),
     toFlow: (projectId: string) => setRoute({ page: "flow", projectId }),
@@ -323,6 +325,9 @@ export function App() {
           )}
           {route.page === "relations" && (
             <RelationGraphPanel bookId={route.bookId} />
+          )}
+          {route.page === "timeline" && (
+            <TimelinePage bookId={route.bookId} />
           )}
           {route.page === "doctor" && (
             <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">

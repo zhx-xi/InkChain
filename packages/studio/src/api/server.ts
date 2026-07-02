@@ -119,6 +119,7 @@ import { createTimelinesRouter } from "./routes/timelines.js";
 import { createSessionTagsRouter } from "./routes/session-tags.js";
 import { createSessionsRouter } from "./routes/sessions.js";
 import { createRelationExtractionRouter } from "./routes/relation-extraction.js";
+import { createSearchRouter } from "./routes/search.js";
 
 // -- Pipeline stage definitions per agent type --
 
@@ -5588,6 +5589,10 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // ── Voice Profile CRUD (C3-1) ──
   const voiceProfilesRouter = createVoiceProfilesRouter(() => root);
   app.route("/api/v1/project", voiceProfilesRouter);
+
+  // ── Full-Text Search (Ar-2) ──
+  const searchRouter = createSearchRouter(() => root);
+  app.route("/api/v1/books", searchRouter);
 
   // ── Writer's Block Breakthrough (E4 simplified) ──
   // GET  /api/v1/books/:id/writers-block — analyze context and return 3-5 advancement suggestions
