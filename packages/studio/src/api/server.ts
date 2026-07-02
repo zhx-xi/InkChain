@@ -113,6 +113,7 @@ import { createCharactersRouter } from "./routes/characters.js";
 import { createPersonasRouter } from "./routes/personas.js";
 import { createPresetsRouter } from "./routes/presets.js";
 import { createPersonaAIGenRouter } from "./routes/persona-ai-gen.js";
+import { createTimelinesRouter } from "./routes/timelines.js";
 import { createSessionTagsRouter } from "./routes/session-tags.js";
 import { createSessionsRouter } from "./routes/sessions.js";
 
@@ -5537,6 +5538,10 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // ── Volumes CRUD ──
   const volumesRouter = createVolumesRouter((id) => state.bookDir(id));
   app.route("/api/v1/books", volumesRouter);
+
+  // ── Timelines CRUD ──
+  const timelinesRouter = createTimelinesRouter((id) => state.bookDir(id));
+  app.route("/api/v1/books", timelinesRouter);
 
   // ── Scene Roles CRUD ──
   const sceneRolesRouter = createSceneRolesRouter((id) => state.bookDir(id));
