@@ -27,6 +27,12 @@ import {
   getDefaultPersona,
   parsePersonaConfig,
   serializePersonaConfig,
+  snapshotPersonaVersion,
+  listPersonaVersions,
+  loadPersonaVersion,
+  restorePersonaVersion,
+  comparePersonaConfigs,
+  summarizePersonaDiff,
   type AgentRole,
   type PersonaConfig,
 } from "@actalk/inkos-core";
@@ -306,6 +312,9 @@ export function createPersonasRouter(getProjectRoot: () => string): Hono {
       agentRole: role, // agentRole is immutable
     };
 
+    // Snapshot current version before overwriting
+    await snapshotPersonaVersion(root, role, current, updated);
+
     // Save with the free text body (or empty if not provided)
     const bodyText = typeof body === "object" && body !== null
       ? (body as Record<string, unknown>).freeTextDetails as string ?? updated.freeTextDetails ?? ""
@@ -353,6 +362,14 @@ export function createPersonasRouter(getProjectRoot: () => string): Hono {
           details: parsedConfig.error.issues,
         },
       }, 400);
+    }
+
+    // Snapshot current version before overwriting (if exists)
+    try {
+      const currentConfig = await readPersonaConfig(root, role);
+      await snapshotPersonaVersion(root, role, currentConfig, parsedConfig.data);
+    } catch {
+      // No current config to snapshot — first write
     }
 
     await savePersonaConfig(root, parsedConfig.data, freeTextBody);
@@ -429,6 +446,186 @@ export function createPersonasRouter(getProjectRoot: () => string): Hono {
     await savePersonaConfig(root, presetPersona, presetPersona.freeTextDetails ?? "");
     const updated = await readPersonaConfig(root, role);
     return c.json({ persona: updated, appliedFromPreset: presetId });
+  });
+
+  // POST /personas/ab-test — Run A/B test with two persona versions on the same prompt
+  app.post("/personas/ab-test", async (c) => {
+    const root = getProjectRoot();
+
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json({ error: { code: "INVALID_JSON", message: "请求体不是有效的 JSON" } }, 400);
+    }
+
+    const reqBody = body as Record<string, unknown>;
+    const agentRole = reqBody.agentRole as string | undefined;
+    const prompt = reqBody.prompt as string | undefined;
+    const versionA = reqBody.versionA as number | undefined;
+    const versionB = reqBody.versionB as number | undefined;
+    const personaA = reqBody.personaA as PersonaConfig | undefined;
+    const personaB = reqBody.personaB as PersonaConfig | undefined;
+
+    if (!agentRole || !prompt) {
+      return c.json({ error: { code: "MISSING_FIELDS", message: "需要 agentRole 和 prompt" } }, 400);
+    }
+
+    // Validate agent role
+    let role: AgentRole;
+    try {
+      role = parseAgentRoleParam(agentRole);
+    } catch (error) {
+      return c.json({
+        error: { code: "INVALID_AGENT_ROLE", message: (error as Error).message },
+      }, 400);
+    }
+
+    try {
+      // Resolve version A config
+      let configA: PersonaConfig;
+      if (personaA) {
+        // Use direct config passed in body
+        configA = PersonaConfigSchema.parse({ ...personaA, agentRole: role });
+      } else if (versionA !== undefined) {
+        // Load from version history
+        const loaded = await loadPersonaVersion(root, role, versionA);
+        if (!loaded) {
+          return c.json({ error: { code: "VERSION_NOT_FOUND", message: `版本 A #${versionA} 不存在` } }, 404);
+        }
+        configA = loaded.config;
+      } else {
+        // Load current config
+        configA = await readPersonaConfig(root, role);
+      }
+
+      // Resolve version B config
+      let configB: PersonaConfig;
+      if (personaB) {
+        configB = PersonaConfigSchema.parse({ ...personaB, agentRole: role });
+      } else if (versionB !== undefined) {
+        const loaded = await loadPersonaVersion(root, role, versionB);
+        if (!loaded) {
+          return c.json({ error: { code: "VERSION_NOT_FOUND", message: `版本 B #${versionB} 不存在` } }, 404);
+        }
+        configB = loaded.config;
+      } else {
+        // If no version B specified, compare with default
+        configB = getDefaultPersona(role);
+      }
+
+      // Compute diff
+      const diff = comparePersonaConfigs(configA, configB);
+      const diffSummary = summarizePersonaDiff(diff);
+
+      return c.json({
+        agentRole: role,
+        versionA: { config: configA },
+        versionB: { config: configB },
+        diff,
+        diffSummary,
+        // A/B test requires the client to send the prompt to each version via Agent API
+        // The diff is returned for display in the A/B test panel
+        note: "Send the prompt to each line's endpoint via the Agent session API to generate side-by-side results.",
+      });
+    } catch (e) {
+      return c.json({
+        error: { code: "AB_TEST_ERROR", message: `A/B 测试准备失败: ${e instanceof Error ? e.message : String(e)}` },
+      }, 500);
+    }
+  });
+
+  // ── Persona Version Routes ──
+
+  // GET /personas/:agentId/versions — List version history
+  app.get("/personas/:agentId/versions", async (c) => {
+    const agentId = c.req.param("agentId");
+    let role: AgentRole;
+    try {
+      role = parseAgentRoleParam(agentId);
+    } catch (error) {
+      return c.json({
+        error: { code: "INVALID_AGENT_ROLE", message: (error as Error).message },
+      }, 400);
+    }
+
+    try {
+      const root = getProjectRoot();
+      const versions = await listPersonaVersions(root, role);
+      return c.json({ versions });
+    } catch (e) {
+      return c.json({
+        error: { code: "INTERNAL_ERROR", message: `获取版本列表失败: ${e instanceof Error ? e.message : String(e)}` },
+      }, 500);
+    }
+  });
+
+  // GET /personas/:agentId/versions/:rev — Get a specific version
+  app.get("/personas/:agentId/versions/:rev", async (c) => {
+    const agentId = c.req.param("agentId");
+    const revParam = c.req.param("rev");
+    let role: AgentRole;
+    try {
+      role = parseAgentRoleParam(agentId);
+    } catch (error) {
+      return c.json({
+        error: { code: "INVALID_AGENT_ROLE", message: (error as Error).message },
+      }, 400);
+    }
+
+    const rev = Number(revParam);
+    if (Number.isNaN(rev) || rev < 1) {
+      return c.json({ error: { code: "INVALID_REVISION", message: "版本号必须是正整数" } }, 400);
+    }
+
+    try {
+      const root = getProjectRoot();
+      const version = await loadPersonaVersion(root, role, rev);
+      if (!version) {
+        return c.json({ error: { code: "VERSION_NOT_FOUND", message: `版本 #${rev} 不存在` } }, 404);
+      }
+      return c.json({ version: { rev, ...version } });
+    } catch (e) {
+      return c.json({
+        error: { code: "INTERNAL_ERROR", message: `获取版本详情失败: ${e instanceof Error ? e.message : String(e)}` },
+      }, 500);
+    }
+  });
+
+  // POST /personas/:agentId/versions/:rev/restore — Restore a specific version
+  app.post("/personas/:agentId/versions/:rev/restore", async (c) => {
+    const agentId = c.req.param("agentId");
+    const revParam = c.req.param("rev");
+    let role: AgentRole;
+    try {
+      role = parseAgentRoleParam(agentId);
+    } catch (error) {
+      return c.json({
+        error: { code: "INVALID_AGENT_ROLE", message: (error as Error).message },
+      }, 400);
+    }
+
+    const rev = Number(revParam);
+    if (Number.isNaN(rev) || rev < 1) {
+      return c.json({ error: { code: "INVALID_REVISION", message: "版本号必须是正整数" } }, 400);
+    }
+
+    try {
+      const root = getProjectRoot();
+      const restored = await restorePersonaVersion(root, role, rev);
+      if (!restored) {
+        return c.json({ error: { code: "VERSION_NOT_FOUND", message: `版本 #${rev} 不存在或恢复失败` } }, 404);
+      }
+
+      // Save the restored config
+      await savePersonaConfig(root, restored, restored.freeTextDetails ?? "");
+
+      return c.json({ persona: restored, restoredFromRev: rev });
+    } catch (e) {
+      return c.json({
+        error: { code: "INTERNAL_ERROR", message: `恢复版本失败: ${e instanceof Error ? e.message : String(e)}` },
+      }, 500);
+    }
   });
 
   return app;

@@ -20,3 +20,19 @@ export {
   type PresetSummary,
   type PresetSource,
 } from "./presets.js";
+export {
+  snapshotPersonaVersion,
+  listPersonaVersions,
+  loadPersonaVersion,
+  restorePersonaVersion,
+  type PersonaVersionMeta,
+} from "./version-history.js";
+export {
+  comparePersonaConfigs,
+  summarizePersonaDiff,
+  type PersonaDiff,
+  type FieldDiff,
+  type ArrayDiff,
+  type NestedFieldDiff,
+  type BehaviorConstraintDiff,
+} from "./compare.js";

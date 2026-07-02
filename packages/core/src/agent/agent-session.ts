@@ -16,6 +16,7 @@ import type {
 import type { PipelineRunner } from "../pipeline/runner.js";
 import { assertWithinContextWindow, estimatePiContextTokens } from "../llm/provider.js";
 import { buildAgentSystemPrompt } from "./agent-system-prompt.js";
+import type { PersonaConfig } from "../models/persona-config.js";
 import {
   createPatchChapterTextTool,
   createReplaceChapterTextTool,
@@ -96,6 +97,8 @@ export interface AgentSessionConfig {
   onEvent?: (event: AgentEvent) => void;
   /** Optional listener for context compression lifecycle events. */
   onContextCompression?: ContextCompressionCallback;
+  /** Optional Persona config to inject into the Agent system prompt. */
+  personaConfig?: PersonaConfig;
 }
 
 export interface AgentSessionResult {
@@ -916,6 +919,7 @@ async function runAgentSessionUnlocked(
           requestedIntent,
           playWorldExists,
           skills: skillResolution,
+          personaConfig: config.personaConfig,
         }),
         tools: createAgentToolsForMode({
           pipeline,
