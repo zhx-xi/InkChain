@@ -803,13 +803,33 @@ export async function deriveBookSessionFromTranscript(
     : events[events.length - 1]?.timestamp ?? createdAt;
   updatedAt = Math.max(updatedAt, latestActivityTimestamp);
 
+  let status: "active" | "archived" = "active";
+  let archivedAt: number | undefined;
+  let archiveReason: string | undefined;
+
   for (const event of events) {
     if (event.type !== "session_metadata_updated") continue;
     if ("bookId" in event && event.bookId !== undefined) bookId = event.bookId;
     if ("sessionKind" in event && event.sessionKind !== undefined) sessionKind = event.sessionKind;
     if ("playMode" in event && event.playMode !== undefined) playMode = event.playMode;
     if ("title" in event && event.title !== undefined) title = event.title;
+    if ("status" in event && event.status !== undefined) status = event.status;
+    if ("archivedAt" in event && event.archivedAt !== undefined) archivedAt = event.archivedAt;
+    if ("archiveReason" in event && event.archiveReason !== undefined) archiveReason = event.archiveReason;
     updatedAt = Math.max(updatedAt, event.updatedAt);
+  }
+
+  // Also check dedicated archive/unarchive events
+  for (const event of events) {
+    if (event.type === "session_archived") {
+      status = "archived";
+      archivedAt = event.timestamp;
+      if ("reason" in event && event.reason !== undefined) archiveReason = event.reason;
+    } else if (event.type === "session_unarchived") {
+      status = "active";
+      archivedAt = undefined;
+      archiveReason = undefined;
+    }
   }
 
   const messages = messageEventsToInteractionMessages(committedMessageEvents(events));
@@ -824,6 +844,9 @@ export async function deriveBookSessionFromTranscript(
     sessionKind,
     playMode,
     title,
+    status,
+    ...(archivedAt !== undefined ? { archivedAt } : {}),
+    ...(archiveReason !== undefined ? { archiveReason } : {}),
     messages,
     draftRounds: [],
     events: [],

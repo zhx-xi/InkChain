@@ -114,6 +114,7 @@ import { createPersonasRouter } from "./routes/personas.js";
 import { createPresetsRouter } from "./routes/presets.js";
 import { createPersonaAIGenRouter } from "./routes/persona-ai-gen.js";
 import { createSessionTagsRouter } from "./routes/session-tags.js";
+import { createSessionsRouter } from "./routes/sessions.js";
 
 // -- Pipeline stage definitions per agent type --
 
@@ -5556,6 +5557,10 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // ── Persona AI Generation (Per-7) ──
   const personaAIGenRouter = createPersonaAIGenRouter({ getProjectRoot: () => root });
   app.route("/api/v1/project", personaAIGenRouter);
+
+  // ── Session Archive (Ar-1) ──
+  const sessionsRouter = createSessionsRouter(() => root);
+  app.route("/api/v1/project", sessionsRouter);
 
   // ── Session Tags (R-02) ──
   const sessionTagsRouter = createSessionTagsRouter(() => root);
