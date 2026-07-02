@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
-import { X, Save, Loader2, Plus, Trash2, Search, Bot } from "lucide-react";
+import { X, Save, Loader2, Plus, Trash2, Search, Bot, History, RotateCcw, ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "../lib/utils";
 import { fetchJson } from "../hooks/use-api";
 import type { SkillConfig, SkillCategory, TriggerConfig, InjectionConfig, AgentRole } from "@actalk/inkos-core";
@@ -430,8 +430,131 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft 
               </section>
             </>
           )}
+
+          {/* Version History (only for existing skills) */}
+          {!isCreateMode && skillId && skillId !== "__create__" && (
+            <SkillVersionHistory skillId={skillId} onRestored={onSaved} />
+          )}
         </div>
       </aside>
     </div>
+  );
+}
+
+// ── Skill Version History (Issue #96) ──
+
+interface SkillVersionMeta {
+  rev: number;
+  timestamp: string;
+  id: string;
+}
+
+interface SkillVersionHistoryProps {
+  readonly skillId: string;
+  readonly onRestored?: () => void;
+}
+
+function SkillVersionHistory({ skillId, onRestored }: SkillVersionHistoryProps) {
+  const [expanded, setExpanded] = useState(false);
+  const [versions, setVersions] = useState<SkillVersionMeta[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [restoring, setRestoring] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!expanded) return;
+    setLoading(true);
+    setError(null);
+    fetchJson<{ versions: SkillVersionMeta[] }>(`/api/skills/${encodeURIComponent(skillId)}/versions`)
+      .then((data) => setVersions(data.versions ?? []))
+      .catch((err) => setError(err instanceof Error ? err.message : "加载失败"))
+      .finally(() => setLoading(false));
+  }, [expanded, skillId]);
+
+  const handleRestore = async (rev: number) => {
+    if (!confirm(`确定要回滚到版本 #${rev} 吗？当前修改将被覆盖。`)) return;
+    setRestoring(rev);
+    setError(null);
+    try {
+      await fetchJson(`/api/skills/${encodeURIComponent(skillId)}/versions/${rev}/restore`, { method: "POST" });
+      onRestored?.();
+      setVersions((prev) => prev.filter((v) => v.rev !== rev)); // remove restored version (it's now current)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "回滚失败");
+    } finally {
+      setRestoring(null);
+    }
+  };
+
+  const formatDate = (iso: string) => {
+    try {
+      const d = new Date(iso);
+      return d.toLocaleString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return iso;
+    }
+  };
+
+  return (
+    <section className="space-y-2 border-t border-border/30 pt-4 mt-4">
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center gap-2 w-full text-left"
+      >
+        <History size={14} className="text-muted-foreground" />
+        <span className="text-[13px] font-medium text-foreground flex-1">版本历史</span>
+        {expanded ? <ChevronDown size={14} className="text-muted-foreground/40" /> : <ChevronRight size={14} className="text-muted-foreground/40" />}
+      </button>
+
+      {expanded && (
+        <div className="space-y-2">
+          {loading && (
+            <div className="flex items-center gap-2 py-2">
+              <Loader2 size={12} className="animate-spin text-muted-foreground/60" />
+              <span className="text-[11px] text-muted-foreground/60">加载中…</span>
+            </div>
+          )}
+
+          {error && (
+            <div className="rounded-md bg-destructive/5 border border-destructive/20 px-3 py-2 text-[11px] text-destructive">
+              {error}
+            </div>
+          )}
+
+          {!loading && !error && versions.length === 0 && (
+            <p className="text-[11px] text-muted-foreground/50 py-2 text-center">暂无版本历史</p>
+          )}
+
+          {!loading && versions.length > 0 && (
+            <div className="space-y-1.5 max-h-48 overflow-y-auto">
+              {versions.map((ver) => (
+                <div
+                  key={ver.rev}
+                  className="flex items-center gap-2 rounded-md border border-border/30 bg-card px-3 py-2 text-[11px]"
+                >
+                  <span className="font-mono font-medium text-muted-foreground shrink-0">
+                    #{ver.rev}
+                  </span>
+                  <span className="text-muted-foreground/60 truncate flex-1">
+                    {formatDate(ver.timestamp)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleRestore(ver.rev)}
+                    disabled={restoring === ver.rev}
+                    className="inline-flex items-center gap-1 rounded border border-border/40 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors disabled:opacity-40 shrink-0"
+                    title="回滚到此版本"
+                  >
+                    <RotateCcw size={10} />
+                    {restoring === ver.rev ? "回滚中…" : "回滚"}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </section>
   );
 }
