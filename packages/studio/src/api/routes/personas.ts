@@ -258,7 +258,7 @@ export function createPersonasRouter(getProjectRoot: () => string): Hono {
         })
         .catch(() => config.freeTextDetails ?? "");
 
-      return c.json({ config, body });
+      return c.json({ persona: config, body });
     } catch (e) {
       return c.json({
         error: { code: "INTERNAL_ERROR", message: `获取 Persona 配置失败: ${e instanceof Error ? e.message : String(e)}` },
