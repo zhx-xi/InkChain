@@ -22,6 +22,9 @@ import { RelationGraphPanel } from "./pages/RelationGraphPanel";
 import { TimelinePage } from "./pages/TimelinePage";
 import { AgentTeamPanel } from "./pages/AgentTeamPanel";
 import { SkillListPage } from "./pages/SkillListPage";
+import { ForeshadowingPage } from "./pages/ForeshadowingPage";
+import { WorldListPage } from "./pages/WorldListPage";
+import { WorldDetailPage } from "./pages/WorldDetailPage";
 import { StoryPlayer } from "./pages/StoryPlayer";
 import { StoryGraphTree } from "./pages/StoryGraphTree";
 const FlowView = lazy(() => import("./pages/FlowView"));
@@ -112,6 +115,10 @@ export function App() {
     toAgents: () => setRoute({ page: "agents" }),
     toArchive: () => setRoute({ page: "archive" }),
     toSkills: () => setRoute({ page: "skills" }),
+    toForeshadowing: () => setRoute({ page: "foreshadowing" }),
+    toWorlds: () => setRoute({ page: "worlds" }),
+    toWorldDetail: (worldId: string) => setRoute({ page: "world-detail", worldId }),
+    toWorldCreate: () => setRoute({ page: "world-create" }),
   };
 
   const activeBookId = deriveActiveBookId(route);
@@ -383,6 +390,24 @@ export function App() {
           {route.page === "skills" && (
             <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <SkillListPage />
+            </div>
+          )}
+          {route.page === "foreshadowing" && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <ForeshadowingPage />
+            </div>
+          )}
+          {route.page === "worlds" && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <WorldListPage nav={nav} />
+            </div>
+          )}
+          {(route.page === "world-detail" || route.page === "world-create") && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <WorldDetailPage
+                worldId={route.page === "world-detail" ? route.worldId : undefined}
+                nav={nav}
+              />
             </div>
           )}
         </main>
