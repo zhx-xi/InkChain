@@ -196,6 +196,19 @@ export {
   DEFAULT_DIALOGUE_CONFIG,
 } from "./ai/dialogue-simulator.js";
 export {
+  suggestRelations,
+  filterSuggestionsByConfidence,
+  findSuggestionForPair,
+  toExistingRelationType,
+  SUGGESTED_RELATION_TYPES,
+  SUGGESTED_RELATION_LABELS,
+  type RelationSuggestion,
+  type SuggestedRelationType,
+  type CharacterProfileForLabeling,
+  type RelationLabelerInput,
+  type RelationLabelerResult,
+} from "./ai/relation-labeler.js";
+export {
   checkConsistency,
   type ConsistencyReport,
   type ConsistencyIssue,
@@ -233,7 +246,6 @@ export {
   type GenerationConstraint,
   type ConstraintSeverity,
 } from "./ai/generation-constraints.js";
-export { analyzeStyle } from "./agents/style-analyzer.js";
 export {
   VoiceProfileSchema as CharacterVoiceProfileSchema,
   VoiceProfilesFileSchema,
