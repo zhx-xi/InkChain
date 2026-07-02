@@ -73,6 +73,21 @@ export {
 export { type BookRules, type ParsedBookRules, BookRulesSchema, parseBookRules, tryParseBookRulesFrontmatter } from "./models/book-rules.js";
 export { type DetectionHistoryEntry, type DetectionStats } from "./models/detection.js";
 export { type StyleProfile } from "./models/style-profile.js";
+export {
+  VoiceProfileSchema as CharacterVoiceProfileSchema,
+  VoiceProfilesFileSchema,
+  VOICE_PRESETS,
+  type VoiceProfile as CharacterVoiceProfile,
+  type VoiceProfilesFile,
+} from "./models/voice-profile.js";
+export {
+  loadVoiceProfiles,
+  getVoiceProfile,
+  saveVoiceProfile,
+  deleteVoiceProfile,
+  listVoicePresets,
+  getVoicePreset,
+} from "./interaction/voice-profile-store.js";
 export { type LengthCountingMode, type LengthNormalizeMode, type LengthSpec, type LengthTelemetry, type LengthWarning, LengthCountingModeSchema, LengthNormalizeModeSchema, LengthSpecSchema, LengthTelemetrySchema, LengthWarningSchema } from "./models/length-governance.js";
 export {
   type RuntimeStateLanguage,
