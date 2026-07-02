@@ -170,6 +170,19 @@ export { type BookRules, type ParsedBookRules, BookRulesSchema, parseBookRules, 
 export { type DetectionHistoryEntry, type DetectionStats } from "./models/detection.js";
 export { type StyleProfile } from "./models/style-profile.js";
 export {
+  buildVoiceConstraints,
+  buildDialogueSystemPrompt,
+  createDialogueSession,
+  addTurn,
+  buildDialogueMessages,
+  exportDialogueAsMaterial,
+  type DialogueSimConfig,
+  type DialogueTurn,
+  type DialogueSession,
+  type VoiceConstraints,
+  DEFAULT_DIALOGUE_CONFIG,
+} from "./ai/dialogue-simulator.js";
+export {
   VoiceProfileSchema as CharacterVoiceProfileSchema,
   VoiceProfilesFileSchema,
   VOICE_PRESETS,
