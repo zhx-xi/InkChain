@@ -1,12 +1,15 @@
 import type { SessionKind } from "../interaction/session.js";
 import type { ActionSource, RequestedIntent } from "../interaction/action-envelope.js";
 import type { SkillResolutionResult } from "../skills/index.js";
+import type { PersonaConfig } from "../models/persona-config.js";
 
 export interface AgentSystemPromptOptions {
   readonly actionSource?: ActionSource;
   readonly requestedIntent?: RequestedIntent;
   readonly playWorldExists?: boolean;
   readonly skills?: SkillResolutionResult;
+  /** Optional Persona configuration to inject into the system prompt. */
+  readonly personaConfig?: PersonaConfig;
 }
 
 function isConfirmedAction(
@@ -106,6 +109,62 @@ function appendSkillGuidance(prompt: string, isZh: boolean, skills: SkillResolut
         disabled.trim(),
       ].filter(Boolean).join("\n");
   return `${prompt}\n\n${guidance}`;
+}
+
+function appendPersonaGuidance(
+  prompt: string,
+  isZh: boolean,
+  persona: PersonaConfig | undefined,
+): string {
+  if (!persona) return prompt;
+
+  const sections: string[] = [prompt, ""];
+
+  // Persona identity section
+  const traits = persona.personalityTraits.length > 0
+    ? `\n${isZh ? "性格标签" : "Personality Traits"}: ${persona.personalityTraits.join(", ")}`
+    : "";
+
+  const dialogStyle = [
+    persona.dialogueStyle.tone ? `${isZh ? "语气" : "Tone"}: ${persona.dialogueStyle.tone}` : "",
+    persona.dialogueStyle.rhythm ? `${isZh ? "节奏" : "Rhythm"}: ${persona.dialogueStyle.rhythm}` : "",
+    persona.dialogueStyle.vocabulary ? `${isZh ? "词汇偏好" : "Vocabulary"}: ${persona.dialogueStyle.vocabulary}` : "",
+  ].filter(Boolean).join("\n");
+
+  const dialogSection = dialogStyle
+    ? `\n${isZh ? "## 对话风格" : "## Dialogue Style"}\n${dialogStyle}`
+    : "";
+
+  // Behavior constraints
+  const enabledConstraints = persona.behaviorConstraints.filter((c) => c.enabled);
+  let constraintSection = "";
+  if (enabledConstraints.length > 0) {
+    const lines = enabledConstraints.map((c) => {
+      const prefix = isZh
+        ? c.style === "Always" ? "必须" : c.style === "Never" ? "禁止" : "条件"
+        : c.style;
+      const condition = c.condition ? ` (${c.condition})` : "";
+      return `- [${prefix}] ${c.rule}${condition}`;
+    });
+    constraintSection = `\n${isZh ? "## 行为规则" : "## Behavior Rules"}\n${lines.join("\n")}`;
+  }
+
+  // Free text details
+  const detailsSection = persona.freeTextDetails
+    ? `\n${isZh ? "## 详细人格描述" : "## Detailed Persona Description"}\n${persona.freeTextDetails}`
+    : "";
+
+  const personaBlock = [
+    `${isZh ? `## Persona：${persona.displayName}` : `## Persona: ${persona.displayName}`}`,
+    traits,
+    dialogSection,
+    constraintSection,
+    detailsSection,
+  ].filter(Boolean).join("\n");
+
+  sections.push(personaBlock);
+
+  return sections.join("\n");
 }
 
 function indentSkillBody(body: string, prefix: string): string {
@@ -576,21 +635,22 @@ export function buildAgentSystemPrompt(
 ): string {
   const isZh = language === "zh";
   const withSkills = (prompt: string) => appendSkillGuidance(prompt, isZh, options.skills);
+  const withPersona = (prompt: string) => appendPersonaGuidance(prompt, isZh, options.personaConfig);
 
-  if (sessionKind === "book-create") return withSkills(buildBookCreatePrompt(isZh, isConfirmedAction(options, "create_book")));
+  if (sessionKind === "book-create") return withPersona(withSkills(buildBookCreatePrompt(isZh, isConfirmedAction(options, "create_book"))));
   if (sessionKind === "short") {
     const confirmedIntent = isConfirmedAction(options, "short_run")
       ? "short_run"
       : isConfirmedAction(options, "generate_cover")
         ? "generate_cover"
         : undefined;
-    return withSkills(buildShortPrompt(isZh, confirmedIntent));
+    return withPersona(withSkills(buildShortPrompt(isZh, confirmedIntent)));
   }
-  if (sessionKind === "play") return withSkills(buildPlayPrompt(isZh, isConfirmedAction(options, "play_start"), options.playWorldExists === true));
-  if (sessionKind === "script") return withSkills(buildScriptPrompt(isZh, isConfirmedAction(options, "script_create")));
-  if (sessionKind === "storyboard") return withSkills(buildStoryboardPrompt(isZh, isConfirmedAction(options, "storyboard_create")));
-  if (sessionKind === "interactive-film") return withSkills(buildInteractiveFilmPrompt(isZh, isConfirmedAction(options, "interactive_film_create")));
-  if (sessionKind === "edit") return withSkills(buildEditPrompt(bookId, isZh));
-  if (sessionKind === "book" && bookId) return withSkills(buildBookPrompt(bookId, isZh));
-  return withSkills(buildChatPrompt(isZh));
+  if (sessionKind === "play") return withPersona(withSkills(buildPlayPrompt(isZh, isConfirmedAction(options, "play_start"), options.playWorldExists === true)));
+  if (sessionKind === "script") return withPersona(withSkills(buildScriptPrompt(isZh, isConfirmedAction(options, "script_create"))));
+  if (sessionKind === "storyboard") return withPersona(withSkills(buildStoryboardPrompt(isZh, isConfirmedAction(options, "storyboard_create"))));
+  if (sessionKind === "interactive-film") return withPersona(withSkills(buildInteractiveFilmPrompt(isZh, isConfirmedAction(options, "interactive_film_create"))));
+  if (sessionKind === "edit") return withPersona(withSkills(buildEditPrompt(bookId, isZh)));
+  if (sessionKind === "book" && bookId) return withPersona(withSkills(buildBookPrompt(bookId, isZh)));
+  return withPersona(withSkills(buildChatPrompt(isZh)));
 }
