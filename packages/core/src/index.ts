@@ -170,6 +170,24 @@ export { type BookRules, type ParsedBookRules, BookRulesSchema, parseBookRules, 
 export { type DetectionHistoryEntry, type DetectionStats } from "./models/detection.js";
 export { type StyleProfile } from "./models/style-profile.js";
 export {
+  checkConsistency,
+  type ConsistencyReport,
+  type ConsistencyIssue,
+  type IssueType,
+  type IssueSeverity,
+  type ConsistencyCheckInput,
+  type ChapterContent,
+  type CharacterProfile,
+  ISSUE_TYPE_LABELS,
+  ISSUE_SEVERITY_LABELS,
+} from "./ai/consistency-checker.js";
+export {
+  createEmptyReport,
+  calculateScore,
+  buildSummary,
+  type ConsistencyReport as CRType,
+} from "./ai/consistency-report.js";
+export {
   VoiceProfileSchema as CharacterVoiceProfileSchema,
   VoiceProfilesFileSchema,
   VOICE_PRESETS,
