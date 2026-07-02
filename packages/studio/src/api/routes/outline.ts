@@ -4,6 +4,8 @@ import { join } from "node:path";
 import {
   ChapterOutlineSchema,
   OutlineFileSchema,
+  planChapters,
+  type ChapterPlan,
   type ChapterOutline,
   type OutlineFile,
 } from "@actalk/inkos-core";
@@ -272,6 +274,44 @@ export function createOutlineRouter(bookDir: (id: string) => string) {
     outline.version += 1;
     await saveOutlineFile(dir, outline);
     return c.json({ chapters: all });
+  });
+
+  // POST /:id/outline/plan-chapters — rule-based AI chapter planning
+  router.post("/:id/outline/plan-chapters", async (c) => {
+    const id = c.req.param("id");
+
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json({ error: { code: "INVALID_JSON", message: "请求体不是有效的 JSON" } }, 400);
+    }
+
+    if (!isRecord(body)) {
+      return c.json({ error: { code: "INVALID_BODY", message: "请求体必须是对象" } }, 400);
+    }
+
+    const chapterCount =
+      typeof body.chapterCount === "number" && Number.isInteger(body.chapterCount) && body.chapterCount > 0
+        ? body.chapterCount
+        : 10;
+
+    // Load existing outline for context
+    const dir = bookDir(id);
+    const outline = await loadOutlineFile(dir);
+
+    const existingChapters = outline.chapters.map((ch) => ({
+      number: ch.number,
+      title: ch.title,
+      summary: ch.summary,
+    }));
+
+    const plans: ChapterPlan[] = planChapters({
+      chapterCount,
+      outline: { chapters: existingChapters },
+    });
+
+    return c.json({ plans });
   });
 
   return router;

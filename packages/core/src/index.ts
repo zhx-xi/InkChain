@@ -247,6 +247,14 @@ export {
   type ConstraintSeverity,
 } from "./ai/generation-constraints.js";
 export {
+  planChapters,
+  detectArcCoverage,
+  DEFAULT_PLANNER_CONFIG,
+  type ChapterPlan,
+  type OutlinePlannerInput,
+  type PlannerConfig,
+} from "./ai/outline-planner.js";
+export {
   VoiceProfileSchema as CharacterVoiceProfileSchema,
   VoiceProfilesFileSchema,
   VOICE_PRESETS,
