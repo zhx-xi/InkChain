@@ -175,7 +175,7 @@ export function createSkillsRouter(root: string) {
     const existingStored = mergedSkills.find((s) => s.config.id === id);
     const baseConfig: SkillConfig = existingStored
       ? existingStored.config
-      : { id, category: "utility", triggers: [], injection: { mode: "append", target: "system_prompt", priority: 50 }, params: {}, enabled: true, description: "", prompt: "", agents: [] };
+      : { id, category: "utility", triggers: [], injection: { mode: "append", target: "system_prompt", priority: 50 }, params: {}, enabled: true, description: "", prompt: "" };
 
     const updated: SkillConfig = { ...baseConfig, ...parsed.data, id };
     await writeProjectSkill(root, updated);

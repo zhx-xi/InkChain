@@ -186,13 +186,12 @@ export function SkillListPage() {
               <div
                 key={config.id}
                 className={cn(
-                  "rounded-xl border border-border/40 bg-card p-4 transition-opacity cursor-pointer hover:border-border/70 hover:shadow-sm",
+                  "rounded-xl border border-border/40 bg-card p-4 transition-opacity",
                   !config.enabled && "opacity-60"
                 )}
-                onClick={() => setEditingSkillId(config.id)}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-medium text-foreground truncate">
                         {config.id}
@@ -218,7 +217,7 @@ export function SkillListPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end gap-2" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex flex-col items-end gap-2">
                     <button
                       type="button"
                       role="switch"
@@ -241,14 +240,6 @@ export function SkillListPage() {
                     <span className={cn("text-[10px]", config.enabled ? "text-primary" : "text-muted-foreground")}>
                       {config.enabled ? "已启用" : "已禁用"}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => setEditingSkillId(config.id)}
-                      className="inline-flex items-center gap-1 rounded-md border border-border/40 px-2 py-1 text-[10px] text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors"
-                    >
-                      <Edit2 size={10} />
-                      编辑
-                    </button>
                   </div>
                 </div>
 

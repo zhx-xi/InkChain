@@ -28,8 +28,7 @@ export type HashRoute =
   | { page: "timeline"; bookId: string }
   | { page: "agents" }
   | { page: "archive" }
-  | { page: "skills" }
-  | { page: "foreshadowing" };
+  | { page: "skills" };
 
 function parseHash(hash: string): HashRoute {
   const path = hash.replace(/^#\/?/, "");
@@ -42,7 +41,6 @@ function parseHash(hash: string): HashRoute {
   if (path === "agents") return { page: "agents" };
   if (path === "archive") return { page: "archive" };
   if (path === "skills") return { page: "skills" };
-  if (path === "foreshadowing") return { page: "foreshadowing" };
   const importMatch = path.match(/^import\/(chapters|canon|fanfic|spinoff|imitation)$/);
   if (importMatch) return { page: "import", tab: importMatch[1] as "chapters" | "canon" | "fanfic" | "spinoff" | "imitation" };
   if (path === "book/new") return { page: "book-create" };
@@ -101,14 +99,13 @@ function routeToHash(route: HashRoute): string {
     case "agents": return "#/agents";
     case "archive": return "#/archive";
     case "skills": return "#/skills";
-    case "foreshadowing": return "#/foreshadowing";
     default: return "";
   }
 }
 
 export { parseHash, routeToHash }; // for testing
 
-const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing"]);
+const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills"]);
 
 export function useHashRoute() {
   const [route, setRouteState] = useState<HashRoute>(() => parseHash(window.location.hash));
