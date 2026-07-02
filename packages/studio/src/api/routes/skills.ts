@@ -48,7 +48,7 @@ function toApiSkill(stored: StoredSkillConfig): ApiSkillResponse {
   };
 }
 
-async function loadMergedSkills(root: string): Promise<StoredSkillConfig[]> {
+async function loadMergedSkills(root: string): Promise<ReadonlyArray<StoredSkillConfig>> {
   const result = await loadSkillConfigs({ projectRoot: root });
   return result.skills;
 }
