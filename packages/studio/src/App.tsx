@@ -26,6 +26,7 @@ import { StoryGraphTree } from "./pages/StoryGraphTree";
 const FlowView = lazy(() => import("./pages/FlowView"));
 const FilmWizard = lazy(() => import("./pages/FilmWizard"));
 import { LanguageSelector } from "./pages/LanguageSelector";
+import { ArchivePage } from "./pages/ArchivePage";
 import { BookSidebar, BookSidebarToggle } from "./components/chat/BookSidebar";
 import { useSSE } from "./hooks/use-sse";
 import { useSessionEvents } from "./hooks/use-session-events";
@@ -108,6 +109,7 @@ export function App() {
     toFilmAuthor: (projectId: string) => setRoute({ page: "film-author", projectId }),
     toFilmStudio: (projectId: string) => setRoute({ page: "film-studio", projectId }),
     toAgents: () => setRoute({ page: "agents" }),
+    toArchive: () => setRoute({ page: "archive" }),
   };
 
   const activeBookId = deriveActiveBookId(route);
@@ -369,6 +371,11 @@ export function App() {
           {route.page === "agents" && (
             <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <AgentTeamPanel nav={nav} />
+            </div>
+          )}
+          {route.page === "archive" && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <ArchivePage />
             </div>
           )}
         </main>
