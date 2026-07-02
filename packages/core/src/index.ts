@@ -369,6 +369,24 @@ export {
   legacyBookSessionPath,
 } from "./interaction/session-transcript.js";
 export {
+  SessionTagSchema,
+  SessionTagsFileSchema,
+  TAG_COLORS,
+  type SessionTag,
+  type SessionTagsFile,
+  type TagColorId,
+  type TagColorHex,
+} from "./interaction/session-tags.js";
+export {
+  loadSessionTags,
+  getSessionTags,
+  addSessionTag,
+  removeSessionTag,
+  listTagsByName,
+  resolveSessionTagsPath,
+  persistSessionTags,
+} from "./interaction/session-tag-store.js";
+export {
   cleanRestoredAgentMessages,
   committedMessageEvents,
   deriveBookSessionFromTranscript,
