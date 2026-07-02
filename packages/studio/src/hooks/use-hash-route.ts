@@ -34,7 +34,8 @@ export type HashRoute =
   | { page: "world-detail"; worldId: string }
   | { page: "world-create" }
   | { page: "world-geoviz"; worldId: string }
-  | { page: "publish"; bookId: string };
+  | { page: "publish"; bookId: string }
+  | { page: "edit-dashboard"; bookId: string };
 
 function parseHash(hash: string): HashRoute {
   const path = hash.replace(/^#\/?/, "");
@@ -92,6 +93,9 @@ function parseHash(hash: string): HashRoute {
   const publishMatch = path.match(/^publish\/([^/]+)$/);
   if (publishMatch) return { page: "publish", bookId: decodeURIComponent(publishMatch[1]) };
 
+  const editDashboardMatch = path.match(/^edit-dashboard\/([^/]+)$/);
+  if (editDashboardMatch) return { page: "edit-dashboard", bookId: decodeURIComponent(editDashboardMatch[1]) };
+
   return { page: "dashboard" };
 }
 
@@ -122,13 +126,14 @@ function routeToHash(route: HashRoute): string {
     case "world-detail": return `#/worlds/${encodeURIComponent(route.worldId)}`;
     case "world-geoviz": return `#/worlds/${encodeURIComponent(route.worldId)}/geoviz`;
     case "publish": return `#/publish/${encodeURIComponent(route.bookId)}`;
+    case "edit-dashboard": return `#/edit-dashboard/${encodeURIComponent(route.bookId)}`;
     default: return "";
   }
 }
 
 export { parseHash, routeToHash }; // for testing
 
-const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "worlds", "world-detail", "world-create", "world-geoviz", "publish"]);
+const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "worlds", "world-detail", "world-create", "world-geoviz", "publish", "edit-dashboard"]);
 
 export function useHashRoute() {
   const [route, setRouteState] = useState<HashRoute>(() => parseHash(window.location.hash));
