@@ -1,10 +1,11 @@
 import { useMemo, useState, useCallback } from "react";
-import { Search, X, Sparkles, Edit2 } from "lucide-react";
+import { Search, X, Sparkles, Edit2, Plus } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useApi, fetchJson } from "../hooks/use-api";
 import type { SkillConfig, SkillCategory } from "@actalk/inkos-core";
 import { SKILL_CATEGORY_LABELS } from "@actalk/inkos-core";
 import { SkillEditSheet } from "../components/SkillEditSheet";
+import { SkillCreateDialog } from "../components/SkillCreateDialog";
 
 interface ApiSkillResponse {
   readonly config: SkillConfig;
@@ -41,6 +42,9 @@ export function SkillListPage() {
   const [status, setStatus] = useState<StatusFilter>("all");
   const [toggling, setToggling] = useState<Set<string>>(new Set());
   const [editingSkillId, setEditingSkillId] = useState<string | null>(null);
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [createMode, setCreateMode] = useState<"blank" | "template" | "ai" | null>(null);
+  const [aiDraft, setAiDraft] = useState<Partial<SkillConfig> | null>(null);
 
   const filteredSkills = useMemo(() => {
     const list = data?.skills ?? [];
@@ -83,6 +87,14 @@ export function SkillListPage() {
             管理项目级与内置 Skill，控制启用状态与分类
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => setShowCreateDialog(true)}
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
+        >
+          <Plus size={16} />
+          创建 Skill
+        </button>
       </div>
 
       {/* Filters */}
@@ -174,13 +186,12 @@ export function SkillListPage() {
               <div
                 key={config.id}
                 className={cn(
-                  "rounded-xl border border-border/40 bg-card p-4 transition-opacity cursor-pointer hover:border-border/70 hover:shadow-sm",
+                  "rounded-xl border border-border/40 bg-card p-4 transition-opacity",
                   !config.enabled && "opacity-60"
                 )}
-                onClick={() => setEditingSkillId(config.id)}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-medium text-foreground truncate">
                         {config.id}
@@ -206,7 +217,7 @@ export function SkillListPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end gap-2" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex flex-col items-end gap-2">
                     <button
                       type="button"
                       role="switch"
@@ -229,14 +240,6 @@ export function SkillListPage() {
                     <span className={cn("text-[10px]", config.enabled ? "text-primary" : "text-muted-foreground")}>
                       {config.enabled ? "已启用" : "已禁用"}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => setEditingSkillId(config.id)}
-                      className="inline-flex items-center gap-1 rounded-md border border-border/40 px-2 py-1 text-[10px] text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors"
-                    >
-                      <Edit2 size={10} />
-                      编辑
-                    </button>
                   </div>
                 </div>
 
@@ -252,11 +255,22 @@ export function SkillListPage() {
           })}
         </div>
       )}
+      {/* Create dialog */}
+      <SkillCreateDialog
+        isOpen={showCreateDialog}
+        onClose={() => { setShowCreateDialog(false); setCreateMode(null); setAiDraft(null); }}
+        onSelectBlank={() => { setCreateMode("blank"); }}
+        onSelectTemplate={(template) => { setCreateMode("template"); setAiDraft(template); }}
+        onAiGenerate={(config) => { setCreateMode("ai"); setAiDraft(config); }}
+      />
+
+      {/* Create mode: open SkillEditSheet */}
       <SkillEditSheet
-        skillId={editingSkillId}
-        isOpen={editingSkillId !== null}
-        onClose={() => setEditingSkillId(null)}
-        onSaved={refetch}
+        skillId={createMode === "blank" ? "__create__" : (createMode ? "__create__" : editingSkillId)}
+        isOpen={createMode !== null || editingSkillId !== null}
+        onClose={() => { setEditingSkillId(null); setCreateMode(null); setAiDraft(null); }}
+        onSaved={() => { refetch(); setCreateMode(null); setAiDraft(null); }}
+        createDraft={createMode ? aiDraft ?? undefined : undefined}
       />
     </div>
   );

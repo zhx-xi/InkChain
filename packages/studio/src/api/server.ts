@@ -117,7 +117,6 @@ import { createOutlineRouter } from "./routes/outline.js";
 import { createVoiceProfilesRouter } from "./routes/voice-profiles.js";
 import { createTimelinesRouter } from "./routes/timelines.js";
 import { createSkillsRouter } from "./routes/skills.js";
-import { createWorldsRouter } from "./routes/worlds.js";
 import { createSessionTagsRouter } from "./routes/session-tags.js";
 import { createSessionsRouter } from "./routes/sessions.js";
 import { createRelationExtractionRouter } from "./routes/relation-extraction.js";
