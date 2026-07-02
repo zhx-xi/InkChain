@@ -408,6 +408,7 @@ async function ensureSessionCreatedEvent(
       bookId,
       ...(sessionKind ? { sessionKind } : {}),
       title: null,
+      status: "active",
       createdAt: now,
       updatedAt: now,
     }];

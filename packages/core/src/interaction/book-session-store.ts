@@ -1,8 +1,10 @@
-import { readdir, unlink } from "node:fs/promises";
+import { readdir, readFile, unlink } from "node:fs/promises";
+import { join } from "node:path";
 import { createBookSession } from "./session.js";
 import type { BookSession, PlayMode, SessionKind } from "./session.js";
 import {
   appendTranscriptEvents,
+  appendTranscriptEvent,
   legacyBookSessionPath,
   readTranscriptEvents,
   sessionsDir,
@@ -69,6 +71,7 @@ async function appendSessionCreatedEvent(
       ...(session.sessionKind ? { sessionKind: session.sessionKind } : {}),
       ...(session.playMode ? { playMode: session.playMode } : {}),
       title: session.title,
+      status: session.status ?? "active",
       createdAt: session.createdAt,
       updatedAt: session.updatedAt,
     }];
@@ -83,6 +86,9 @@ async function appendSessionMetadataUpdatedEvent(
     readonly sessionKind?: SessionKind;
     readonly playMode?: PlayMode;
     readonly title?: string | null;
+    readonly status?: "active" | "archived";
+    readonly archivedAt?: number;
+    readonly archiveReason?: string;
     readonly updatedAt: number;
   },
 ): Promise<void> {
@@ -97,6 +103,9 @@ async function appendSessionMetadataUpdatedEvent(
     ...(metadata.sessionKind ? { sessionKind: metadata.sessionKind } : {}),
     ...(metadata.playMode ? { playMode: metadata.playMode } : {}),
     ...("title" in metadata ? { title: metadata.title } : {}),
+    ...("status" in metadata ? { status: metadata.status } : {}),
+    ...("archivedAt" in metadata ? { archivedAt: metadata.archivedAt } : {}),
+    ...("archiveReason" in metadata ? { archiveReason: metadata.archiveReason } : {}),
   }]);
 }
 
@@ -129,6 +138,7 @@ export interface BookSessionSummary {
   readonly sessionKind?: SessionKind;
   readonly playMode?: PlayMode;
   readonly title: string | null;
+  readonly status: "active" | "archived";
   readonly messageCount: number;
   readonly createdAt: number;
   readonly updatedAt: number;
@@ -136,7 +146,8 @@ export interface BookSessionSummary {
 
 export async function listBookSessions(
   projectRoot: string,
-  bookId: string | null,
+  bookId: string | null | undefined,
+  status?: "active" | "archived",
 ): Promise<ReadonlyArray<BookSessionSummary>> {
   const dir = sessionsDir(projectRoot);
   let files: string[];
@@ -159,7 +170,9 @@ export async function listBookSessions(
     [...sessionIds].map(async (sessionId): Promise<BookSessionSummary | null> => {
       try {
         const session = await loadBookSession(projectRoot, sessionId);
-        if (!session || session.bookId !== bookId) return null;
+        if (!session) return null;
+        if (bookId !== undefined && session.bookId !== bookId) return null;
+        if (status !== undefined && session.status !== status) return null;
 
         return {
           sessionId: session.sessionId,
@@ -167,6 +180,7 @@ export async function listBookSessions(
           sessionKind: session.sessionKind,
           playMode: session.playMode,
           title: session.title,
+          status: session.status,
           messageCount: session.messages.length,
           createdAt: session.createdAt,
           updatedAt: session.updatedAt,
@@ -248,4 +262,171 @@ export async function createAndPersistBookSession(
   const session = createBookSession(bookId, sessionId, sessionKind, options);
   await appendSessionCreatedEvent(projectRoot, session);
   return session;
+}
+
+// ── Archive / Unarchive ──
+
+export async function archiveBookSession(
+  projectRoot: string,
+  sessionId: string,
+  reason?: string,
+): Promise<BookSession | null> {
+  const session = await loadBookSession(projectRoot, sessionId);
+  if (!session) return null;
+  if (session.status === "archived") return session;
+
+  const now = Date.now();
+  await appendTranscriptEvents(projectRoot, sessionId, ({ nextSeq }) => [{
+    type: "session_archived",
+    version: 1,
+    sessionId,
+    seq: nextSeq,
+    timestamp: now,
+    ...(reason ? { reason } : {}),
+  }]);
+
+  await appendSessionMetadataUpdatedEvent(projectRoot, sessionId, {
+    status: "archived",
+    archivedAt: now,
+    ...(reason ? { archiveReason: reason } : {}),
+    updatedAt: now,
+  });
+
+  return loadBookSession(projectRoot, sessionId);
+}
+
+export async function unarchiveBookSession(
+  projectRoot: string,
+  sessionId: string,
+): Promise<BookSession | null> {
+  const session = await loadBookSession(projectRoot, sessionId);
+  if (!session) return null;
+  if (session.status === "active") return session;
+
+  const now = Date.now();
+  await appendTranscriptEvents(projectRoot, sessionId, ({ nextSeq }) => [{
+    type: "session_unarchived",
+    version: 1,
+    sessionId,
+    seq: nextSeq,
+    timestamp: now,
+  }]);
+
+  await appendSessionMetadataUpdatedEvent(projectRoot, sessionId, {
+    status: "active",
+    archivedAt: undefined,
+    archiveReason: undefined,
+    updatedAt: now,
+  });
+
+  return loadBookSession(projectRoot, sessionId);
+}
+
+export async function batchArchiveBookSessions(
+  projectRoot: string,
+  sessionIds: string[],
+): Promise<number> {
+  let count = 0;
+  for (const sessionId of sessionIds) {
+    const result = await archiveBookSession(projectRoot, sessionId);
+    if (result) count += 1;
+  }
+  return count;
+}
+
+export async function mergeBookSessions(
+  projectRoot: string,
+  targetId: string,
+  sourceId: string,
+): Promise<BookSession | null> {
+  const target = await loadBookSession(projectRoot, targetId);
+  const source = await loadBookSession(projectRoot, sourceId);
+  if (!target || !source) return null;
+
+  // Merge messages sorted by timestamp
+  const mergedMessages = [...target.messages, ...source.messages].sort(
+    (a, b) => a.timestamp - b.timestamp,
+  );
+
+  // Delete source session files
+  await Promise.all([
+    unlink(transcriptPath(projectRoot, sourceId)).catch(() => undefined),
+    unlink(legacyBookSessionPath(projectRoot, sourceId)).catch(() => undefined),
+  ]);
+
+  // For each source message, append as a transcript event to the target session
+  for (const msg of source.messages) {
+    await appendTranscriptEvents(projectRoot, targetId, ({ nextSeq }) => [{
+      type: "message",
+      version: 1 as const,
+      sessionId: targetId,
+      requestId: `merge-${sourceId}-${nextSeq}`,
+      uuid: `merge-${sourceId}-${msg.timestamp}-${nextSeq}`,
+      parentUuid: null,
+      seq: nextSeq,
+      role: msg.role === "user" ? "user" as const : msg.role === "assistant" ? "assistant" as const : "system" as const,
+      timestamp: msg.timestamp,
+      message: {
+        role: msg.role,
+        content: [{ type: "text", text: msg.content }],
+        timestamp: msg.timestamp,
+      },
+    }]);
+  }
+
+  // Persist target with merged messages
+  const now = Date.now();
+  await appendSessionMetadataUpdatedEvent(projectRoot, targetId, {
+    updatedAt: now,
+  });
+
+  const updated = await loadBookSession(projectRoot, targetId);
+  if (!updated) return null;
+
+  return {
+    ...updated,
+    messages: mergedMessages,
+    updatedAt: now,
+  };
+}
+
+export async function autoArchiveStaleSessions(
+  projectRoot: string,
+  maxAgeDays: number = 30,
+): Promise<number> {
+  const dir = sessionsDir(projectRoot);
+  let files: string[];
+  try {
+    files = await readdir(dir);
+  } catch {
+    return 0;
+  }
+
+  const sessionIds = new Set<string>();
+  for (const file of files) {
+    if (file.endsWith(".jsonl")) {
+      sessionIds.add(file.slice(0, -".jsonl".length));
+    } else if (file.endsWith(".json")) {
+      sessionIds.add(file.slice(0, -".json".length));
+    }
+  }
+
+  const cutoff = Date.now() - maxAgeDays * 24 * 60 * 60 * 1000;
+  let count = 0;
+
+  for (const sessionId of sessionIds) {
+    try {
+      const session = await loadBookSession(projectRoot, sessionId);
+      if (!session || session.status !== "active") continue;
+      if (session.updatedAt > cutoff) continue;
+
+      const result = await archiveBookSession(projectRoot, sessionId, "auto-archived (stale)");
+      if (result) count += 1;
+    } catch {
+      // Skip sessions that fail to load
+      continue;
+    }
+  }
+
+  return count;
 }
