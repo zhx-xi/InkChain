@@ -113,16 +113,59 @@ describe("injectSkillsIntoPrompt", () => {
     expect(midIndex).toBeLessThan(lowIndex);
   });
 
-  it("ignores skills with non-append mode in MVP", () => {
+  it("prepends matching prepend-mode skills before base prompt", () => {
     const base = "Base prompt";
     const skill = makeSkill({
-      id: "prepend-skill",
-      prompt: "Ignored",
+      id: "prep",
+      prompt: "Prepend content",
       injection: { mode: InjectionModeEnum.enum.prepend, target: "system_prompt", priority: 99 },
     });
     const result = injectSkillsIntoPrompt(base, [skill], {});
-    expect(result.prompt).toBe(base);
-    expect(result.injectedSkillIds).toEqual([]);
+    expect(result.injectedSkillIds).toEqual(["prep"]);
+    expect(result.prompt).toContain("Prepend content");
+    expect(result.prompt.indexOf("Prepend content")).toBeLessThan(result.prompt.indexOf("Base prompt"));
+  });
+
+  it("replaces base prompt with highest-priority replace-mode skill", () => {
+    const base = "Base prompt";
+    const low = makeSkill({
+      id: "replace-low",
+      prompt: "Low priority replace",
+      injection: { mode: InjectionModeEnum.enum.replace, target: "system_prompt", priority: 30 },
+    });
+    const high = makeSkill({
+      id: "replace-high",
+      prompt: "High priority replace",
+      injection: { mode: InjectionModeEnum.enum.replace, target: "system_prompt", priority: 90 },
+    });
+    const result = injectSkillsIntoPrompt(base, [low, high], {});
+    expect(result.injectedSkillIds).toEqual(["replace-high"]);
+    expect(result.prompt).toContain("High priority replace");
+    expect(result.prompt).not.toContain("Base prompt");
+    expect(result.prompt).not.toContain("Low priority replace");
+  });
+
+  it("combines prepend + append skills together", () => {
+    const base = "Core prompt";
+    const prep = makeSkill({
+      id: "prep",
+      prompt: "Prepend",
+      injection: { mode: InjectionModeEnum.enum.prepend, target: "system_prompt", priority: 50 },
+    });
+    const app = makeSkill({
+      id: "app",
+      prompt: "Append",
+      injection: { mode: "append", target: "system_prompt", priority: 50 },
+    });
+    const result = injectSkillsIntoPrompt(base, [prep, app], {});
+    expect(result.injectedSkillIds).toEqual(["app", "prep"]); // append listed first, then prepend
+    const prompt = result.prompt;
+    expect(prompt).toContain("Prepend");
+    expect(prompt).toContain("Core prompt");
+    expect(prompt).toContain("Append");
+    // Order: prepend block → base prompt → append block
+    expect(prompt.indexOf("Prepend")).toBeLessThan(prompt.indexOf("Core prompt"));
+    expect(prompt.indexOf("Core prompt")).toBeLessThan(prompt.indexOf("Append"));
   });
 
   it("ignores skills targeting non-system_prompt targets", () => {

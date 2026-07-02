@@ -1,12 +1,19 @@
-// ── Skill Injection Pipeline (Issue #75) ──
+// ── Skill Injection Pipeline (Issue #75 / #91) ──
 //
 // Evaluates user-facing SkillConfig triggers at runtime and injects matching
-// skill prompts into the system prompt. MVP scope:
-//   * Injection mode: append only
-//   * Trigger types: manual and condition
-//   * Target: system_prompt (user_prompt / context reserved for v2.5+)
+// skill prompts into the system prompt.
+//
+// Injection modes (Issue #91):
+//   * append  — appends the injected block after the base prompt (default)
+//   * prepend — inserts the injected block before the base prompt
+//   * replace — replaces the base prompt entirely with the highest-priority
+//               matching replace-skill's prompt
+//
+// Multiple replace-skills are resolved by priority: the one with the highest
+// `injection.priority` wins; lower-priority replace-skills are skipped.
 //
 // See: Issue #75 — Skill-2: Skill触发注入管道
+// See: Issue #91 — Skill-8: Skill prepend/replace注入模式扩展
 
 import {
   type SkillConfig,
@@ -116,12 +123,16 @@ export interface SkillInjectionResult {
 /**
  * Inject matching skills into a system prompt.
  *
- * MVP behaviour:
- *   * Only `append` mode is honoured; `prepend` and `replace` are ignored.
- *   * Only `target === "system_prompt"` is honoured.
- *   * Matching skills are sorted by `injection.priority` descending (higher
- *     priority injected first among the appended block).
- *   * The injected block is appended to the end of `basePrompt`.
+ * Supported injection modes:
+ *   * append  — injected block appended after the base prompt
+ *   * prepend — injected block inserted before the base prompt
+ *   * replace — replaced the entire prompt with the highest-priority matching
+ *               replace skill's prompt (lower-priority replace skills skipped)
+ *
+ * Only `target === "system_prompt"` is honoured in v2.5.
+ * Matching skills are sorted by `injection.priority` descending within
+ * each mode group. Append and prepend skills can coexist; replace skills
+ * are mutually exclusive with each other (only the highest priority wins).
  */
 export function injectSkillsIntoPrompt(
   basePrompt: string,
@@ -133,19 +144,37 @@ export function injectSkillsIntoPrompt(
     "config" in s ? s.config : s
   );
 
-  const matching = normalized
+  const allMatching = normalized
     .filter((skill) => shouldInjectSkill(skill, context))
-    .filter((skill) => skill.injection.mode === InjectionModeEnum.enum.append)
     .filter((skill) => skill.injection.target === InjectionTargetEnum.enum.system_prompt)
-    .filter((skill) => skill.prompt.trim().length > 0)
+    .filter((skill) => skill.prompt.trim().length > 0);
+
+  // Separate by injection mode
+  const appendSkills = allMatching
+    .filter((s) => s.injection.mode === InjectionModeEnum.enum.append)
     .sort((a, b) => b.injection.priority - a.injection.priority);
 
-  const injectedSkillIds = matching.map((s) => s.id);
+  const prependSkills = allMatching
+    .filter((s) => s.injection.mode === InjectionModeEnum.enum.prepend)
+    .sort((a, b) => b.injection.priority - a.injection.priority);
+
+  const replaceSkills = allMatching
+    .filter((s) => s.injection.mode === InjectionModeEnum.enum.replace)
+    .sort((a, b) => b.injection.priority - a.injection.priority);
+
+  // For replace mode, only the highest-priority replace skill wins
+  const winnerReplace = replaceSkills.length > 0 ? replaceSkills[0] : null;
+
+  const injectedSkillIds = [
+    ...appendSkills.map((s) => s.id),
+    ...prependSkills.map((s) => s.id),
+    ...(winnerReplace ? [winnerReplace.id] : []),
+  ];
   const skippedSkillIds = normalized
     .filter((s) => !injectedSkillIds.includes(s.id))
     .map((s) => s.id);
 
-  if (matching.length === 0) {
+  if (injectedSkillIds.length === 0) {
     return { prompt: basePrompt, injectedSkillIds, skippedSkillIds };
   }
 
@@ -154,14 +183,39 @@ export function injectSkillsIntoPrompt(
     ? "以下 Skill 已根据触发条件自动注入，按优先级排序。"
     : "The following skills have been automatically injected based on trigger conditions, sorted by priority.";
 
-  const skillBlocks = matching.map((skill) => {
-    const meta = `[${skill.id}] priority=${skill.injection.priority}`;
-    return `${meta}\n${skill.prompt.trim()}`;
-  });
+  const buildBlock = (skills: SkillConfig[]): string => {
+    if (skills.length === 0) return "";
+    const blocks = skills.map((skill) => {
+      const meta = `[${skill.id}] priority=${skill.injection.priority}`;
+      return `${meta}\n${skill.prompt.trim()}`;
+    });
+    return [heading, "", intro, ...blocks].join("\n");
+  };
 
-  const injected = [heading, "", intro, ...skillBlocks].join("\n");
+  // Build the injected block
+  let resultPrompt = basePrompt;
+
+  // 1. Prepend block (inserted before base prompt)
+  if (prependSkills.length > 0) {
+    const prependBlock = buildBlock(prependSkills);
+    resultPrompt = `${prependBlock}\n\n${resultPrompt}`;
+  }
+
+  // 2. Replace block (replaces the entire prompt)
+  if (winnerReplace) {
+    const meta = `[${winnerReplace.id}] priority=${winnerReplace.injection.priority}`;
+    const replaceContent = `${heading}\n\n${intro}\n${meta}\n${winnerReplace.prompt.trim()}`;
+    resultPrompt = replaceContent;
+  }
+
+  // 3. Append block (appended after base prompt)
+  if (appendSkills.length > 0) {
+    const appendBlock = buildBlock(appendSkills);
+    resultPrompt = `${resultPrompt}\n\n${appendBlock}`;
+  }
+
   return {
-    prompt: `${basePrompt}\n\n${injected}`,
+    prompt: resultPrompt,
     injectedSkillIds,
     skippedSkillIds,
   };

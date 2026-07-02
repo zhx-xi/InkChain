@@ -217,3 +217,13 @@ export function serializePersonaConfig(config: PersonaConfig, body: string): str
   });
   return `---\n${yamlStr}---\n\n${body}`;
 }
+
+/**
+ * Summary of an available persona configuration.
+ * Used for listing personas without loading the full config.
+ */
+export interface PersonaSummary {
+  readonly agentRole: AgentRole;
+  readonly displayName: string;
+  readonly source: "project" | "builtin" | "default";
+}

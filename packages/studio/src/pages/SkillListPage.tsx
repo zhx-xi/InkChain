@@ -2,8 +2,8 @@ import { useMemo, useState, useCallback } from "react";
 import { Search, X, Sparkles, Edit2, Plus } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useApi, fetchJson } from "../hooks/use-api";
-import type { SkillConfig, SkillCategory } from "@actalk/inkos-core";
-import { SKILL_CATEGORY_LABELS } from "@actalk/inkos-core";
+import type { SkillConfig, SkillCategory } from "@actalk/inkos-core/models/skill-config.js";
+import { SKILL_CATEGORY_LABELS } from "@actalk/inkos-core/models/skill-config.js";
 import { SkillEditSheet } from "../components/SkillEditSheet";
 import { SkillCreateDialog } from "../components/SkillCreateDialog";
 
