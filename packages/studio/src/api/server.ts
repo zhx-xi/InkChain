@@ -126,6 +126,7 @@ import { createWorldsRouter } from "./routes/worlds.js";
 import { createPublishRouter } from "./routes/publish.js";
 import { createStyleProfilesRouter } from "./routes/style-profiles.js";
 import { createConsistencyRouter } from "./routes/consistency.js";
+import { createRelationLabelerRouter } from "./routes/relation-labeler.js";
 
 // -- Pipeline stage definitions per agent type --
 
@@ -5551,6 +5552,12 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     () => root,
   );
   app.route("/api/v1/books", relationExtractionRouter);
+
+  // ── AI Relation Labeler (R-15) ──
+  const relationLabelerRouter = createRelationLabelerRouter(
+    (id) => state.bookDir(id),
+  );
+  app.route("/api/v1/books", relationLabelerRouter);
 
   // ── Volumes CRUD ──
   const volumesRouter = createVolumesRouter((id) => state.bookDir(id));
