@@ -957,3 +957,15 @@ export {
 } from "./interactive-film/emotion.js";
 export { exportInk } from "./interactive-film/export-ink.js";
 export { buildPlayableHtml } from "./interactive-film/export-html.js";
+
+// ── Cross-Platform Publish (C1-2) ──
+export {
+  type PublishPlatform,
+  type FormatOptions,
+  type ValidationWarning,
+  type PublishChapter,
+  type IPlatformAdapter,
+  getAdapter,
+  qidianAdapter,
+  fanqieAdapter,
+} from "./publish/index.js";
