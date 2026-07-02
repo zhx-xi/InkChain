@@ -13,17 +13,25 @@ import { Archive, Search, ArrowUpDown, RotateCcw, Check, X, Loader2, Inbox } fro
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { cn } from "@/lib/utils";
 import { HighlightedText } from "../components/SearchPanel";
+import { SessionTagBadge } from "../components/SessionTagBadge";
 
 // ── Types ──
+
+interface SessionTagItem {
+  readonly id: string;
+  readonly name: string;
+  readonly color: string;
+}
 
 interface SessionSummary {
   readonly id: string;
   readonly title: string;
-  readonly summary: string;
   readonly status: "active" | "archived";
+  readonly messageCount: number;
   readonly archivedAt?: string;
-  readonly tags?: string[];
+  readonly createdAt: string;
   readonly updatedAt: string;
+  readonly tags: SessionTagItem[];
 }
 
 interface ArchiveListResponse {
@@ -88,23 +96,6 @@ function findMatchPositions(text: string, query: string): Array<{ start: number;
     idx = found + lowerQuery.length;
   }
   return positions;
-}
-
-// ── Helper: get snippet around first match ──
-
-function getSnippet(text: string, query: string, maxLen = 120): string {
-  if (!query || !text) return text.slice(0, maxLen);
-  const lowerText = text.toLowerCase();
-  const lowerQuery = query.toLowerCase();
-  const firstIdx = lowerText.indexOf(lowerQuery);
-  if (firstIdx === -1) return text.slice(0, maxLen);
-
-  const snippetStart = Math.max(0, firstIdx - 40);
-  const snippetEnd = Math.min(text.length, firstIdx + lowerQuery.length + 60);
-  let snippet = text.slice(snippetStart, snippetEnd);
-  if (snippetStart > 0) snippet = `…${snippet}`;
-  if (snippetEnd < text.length) snippet = `${snippet}…`;
-  return snippet;
 }
 
 // ── ArchivePage Component ──
@@ -182,12 +173,10 @@ export function ArchivePage() {
       if (query) {
         result = result.filter((s) => {
           const title = s.title.toLowerCase();
-          const summary = s.summary.toLowerCase();
-          const tags = (s.tags ?? []).map((t) => t.toLowerCase());
+          const tagNames = s.tags.map((t) => t.name.toLowerCase());
           return (
             title.includes(query) ||
-            summary.includes(query) ||
-            tags.some((t) => t.includes(query))
+            tagNames.some((n) => n.includes(query))
           );
         });
       }
@@ -195,7 +184,7 @@ export function ArchivePage() {
       // Tag filter
       if (selectedTags.size > 0) {
         result = result.filter((s) =>
-          (s.tags ?? []).some((t) => selectedTags.has(t)),
+          s.tags.some((t) => selectedTags.has(t.id)),
         );
       }
 
@@ -212,12 +201,10 @@ export function ArchivePage() {
         const unmatched: SessionSummary[] = [];
         for (const s of result) {
           const title = s.title.toLowerCase();
-          const summary = s.summary.toLowerCase();
-          const tags = (s.tags ?? []).map((t) => t.toLowerCase());
+          const tagNames = s.tags.map((t) => t.name.toLowerCase());
           const isMatch =
             title.includes(query) ||
-            summary.includes(query) ||
-            tags.some((t) => t.includes(query));
+            tagNames.some((n) => n.includes(query));
           if (isMatch) matched.push(s);
           else unmatched.push(s);
         }
@@ -238,13 +225,13 @@ export function ArchivePage() {
   // ── Derive all unique tags from sessions ──
 
   const allTags = useMemo(() => {
-    const tagSet = new Set<string>();
+    const tagMap = new Map<string, SessionTagItem>();
     for (const s of sessions) {
-      for (const t of s.tags ?? []) {
-        tagSet.add(t);
+      for (const t of s.tags) {
+        if (!tagMap.has(t.id)) tagMap.set(t.id, t);
       }
     }
-    return [...tagSet].sort();
+    return [...tagMap.values()].sort((a, b) => a.name.localeCompare(b.name));
   }, [sessions]);
 
   // ── Pagination ──
@@ -487,16 +474,16 @@ export function ArchivePage() {
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs text-muted-foreground shrink-0">标签筛选：</span>
             {allTags.map((tag) => {
-              const isActive = selectedTags.has(tag);
+              const isActive = selectedTags.has(tag.id);
               return (
                 <button
-                  key={tag}
+                  key={tag.id}
                   type="button"
                   onClick={() => {
                     setSelectedTags((prev) => {
                       const next = new Set(prev);
-                      if (next.has(tag)) next.delete(tag);
-                      else next.add(tag);
+                      if (next.has(tag.id)) next.delete(tag.id);
+                      else next.add(tag.id);
                       return next;
                     });
                   }}
@@ -507,7 +494,11 @@ export function ArchivePage() {
                       : "bg-muted/50 text-muted-foreground border border-border/50 hover:bg-muted/80",
                   )}
                 >
-                  {tag}
+                  <span
+                    className="w-2 h-2 rounded-full shrink-0"
+                    style={{ backgroundColor: tag.color }}
+                  />
+                  {tag.name}
                   {isActive && <X size={10} />}
                 </button>
               );
@@ -625,12 +616,6 @@ export function ArchivePage() {
               const titlePositions = query
                 ? findMatchPositions(session.title, query)
                 : [];
-              const summarySnippet = query
-                ? getSnippet(session.summary, query)
-                : session.summary.slice(0, 120);
-              const summaryPositions = query
-                ? findMatchPositions(summarySnippet, query)
-                : [];
 
               return (
                 <div
@@ -662,7 +647,7 @@ export function ArchivePage() {
                           {query && titlePositions.length > 0 ? (
                             <HighlightedText text={session.title} positions={titlePositions} />
                           ) : (
-                            session.title || "（无标题）"
+                            session.title
                           )}
                         </h3>
                         {/* Status Badge */}
@@ -672,49 +657,38 @@ export function ArchivePage() {
                         </span>
                       </div>
 
-                      {/* Summary */}
-                      {session.summary && (
-                        <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2">
-                          {query && summaryPositions.length > 0 ? (
-                            <HighlightedText text={summarySnippet} positions={summaryPositions} />
-                          ) : (
-                            session.summary.slice(0, 120)
-                          )}
-                          {!query && session.summary.length > 120 && "…"}
-                        </p>
-                      )}
+                      {/* Message count summary */}
+                      <p className="mt-1.5 text-xs text-muted-foreground">
+                        {session.messageCount > 0
+                          ? `共 ${session.messageCount} 条消息`
+                          : "空会话"}
+                      </p>
 
                       {/* Tags + Archive Date Row */}
                       <div className="mt-2 flex items-center gap-2 flex-wrap">
                         {/* Tags */}
-                        {(session.tags ?? []).length > 0 && (
+                        {session.tags.length > 0 && (
                           <div className="flex items-center gap-1 flex-wrap">
-                            {(session.tags ?? []).map((tag) => {
-                              const isTagActive = selectedTags.has(tag);
-                              return (
-                                <button
-                                  key={tag}
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedTags((prev) => {
-                                      const next = new Set(prev);
-                                      if (next.has(tag)) next.delete(tag);
-                                      else next.add(tag);
-                                      return next;
-                                    });
-                                  }}
-                                  className={cn(
-                                    "text-[10px] px-1.5 py-0.5 rounded-full border transition-colors",
-                                    isTagActive
-                                      ? "bg-primary/15 text-primary border-primary/30"
-                                      : "bg-muted/30 text-muted-foreground/70 border-border/40 hover:bg-muted/50",
-                                  )}
-                                >
-                                  {tag}
-                                </button>
-                              );
-                            })}
+                            {session.tags.map((tag) => (
+                              <span
+                                key={tag.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedTags((prev) => {
+                                    const next = new Set(prev);
+                                    if (next.has(tag.id)) next.delete(tag.id);
+                                    else next.add(tag.id);
+                                    return next;
+                                  });
+                                }}
+                                className="cursor-pointer"
+                              >
+                                <SessionTagBadge
+                                  tag={tag}
+                                  size="sm"
+                                />
+                              </span>
+                            ))}
                           </div>
                         )}
 
