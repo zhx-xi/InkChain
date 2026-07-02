@@ -7,8 +7,8 @@ export {
   listAvailablePersonas,
   ensurePersonasDir,
   savePersonaConfig,
-  type PersonaSummary,
 } from "./loader.js";
+export type { PersonaSummary } from "../models/persona-config.js";
 export {
   listBuiltinPresets,
   getBuiltinPreset,

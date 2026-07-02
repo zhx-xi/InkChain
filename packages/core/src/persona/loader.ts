@@ -15,6 +15,7 @@ import {
   parsePersonaConfig,
   type AgentRole,
   type PersonaConfig,
+  type PersonaSummary,
 } from "../models/persona-config.js";
 import { getDefaultPersona } from "./defaults.js";
 import { serializePersonaConfig } from "../models/persona-config.js";
@@ -82,15 +83,6 @@ export async function readPersonaConfig(
 
   // Level 3: Hardcoded default
   return getDefaultPersona(agentRole);
-}
-
-/**
- * Result of listing available personas.
- */
-export interface PersonaSummary {
-  readonly agentRole: AgentRole;
-  readonly displayName: string;
-  readonly source: "project" | "builtin" | "default";
 }
 
 /**
