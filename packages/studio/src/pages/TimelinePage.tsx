@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useEffect, memo } from "react";
+import { useMemo, useState, useCallback, useEffect, memo, useRef } from "react";
 import {
   ReactFlow,
   Controls,
@@ -11,7 +11,7 @@ import {
   type NodeMouseHandler,
 } from "@xyflow/react";
 import "@xyflow/react/dist/base.css";
-import { useApi, postApi, putApi, fetchJson } from "../hooks/use-api";
+import { postApi, putApi, fetchJson } from "../hooks/use-api";
 import {
   Dialog,
   DialogContent,
@@ -31,34 +31,19 @@ import {
   SelectValue,
 } from "../components/ui/select";
 import { PlusIcon, PencilIcon, Trash2Icon, XIcon } from "lucide-react";
+import { useTimelineSegments, type TimelineEvent } from "../hooks/use-timeline-segments";
 
 // ── Types ──
-
-interface TimelineEvent {
-  id: string;
-  timestamp: string;
-  eventType: string;
-  title: string;
-  description: string;
-  relatedCharacters: string[];
-  chapter: number;
-  importance: number;
-  tags?: string[];
-}
-
-interface TimelineResponse {
-  events: TimelineEvent[];
-}
 
 interface TimelineNodeData {
   id: string;
   title: string;
   eventType: string;
   description: string;
-  relatedCharacters: string[];
+  relatedCharacters: readonly string[];
   chapter: number;
   importance: number;
-  tags?: string[];
+  tags?: readonly string[];
   timestamp: string;
   [key: string]: unknown;
 }
@@ -94,10 +79,75 @@ const TOP_MARGIN = 80;     // Space for chapter X-axis labels
 const HEADER_NODE_WIDTH = 140;
 const HEADER_NODE_HEIGHT = 36;
 
+// ── FPS Counter (dev-mode only) ──
+
+function FpsCounter() {
+  const [fps, setFps] = useState(0);
+  const lastTimeRef = useRef(performance.now());
+  const framesRef = useRef(0);
+
+  useEffect(() => {
+    let rafId: number;
+
+    function tick(now: number) {
+      framesRef.current += 1;
+      const elapsed = now - lastTimeRef.current;
+      if (elapsed >= 1000) {
+        setFps(Math.round((framesRef.current * 1000) / elapsed));
+        framesRef.current = 0;
+        lastTimeRef.current = now;
+      }
+      rafId = requestAnimationFrame(tick);
+    }
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, []);
+
+  return (
+    <span className="text-[10px] font-mono tabular-nums text-muted-foreground/40" title="FPS (开发模式)">
+      {fps} FPS
+    </span>
+  );
+}
+
 // ── Custom Timeline Event Node ──
 
 function TimelineEventNode({ data, selected }: NodeProps<TimelineEventNodeType>) {
   const color = EVENT_TYPE_COLORS[data.eventType] ?? DEFAULT_COLOR;
+  const isLightweight = (data as TimelineNodeData & { lightweight?: boolean }).lightweight === true;
+
+  if (isLightweight) {
+    // Lightweight mode: minimal rendering for 500+ events
+    return (
+      <div
+        className="relative flex flex-col gap-0.5 px-2 py-1.5 rounded border transition-colors duration-100 cursor-pointer"
+        style={{
+          backgroundColor: color.bg,
+          borderColor: selected ? color.border : `${color.border}44`,
+          borderWidth: selected ? 2 : 1,
+          width: NODE_WIDTH,
+          minHeight: 28,
+        }}
+        title={data.title}
+      >
+        <span className="text-[11px] font-medium leading-tight text-foreground truncate">
+          {data.title}
+        </span>
+        <div className="flex items-center gap-1.5">
+          <span
+            className="text-[9px] font-medium rounded px-1 py-0 leading-tight"
+            style={{ backgroundColor: `${color.border}20`, color: color.text }}
+          >
+            {color.label}
+          </span>
+          <span className="text-[8px] text-muted-foreground/50">
+            {"★".repeat(data.importance)}
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -470,7 +520,26 @@ interface TimelinePageProps {
 // ── Component ──
 
 export function TimelinePage({ bookId }: TimelinePageProps) {
-  const { data, loading, error, refetch } = useApi<TimelineResponse>(`/books/${bookId}/timelines`);
+  // ── Segmented / paginated data ──
+  const {
+    volumes,
+    selectedVolumeId,
+    setSelectedVolumeId,
+    events: paginatedEvents,
+    allEvents,
+    totalFilteredCount,
+    loadedCount,
+    totalCount,
+    hasMore,
+    loadMore,
+    loading,
+    error,
+    refetch,
+    isLightweightMode,
+  } = useTimelineSegments(bookId);
+
+  // All events (full list used for computing chapters/characters and detail dialog)
+  const events = allEvents;
 
   // Filters
   const [characterFilter, setCharacterFilter] = useState<string>("");
@@ -494,9 +563,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
   const [deleteConfirmEvent, setDeleteConfirmEvent] = useState<TimelineEvent | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // ── Compute unique chapters and characters ──
-  const events = data?.events ?? [];
-
+  // ── Compute unique chapters and characters (from ALL events, not paginated) ──
   const { uniqueChapters, uniqueCharacters } = useMemo(() => {
     const chapters = new Set<number>();
     const characters = new Set<string>();
@@ -512,9 +579,9 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
     };
   }, [events]);
 
-  // ── Filtered events ──
+  // ── Filtered events (applied on top of paginated slice) ──
   const filteredEvents = useMemo(() => {
-    let result = events;
+    let result = paginatedEvents;
     if (characterFilter) {
       const lower = characterFilter.toLowerCase();
       result = result.filter((e) =>
@@ -528,7 +595,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
       }
     }
     return result;
-  }, [events, characterFilter, chapterFilter]);
+  }, [paginatedEvents, characterFilter, chapterFilter]);
 
   // ── Build ReactFlow nodes ──
   const initialNodes = useMemo<Node[]>(() => {
@@ -604,9 +671,10 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
             importance: e.importance,
             tags: e.tags,
             timestamp: e.timestamp,
+            lightweight: isLightweightMode,
           },
-          draggable: true,
-        });
+          draggable: false,
+        } satisfies Node);
       } else {
         for (const character of e.relatedCharacters) {
           const charIdx = characterIndexMap.get(character);
@@ -633,22 +701,21 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
               importance: e.importance,
               tags: e.tags,
               timestamp: e.timestamp,
+              lightweight: isLightweightMode,
             },
-            draggable: true,
-          });
+            draggable: false,
+          } satisfies Node);
         }
       }
     }
 
     return nodes;
-  }, [filteredEvents, uniqueChapters, uniqueCharacters]);
+  }, [filteredEvents, uniqueChapters, uniqueCharacters, isLightweightMode]);
 
   // ── ReactFlow state ──
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 
   // ── Sync nodes when data/filters change ──
-  // useNodesState only uses the initial value on first render; subsequent
-  // changes to initialNodes need to be synced via setNodes.
   useEffect(() => {
     setNodes(initialNodes);
   }, [initialNodes, setNodes]);
@@ -903,11 +970,27 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
           <div className="flex items-center gap-3">
             <h2 className="text-base font-semibold text-foreground">时间线</h2>
             <span className="text-xs text-muted-foreground/60">
-              {events.length} 个事件 · {uniqueChapters.length} 章 · {uniqueCharacters.length} 个角色
+              {totalFilteredCount} 个事件 · {uniqueChapters.length} 章 · {uniqueCharacters.length} 个角色
               {(characterFilter || chapterFilter) && ` · 筛选`}
             </span>
           </div>
           <div className="flex items-center gap-2">
+            {/* Volume selector */}
+            {volumes.length > 0 && (
+              <select
+                value={selectedVolumeId ?? ""}
+                onChange={(e) => setSelectedVolumeId(e.target.value || null)}
+                className="rounded-lg bg-card/80 border border-border/30 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer max-w-[130px] truncate"
+                title="按分卷筛选"
+              >
+                {volumes.map((v) => (
+                  <option key={v.id} value={v.id}>
+                    {v.title}
+                  </option>
+                ))}
+              </select>
+            )}
+
             {/* Character filter */}
             <input
               type="text"
@@ -951,6 +1034,19 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
             >
               <PlusIcon className="size-4" />
             </Button>
+
+            {/* FPS counter (dev mode) */}
+            {import.meta.env.DEV && <FpsCounter />}
+
+            {/* Lightweight mode indicator */}
+            {isLightweightMode && (
+              <span
+                className="text-[10px] text-amber-500/70 font-medium"
+                title="事件数超过 500，已启用轻量模式以提升性能"
+              >
+                轻量
+              </span>
+            )}
           </div>
         </div>
 
@@ -966,10 +1062,15 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
             nodeTypes={nodeTypes}
             fitView
             fitViewOptions={{ padding: 0.3 }}
-            nodesDraggable
+            nodesDraggable={false}
+            nodesConnectable={false}
             panOnDrag
             zoomOnScroll
             zoomOnDoubleClick={false}
+            panActivationKeyCode="Space"
+            maxZoom={2}
+            minZoom={0.3}
+            elevateNodesOnSelect
             deleteKeyCode={null}
             className="bg-background/50"
             proOptions={{ hideAttribution: true }}
@@ -986,6 +1087,29 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
               className="!shadow-sm !border !border-border/20 !rounded-lg"
             />
           </ReactFlow>
+        </div>
+
+        {/* Bottom bar: event count + load more */}
+        <div className="flex items-center justify-between shrink-0 px-6 py-2 border-t border-border/10">
+          <span className="text-[11px] text-muted-foreground/50 tabular-nums">
+            共 {totalFilteredCount} 个事件，已加载 {loadedCount} 个
+            {totalCount !== totalFilteredCount && (
+              <span className="ml-1.5 text-muted-foreground/30">
+                （全部事件: {totalCount}）
+              </span>
+            )}
+          </span>
+          <div className="flex items-center gap-2">
+            {hasMore && (
+              <button
+                type="button"
+                onClick={loadMore}
+                className="rounded-lg bg-card/60 border border-border/20 px-3 py-1 text-[11px] text-muted-foreground/70 hover:text-foreground hover:bg-card transition-colors"
+              >
+                加载更多（+100）
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
