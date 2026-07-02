@@ -21,6 +21,7 @@ import { DoctorView } from "./pages/DoctorView";
 import { RelationGraphPanel } from "./pages/RelationGraphPanel";
 import { TimelinePage } from "./pages/TimelinePage";
 import { AgentTeamPanel } from "./pages/AgentTeamPanel";
+import { SkillListPage } from "./pages/SkillListPage";
 import { StoryPlayer } from "./pages/StoryPlayer";
 import { StoryGraphTree } from "./pages/StoryGraphTree";
 const FlowView = lazy(() => import("./pages/FlowView"));
@@ -110,6 +111,7 @@ export function App() {
     toFilmStudio: (projectId: string) => setRoute({ page: "film-studio", projectId }),
     toAgents: () => setRoute({ page: "agents" }),
     toArchive: () => setRoute({ page: "archive" }),
+    toSkills: () => setRoute({ page: "skills" }),
   };
 
   const activeBookId = deriveActiveBookId(route);
@@ -376,6 +378,11 @@ export function App() {
           {route.page === "archive" && (
             <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <ArchivePage />
+            </div>
+          )}
+          {route.page === "skills" && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <SkillListPage />
             </div>
           )}
         </main>

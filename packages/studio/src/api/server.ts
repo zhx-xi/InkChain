@@ -117,7 +117,6 @@ import { createOutlineRouter } from "./routes/outline.js";
 import { createVoiceProfilesRouter } from "./routes/voice-profiles.js";
 import { createTimelinesRouter } from "./routes/timelines.js";
 import { createSkillsRouter } from "./routes/skills.js";
-import { createWorldsRouter } from "./routes/worlds.js";
 import { createSessionTagsRouter } from "./routes/session-tags.js";
 import { createSessionsRouter } from "./routes/sessions.js";
 import { createRelationExtractionRouter } from "./routes/relation-extraction.js";
@@ -5597,7 +5596,6 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   app.route("/api/v1/books", searchRouter);
 
   app.route("/api/skills", createSkillsRouter(root));
-  app.route("/api/worlds", createWorldsRouter(root));
 
   // ── Writer's Block Breakthrough (E4 simplified) ──
   // GET  /api/v1/books/:id/writers-block — analyze context and return 3-5 advancement suggestions

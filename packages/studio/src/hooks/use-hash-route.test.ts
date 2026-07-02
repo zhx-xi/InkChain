@@ -55,6 +55,14 @@ describe("hash route", () => {
       expect(parseHash("#/services/%E8%87%AA%E5%AE%9A%E4%B9%89")).toEqual({ page: "service-detail", serviceId: "自定义" });
     });
 
+    it("parses agents", () => {
+      expect(parseHash("#/agents")).toEqual({ page: "agents" });
+    });
+
+    it("parses skills", () => {
+      expect(parseHash("#/skills")).toEqual({ page: "skills" });
+    });
+
     it("falls back to dashboard for unknown hash", () => {
       expect(parseHash("#/unknown/route")).toEqual({ page: "dashboard" });
     });
@@ -101,6 +109,10 @@ describe("hash route", () => {
 
     it("import tab -> #/import/{tab}", () => {
       expect(routeToHash({ page: "import", tab: "chapters" })).toBe("#/import/chapters");
+    });
+
+    it("skills -> #/skills", () => {
+      expect(routeToHash({ page: "skills" })).toBe("#/skills");
     });
 
     it("encodes Chinese serviceId", () => {
