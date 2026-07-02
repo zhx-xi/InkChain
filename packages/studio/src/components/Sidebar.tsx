@@ -52,6 +52,7 @@ import {
   Archive,
   Sparkles,
   AlertTriangle,
+  Globe,
 } from "lucide-react";
 import { InkosLogo } from "./InkosLogo";
 
@@ -97,6 +98,9 @@ interface Nav {
   toArchive: () => void;
   toSkills: () => void;
   toForeshadowing: () => void;
+  toWorlds: () => void;
+  toWorldDetail: (worldId: string) => void;
+  toWorldCreate: () => void;
 }
 
 export function Sidebar({ nav, activePage, sse, t }: {
@@ -640,6 +644,12 @@ export function Sidebar({ nav, activePage, sse, t }: {
               icon={<AlertTriangle size={16} />}
               active={activePage === "foreshadowing"}
               onClick={nav.toForeshadowing}
+            />
+            <SidebarItem
+              label="世界设定"
+              icon={<Globe size={16} />}
+              active={activePage === "worlds" || activePage === "world-create" || activePage.startsWith("world-detail")}
+              onClick={nav.toWorlds}
             />
             <SidebarItem
               label="会话归档"
