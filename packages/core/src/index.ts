@@ -25,6 +25,7 @@ export {
   type UpdateRelation,
   type RelationsFile,
 } from "./models/relations.js";
+export { type TimelineEvent, type CharacterTimelineFile, TimelineEventSchema, CharacterTimelineFileSchema } from "./models/character-timeline.js";
 export { type ProjectConfig, type LLMConfig, type NotifyChannel, type DetectionConfig, type QualityGates, type FoundationConfig, type WritingConfig, type AgentLLMOverride, type InputGovernanceMode, ProjectConfigSchema, LLMConfigSchema, AgentLLMOverrideSchema, DetectionConfigSchema, QualityGatesSchema, FoundationConfigSchema, WritingConfigSchema, InputGovernanceModeSchema } from "./models/project.js";
 export { type CurrentState, type ParticleLedger, type PendingHooks, type PendingHook, type LedgerEntry } from "./models/state.js";
 export { type GenreProfile, type ParsedGenreProfile, GenreProfileSchema, parseGenreProfile } from "./models/genre-profile.js";
@@ -373,6 +374,11 @@ export {
   migrateBookSession,
   createAndPersistBookSession,
   SessionAlreadyMigratedError,
+  archiveBookSession,
+  unarchiveBookSession,
+  batchArchiveBookSessions,
+  mergeBookSessions,
+  autoArchiveStaleSessions,
 } from "./interaction/book-session-store.js";
 export {
   appendManualSessionMessages,
@@ -383,6 +389,24 @@ export {
   transcriptPath,
   legacyBookSessionPath,
 } from "./interaction/session-transcript.js";
+export {
+  SessionTagSchema,
+  SessionTagsFileSchema,
+  TAG_COLORS,
+  type SessionTag,
+  type SessionTagsFile,
+  type TagColorId,
+  type TagColorHex,
+} from "./interaction/session-tags.js";
+export {
+  loadSessionTags,
+  getSessionTags,
+  addSessionTag,
+  removeSessionTag,
+  listTagsByName,
+  resolveSessionTagsPath,
+  persistSessionTags,
+} from "./interaction/session-tag-store.js";
 export {
   cleanRestoredAgentMessages,
   committedMessageEvents,

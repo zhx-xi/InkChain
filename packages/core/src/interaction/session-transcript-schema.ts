@@ -19,6 +19,7 @@ export const SessionCreatedEventSchema = BaseEventSchema.extend({
   sessionKind: SessionKindSchema.optional(),
   playMode: PlayModeSchema.optional(),
   title: z.string().nullable().default(null),
+  status: z.enum(["active", "archived"]).default("active"),
   createdAt: z.number().int().nonnegative(),
   updatedAt: z.number().int().nonnegative(),
 });
@@ -29,6 +30,9 @@ export const SessionMetadataUpdatedEventSchema = BaseEventSchema.extend({
   sessionKind: SessionKindSchema.optional(),
   playMode: PlayModeSchema.optional(),
   title: z.string().nullable().optional(),
+  status: z.enum(["active", "archived"]).optional(),
+  archivedAt: z.number().int().nonnegative().optional(),
+  archiveReason: z.string().optional(),
   updatedAt: z.number().int().nonnegative(),
 });
 
@@ -66,9 +70,23 @@ export const MessageEventSchema = BaseEventSchema.extend({
   message: z.unknown(),
 });
 
+export const SessionArchivedEventSchema = BaseEventSchema.extend({
+  type: z.literal("session_archived"),
+  reason: z.string().optional(),
+});
+
+export const SessionUnarchivedEventSchema = BaseEventSchema.extend({
+  type: z.literal("session_unarchived"),
+});
+
+export type SessionArchivedEvent = z.infer<typeof SessionArchivedEventSchema>;
+export type SessionUnarchivedEvent = z.infer<typeof SessionUnarchivedEventSchema>;
+
 export const TranscriptEventSchema = z.discriminatedUnion("type", [
   SessionCreatedEventSchema,
   SessionMetadataUpdatedEventSchema,
+  SessionArchivedEventSchema,
+  SessionUnarchivedEventSchema,
   RequestStartedEventSchema,
   RequestCommittedEventSchema,
   RequestFailedEventSchema,
