@@ -11,12 +11,12 @@ import type {
   WorldHistoryEvent,
   WorldRule,
   WorldDimensionKey,
-} from "@actalk/inkos-core";
+} from "@actalk/inkos-core/models/world-config.js";
 import {
   WORLD_DIMENSION_KEYS,
   WorldConfigSchema,
   WorldConfigUpdateSchema,
-} from "@actalk/inkos-core";
+} from "@actalk/inkos-core/models/world-config.js";
 import { ArrowLeft, Save, Trash2, Plus, BookPlus, X } from "lucide-react";
 import { cn } from "../lib/utils";
 

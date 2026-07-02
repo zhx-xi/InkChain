@@ -5,13 +5,13 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useApi, fetchJson } from "../hooks/use-api";
-import type { Foreshadowing, ForeshadowingType, ForeshadowingStatus } from "@actalk/inkos-core";
+import type { Foreshadowing, ForeshadowingType, ForeshadowingStatus } from "@actalk/inkos-core/models/foreshadowing.js";
 import {
   FORESHADOWING_TYPE_LABELS,
   FORESHADOWING_STATUS_LABELS,
   ForeshadowingTypeEnum,
   ForeshadowingStatusEnum,
-} from "@actalk/inkos-core";
+} from "@actalk/inkos-core/models/foreshadowing.js";
 
 interface ForeshadowingResponseItem extends Foreshadowing {
   _forgotten?: boolean;
