@@ -123,6 +123,7 @@ import { createRelationExtractionRouter } from "./routes/relation-extraction.js"
 import { createSearchRouter } from "./routes/search.js";
 import { createForeshadowingRouter } from "./routes/foreshadowing.js";
 import { createWorldsRouter } from "./routes/worlds.js";
+import { createWorldsExtractRouter } from "./routes/worlds-extract.js";
 import { createPublishRouter } from "./routes/publish.js";
 import { createStyleProfilesRouter } from "./routes/style-profiles.js";
 import { createConsistencyRouter } from "./routes/consistency.js";
@@ -5673,6 +5674,10 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     () => root,
   );
   app.route("/api/v1/books", relationExtractionRouter);
+
+  // ── AI World Extraction (Wrld-7) ──
+  const worldsExtractRouter = createWorldsExtractRouter((id) => state.bookDir(id));
+  app.route("/api/v1/books", worldsExtractRouter);
 
   // ── AI Relation Labeler (R-15) ──
   const relationLabelerRouter = createRelationLabelerRouter(
