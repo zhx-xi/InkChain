@@ -14,7 +14,6 @@
 // See: Issue #74 — Skill-1: SkillConfigSchema Zod 定义 + Skill 注册机制
 
 import { z } from "zod";
-import { AgentRoleEnum } from "./persona-config.js";
 
 // ── Skill Category ──
 
@@ -110,7 +109,6 @@ export const SkillConfigSchema = z.object({
   enabled: z.boolean().default(true),
   description: z.string().default(""),
   prompt: z.string().default(""),
-  agents: z.array(AgentRoleEnum).default([]),
 });
 export type SkillConfig = z.infer<typeof SkillConfigSchema>;
 

@@ -5,8 +5,6 @@ import { join } from "node:path";
 import { StateManager } from "../state/manager.js";
 import type { BookConfig } from "../models/book.js";
 import type { ChapterMeta } from "../models/chapter.js";
-import { saveWorld } from "../models/world-store.js";
-import type { WorldConfig } from "../models/world-config.js";
 
 describe("StateManager", () => {
   let tempDir: string;
@@ -55,64 +53,6 @@ describe("StateManager", () => {
 
     it("throws when loading a non-existent book", async () => {
       await expect(manager.loadBookConfig("nope")).rejects.toThrow();
-    });
-  });
-
-  // -------------------------------------------------------------------------
-  // loadBookConfigWithWorld (dual-track loading, Issue #78)
-  // -------------------------------------------------------------------------
-
-  describe("loadBookConfigWithWorld", () => {
-    const bookConfig: BookConfig = {
-      id: "test-book",
-      title: "Test Novel",
-      platform: "tomato",
-      genre: "xuanhuan",
-      status: "active",
-      targetChapters: 100,
-      chapterWordCount: 3000,
-      createdAt: "2026-01-01T00:00:00Z",
-      updatedAt: "2026-01-01T00:00:00Z",
-    };
-
-    it("returns config with world: null when worldId is absent", async () => {
-      await manager.saveBookConfig("test-book", bookConfig);
-      const ctx = await manager.loadBookConfigWithWorld("test-book");
-      expect(ctx.config).toEqual(bookConfig);
-      expect(ctx.world).toBeNull();
-    });
-
-    it("loads linked world when worldId is present", async () => {
-      const world: WorldConfig = {
-        id: "linked-world",
-        name: "Linked World",
-        description: "Linked to test book.",
-        createdAt: "2026-01-01T00:00:00Z",
-        updatedAt: "2026-01-01T00:00:00Z",
-        settings: [],
-        roles: [],
-        relations: [],
-        regions: [],
-        institutions: [],
-        history: [],
-        rules: [],
-      };
-      await saveWorld(tempDir, world);
-      await manager.saveBookConfig("test-book", {
-        ...bookConfig,
-        worldId: "linked-world",
-      });
-      const ctx = await manager.loadBookConfigWithWorld("test-book");
-      expect(ctx.config.worldId).toBe("linked-world");
-      expect(ctx.world).toEqual(world);
-    });
-
-    it("throws when worldId references a missing world", async () => {
-      await manager.saveBookConfig("test-book", {
-        ...bookConfig,
-        worldId: "missing-world",
-      });
-      await expect(manager.loadBookConfigWithWorld("test-book")).rejects.toThrow();
     });
   });
 

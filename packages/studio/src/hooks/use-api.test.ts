@@ -12,11 +12,6 @@ describe("buildApiUrl", () => {
     expect(buildApiUrl("books")).toBe("/api/v1/books");
     expect(buildApiUrl("/api/v1/books")).toBe("/api/v1/books");
   });
-
-  it("preserves full /api/ paths for non-v1 routes", () => {
-    expect(buildApiUrl("/api/skills")).toBe("/api/skills");
-    expect(buildApiUrl("/api/skills/style-imitation/toggle")).toBe("/api/skills/style-imitation/toggle");
-  });
 });
 
 describe("fetchJson", () => {

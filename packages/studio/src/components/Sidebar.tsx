@@ -50,8 +50,6 @@ import {
   CalendarDays,
   Users,
   Archive,
-  Sparkles,
-  AlertTriangle,
 } from "lucide-react";
 import { InkosLogo } from "./InkosLogo";
 
@@ -95,8 +93,6 @@ interface Nav {
   toFilmStudio: (id: string) => void;
   toAgents: () => void;
   toArchive: () => void;
-  toSkills: () => void;
-  toForeshadowing: () => void;
 }
 
 export function Sidebar({ nav, activePage, sse, t }: {
@@ -636,22 +632,10 @@ export function Sidebar({ nav, activePage, sse, t }: {
               onClick={nav.toAgents}
             />
             <SidebarItem
-              label="伏笔追踪"
-              icon={<AlertTriangle size={16} />}
-              active={activePage === "foreshadowing"}
-              onClick={nav.toForeshadowing}
-            />
-            <SidebarItem
               label="会话归档"
               icon={<Archive size={16} />}
               active={activePage === "archive"}
               onClick={nav.toArchive}
-            />
-            <SidebarItem
-              label="Skill 库"
-              icon={<Sparkles size={16} />}
-              active={activePage === "skills"}
-              onClick={nav.toSkills}
             />
             <SidebarItem
               label={t("nav.style")}

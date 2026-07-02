@@ -48,7 +48,7 @@ function toApiSkill(stored: StoredSkillConfig): ApiSkillResponse {
   };
 }
 
-async function loadMergedSkills(root: string): Promise<ReadonlyArray<StoredSkillConfig>> {
+async function loadMergedSkills(root: string): Promise<StoredSkillConfig[]> {
   const result = await loadSkillConfigs({ projectRoot: root });
   return result.skills;
 }
@@ -175,7 +175,7 @@ export function createSkillsRouter(root: string) {
     const existingStored = mergedSkills.find((s) => s.config.id === id);
     const baseConfig: SkillConfig = existingStored
       ? existingStored.config
-      : { id, category: "utility", triggers: [], injection: { mode: "append", target: "system_prompt", priority: 50 }, params: {}, enabled: true, description: "", prompt: "", agents: [] };
+      : { id, category: "utility", triggers: [], injection: { mode: "append", target: "system_prompt", priority: 50 }, params: {}, enabled: true, description: "", prompt: "" };
 
     const updated: SkillConfig = { ...baseConfig, ...parsed.data, id };
     await writeProjectSkill(root, updated);

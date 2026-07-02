@@ -155,23 +155,6 @@ export {
   worldPath,
 } from "./models/world-store.js";
 export { type DetectionHistoryEntry, type DetectionStats } from "./models/detection.js";
-export {
-  type Foreshadowing,
-  type ForeshadowingType,
-  type ForeshadowingStatus,
-  type ForeshadowingUpdate,
-  type ForeshadowingCreate,
-  type ForeshadowingForgetCheck,
-  ForeshadowingSchema,
-  ForeshadowingCreateSchema,
-  ForeshadowingUpdateSchema,
-  ForeshadowingTypeEnum,
-  ForeshadowingStatusEnum,
-  FORESHADOWING_TYPE_LABELS,
-  FORESHADOWING_STATUS_LABELS,
-  checkForeshadowingForget,
-  findForgottenForeshadowing,
-} from "./models/foreshadowing.js";
 export { type StyleProfile } from "./models/style-profile.js";
 export {
   VoiceProfileSchema as CharacterVoiceProfileSchema,
@@ -699,14 +682,7 @@ export { runScriptCreation, runStoryboardCreation, runInteractiveFilmCreation, c
 export { ScriptCreationAgent, StoryboardCreationAgent, InteractiveFilmCreationAgent, renderScriptSpec, renderStoryboardSpec, renderInteractiveFilmSpec, type ScriptCreationInput, type ScriptTargetFormat, type StoryboardCreationInput, type InteractiveFilmCreationInput } from "./agents/script-storyboard.js";
 
 // State
-export {
-  extractWorldFromBook,
-  type ExtractWorldFromBookInput,
-} from "./models/book-world-extraction.js";
-export {
-  StateManager,
-  type BookWithWorldContext,
-} from "./state/manager.js";
+export { StateManager } from "./state/manager.js";
 export { bootstrapStructuredStateFromMarkdown } from "./state/state-bootstrap.js";
 export { renderCurrentStateProjection, renderHooksProjection, renderChapterSummariesProjection } from "./state/state-projections.js";
 export { applyRuntimeStateDelta, type RuntimeStateSnapshot } from "./state/state-reducer.js";

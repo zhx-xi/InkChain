@@ -14,10 +14,6 @@ export function buildApiUrl(path: string): string | null {
   if (normalized.startsWith(`${BASE}/`) || normalized === BASE) {
     return normalized;
   }
-  // Allow full paths for non-v1 routes (e.g. /api/skills from Issue #76).
-  if (normalized.startsWith("/api/")) {
-    return normalized;
-  }
   return normalized.startsWith("/") ? `${BASE}${normalized}` : `${BASE}/${normalized}`;
 }
 
