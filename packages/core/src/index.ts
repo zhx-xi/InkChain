@@ -58,7 +58,16 @@ export {
   listAvailablePersonas,
   ensurePersonasDir,
   savePersonaConfig,
+  listBuiltinPresets,
+  getBuiltinPreset,
+  listAllPresets,
+  loadPreset,
+  applyPreset,
+  saveAsPreset,
+  deletePreset,
   type PersonaSummary,
+  type PresetSummary,
+  type PresetSource,
 } from "./persona/index.js";
 export { type BookRules, type ParsedBookRules, BookRulesSchema, parseBookRules, tryParseBookRulesFrontmatter } from "./models/book-rules.js";
 export { type DetectionHistoryEntry, type DetectionStats } from "./models/detection.js";
