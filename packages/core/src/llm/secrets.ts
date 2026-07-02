@@ -1,5 +1,10 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
+import {
+  isEncrypted,
+  encryptApiKeyForProject,
+  decryptApiKeyForProject,
+} from "./encryption.js";
 
 export interface SecretsFile {
   services: Record<string, { apiKey: string }>;
@@ -40,22 +45,63 @@ async function readSecretsRaw(projectRoot: string): Promise<SecretsFile> {
   }
 }
 
+/**
+ * Decrypt all API keys in a SecretsFile in-memory after loading.
+ * Plaintext keys (backward compat) are passed through unchanged.
+ */
+async function decryptServicesInMemory(
+  secrets: SecretsFile,
+  projectRoot: string,
+): Promise<SecretsFile> {
+  const decrypted: Record<string, { apiKey: string }> = {};
+  for (const [serviceId, entry] of Object.entries(secrets.services)) {
+    decrypted[serviceId] = {
+      apiKey: await decryptApiKeyForProject(entry.apiKey, projectRoot),
+    };
+  }
+  return { services: decrypted };
+}
+
+/**
+ * Encrypt all API keys for disk storage.
+ * Already-encrypted keys are re-encrypted (idempotent).
+ */
+async function encryptServicesForDisk(
+  secrets: SecretsFile,
+  projectRoot: string,
+): Promise<SecretsFile> {
+  const encrypted: Record<string, { apiKey: string }> = {};
+  for (const [serviceId, entry] of Object.entries(secrets.services)) {
+    const plaintext = isEncrypted(entry.apiKey)
+      ? await decryptApiKeyForProject(entry.apiKey, projectRoot)
+      : entry.apiKey;
+    encrypted[serviceId] = {
+      apiKey: await encryptApiKeyForProject(plaintext, projectRoot),
+    };
+  }
+  return { services: encrypted };
+}
+
 export async function loadSecrets(projectRoot: string): Promise<SecretsFile> {
   const raw = await readSecretsRaw(projectRoot);
   const { data, changed } = migrateLegacyServiceIds(raw);
-  if (changed) await saveSecrets(projectRoot, data);
-  return data;
+  // Decrypt keys in memory; plaintext keys pass through
+  const decrypted = await decryptServicesInMemory(data, projectRoot);
+  if (changed) await saveSecrets(projectRoot, decrypted);
+  return decrypted;
 }
 
 export async function saveSecrets(
   projectRoot: string,
   secrets: SecretsFile,
 ): Promise<void> {
+  // Encrypt all API keys before writing to disk
+  const encrypted = await encryptServicesForDisk(secrets, projectRoot);
   const dir = join(projectRoot, SECRETS_DIR);
   await mkdir(dir, { recursive: true });
   await writeFile(
     join(dir, SECRETS_FILE),
-    JSON.stringify(secrets, null, 2),
+    JSON.stringify(encrypted, null, 2),
     "utf-8",
   );
 }

@@ -30,8 +30,9 @@ describe("loadSecrets legacy service id migration", () => {
     expect(result.services.siliconcloud).toEqual({ apiKey: "sk-legacy" });
     expect(result.services.siliconflow).toBeUndefined();
 
+    // Keys are encrypted on disk after migration-driven save
     const onDisk = await readSecretsRaw();
-    expect(onDisk.services.siliconcloud).toEqual({ apiKey: "sk-legacy" });
+    expect(onDisk.services.siliconcloud.apiKey).toMatch(/^aes256gcm:/);
     expect(onDisk.services.siliconflow).toBeUndefined();
   });
 

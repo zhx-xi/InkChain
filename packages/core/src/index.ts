@@ -719,6 +719,15 @@ export {
 export { resolveServiceModel, type ResolvedModel } from "./llm/service-resolver.js";
 export { loadSecrets, saveSecrets, getServiceApiKey, type SecretsFile } from "./llm/secrets.js";
 export {
+  isEncrypted,
+  encryptApiKeyForProject,
+  decryptApiKeyForProject,
+  getOrCreateEncryptionKey,
+  encryptValue,
+  decryptValue,
+  ENCRYPTION_PREFIX,
+} from "./llm/encryption.js";
+export {
   COVER_PROVIDER_PRESETS,
   coverSecretKey,
   resolveCoverProviderPreset,

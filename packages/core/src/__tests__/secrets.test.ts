@@ -33,16 +33,20 @@ describe("secrets", () => {
   });
 
   describe("saveSecrets", () => {
-    it("creates .inkos dir and writes secrets file", async () => {
+    it("creates .inkos dir and writes encrypted secrets file", async () => {
       await saveSecrets(root, {
         services: { deepseek: { apiKey: "sk-deep" } },
       });
       const raw = await readFile(join(root, ".inkos", "secrets.json"), "utf-8");
       const parsed = JSON.parse(raw);
-      expect(parsed.services.deepseek.apiKey).toBe("sk-deep");
+      // Key is encrypted on disk with aes256gcm: prefix
+      expect(parsed.services.deepseek.apiKey).toMatch(/^aes256gcm:/);
+      // Reading back decrypts transparently
+      const secrets = await loadSecrets(root);
+      expect(secrets.services.deepseek.apiKey).toBe("sk-deep");
     });
 
-    it("overwrites existing secrets file", async () => {
+    it("overwrites existing plaintext secrets with encrypted ones", async () => {
       await mkdir(join(root, ".inkos"), { recursive: true });
       await writeFile(
         join(root, ".inkos", "secrets.json"),
@@ -54,6 +58,26 @@ describe("secrets", () => {
       const secrets = await loadSecrets(root);
       expect(secrets.services.new.apiKey).toBe("new-key");
       expect(secrets.services.old).toBeUndefined();
+    });
+
+    it("migrates existing plaintext keys to encrypted on read+save cycle", async () => {
+      await mkdir(join(root, ".inkos"), { recursive: true });
+      await writeFile(
+        join(root, ".inkos", "secrets.json"),
+        JSON.stringify({ services: { moonshot: { apiKey: "sk-plaintext" } } }),
+      );
+      // loadSecrets reads plaintext → saveSecrets encrypts (auto-migration happens if needed)
+      const secrets = await loadSecrets(root);
+      expect(secrets.services.moonshot.apiKey).toBe("sk-plaintext");
+      // Force a save
+      await saveSecrets(root, secrets);
+      // Now the file should contain encrypted values
+      const raw = await readFile(join(root, ".inkos", "secrets.json"), "utf-8");
+      const parsed = JSON.parse(raw);
+      expect(parsed.services.moonshot.apiKey).toMatch(/^aes256gcm:/);
+      // loadSecrets can still read it back as plaintext
+      const reloaded = await loadSecrets(root);
+      expect(reloaded.services.moonshot.apiKey).toBe("sk-plaintext");
     });
   });
 
