@@ -15,7 +15,10 @@ export interface GraphEdgeData {
   source: string;
   target: string;
   relationType: RelationType;
+  /** Display label — falls back to preset label if customLabel is unset */
   label: string;
+  /** User-defined custom relation label (overrides preset) */
+  customLabel?: string;
   intensity: number;
   isForgotten: boolean;
   description?: string;

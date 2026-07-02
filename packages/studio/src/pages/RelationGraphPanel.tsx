@@ -12,11 +12,12 @@ import {
   type NodeTypes,
   type EdgeTypes,
   type OnNodeClick,
+  type ReactFlowInstance,
 } from "@xyflow/react";
 import "@xyflow/react/dist/base.css";
 import { useGraphStore } from "../store/relations/graph-store";
 import { fetchJson } from "../hooks/use-api";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Download } from "lucide-react";
 import { AlertBanner } from "../components/graph/AlertBanner";
 import { MemoCharacterNode } from "../components/graph/CharacterNode";
 import { MemoRelationEdge } from "../components/graph/RelationEdge";
@@ -113,6 +114,9 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
   const [chapterVolumeMap, setChapterVolumeMap] = useState<Map<number, string>>(new Map());
   const [showExtraction, setShowExtraction] = useState(false);
   const reactFlowRef = useRef<HTMLDivElement>(null);
+  const reactFlowInstance = useRef<ReactFlowInstance | null>(null);
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportBtnRef = useRef<HTMLDivElement>(null);
 
   // ── Load graph data on mount ──
   useEffect(() => {
@@ -484,6 +488,78 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
             >
               全屏
             </button>
+
+            {/* Export button */}
+            <div ref={exportBtnRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                className="rounded-lg bg-card/80 border border-border/30 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-card transition-colors flex items-center gap-1"
+              >
+                <Download size={14} />
+                导出
+              </button>
+              {showExportMenu && (
+                <div className="absolute right-0 top-full mt-1 z-50 min-w-[140px] rounded-lg border border-border/20 bg-card shadow-lg overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setShowExportMenu(false);
+                      if (!reactFlowInstance.current) return;
+                      try {
+                        const url = reactFlowInstance.current.toObjectUrl({
+                          width: 1920,
+                          height: 1080,
+                          quality: 1,
+                        });
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = `relation-graph-${bookId}.png`;
+                        a.click();
+                      } catch {
+                        alert("导出 PNG 失败");
+                      }
+                    }}
+                    className="block w-full text-left px-3 py-2 text-xs text-foreground hover:bg-accent/50 transition-colors"
+                  >
+                    导出 PNG
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setShowExportMenu(false);
+                      if (!reactFlowInstance.current) return;
+                      try {
+                        const svgEl = reactFlowRef.current?.querySelector(".react-flow__viewport");
+                        if (svgEl) {
+                          const serializer = new XMLSerializer();
+                          const svgStr = serializer.serializeToString(svgEl);
+                          const blob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = `relation-graph-${bookId}.svg`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        }
+                      } catch {
+                        alert("导出 SVG 失败");
+                      }
+                    }}
+                    className="block w-full text-left px-3 py-2 text-xs text-foreground hover:bg-accent/50 transition-colors"
+                  >
+                    导出 SVG
+                  </button>
+                </div>
+              )}
+              {/* Close menu on outside click */}
+              {showExportMenu && (
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowExportMenu(false)}
+                />
+              )}
+            </div>
           </div>
         </div>
 
@@ -502,6 +578,7 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onNodeClick={onNodeClick}
+            onInit={(instance) => { reactFlowInstance.current = instance; }}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             fitView

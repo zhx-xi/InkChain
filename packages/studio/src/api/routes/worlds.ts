@@ -195,5 +195,29 @@ export function createWorldsRouter(root: string) {
     return c.json({ world: updated });
   });
 
+  // ── P3-3: World Inheritance ──
+  // POST /:id/inherit — copy world settings into a new world.
+  router.post("/:id/inherit", async (c) => {
+    const id = c.req.param("id");
+    const root = c.var.root as string;
+    const body = (await c.req.json().catch(() => ({}))) as { newId?: string; newTitle?: string };
+
+    const world = await loadWorld(root, id);
+    if (!world) throw new ApiError(404, "WORLD_NOT_FOUND", `World not found: ${id}`);
+
+    const newId = body.newId ?? `${id}-derived-${Date.now().toString(36)}`;
+    const newWorld = {
+      ...world,
+      id: newId,
+      title: body.newTitle ?? `${world.title} (继承)`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      history: world.history ? [...world.history] : [],
+    };
+
+    await saveWorld(root, newWorld);
+    return c.json({ world: newWorld, message: `已从「${world.title}」继承创建新世界观` });
+  });
+
   return router;
 }

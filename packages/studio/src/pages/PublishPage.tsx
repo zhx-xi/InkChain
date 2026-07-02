@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, Download, Check, X as XIcon, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, BookOpen, Eye, Check, X as XIcon, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { fetchJson, useApi } from "../hooks/use-api";
 import type { BookConfig } from "@actalk/inkos-core";
@@ -240,23 +240,58 @@ export function PublishPage({ bookId, nav }: PublishPageProps) {
           </div>
         )}
 
-        <button
-          type="button"
-          onClick={handleExport}
-          disabled={exporting || checkResult === null}
-          className={cn(
-            "inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-all",
-            exporting || !checkResult
-              ? "bg-muted text-muted-foreground cursor-not-allowed"
-              : "bg-primary text-primary-foreground hover:opacity-90"
-          )}
-        >
-          {exporting ? (
-            <><Loader2 size={16} className="animate-spin" /> 导出中…</>
-          ) : (
-            <><Download size={16} /> 导出 TXT 文件</>
-          )}
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={exporting || checkResult === null}
+            className={cn(
+              "inline-flex items-center gap-2 rounded-lg px-5 py-2.5 text-sm font-medium transition-all",
+              exporting || !checkResult
+                ? "bg-muted text-muted-foreground cursor-not-allowed"
+                : "bg-primary text-primary-foreground hover:opacity-90"
+            )}
+          >
+            {exporting ? (
+              <><Loader2 size={16} className="animate-spin" /> 导出中…</>
+            ) : (
+              <><Download size={16} /> 导出 TXT 文件</>
+            )}
+          </button>
+
+          {/* P2-3: EPUB export */}
+          <a
+            href={`/api/publish/${encodeURIComponent(bookId)}/export-epub`}
+            download
+            className="inline-flex items-center gap-2 rounded-lg border border-border/30 bg-card/80 px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-all"
+          >
+            <BookOpen size={16} />
+            下载 EPUB
+          </a>
+
+          {/* P2-3: HTML preview */}
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const resp = await fetch(`/api/publish/${encodeURIComponent(bookId)}/preview-html`, { method: "POST" });
+                if (!resp.ok) throw new Error("预览生成失败");
+                const html = await resp.text();
+                const win = window.open("", "_blank");
+                if (win) {
+                  win.document.write(html);
+                  win.document.close();
+                }
+              } catch {
+                alert("预览生成失败，请稍后重试");
+              }
+            }}
+            className="inline-flex items-center gap-2 rounded-lg border border-border/30 bg-card/80 px-4 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-card transition-all"
+          >
+            <Eye size={16} />
+            HTML 预览
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -34,15 +34,37 @@ const DEFAULT_COLOR = "#9ca3af";
 
 export type RelationEdgeData = GraphEdgeData;
 
+/** Render weight stars (1-5). */
+function WeightStars({ intensity }: { readonly intensity: number }) {
+  return (
+    <span style={{ letterSpacing: "1px", fontSize: 9 }}>
+      {"★".repeat(Math.min(intensity, 5))}
+      {"☆".repeat(Math.max(0, 5 - intensity))}
+    </span>
+  );
+}
+
+/**
+ * Resolve the display label for an edge.
+ * Priority: customLabel on data > preset label > raw type key.
+ */
+function resolveLabel(data: GraphEdgeData | undefined): string {
+  if (!data) return "";
+  if (data.customLabel) return data.customLabel;
+  return RELATION_LABELS[data.relationType] ?? data.relationType;
+}
+
 /**
  * ReactFlow Custom Edge for rendering a character relation connection.
  * Draws a smooth-step path with relation-type color, optional dash for
  * forgotten relations, and a centered label overlay.
+ * Enhanced with:
+ * - Custom label support (user-defined relation types)
+ * - Weight stars display (intensity 1-5 as ★☆☆☆☆)
+ * - Thicker stroke for weight > 3
  */
 export function RelationEdge({
   id,
-  source,
-  target,
   sourceX,
   sourceY,
   targetX,
@@ -57,8 +79,11 @@ export function RelationEdge({
     : DEFAULT_COLOR;
   const isHighlighted = selected;
   const isForgotten = data?.isForgotten ?? false;
+  const intensity = data?.intensity ?? 3;
 
-  const strokeWidth = isHighlighted ? 2.5 : 1.5;
+  // Thicker line for stronger relationships
+  const baseWidth = intensity >= 4 ? 2.5 : intensity >= 2 ? 1.5 : 1;
+  const strokeWidth = isHighlighted ? baseWidth + 1 : baseWidth;
   const opacity = isForgotten ? 0.4 : isHighlighted ? 0.9 : 0.65;
 
   const [edgePath, labelX, labelY] = getSmoothStepPath({
@@ -71,9 +96,7 @@ export function RelationEdge({
     borderRadius: 8,
   });
 
-  const label = data?.label
-    ? RELATION_LABELS[data.relationType] ?? data.label
-    : "";
+  const label = resolveLabel(data);
 
   return (
     <>
@@ -89,11 +112,11 @@ export function RelationEdge({
         }}
       />
 
-      {/* Edge label */}
+      {/* Edge label with weight stars */}
       {label && (
         <EdgeLabelRenderer>
           <div
-            className="absolute px-2 py-0.5 rounded text-[10px] font-medium leading-tight pointer-events-none"
+            className="absolute px-2 py-0.5 rounded text-[10px] font-medium leading-tight pointer-events-none flex flex-col items-center gap-0.5 min-w-[40px]"
             style={{
               transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
               backgroundColor: "rgba(0,0,0,0.35)",
@@ -101,7 +124,8 @@ export function RelationEdge({
               opacity,
             }}
           >
-            {label}
+            <span>{label}</span>
+            <WeightStars intensity={intensity} />
           </div>
         </EdgeLabelRenderer>
       )}
@@ -112,7 +136,7 @@ export function RelationEdge({
           <div
             className="absolute px-1.5 py-0.5 rounded text-[9px] font-medium leading-tight pointer-events-none"
             style={{
-              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY + 14}px)`,
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY + 24}px)`,
               color: "#f59e0b",
               opacity: 0.7,
             }}

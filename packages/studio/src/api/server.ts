@@ -128,6 +128,7 @@ import { createPublishRouter } from "./routes/publish.js";
 import { createStyleProfilesRouter } from "./routes/style-profiles.js";
 import { createConsistencyRouter } from "./routes/consistency.js";
 import { createRelationLabelerRouter } from "./routes/relation-labeler.js";
+import { createStatsRouter } from "./routes/stats.js";
 
 // -- Pipeline stage definitions per agent type --
 
@@ -5732,6 +5733,13 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // ── Full-Text Search (Ar-2) ──
   const searchRouter = createSearchRouter(() => root);
   app.route("/api/v1/books", searchRouter);
+
+  // ── Writing Stats (P2-2: 写作统计面板) ──
+  const statsRouter = createStatsRouter(
+    (id: string) => state.bookDir(id),
+    state,
+  );
+  app.route("/api/v1/books", statsRouter);
 
   app.route("/api/skills", createSkillsRouter(root));
   app.route("/api/worlds", createWorldsRouter(root));

@@ -23,15 +23,19 @@ export const RELATION_LABELS: Record<RelationType, string> = {
 };
 
 // ── Character relation schema ──
+// Enhanced with customType (for user-defined relation labels) and weight (1-5 stars).
 
 export const CharacterRelationSchema = z.object({
   id: z.string().uuid(),
   sourceRoleId: z.string().min(1, "源角色ID不能为空"),
   targetRoleId: z.string().min(1, "目标角色ID不能为空"),
   relationType: RelationType,
+  /** User-defined custom relation label (overrides preset label) */
+  customLabel: z.string().optional(),
   description: z.string().optional(),
   validFromChapter: z.number().int().min(1),
   validUntilChapter: z.number().int().optional(),
+  /** Formerly called intensity — now used as weight (1-5 stars) */
   intensity: z.number().int().min(1).max(5),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
@@ -56,3 +60,15 @@ export const RelationsFileSchema = z.object({
   relations: z.array(CharacterRelationSchema),
 });
 export type RelationsFile = z.infer<typeof RelationsFileSchema>;
+
+/**
+ * Resolve the display label for a relation edge.
+ * Priority: customLabel > preset label > relationType raw value.
+ */
+export function getRelationDisplayLabel(
+  relationType: string,
+  customLabel?: string | null,
+): string {
+  if (customLabel) return customLabel;
+  return RELATION_LABELS[relationType as RelationType] ?? relationType;
+}
