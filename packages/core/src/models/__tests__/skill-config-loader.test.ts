@@ -134,7 +134,7 @@ describe("skill config loader (Issue #74)", () => {
   describe("mergeSkillConfigs (pure helper)", () => {
     function makeStored(id: string, source: "builtin" | "project"): StoredSkillConfig {
       return {
-        config: { id, category: "writing", triggers: [], injection: { mode: "append", target: "system_prompt", priority: 50 }, params: {}, enabled: true, description: `${id} ${source}`, prompt: "" },
+        config: { id, category: "writing", triggers: [], injection: { mode: "append", target: "system_prompt", priority: 50 }, params: {}, enabled: true, description: `${id} ${source}`, prompt: "", agents: [] },
         source,
         path: `/path/${id}.json`,
       };
@@ -172,6 +172,7 @@ describe("skill config loader (Issue #74)", () => {
           enabled,
           description: "",
           prompt: "",
+          agents: [],
         },
         source: "project",
         path: `/p/${id}.json`,

@@ -24,6 +24,7 @@ describe("SkillConfigSchema (Issue #74)", () => {
         enabled: true,
         description: "Imitate the reference author's style.",
         prompt: "",
+        agents: [],
       };
       const parsed = SkillConfigSchema.parse(raw);
       expect(parsed.id).toBe("writing-style-imitation");
@@ -84,6 +85,7 @@ describe("SkillConfigSchema (Issue #74)", () => {
         enabled: true,
         description: "Advanced analysis skill.",
         prompt: "",
+        agents: ["writer", "auditor"],
       };
       const parsed = SkillConfigSchema.parse(config);
       expect(parsed.triggers).toHaveLength(2);
@@ -166,6 +168,15 @@ describe("SkillConfigSchema (Issue #74)", () => {
         id: "test",
         category: "writing",
         params: { x: { key: "x", label: "X", type: "magic" } },
+      };
+      expect(() => SkillConfigSchema.parse(bad)).toThrow();
+    });
+
+    it("rejects unknown agent role", () => {
+      const bad = {
+        id: "test",
+        category: "writing",
+        agents: ["manager"],
       };
       expect(() => SkillConfigSchema.parse(bad)).toThrow();
     });
