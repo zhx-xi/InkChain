@@ -122,6 +122,7 @@ import { createSessionTagsRouter } from "./routes/session-tags.js";
 import { createSessionsRouter } from "./routes/sessions.js";
 import { createRelationExtractionRouter } from "./routes/relation-extraction.js";
 import { createSearchRouter } from "./routes/search.js";
+import { createForeshadowingRouter } from "./routes/foreshadowing.js";
 
 // -- Pipeline stage definitions per agent type --
 
@@ -5598,6 +5599,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
 
   app.route("/api/skills", createSkillsRouter(root));
   app.route("/api/worlds", createWorldsRouter(root));
+  app.route("/api/foreshadowing", createForeshadowingRouter(root));
 
   // ── Writer's Block Breakthrough (E4 simplified) ──
   // GET  /api/v1/books/:id/writers-block — analyze context and return 3-5 advancement suggestions

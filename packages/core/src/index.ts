@@ -155,6 +155,23 @@ export {
   worldPath,
 } from "./models/world-store.js";
 export { type DetectionHistoryEntry, type DetectionStats } from "./models/detection.js";
+export {
+  type Foreshadowing,
+  type ForeshadowingType,
+  type ForeshadowingStatus,
+  type ForeshadowingUpdate,
+  type ForeshadowingCreate,
+  type ForeshadowingForgetCheck,
+  ForeshadowingSchema,
+  ForeshadowingCreateSchema,
+  ForeshadowingUpdateSchema,
+  ForeshadowingTypeEnum,
+  ForeshadowingStatusEnum,
+  FORESHADOWING_TYPE_LABELS,
+  FORESHADOWING_STATUS_LABELS,
+  checkForeshadowingForget,
+  findForgottenForeshadowing,
+} from "./models/foreshadowing.js";
 export { type StyleProfile } from "./models/style-profile.js";
 export {
   VoiceProfileSchema as CharacterVoiceProfileSchema,

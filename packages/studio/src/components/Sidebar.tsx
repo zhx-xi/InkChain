@@ -51,6 +51,7 @@ import {
   Users,
   Archive,
   Sparkles,
+  AlertTriangle,
 } from "lucide-react";
 import { InkosLogo } from "./InkosLogo";
 
@@ -95,6 +96,7 @@ interface Nav {
   toAgents: () => void;
   toArchive: () => void;
   toSkills: () => void;
+  toForeshadowing: () => void;
 }
 
 export function Sidebar({ nav, activePage, sse, t }: {
@@ -632,6 +634,12 @@ export function Sidebar({ nav, activePage, sse, t }: {
               icon={<Users size={16} />}
               active={activePage === "agents"}
               onClick={nav.toAgents}
+            />
+            <SidebarItem
+              label="伏笔追踪"
+              icon={<AlertTriangle size={16} />}
+              active={activePage === "foreshadowing"}
+              onClick={nav.toForeshadowing}
             />
             <SidebarItem
               label="会话归档"
