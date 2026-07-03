@@ -133,6 +133,7 @@ import { createWritingContinueRouter } from "./routes/writing-continue.js";
 import { createAgentTeamRouter } from "./routes/agent-team.js";
 import { createForeshadowingExtractRouter } from "./routes/foreshadowing-extract.js";
 import { createTimelineExtractRouter } from "./routes/timeline-extract.js";
+import { createChapterVersionsRouter } from "./routes/chapter-versions.js";
 import { createAgentTemplatesRouter } from "./routes/agent-templates.js";
 
 // -- Pipeline stage definitions per agent type --
@@ -5704,6 +5705,10 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // ── Volumes CRUD ──
   const volumesRouter = createVolumesRouter((id) => state.bookDir(id));
   app.route("/api/v1/books", volumesRouter);
+
+  // ── Chapter Versions (Issue #235) ──
+  const chapterVersionsRouter = createChapterVersionsRouter((id) => state.bookDir(id));
+  app.route("/api/v1/books", chapterVersionsRouter);
 
   // ── Timelines CRUD ──
   const timelinesRouter = createTimelinesRouter((id) => state.bookDir(id));
