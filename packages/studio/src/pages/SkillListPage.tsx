@@ -87,10 +87,10 @@ export function SkillListPage() {
       <button
         type="button"
         onClick={() => setRoute({ page: "project-settings" })}
-        className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-card/60 px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4"
       >
-        <ArrowLeft size={14} />
-        返回设置
+        <ArrowLeft size={16} />
+        <span>返回设置</span>
       </button>
 
       <div className="flex items-center justify-between">

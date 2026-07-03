@@ -59,10 +59,10 @@ export function WorldListPage({ nav }: { readonly nav?: { toWorldDetail: (id: st
       <button
         type="button"
         onClick={() => setRoute({ page: "dashboard" })}
-        className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-card/60 px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors"
+        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4"
       >
-        <ArrowLeft size={14} />
-        返回首页
+        <ArrowLeft size={16} />
+        <span>返回首页</span>
       </button>
 
       <div className="flex items-center justify-between">

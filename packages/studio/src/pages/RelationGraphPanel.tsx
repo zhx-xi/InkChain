@@ -307,10 +307,10 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
         <button
           type="button"
           onClick={() => setRoute({ page: "book", bookId })}
-          className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-card/60 px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors mb-6"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4"
         >
-          <ArrowLeft size={14} />
-          返回书籍
+          <ArrowLeft size={16} />
+          <span>返回书籍</span>
         </button>
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="flex flex-col items-center gap-3">
@@ -329,10 +329,10 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
         <button
           type="button"
           onClick={() => setRoute({ page: "book", bookId })}
-          className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-card/60 px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors mb-6"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4"
         >
-          <ArrowLeft size={14} />
-          返回书籍
+          <ArrowLeft size={16} />
+          <span>返回书籍</span>
         </button>
         <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
           <div className="rounded-full bg-destructive/10 p-3">
@@ -375,10 +375,10 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
         <button
           type="button"
           onClick={() => setRoute({ page: "book", bookId })}
-          className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-card/60 px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors mb-6"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4"
         >
-          <ArrowLeft size={14} />
-          返回书籍
+          <ArrowLeft size={16} />
+          <span>返回书籍</span>
         </button>
         <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
           <svg
@@ -414,10 +414,10 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
             <button
               type="button"
               onClick={() => setRoute({ page: "book", bookId })}
-              className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-card/60 px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors"
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
             >
-              <ArrowLeft size={14} />
-              返回书籍
+              <ArrowLeft size={16} />
+              <span>返回书籍</span>
             </button>
             <h2 className="text-base font-semibold text-foreground">
               角色关系图谱
