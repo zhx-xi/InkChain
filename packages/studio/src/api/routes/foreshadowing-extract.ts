@@ -15,6 +15,7 @@ import { isSafeBookId } from "../safety.js";
 
 export function createForeshadowingExtractRouter(
   bookDir: (id: string) => string,
+  root: string,
 ): Hono {
   const router = new Hono();
 
@@ -35,8 +36,8 @@ export function createForeshadowingExtractRouter(
 
       const dir = bookDir(id);
 
-      // Load project config for LLM settings
-      const config = await loadProjectConfig(dir, { consumer: "studio", requireApiKey: false });
+      // Load project config for LLM settings — use project root, not book dir
+      const config = await loadProjectConfig(root, { consumer: "studio", requireApiKey: false });
 
       // Read chapter file
       const padded = String(chapterNum).padStart(4, "0");

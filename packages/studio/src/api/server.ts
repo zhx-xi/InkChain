@@ -5694,11 +5694,11 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   app.route("/api/v1/books", relationLabelerRouter);
 
   // ── AI Foreshadowing Extraction (Issue #211) ──
-  const foreshadowingExtractRouter = createForeshadowingExtractRouter((id) => state.bookDir(id));
+  const foreshadowingExtractRouter = createForeshadowingExtractRouter((id) => state.bookDir(id), root);
   app.route("/api/v1/books", foreshadowingExtractRouter);
 
   // ── AI Timeline Extraction (Issue #211) ──
-  const timelineExtractRouter = createTimelineExtractRouter((id) => state.bookDir(id));
+  const timelineExtractRouter = createTimelineExtractRouter((id) => state.bookDir(id), root);
   app.route("/api/v1/books", timelineExtractRouter);
 
   // ── Volumes CRUD ──
