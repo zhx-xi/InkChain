@@ -9,6 +9,8 @@
 // 5. 分页 + 空状态
 
 import { useState, useEffect, useCallback, useMemo, useRef, type KeyboardEvent } from "react";
+import { ArrowLeft } from "lucide-react";
+import { useHashRoute } from "../hooks/use-hash-route";
 import { Archive, Search, ArrowUpDown, RotateCcw, Check, X, Loader2, Inbox } from "lucide-react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { cn } from "@/lib/utils";
@@ -101,6 +103,7 @@ function findMatchPositions(text: string, query: string): Array<{ start: number;
 // ── ArchivePage Component ──
 
 export function ArchivePage() {
+  const { setRoute } = useHashRoute();
   // ── State ──
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -366,6 +369,16 @@ export function ArchivePage() {
 
   return (
     <div className="space-y-6">
+      {/* Back button */}
+      <button
+        type="button"
+        onClick={() => setRoute({ page: "dashboard" })}
+        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4"
+      >
+        <ArrowLeft size={16} />
+        <span>返回首页</span>
+      </button>
+
       {/* Page Title */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">

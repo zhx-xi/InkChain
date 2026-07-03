@@ -17,7 +17,8 @@ import {
 import "@xyflow/react/dist/base.css";
 import { useGraphStore } from "../store/relations/graph-store";
 import { fetchJson } from "../hooks/use-api";
-import { Sparkles, Download } from "lucide-react";
+import { ArrowLeft, Sparkles, Download } from "lucide-react";
+import { useHashRoute } from "../hooks/use-hash-route";
 import { AlertBanner } from "../components/graph/AlertBanner";
 import { MemoCharacterNode } from "../components/graph/CharacterNode";
 import { MemoRelationEdge } from "../components/graph/RelationEdge";
@@ -100,6 +101,7 @@ function toReactFlowEdges(
  * pan/zoom/drag, custom nodes and edges, and Controls component.
  */
 export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
+  const { setRoute } = useHashRoute();
   const storeNodes = useGraphStore((s) => s.nodes);
   const storeEdges = useGraphStore((s) => s.edges);
   const loading = useGraphStore((s) => s.loading);
@@ -302,6 +304,14 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
   if (loading) {
     return (
       <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+        <button
+          type="button"
+          onClick={() => setRoute({ page: "book", bookId })}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4"
+        >
+          <ArrowLeft size={16} />
+          <span>返回书籍</span>
+        </button>
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -316,6 +326,14 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
   if (error) {
     return (
       <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+        <button
+          type="button"
+          onClick={() => setRoute({ page: "book", bookId })}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4"
+        >
+          <ArrowLeft size={16} />
+          <span>返回书籍</span>
+        </button>
         <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
           <div className="rounded-full bg-destructive/10 p-3">
             <svg
@@ -354,6 +372,14 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
   if (storeNodes.length === 0) {
     return (
       <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+        <button
+          type="button"
+          onClick={() => setRoute({ page: "book", bookId })}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4"
+        >
+          <ArrowLeft size={16} />
+          <span>返回书籍</span>
+        </button>
         <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
           <svg
             className="w-12 h-12 text-muted-foreground/30"
@@ -385,6 +411,14 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-3 shrink-0 border-b border-border/10">
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setRoute({ page: "book", bookId })}
+              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft size={16} />
+              <span>返回书籍</span>
+            </button>
             <h2 className="text-base font-semibold text-foreground">
               角色关系图谱
             </h2>
