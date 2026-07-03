@@ -985,12 +985,111 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
           </svg>
           <p className="text-sm text-muted-foreground">暂无时间线事件</p>
           <p className="text-xs text-muted-foreground/60 mb-2">开始添加第一个事件吧</p>
-          <Button onClick={handleCreateEvent}>
-            <PlusIcon className="size-4" />
-            新增事件
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleCreateEvent}>
+              <PlusIcon className="size-4" />
+              新增事件
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => { setAiExtractResult(null); setAiExtractError(null); setShowAiExtract(true); }}
+            >
+              <Bot className="size-4" />
+              AI 提取事件
+            </Button>
+          </div>
         </div>
       </div>
+      {showAiExtract && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px]">
+          <button
+            type="button"
+            aria-label="关闭"
+            className="absolute inset-0 cursor-default"
+            onClick={() => { setShowAiExtract(false); setAiExtractResult(null); }}
+          />
+          <div className="relative w-full max-w-2xl rounded-xl border border-border/55 bg-card shadow-2xl mx-4 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-border/45 px-6 py-4">
+              <h2 className="text-lg font-semibold text-foreground">AI 提取时间线事件</h2>
+              <button
+                type="button"
+                onClick={() => { setShowAiExtract(false); setAiExtractResult(null); }}
+                className="p-1 rounded-md text-muted-foreground hover:bg-secondary/60"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-foreground shrink-0">提取章节：</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={aiExtractChapter}
+                  onChange={(e) => setAiExtractChapter(Number(e.target.value))}
+                  className="w-24 rounded-lg border border-border/40 bg-background px-3 py-2 text-sm outline-none focus:border-primary/50"
+                />
+                <button
+                  type="button"
+                  onClick={handleAiExtract}
+                  disabled={aiExtractLoading}
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
+                >
+                  {aiExtractLoading ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Bot size={14} />
+                  )}
+                  开始提取
+                </button>
+              </div>
+              {aiExtractError && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                  {aiExtractError}
+                </div>
+              )}
+              {aiExtractLoading && (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 size={24} className="animate-spin text-primary" />
+                  <span className="ml-3 text-sm text-muted-foreground">AI 正在分析章节文本，请稍候…</span>
+                </div>
+              )}
+              {aiExtractResult !== null && !aiExtractLoading && (
+                <div className="space-y-2">
+                  {aiExtractResult.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">未提取到事件。</p>
+                  ) : (
+                    aiExtractResult.map((ev, idx) => {
+                      const color = EVENT_TYPE_COLORS[ev.eventType] ?? DEFAULT_COLOR;
+                      return (
+                        <div key={idx} className="rounded-lg border border-border/40 bg-background p-4 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm text-foreground">{ev.title}</span>
+                              <span
+                                className="text-[10px] font-medium rounded px-1.5 py-0.5"
+                                style={{ backgroundColor: `${color.border}20`, color: color.text }}
+                              >
+                                {color.label}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{ev.description}</p>
+                        </div>
+                      );
+                    })
+                  )}
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" size="sm" onClick={() => { setShowAiExtract(false); setAiExtractResult(null); }}>
+                      关闭
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     );
   }
 

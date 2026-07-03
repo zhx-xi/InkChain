@@ -395,11 +395,31 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
             />
           </svg>
           <p className="text-sm text-muted-foreground">暂无角色关系数据</p>
-          <p className="text-xs text-muted-foreground/60">
+          <p className="text-xs text-muted-foreground/60 mb-2">
             写作过程中角色关系将自动生成
           </p>
+          <button
+            type="button"
+            onClick={() => setShowExtraction(!showExtraction)}
+            className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-medium text-primary shadow-sm transition hover:bg-primary/10"
+          >
+            <Sparkles size={16} />
+            AI 提取角色关系
+          </button>
         </div>
       </div>
+      {/* AI extraction panel in empty state */}
+      {showExtraction && (
+        <RelationExtractionReviewPanel
+          bookId={bookId}
+          onClose={() => setShowExtraction(false)}
+          onLoadGraph={(nodes, edges) => {
+            setStoreNodes(nodes);
+            setStoreEdges(edges);
+            setShowExtraction(false);
+          }}
+        />
+      )}
     );
   }
 
