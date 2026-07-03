@@ -136,6 +136,12 @@ import { createTimelineExtractRouter } from "./routes/timeline-extract.js";
 import { createChapterVersionsRouter } from "./routes/chapter-versions.js";
 import { createAgentTemplatesRouter } from "./routes/agent-templates.js";
 
+import { createChapterVersionsRouter } from "./routes/chapter-versions.js";
+import { createAgentTemplatesRouter } from "./routes/agent-templates.js";
+import { createCustomAgentsRouter } from "./routes/custom-agents.js";
+import { createAgentOrderRouter } from "./routes/agent-order.js";
+>>>>>>> parent of 2614c75 (Revert "feat: agent flow editor with ReactFlow visualization and drag reorder (#233)")
+
 // -- Pipeline stage definitions per agent type --
 
 const PIPELINE_STAGES: Record<string, string[]> = {
@@ -5765,6 +5771,11 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   app.route("/api/v1/writing", createWritingContinueRouter(root));
   app.route("/api/v1/project/agent-team", createAgentTeamRouter(root));
   app.route("/api/v1/agent-templates", createAgentTemplatesRouter(root));
+
+  app.route("/api/v1/agent-templates", createAgentTemplatesRouter(root));
+  app.route("/api/v1/custom-agents", createCustomAgentsRouter(root));
+  app.route("/api/v1/agent-order", createAgentOrderRouter(root));
+>>>>>>> parent of 2614c75 (Revert "feat: agent flow editor with ReactFlow visualization and drag reorder (#233)")
 
   // ── Writer's Block Breakthrough (E4 simplified) ──
   // GET  /api/v1/books/:id/writers-block — analyze context and return 3-5 advancement suggestions
