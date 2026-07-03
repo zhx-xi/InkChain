@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import { PlusIcon, PencilIcon, Trash2Icon, XIcon } from "lucide-react";
+import { PlusIcon, PencilIcon, Trash2Icon, XIcon, Bot, Loader2, X, Search } from "lucide-react";
 import { useTimelineSegments, type TimelineEvent } from "../hooks/use-timeline-segments";
 
 // ── Types ──
@@ -517,6 +517,15 @@ interface TimelinePageProps {
   readonly bookId: string;
 }
 
+interface TimelineExtractEvent {
+  title: string;
+  eventType: string;
+  description: string;
+  relatedCharacters: string[];
+  importance: number;
+  tags: string[];
+}
+
 // ── Component ──
 
 export function TimelinePage({ bookId }: TimelinePageProps) {
@@ -562,6 +571,13 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
   // Delete confirmation state
   const [deleteConfirmEvent, setDeleteConfirmEvent] = useState<TimelineEvent | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // AI extract state
+  const [showAiExtract, setShowAiExtract] = useState(false);
+  const [aiExtractResult, setAiExtractResult] = useState<TimelineExtractEvent[] | null>(null);
+  const [aiExtractLoading, setAiExtractLoading] = useState(false);
+  const [aiExtractChapter, setAiExtractChapter] = useState(1);
+  const [aiExtractError, setAiExtractError] = useState<string | null>(null);
 
   // ── Compute unique chapters and characters (from ALL events, not paginated) ──
   const { uniqueChapters, uniqueCharacters } = useMemo(() => {
@@ -813,6 +829,23 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
     }
   }, [deleteConfirmEvent, bookId, refetch]);
 
+  // ── AI Extract ──
+  const handleAiExtract = useCallback(async () => {
+    setAiExtractLoading(true);
+    setAiExtractError(null);
+    setAiExtractResult(null);
+    try {
+      const result = await postApi<{ events: TimelineExtractEvent[] }>(
+        `/api/v1/books/${encodeURIComponent(bookId)}/chapters/${aiExtractChapter}/extract/timeline`,
+      );
+      setAiExtractResult(result.events);
+    } catch (err) {
+      setAiExtractError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setAiExtractLoading(false);
+    }
+  }, [bookId, aiExtractChapter]);
+
   // ── Handle save (create or update) ──
   const handleSaveEvent = useCallback(
     async (form: EventFormData, eventId: string | null) => {
@@ -1026,6 +1059,14 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
             </div>
 
             {/* Add event button */}
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={() => { setAiExtractResult(null); setAiExtractError(null); setShowAiExtract(true); }}
+              title="AI 提取事件"
+            >
+              <Bot className="size-4" />
+            </Button>
             <Button
               variant="default"
               size="icon-sm"
@@ -1278,6 +1319,114 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
           </DialogContent>
         )}
       </Dialog>
+
+      {/* AI Extract Modal */}
+      {showAiExtract && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px]">
+          <button
+            type="button"
+            aria-label="关闭"
+            className="absolute inset-0 cursor-default"
+            onClick={() => { setShowAiExtract(false); setAiExtractResult(null); }}
+          />
+          <div className="relative w-full max-w-2xl rounded-xl border border-border/55 bg-card shadow-2xl mx-4 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-border/45 px-6 py-4">
+              <h2 className="text-lg font-semibold text-foreground">AI 提取时间线事件</h2>
+              <button
+                type="button"
+                onClick={() => { setShowAiExtract(false); setAiExtractResult(null); }}
+                className="p-1 rounded-md text-muted-foreground hover:bg-secondary/60"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="px-6 py-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-foreground shrink-0">提取章节：</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={aiExtractChapter}
+                  onChange={(e) => setAiExtractChapter(Number(e.target.value))}
+                  className="w-24 rounded-lg border border-border/40 bg-background px-3 py-2 text-sm outline-none focus:border-primary/50"
+                />
+                <button
+                  type="button"
+                  onClick={handleAiExtract}
+                  disabled={aiExtractLoading}
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
+                >
+                  {aiExtractLoading ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Bot size={14} />
+                  )}
+                  开始提取
+                </button>
+              </div>
+
+              {aiExtractError && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                  {aiExtractError}
+                </div>
+              )}
+
+              {aiExtractLoading && (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 size={24} className="animate-spin text-primary" />
+                  <span className="ml-3 text-sm text-muted-foreground">AI 正在分析章节文本，请稍候…</span>
+                </div>
+              )}
+
+              {aiExtractResult !== null && !aiExtractLoading && (
+                <div className="space-y-2">
+                  {aiExtractResult.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">未提取到事件。</p>
+                  ) : (
+                    aiExtractResult.map((ev, idx) => {
+                      const color = EVENT_TYPE_COLORS[ev.eventType] ?? DEFAULT_COLOR;
+                      return (
+                        <div key={idx} className="rounded-lg border border-border/40 bg-background p-4 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm text-foreground">{ev.title}</span>
+                              <span
+                                className="text-[10px] font-medium rounded px-1.5 py-0.5"
+                                style={{ backgroundColor: `${color.border}20`, color: color.text }}
+                              >
+                                {color.label}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                              <span>{"★".repeat(ev.importance)}{"☆".repeat(5 - ev.importance)}</span>
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{ev.description}</p>
+                          {ev.relatedCharacters.length > 0 && (
+                            <p className="text-[11px] text-muted-foreground/60">
+                              角色：{ev.relatedCharacters.join("、")}
+                            </p>
+                          )}
+                          {ev.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {ev.tags.map((tag, ti) => (
+                                <span key={ti} className="text-[10px] bg-muted/60 text-muted-foreground rounded px-1.5 py-0.5">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

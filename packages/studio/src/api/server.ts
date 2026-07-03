@@ -131,6 +131,8 @@ import { createConsistencyRouter } from "./routes/consistency.js";
 import { createRelationLabelerRouter } from "./routes/relation-labeler.js";
 import { createWritingContinueRouter } from "./routes/writing-continue.js";
 import { createAgentTeamRouter } from "./routes/agent-team.js";
+import { createForeshadowingExtractRouter } from "./routes/foreshadowing-extract.js";
+import { createTimelineExtractRouter } from "./routes/timeline-extract.js";
 
 // -- Pipeline stage definitions per agent type --
 
@@ -5687,6 +5689,14 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     (id) => state.bookDir(id),
   );
   app.route("/api/v1/books", relationLabelerRouter);
+
+  // ── AI Foreshadowing Extraction (Issue #211) ──
+  const foreshadowingExtractRouter = createForeshadowingExtractRouter((id) => state.bookDir(id));
+  app.route("/api/v1/books", foreshadowingExtractRouter);
+
+  // ── AI Timeline Extraction (Issue #211) ──
+  const timelineExtractRouter = createTimelineExtractRouter((id) => state.bookDir(id));
+  app.route("/api/v1/books", timelineExtractRouter);
 
   // ── Volumes CRUD ──
   const volumesRouter = createVolumesRouter((id) => state.bookDir(id));
