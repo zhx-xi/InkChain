@@ -1,0 +1,9 @@
+{
+  "id": "character-voice",
+  "category": "writing",
+  "triggers": [{ "type": "condition", "condition": "session.kind === 'book'" }],
+  "injection": { "mode": "append", "target": "system_prompt", "priority": 55 },
+  "params": {},
+  "enabled": true,
+  "description": "Ensure each character's dialogue style remains consistent."
+}

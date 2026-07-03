@@ -1,0 +1,9 @@
+{
+  "id": "plot-advancement",
+  "category": "analysis",
+  "triggers": [{ "type": "manual" }],
+  "injection": { "mode": "append", "target": "system_prompt", "priority": 50 },
+  "params": {},
+  "enabled": true,
+  "description": "Analyze current plot state and suggest advancement options."
+}
