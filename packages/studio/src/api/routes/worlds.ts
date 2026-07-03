@@ -31,6 +31,7 @@ import {
   type WorldConfig,
 } from "@actalk/inkos-core";
 import { ApiError } from "../errors.js";
+import { isSafeBookId } from "../safety.js";
 
 function validateWorldId(id: string): string {
   if (!/^[a-z0-9_-]+$/i.test(id)) {
@@ -231,9 +232,15 @@ export function createBookWorldsRouter(root: string) {
   const router = new Hono();
 
   router.get("/:bookId/worlds", async (c) => {
-    const { bookId } = c.req.param();
-    if (!/^[a-z0-9_-]+$/i.test(bookId)) {
-      throw new ApiError(400, "INVALID_BOOK_ID", `Invalid book id: ${bookId}`);
+    const rawBookId = c.req.param("bookId");
+    let bookId: string;
+    try {
+      bookId = decodeURIComponent(rawBookId);
+    } catch {
+      throw new ApiError(400, "INVALID_BOOK_ID", `Invalid book id: ${rawBookId}`);
+    }
+    if (!isSafeBookId(bookId)) {
+      throw new ApiError(400, "INVALID_BOOK_ID", `Invalid book id: ${rawBookId}`);
     }
 
     const bookDir = join(root, "books", bookId);
