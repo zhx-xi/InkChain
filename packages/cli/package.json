@@ -1,6 +1,6 @@
 {
   "name": "@actalk/inkos",
-  "version": "1.5.0",
+  "version": "3.0.0",
   "description": "Story Creation AI Agent CLI for long-form fiction, InkOS Short, fan works, continuations, covers, and interactive worlds.",
   "keywords": [
     "story-creation-ai-agent",
