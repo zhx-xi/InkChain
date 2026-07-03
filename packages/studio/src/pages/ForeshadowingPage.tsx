@@ -1,4 +1,6 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
+import { ArrowLeft } from "lucide-react";
+import { useHashRoute } from "../hooks/use-hash-route";
 import {
   Search, X, Sparkles, Plus, AlertTriangle, CheckCircle2, Clock,
   XCircle, Eye, EyeOff, Loader2, Bot,
@@ -469,6 +471,7 @@ function EditForeshadowingModal({
 }
 
 export function ForeshadowingPage() {
+  const { setRoute } = useHashRoute();
   const { data, loading, error, refetch } = useApi<ForeshadowingListResponse>(
     "/api/foreshadowing?currentChapter=999",
   );
@@ -495,6 +498,16 @@ export function ForeshadowingPage() {
 
   return (
     <div className="space-y-6">
+      {/* Back button */}
+      <button
+        type="button"
+        onClick={() => setRoute({ page: "dashboard" })}
+        className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-card/60 px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors"
+      >
+        <ArrowLeft size={14} />
+        返回首页
+      </button>
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-serif font-semibold text-foreground">伏笔追踪</h1>

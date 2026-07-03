@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { ArrowLeft } from "lucide-react";
+import { useHashRoute } from "../hooks/use-hash-route";
 import { Search, X, Globe, Plus } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useApi, fetchJson } from "../hooks/use-api";
@@ -29,6 +31,7 @@ const DIMENSION_COLORS: Record<string, string> = {
 };
 
 export function WorldListPage({ nav }: { readonly nav?: { toWorldDetail: (id: string) => void; toWorldCreate: () => void } }) {
+  const { setRoute } = useHashRoute();
   const { data, loading, error, refetch } = useApi<WorldsListResponse>("/api/worlds");
   const [query, setQuery] = useState("");
 
@@ -52,6 +55,16 @@ export function WorldListPage({ nav }: { readonly nav?: { toWorldDetail: (id: st
 
   return (
     <div className="space-y-6">
+      {/* Back button */}
+      <button
+        type="button"
+        onClick={() => setRoute({ page: "dashboard" })}
+        className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-card/60 px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors"
+      >
+        <ArrowLeft size={14} />
+        返回首页
+      </button>
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-serif font-semibold text-foreground">世界设定</h1>

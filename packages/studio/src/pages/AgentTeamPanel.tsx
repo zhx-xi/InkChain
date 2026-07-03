@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
+import { ArrowLeft } from "lucide-react";
+import { useHashRoute } from "../hooks/use-hash-route";
 import {
   RefreshCw,
   RotateCcw,
@@ -51,6 +53,7 @@ function initialAgentStatuses(): Record<AgentRole, AgentStatus> {
 // ── Component ──
 
 export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
+  const { setRoute } = useHashRoute();
   const [agentStatuses, setAgentStatuses] = useState<Record<AgentRole, AgentStatus>>(initialAgentStatuses);
   const [selectedPreset, setSelectedPreset] = useState("default");
   const [isResetting, setIsResetting] = useState(false);
@@ -123,6 +126,16 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
 
   return (
     <div className="fade-in space-y-8">
+      {/* Back button */}
+      <button
+        type="button"
+        onClick={() => setRoute({ page: "project-settings" })}
+        className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-card/60 px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors"
+      >
+        <ArrowLeft size={14} />
+        返回设置
+      </button>
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

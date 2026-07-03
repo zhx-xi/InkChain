@@ -14,6 +14,8 @@ import {
   type ReactFlowProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/base.css";
+import { ArrowLeft } from "lucide-react";
+import { useHashRoute } from "../hooks/use-hash-route";
 import { useApi, fetchJson } from "../hooks/use-api";
 import { useColors } from "../hooks/use-colors";
 import type { Theme } from "../hooks/use-theme";
@@ -109,6 +111,7 @@ export default function FlowView({
   embedded?: boolean;
 }) {
   const c = useColors(theme);
+  const { setRoute } = useHashRoute();
   const { data: graph, loading, error, refetch } = useApi<StoryGraph>(
     `/projects/${projectId}/story-graph`,
   );
@@ -266,11 +269,13 @@ export default function FlowView({
       <div className="flex items-center gap-3 text-sm shrink-0">
         {!embedded && (
           <button
-            onClick={() => nav.toFilm(projectId)}
-            className={c.link}
+            type="button"
+            onClick={() => setRoute({ page: "book", bookId: projectId })}
+            className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-card/60 px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors"
             data-testid="flow-back"
           >
-            ← {t("bread.film")}
+            <ArrowLeft size={14} />
+            返回书籍
           </button>
         )}
         <span data-testid="flow-title">{graph.title || projectId}</span>

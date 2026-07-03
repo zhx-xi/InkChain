@@ -1,4 +1,6 @@
 import { useMemo, useState, useCallback } from "react";
+import { ArrowLeft } from "lucide-react";
+import { useHashRoute } from "../hooks/use-hash-route";
 import { Search, X, Sparkles, Edit2, Plus } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useApi, fetchJson } from "../hooks/use-api";
@@ -36,6 +38,7 @@ const CATEGORY_BG: Record<SkillCategory, string> = {
 type StatusFilter = "all" | "enabled" | "disabled";
 
 export function SkillListPage() {
+  const { setRoute } = useHashRoute();
   const { data, loading, error, refetch } = useApi<SkillsListResponse>("/api/skills");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<"all" | SkillCategory>("all");
@@ -80,6 +83,16 @@ export function SkillListPage() {
 
   return (
     <div className="space-y-6">
+      {/* Back button */}
+      <button
+        type="button"
+        onClick={() => setRoute({ page: "project-settings" })}
+        className="inline-flex items-center gap-2 rounded-lg border border-border/50 bg-card/60 px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors"
+      >
+        <ArrowLeft size={14} />
+        返回设置
+      </button>
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-serif font-semibold text-foreground">Skill 库</h1>
