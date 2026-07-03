@@ -10,6 +10,7 @@ describe("capability skill registry", () => {
     const ids = registry.listSkills().map((skill) => skill.id).sort();
 
     expect(ids).toEqual([
+      "humanizer-zh",
       "interactive-film-authoring",
       "longform-writing",
       "open-world-play",
@@ -65,7 +66,7 @@ describe("capability skill registry", () => {
     expect(registry.resolveSkills({
       sessionKind: "play",
       instruction: "我走进旧图书馆，查看桌上的信",
-    }).usedSkills.map((skill) => skill.id)).toEqual(["open-world-play"]);
+    }).usedSkills.map((skill) => skill.id)).toEqual(["humanizer-zh", "open-world-play"]);
 
     expect(registry.resolveSkills({
       sessionKind: "chat",
@@ -75,10 +76,10 @@ describe("capability skill registry", () => {
     expect(registry.resolveSkills({
       sessionKind: "book",
       instruction: "继续写下一章，注意伏笔一致性",
-    }).usedSkills.map((skill) => skill.id)).toEqual(["longform-writing"]);
+    }).usedSkills.map((skill) => skill.id)).toEqual(["humanizer-zh", "longform-writing"]);
   });
 
   it("keeps built-in manifests schema-valid at module load time", () => {
-    expect(BUILTIN_CAPABILITY_SKILLS).toHaveLength(3);
+    expect(BUILTIN_CAPABILITY_SKILLS).toHaveLength(4);
   });
 });
