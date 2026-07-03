@@ -1,10 +1,18 @@
 import { useMemo, useState, useCallback } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useHashRoute } from "../hooks/use-hash-route";
-import { Search, X, Globe, Plus, Bot, Loader2 } from "lucide-react";
+import { Search, X, Globe, Plus, Bot, Loader2, FileText } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useApi, postApi } from "../hooks/use-api";
 import type { WorldConfig } from "@actalk/inkos-core";
+
+interface AiExtractResponse {
+  readonly summary: string;
+  readonly entities: Array<{ type: string; name: string; description?: string }>;
+  readonly sections: string[];
+  readonly textLength: number;
+  readonly chaptersRead: number;
+}
 
 interface WorldsListResponse {
   readonly worlds: ReadonlyArray<WorldConfig>;
@@ -43,7 +51,7 @@ export function WorldListPage({ nav, bookId }: {
   const [showAiExtract, setShowAiExtract] = useState(false);
   const [aiExtractLoading, setAiExtractLoading] = useState(false);
   const [aiExtractError, setAiExtractError] = useState<string | null>(null);
-  const [aiExtractResult, setAiExtractResult] = useState<string | null>(null);
+  const [aiExtractResult, setAiExtractResult] = useState<AiExtractResponse | null>(null);
 
   const handleAiExtract = useCallback(async () => {
     if (!bookId) return;
@@ -51,10 +59,10 @@ export function WorldListPage({ nav, bookId }: {
     setAiExtractError(null);
     setAiExtractResult(null);
     try {
-      const result = await postApi<{ summary: string }>(
-        `/api/v1/books/${encodeURIComponent(bookId)}/chapters/1/extract/timeline`,
+      const result = await postApi<AiExtractResponse>(
+        `/api/v1/books/${encodeURIComponent(bookId)}/worlds/ai-extract-from-book`,
       );
-      setAiExtractResult("世界设定提取功能即将完善，当前版本支持从章节文本提取伏笔和时间线事件。");
+      setAiExtractResult(result);
     } catch (err) {
       setAiExtractError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -277,14 +285,33 @@ export function WorldListPage({ nav, bookId }: {
               </button>
             </div>
             <div className="px-6 py-4 space-y-4">
-              <p className="text-sm text-muted-foreground">
-                AI 可从章节文本中自动提取伏笔和时间线事件。请使用对应的伏笔页面和时间线页面中的 AI 提取功能。
-                {bookId && (
-                  <span className="block mt-2">
-                    当前书籍：<strong>{bookName || bookId}</strong>
-                  </span>
-                )}
-              </p>
+              {!aiExtractResult && !aiExtractLoading && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-3">
+                    从本书的章节文本和设定文件中自动提取世界观设定。
+                    {bookId && (
+                      <span className="block mt-2">
+                        当前书籍：<strong>{bookName || bookId}</strong>
+                      </span>
+                    )}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleAiExtract}
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                  >
+                    <Bot size={16} />
+                    开始提取
+                  </button>
+                </div>
+              )}
+
+              {aiExtractLoading && (
+                <div className="flex flex-col items-center gap-3 py-8">
+                  <Loader2 size={28} className="animate-spin text-primary" />
+                  <p className="text-sm text-muted-foreground">AI 正在分析章节文本，请稍候…</p>
+                </div>
+              )}
 
               {aiExtractError && (
                 <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
@@ -292,9 +319,56 @@ export function WorldListPage({ nav, bookId }: {
                 </div>
               )}
 
-              {aiExtractResult && (
-                <div className="rounded-lg border border-border/40 bg-background p-4 text-sm text-foreground">
-                  {aiExtractResult}
+              {aiExtractResult && !aiExtractLoading && (
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {/* Summary */}
+                  <div className="rounded-lg border border-border/40 bg-background p-4">
+                    <h3 className="text-sm font-semibold text-foreground mb-2">提取摘要</h3>
+                    <p className="text-sm text-muted-foreground">{aiExtractResult.summary}</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      分析 {aiExtractResult.textLength} 字 · 读取 {aiExtractResult.chaptersRead} 个文件
+                    </p>
+                  </div>
+
+                  {/* Entities */}
+                  {aiExtractResult.entities.length > 0 && (
+                    <div className="rounded-lg border border-border/40 bg-background p-4">
+                      <h3 className="text-sm font-semibold text-foreground mb-2">
+                        识别实体 ({aiExtractResult.entities.length})
+                      </h3>
+                      <div className="grid grid-cols-1 gap-2">
+                        {aiExtractResult.entities.map((entity, idx) => (
+                          <div key={idx} className="flex items-start gap-2 text-sm">
+                            <FileText size={14} className="mt-0.5 shrink-0 text-primary" />
+                            <div>
+                              <span className="font-medium text-foreground">{entity.name}</span>
+                              <span className="text-muted-foreground ml-2">({entity.type})</span>
+                              {entity.description && (
+                                <p className="text-xs text-muted-foreground mt-0.5">{entity.description}</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Sections/Dimensions */}
+                  {aiExtractResult.sections.length > 0 && (
+                    <div className="rounded-lg border border-border/40 bg-background p-4">
+                      <h3 className="text-sm font-semibold text-foreground mb-2">提取维度</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {aiExtractResult.sections.map((section, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
+                          >
+                            {DIMENSION_LABELS[section] || section}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -306,6 +380,16 @@ export function WorldListPage({ nav, bookId }: {
               >
                 关闭
               </button>
+              {aiExtractResult && (
+                <button
+                  type="button"
+                  onClick={() => { setAiExtractResult(null); handleAiExtract(); }}
+                  className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-medium text-primary transition hover:bg-primary/10"
+                >
+                  <Loader2 size={14} className={aiExtractLoading ? "animate-spin" : ""} />
+                  重新提取
+                </button>
+              )}
             </div>
           </div>
         </div>
