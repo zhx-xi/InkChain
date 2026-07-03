@@ -20,6 +20,80 @@ export function createWorldsExtractRouter(
 
   // ── POST /:bookId/worlds/extract — Extract world from text ──
 
+  // ── POST /:bookId/worlds/ai-extract-from-book — Extract world from book content ──
+  // Reads first N chapters and setting files, concatenates them, and runs extractWorldFromText.
+
+  router.post("/:id/worlds/ai-extract-from-book", async (c) => {
+    const id = c.req.param("id");
+
+    if (!isSafeBookId(id)) {
+      throw new ApiError(400, "INVALID_BOOK_ID", `Invalid book id: "${id}"`);
+    }
+
+    const dir = bookDir(id);
+    const { access, readdir, readFile } = await import("node:fs/promises");
+    const { join } = await import("node:path");
+
+    // Verify the book exists
+    try {
+      await access(join(dir, "book.json"));
+    } catch {
+      throw new ApiError(404, "BOOK_NOT_FOUND", `Book not found: ${id}`);
+    }
+
+    // Read chapter files
+    const chaptersDir = join(dir, "chapters");
+    const maxChapters: number = 5; // Default: first 5 chapters
+
+    let textParts: string[] = [];
+
+    try {
+      const chapterFiles = await readdir(chaptersDir);
+      const sortedChapters = chapterFiles
+        .filter((f) => f.endsWith(".md") && /^\d{4}/.test(f))
+        .sort();
+
+      const toRead = Math.min(sortedChapters.length, maxChapters);
+      for (let i = 0; i < toRead; i++) {
+        const content = await readFile(join(chaptersDir, sortedChapters[i]), "utf-8");
+        textParts.push(`## 第 ${i + 1} 章\n\n${content}`);
+      }
+    } catch {
+      // No chapters directory — continue with setting files only
+    }
+
+    // Try reading setting files from story/ directory
+    const storyDir = join(dir, "story");
+    try {
+      await access(storyDir);
+      const storyFiles = await readdir(storyDir);
+      const mdFiles = storyFiles.filter((f) => f.endsWith(".md") && !f.startsWith("."));
+      for (const file of mdFiles) {
+        const content = await readFile(join(storyDir, file), "utf-8");
+        textParts.push(`## ${file}\n\n${content}`);
+      }
+    } catch {
+      // No story directory — fine
+    }
+
+    const text = textParts.join("\n\n---\n\n");
+    if (!text.trim()) {
+      throw new ApiError(400, "NO_CONTENT", "本书暂无章节或设定文件可提取");
+    }
+
+    const result: ExtractResult = extractWorldFromText(text);
+    const summary = summarizeExtraction(result);
+
+    return c.json({
+      world: result.world,
+      entities: result.entities,
+      sections: result.sections,
+      summary,
+      textLength: text.length,
+      chaptersRead: textParts.length,
+    });
+  });
+
   router.post("/:id/worlds/extract", async (c) => {
     const id = c.req.param("id");
 
