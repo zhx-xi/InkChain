@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { useHashRoute } from "../hooks/use-hash-route";
 import { Search, X, Globe, Plus } from "lucide-react";
 import { cn } from "../lib/utils";
-import { useApi, fetchJson } from "../hooks/use-api";
+import { useApi } from "../hooks/use-api";
 import type { WorldConfig } from "@actalk/inkos-core";
 
 interface WorldsListResponse {
@@ -30,10 +30,21 @@ const DIMENSION_COLORS: Record<string, string> = {
   rules: "#EF4444",
 };
 
-export function WorldListPage({ nav }: { readonly nav?: { toWorldDetail: (id: string) => void; toWorldCreate: () => void } }) {
+export function WorldListPage({ nav, bookId }: {
+  readonly nav?: { toWorldDetail: (id: string) => void; toWorldCreate: () => void; toBook?: (id: string) => void };
+  readonly bookId?: string;
+}) {
   const { setRoute } = useHashRoute();
-  const { data, loading, error, refetch } = useApi<WorldsListResponse>("/api/worlds");
+  const { data: booksData } = useApi<{ books: ReadonlyArray<{ id: string; title: string }> }>("/api/v1/books");
+  const { data, loading, error, refetch } = useApi<WorldsListResponse>(
+    bookId ? `/api/books/${encodeURIComponent(bookId)}/worlds` : "/api/worlds",
+  );
   const [query, setQuery] = useState("");
+
+  const bookName = useMemo(() => {
+    if (!bookId || !booksData?.books) return "";
+    return booksData.books.find((b) => b.id === bookId)?.title ?? "";
+  }, [bookId, booksData]);
 
   const filteredWorlds = useMemo(() => {
     const list = data?.worlds ?? [];
@@ -58,18 +69,22 @@ export function WorldListPage({ nav }: { readonly nav?: { toWorldDetail: (id: st
       {/* Back button */}
       <button
         type="button"
-        onClick={() => setRoute({ page: "dashboard" })}
+        onClick={() => bookId ? setRoute({ page: "book", bookId }) : setRoute({ page: "dashboard" })}
         className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4"
       >
         <ArrowLeft size={16} />
-        <span>返回首页</span>
+        <span>{bookId ? (bookName || "返回书籍") : "返回首页"}</span>
       </button>
 
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-serif font-semibold text-foreground">世界设定</h1>
+          <h1 className="text-2xl font-serif font-semibold text-foreground">
+            {bookId ? (bookName ? `${bookName} — 世界设定` : "书籍世界设定") : "世界设定"}
+          </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            管理世界观配置，7 维度数据驱动小说创作
+            {bookId
+              ? `该书关联的 ${filteredWorlds.length} 个世界观`
+              : "管理世界观配置，7 维度数据驱动小说创作"}
           </p>
         </div>
         <button
@@ -141,12 +156,12 @@ export function WorldListPage({ nav }: { readonly nav?: { toWorldDetail: (id: st
             <Globe size={28} className="text-muted-foreground/40" />
           </div>
           <p className="text-base text-muted-foreground mb-1">
-            {query ? "没有符合条件的 World" : "还没有创建任何世界设定"}
+            {query ? "没有符合条件的 World" : bookId ? "该书还没有关联任何世界设定" : "还没有创建任何世界设定"}
           </p>
           <p className="text-sm text-muted-foreground/60 mb-4">
-            {query ? "尝试修改搜索词" : "创建您的第一个世界，为小说提供完整的背景设定"}
+            {query ? "尝试修改搜索词" : bookId ? "在书籍配置中设置 worldId 来关联世界" : "创建您的第一个世界，为小说提供完整的背景设定"}
           </p>
-          {!query && (
+          {!query && !bookId && (
             <button
               type="button"
               onClick={() => {

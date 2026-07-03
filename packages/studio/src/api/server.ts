@@ -122,7 +122,7 @@ import { createSessionsRouter } from "./routes/sessions.js";
 import { createRelationExtractionRouter } from "./routes/relation-extraction.js";
 import { createSearchRouter } from "./routes/search.js";
 import { createForeshadowingRouter } from "./routes/foreshadowing.js";
-import { createWorldsRouter } from "./routes/worlds.js";
+import { createWorldsRouter, createBookWorldsRouter } from "./routes/worlds.js";
 import { createWorldsExtractRouter } from "./routes/worlds-extract.js";
 import { createWorldsAIGenRouter } from "./routes/worlds-ai-gen.js";
 import { createPublishRouter } from "./routes/publish.js";
@@ -5739,6 +5739,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   app.route("/api/skills", createSkillsRouter(root));
   app.route("/api/worlds", createWorldsRouter(root));
   app.route("/api/worlds", createWorldsAIGenRouter(root));
+  app.route("/api/books", createBookWorldsRouter(root));
   app.route("/api/foreshadowing", createForeshadowingRouter(root));
   app.route("/api/publish", createPublishRouter(root));
   app.route("/api/style-profiles", createStyleProfilesRouter(root));

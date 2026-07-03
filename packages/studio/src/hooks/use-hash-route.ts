@@ -35,7 +35,8 @@ export type HashRoute =
   | { page: "world-create" }
   | { page: "world-geoviz"; worldId: string }
   | { page: "publish"; bookId: string }
-  | { page: "edit-dashboard"; bookId: string };
+  | { page: "edit-dashboard"; bookId: string }
+  | { page: "book-worlds"; bookId: string };
 
 function parseHash(hash: string): HashRoute {
   const path = hash.replace(/^#\/?/, "");
