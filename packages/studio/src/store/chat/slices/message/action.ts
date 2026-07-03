@@ -257,6 +257,39 @@ export const createMessageSlice: StateCreator<ChatStore, [], [], MessageActions>
     }
   },
 
+  archiveSession: async (sessionId) => {
+    const session = get().sessions[sessionId];
+    if (session && !session.isDraft) {
+      try {
+        await fetchJson(`/project/sessions/${sessionId}/archive`, { method: "POST" });
+      } catch {
+        // ignore
+      }
+    }
+
+    set((state) => {
+      const { [sessionId]: removed, ...rest } = state.sessions;
+      const sessionIdsByBook = Object.fromEntries(
+        Object.entries(state.sessionIdsByBook).map(([key, ids]) => [
+          key,
+          ids.filter((id) => id !== sessionId),
+        ]),
+      );
+
+      let activeSessionId = state.activeSessionId;
+      if (activeSessionId === sessionId) {
+        const fallbackKey = bookKey(session?.bookId ?? null);
+        activeSessionId = sessionIdsByBook[fallbackKey]?.[0] ?? null;
+      }
+
+      return {
+        sessions: rest,
+        sessionIdsByBook,
+        activeSessionId,
+      };
+    });
+  },
+
   deleteSession: async (sessionId) => {
     const session = get().sessions[sessionId];
     session?.stream?.close();
