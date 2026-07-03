@@ -91,6 +91,11 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
   const [editingSkillId, setEditingSkillId] = useState<string | null>(null);
   const [notice, setNotice] = useState<{ tone: NoticeTone; message: string } | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
+  const [agentTeamAgents, setAgentTeamAgents] = useState<Array<{ role: string; enabled: boolean }>>(
+    ["writer", "architect", "planner", "editor", "auditor", "observer", "reviser"].map((r) => ({ role: r, enabled: true })),
+  );
+  const [agentTeamDefaultModel, setAgentTeamDefaultModel] = useState("");
+  const [agentTeamCollabMode, setAgentTeamCollabMode] = useState<"sequential" | "parallel" | "hybrid">("sequential");
   const skills = skillsData?.skills ?? [];
 
   useEffect(() => {
@@ -121,6 +126,21 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
     if (!detectionData) return;
     setDet(detectionDraftFromConfig(detectionData.detection));
   }, [detectionData]);
+
+  useEffect(() => {
+    fetchJson<{ config: { agents: Array<{ role: string; enabled: boolean }>; defaultModel?: string; collaborationMode?: "sequential" | "parallel" | "hybrid" } }>("/project/agent-team")
+      .then((data) => {
+        const config = data.config;
+        if (config.agents && config.agents.length > 0) {
+          setAgentTeamAgents(config.agents.map((a) => ({ role: a.role, enabled: a.enabled !== false })));
+        }
+        if (config.defaultModel) setAgentTeamDefaultModel(config.defaultModel);
+        if (config.collaborationMode) setAgentTeamCollabMode(config.collaborationMode);
+      })
+      .catch(() => {
+        // Fall back to defaults if no config exists
+      });
+  }, []);
 
   const runSave = async (key: string, work: () => Promise<void>, success: string) => {
     setSaving(key);
@@ -490,6 +510,77 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
           >
             {saving === "notify" ? t("config.saving") : t("config.save")}
           </button>
+        </div>
+      </SettingsCard>
+
+      {/* Agent Team Config */}
+      <SettingsCard
+        title={isZh ? "Agent 团队配置" : "Agent Team Config"}
+        description={isZh ? "管理创作团队的 Agent 角色启用状态、默认模型和协作模式。" : "Manage agent role enable states, default model, and collaboration mode for your writing team."}
+        icon={<Bot size={18} />}
+      >
+        <div className="space-y-3">
+          {/* Agent toggle switches */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+            {agentTeamAgents.map((agentCfg, i) => (
+              <label
+                key={agentCfg.role}
+                className="flex items-center gap-2 rounded-lg border border-border/40 bg-secondary/20 px-3 py-2 text-sm cursor-pointer hover:bg-secondary/40 transition-colors"
+              >
+                <input
+                  type="checkbox"
+                  checked={agentCfg.enabled}
+                  onChange={(e) => {
+                    const next = [...agentTeamAgents];
+                    next[i] = { ...next[i], enabled: e.target.checked };
+                    setAgentTeamAgents(next);
+                  }}
+                  className="rounded"
+                />
+                <span className="font-medium capitalize">{agentCfg.role}</span>
+              </label>
+            ))}
+          </div>
+
+          {/* Default model */}
+          <div className="grid gap-2 md:grid-cols-[1fr_1fr_auto] items-end">
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">{isZh ? "默认模型" : "Default model"}</label>
+              <input
+                value={agentTeamDefaultModel}
+                onChange={(e) => setAgentTeamDefaultModel(e.target.value)}
+                placeholder={isZh ? "模型 ID（可选）" : "Model ID (optional)"}
+                className={`${fieldClass} font-mono`}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs text-muted-foreground">{isZh ? "协作模式" : "Collaboration mode"}</label>
+              <select
+                value={agentTeamCollabMode}
+                onChange={(e) => setAgentTeamCollabMode(e.target.value as "sequential" | "parallel" | "hybrid")}
+                className="rounded-lg border border-border bg-secondary/30 px-3 py-2 text-sm outline-none"
+              >
+                <option value="sequential">{isZh ? "顺序 (sequential)" : "Sequential"}</option>
+                <option value="parallel">{isZh ? "并行 (parallel)" : "Parallel"}</option>
+                <option value="hybrid">{isZh ? "混合 (hybrid)" : "Hybrid"}</option>
+              </select>
+            </div>
+            <button
+              onClick={() => runSave("agent-team", async () => {
+                const payload = {
+                  schemaVersion: "1",
+                  agents: agentTeamAgents.map((a) => ({ role: a.role, enabled: a.enabled })),
+                  defaultModel: agentTeamDefaultModel.trim() || undefined,
+                  collaborationMode: agentTeamCollabMode,
+                };
+                await putApi("/project/agent-team", payload);
+              }, isZh ? "Agent 配置已保存" : "Agent config saved")}
+              disabled={saving === "agent-team"}
+              className={`rounded-lg px-4 py-2 text-sm font-bold ${c.btnPrimary} disabled:opacity-40`}
+            >
+              {saving === "agent-team" ? t("config.saving") : t("config.save")}
+            </button>
+          </div>
         </div>
       </SettingsCard>
 

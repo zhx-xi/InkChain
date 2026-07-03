@@ -16,6 +16,7 @@ import {
 } from "../components/AgentCard";
 import { PersonaEditPanel } from "../components/PersonaEditPanel";
 import { cn } from "../lib/utils";
+import { fetchJson } from "../hooks/use-api";
 
 // ── Props ──
 
@@ -42,6 +43,26 @@ const PRESETS: ReadonlyArray<Preset> = [
   { id: "mystery",   name: "悬疑推理",     description: "适合悬疑/推理题材创作" },
 ];
 
+// ── Config types ──
+
+interface AgentRoleConfig {
+  readonly role: string;
+  readonly enabled: boolean;
+  readonly model?: string;
+  readonly systemPromptOverride?: string;
+}
+
+interface AgentTeamConfig {
+  readonly schemaVersion: string;
+  readonly agents: ReadonlyArray<AgentRoleConfig>;
+  readonly defaultModel?: string;
+  readonly collaborationMode: "sequential" | "parallel" | "hybrid";
+}
+
+interface AgentTeamResponse {
+  readonly config: AgentTeamConfig;
+}
+
 // ── Initial Agent States ──
 
 function initialAgentStatuses(): Record<AgentRole, AgentStatus> {
@@ -50,28 +71,64 @@ function initialAgentStatuses(): Record<AgentRole, AgentStatus> {
   ) as Record<AgentRole, AgentStatus>;
 }
 
+function statusFromEnabled(enabled: boolean): AgentStatus {
+  return enabled ? "ready" : "disabled";
+}
+
 // ── Component ──
 
 export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
   const { setRoute } = useHashRoute();
   const [agentStatuses, setAgentStatuses] = useState<Record<AgentRole, AgentStatus>>(initialAgentStatuses);
+  const [agentConfigs, setAgentConfigs] = useState<Map<string, AgentRoleConfig>>(new Map());
   const [selectedPreset, setSelectedPreset] = useState("default");
   const [isResetting, setIsResetting] = useState(false);
   const [showPresetDropdown, setShowPresetDropdown] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [editingAgent, setEditingAgent] = useState<AgentRole | null>(null);
 
-  // Simulate initial loading
+  // Load real config from backend
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 600);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+    setIsLoading(true);
+    setLoadError(null);
+
+    fetchJson<AgentTeamResponse>("/project/agent-team")
+      .then((data) => {
+        if (cancelled) return;
+        const config = data.config;
+        const configMap = new Map<string, AgentRoleConfig>();
+        for (const agent of config.agents) {
+          configMap.set(agent.role, agent);
+        }
+        setAgentConfigs(configMap);
+        setAgentStatuses((prev) => {
+          const next = { ...prev };
+          for (const agent of config.agents) {
+            const role = agent.role as AgentRole;
+            if (AGENTS.some((a) => a.role === role)) {
+              next[role] = statusFromEnabled(agent.enabled);
+            }
+          }
+          return next;
+        });
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setLoadError(error instanceof Error ? error.message : String(error));
+        setIsLoading(false);
+      });
+
+    return () => { cancelled = true; };
   }, []);
 
   const handlePresetChange = useCallback((presetId: string) => {
     setSelectedPreset(presetId);
     setShowPresetDropdown(false);
 
-    // Simulate applying preset: briefly set all to busy, then back to ready
+    // Apply preset: briefly set all to busy, then back to ready
     const busyStatuses = Object.fromEntries(
       AGENTS.map((a) => [a.role, "busy" as AgentStatus]),
     ) as Record<AgentRole, AgentStatus>;
@@ -86,7 +143,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
     if (isResetting) return;
     setIsResetting(true);
 
-    // Simulate reset: all agents go busy briefly
+    // Reset: all agents go busy briefly
     const busyStatuses = Object.fromEntries(
       AGENTS.map((a) => [a.role, "busy" as AgentStatus]),
     ) as Record<AgentRole, AgentStatus>;
@@ -118,6 +175,21 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
         <Loader2 size={24} className="animate-spin text-muted-foreground" />
         <span className="text-sm text-muted-foreground">加载 Agent Team…</span>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <span className="text-sm text-destructive">加载失败：{loadError}</span>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="rounded-lg px-4 py-2 text-sm font-medium border border-border/60 hover:bg-secondary/50"
+        >
+          重试
+        </button>
       </div>
     );
   }

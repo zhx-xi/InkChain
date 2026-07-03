@@ -130,6 +130,7 @@ import { createStyleProfilesRouter } from "./routes/style-profiles.js";
 import { createConsistencyRouter } from "./routes/consistency.js";
 import { createRelationLabelerRouter } from "./routes/relation-labeler.js";
 import { createWritingContinueRouter } from "./routes/writing-continue.js";
+import { createAgentTeamRouter } from "./routes/agent-team.js";
 
 // -- Pipeline stage definitions per agent type --
 
@@ -5743,6 +5744,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   app.route("/api/style-profiles", createStyleProfilesRouter(root));
   app.route("/api/consistency", createConsistencyRouter(root));
   app.route("/api/v1/writing", createWritingContinueRouter(root));
+  app.route("/api/project/agent-team", createAgentTeamRouter(root));
 
   // ── Writer's Block Breakthrough (E4 simplified) ──
   // GET  /api/v1/books/:id/writers-block — analyze context and return 3-5 advancement suggestions

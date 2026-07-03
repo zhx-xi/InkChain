@@ -1,5 +1,6 @@
 // Models
 export { type BookConfig, type Platform, type Genre, type BookStatus, type FanficMode, BookConfigSchema, PlatformSchema, GenreSchema, BookStatusSchema, FanficModeSchema, normalizePlatformId, normalizePlatformOrOther } from "./models/book.js";
+export { AgentRoleConfigSchema, AgentTeamConfigSchema, type AgentTeamConfig } from "./models/agent-team-config.js";
 export { type Volume, type VolumeStatus, VolumeSchema, VolumeStatusSchema } from "./models/volume.js";
 export { ChapterOutlineSchema, OutlineFileSchema, PlotLineSchema, KeyEventSchema, type ChapterOutline, type OutlineFile, type PlotLine, type KeyEvent } from "./models/outline.js";
 export { CharacterTier, TIER_CONFIGS, TIER_MIGRATION, TIER_DIR_MAP, type TierConfig } from "./models/character.js";
