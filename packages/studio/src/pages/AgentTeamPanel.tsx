@@ -355,7 +355,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
   // ── Render ──
 
   return (
-    <div className="fade-in space-y-8 pt-6">
+    <div className="fade-in space-y-8 pt-12">
       {/* Back button */}
       <button
         type="button"
