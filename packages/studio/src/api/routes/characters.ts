@@ -136,6 +136,35 @@ export function createCharactersRouter(getBookDir: BookDirFn): Hono {
     }
   });
 
+  // DELETE /:id/characters/:name — Delete a character file permanently
+  app.delete("/:id/characters/:name", async (c) => {
+    const id = c.req.param("id");
+    const name = c.req.param("name");
+    const bookDir = getBookDir(id);
+
+    const found = await findCharacterFile(bookDir, name);
+    if (!found) {
+      return c.json({ error: { code: "NOT_FOUND", message: `角色"${name}"不存在` } }, 404);
+    }
+
+    try {
+      await unlink(found.fullPath);
+      return c.json({
+        ok: true,
+        name,
+        previousTier: found.dir,
+        deletedPath: found.fullPath,
+      });
+    } catch (e) {
+      return c.json({
+        error: {
+          code: "INTERNAL_ERROR",
+          message: `删除角色文件失败: ${e instanceof Error ? e.message : String(e)}`,
+        },
+      }, 500);
+    }
+  });
+
   // GET /:id/characters — List all characters with their tier info
   app.get("/:id/characters", async (c) => {
     const id = c.req.param("id");
