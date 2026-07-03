@@ -67,6 +67,7 @@ function importDimension<T extends Record<string, unknown>>(json: string): T[] |
 
 interface WorldDetailProps {
   readonly worldId?: string;
+  readonly bookId?: string;
   readonly nav?: { toWorlds: () => void; toBook: (bookId: string) => void; toWorldGeoViz?: (worldId: string) => void };
 }
 
@@ -83,11 +84,12 @@ interface WorldDraft {
   history: WorldHistoryEvent[];
   rules: WorldRule[];
   references: WorldReference[];
+  bookIds: string[];
   [key: string]: unknown;
 }
 
 function emptyDraft(): WorldDraft {
-  return { name: "", description: "", settings: [], roles: [], relations: [], regions: [], institutions: [], history: [], rules: [], references: [] };
+  return { name: "", description: "", settings: [], roles: [], relations: [], regions: [], institutions: [], history: [], rules: [], references: [], bookIds: [] };
 }
 
 function worldToDraft(world: WorldConfig): WorldDraft {
@@ -102,6 +104,7 @@ function worldToDraft(world: WorldConfig): WorldDraft {
     history: world.history,
     rules: world.rules,
     references: world.references ?? [],
+    bookIds: (world as any).bookIds ?? [],
   };
 }
 
@@ -226,7 +229,7 @@ function ReferencePicker({ dimension, entityId, worldDraft, onAddRef }: {
   onAddRef: (sourceDim: string, sourceId: string, targetDim: string, targetId: string, label: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [targetDim, setTargetDim] = useState(WORLD_DIMENSION_KEYS[0]);
+  const [targetDim, setTargetDim] = useState<string>(WORLD_DIMENSION_KEYS[0]);
   const [targetId, setTargetId] = useState("");
 
   const targets = ((worldDraft as Record<string, unknown[]>)[targetDim] ?? []) as Record<string, unknown>[];
@@ -926,10 +929,13 @@ function CreateBookDialog({ world, onClose, nav }: {
 
 // ── Main Component ──
 
-export function WorldDetailPage({ worldId, nav }: WorldDetailProps) {
+export function WorldDetailPage({ worldId, bookId, nav }: WorldDetailProps) {
   const isCreateMode = !worldId;
+  const { data: allBooksData } = useApi<{ books: ReadonlyArray<{ id: string; title: string }> }>(
+    isCreateMode ? "/api/v1/books" : "/api/v1/books"
+  );
   const { data, loading, error, refetch } = useApi<{ world: WorldConfig } | undefined>(
-    isCreateMode ? undefined : `/api/worlds/${encodeURIComponent(worldId)}`
+    isCreateMode ? (undefined as unknown as string) : `/api/worlds/${encodeURIComponent(worldId!)}`
   );
 
   const [draft, setDraft] = useState<WorldDraft>(emptyDraft);
@@ -960,7 +966,7 @@ export function WorldDetailPage({ worldId, nav }: WorldDetailProps) {
       if (isCreateMode) {
         const now = new Date().toISOString();
         const wid = draft.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "") || `world-${Date.now()}`;
-        const fullWorld: WorldConfig = {
+        const fullWorld: WorldConfig & { bookIds?: string[] } = {
           id: wid,
           name: draft.name,
           description: draft.description,
@@ -974,11 +980,18 @@ export function WorldDetailPage({ worldId, nav }: WorldDetailProps) {
           history: draft.history as any,
           rules: draft.rules as any,
           references: draft.references as any,
+          bookIds: draft.bookIds,
         };
         await fetchJson("/api/worlds", { method: "POST", body: JSON.stringify(fullWorld) });
+        // If a bookId was provided, associate this world with the book
+        if (bookId) {
+          try {
+            await postApi(`/books/${encodeURIComponent(bookId)}/worlds-associate`, { worldId: wid });
+          } catch { /* non-critical */ }
+        }
         if (nav?.toWorlds) nav.toWorlds();
       } else {
-        const update: WorldConfigUpdate = {
+        const update: WorldConfigUpdate & { bookIds?: string[] } = {
           name: draft.name,
           description: draft.description,
           settings: draft.settings as any,
@@ -989,6 +1002,7 @@ export function WorldDetailPage({ worldId, nav }: WorldDetailProps) {
           history: draft.history as any,
           rules: draft.rules as any,
           references: draft.references as any,
+          bookIds: draft.bookIds,
         };
         await fetchJson(`/api/worlds/${encodeURIComponent(worldId!)}`, { method: "PUT", body: JSON.stringify(update) });
         setIsEditing(false);
@@ -1113,6 +1127,21 @@ export function WorldDetailPage({ worldId, nav }: WorldDetailProps) {
             <label className="text-xs text-muted-foreground block mb-1">描述</label>
             <textarea value={draft.description} onChange={(e) => setDraft((prev) => ({ ...prev, description: e.target.value }))}
               className="w-full rounded-lg border border-border/40 bg-background px-3 py-2 text-sm min-h-[60px]" placeholder="简短的总体描述" />
+          {isCreateMode && allBooksData?.books && allBooksData.books.length > 0 && (
+            <div>
+              <label className="text-xs text-muted-foreground block mb-1">关联作品</label>
+              <select
+                value={draft.bookIds[0] ?? (bookId ?? "")}
+                onChange={(e) => setDraft((prev) => ({ ...prev, bookIds: e.target.value ? [e.target.value] : [] }))}
+                className="w-full rounded-lg border border-border/40 bg-background px-3 py-2 text-sm"
+              >
+                <option value="">不关联（独立世界）</option>
+                {allBooksData.books.map((b) => (
+                  <option key={b.id} value={b.id}>{b.title} ({b.id})</option>
+                ))}
+              </select>
+            </div>
+          )}
           </div>
         </div>
       )}
