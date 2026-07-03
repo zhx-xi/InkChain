@@ -118,7 +118,7 @@ export function App() {
     toAgents: () => setRoute({ page: "agents" }),
     toArchive: () => setRoute({ page: "archive" }),
     toSkills: () => setRoute({ page: "skills" }),
-    toForeshadowing: () => setRoute({ page: "foreshadowing" }),
+    toForeshadowing: (bookId: string) => setRoute({ page: "foreshadowing", bookId }),
     toWorlds: () => setRoute({ page: "worlds" }),
     toWorldDetail: (worldId: string) => setRoute({ page: "world-detail", worldId }),
     toWorldGeoViz: (worldId: string) => setRoute({ page: "world-geoviz", worldId }),
@@ -400,7 +400,7 @@ export function App() {
           )}
           {route.page === "foreshadowing" && (
             <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
-              <ForeshadowingPage />
+              <ForeshadowingPage bookId={route.bookId} />
             </div>
           )}
           {route.page === "worlds" && (
