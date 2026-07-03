@@ -123,6 +123,7 @@ export function App() {
     toWorldDetail: (worldId: string) => setRoute({ page: "world-detail", worldId }),
     toWorldGeoViz: (worldId: string) => setRoute({ page: "world-geoviz", worldId }),
     toWorldCreate: () => setRoute({ page: "world-create" }),
+    toBookWorlds: (bookId: string) => setRoute({ page: "book-worlds", bookId }),
     toPublish: (bookId: string) => setRoute({ page: "publish", bookId }),
     toEditDashboard: (bookId: string) => setRoute({ page: "edit-dashboard", bookId }),
   };
@@ -403,9 +404,9 @@ export function App() {
               <ForeshadowingPage bookId={route.bookId} />
             </div>
           )}
-          {route.page === "worlds" && (
+          {(route.page === "worlds" || route.page === "book-worlds") && (
             <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
-              <WorldListPage nav={nav} />
+              <WorldListPage nav={nav} bookId={route.page === "book-worlds" ? route.bookId : undefined} />
             </div>
           )}
           {(route.page === "world-detail" || route.page === "world-create") && (

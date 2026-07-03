@@ -221,3 +221,52 @@ export function createWorldsRouter(root: string) {
 
   return router;
 }
+
+// ── Book-level World View (Issue #195) ──
+//
+// GET /api/books/:bookId/worlds -- list worlds associated with a book.
+// Reads the book's worldId field and returns matching worlds.
+
+export function createBookWorldsRouter(root: string) {
+  const router = new Hono();
+
+  router.get("/:bookId/worlds", async (c) => {
+    const { bookId } = c.req.param();
+    if (!/^[a-z0-9_-]+$/i.test(bookId)) {
+      throw new ApiError(400, "INVALID_BOOK_ID", `Invalid book id: ${bookId}`);
+    }
+
+    const bookDir = join(root, "books", bookId);
+    let bookRaw: string;
+    try {
+      bookRaw = await readFile(join(bookDir, "book.json"), "utf-8");
+    } catch {
+      throw new ApiError(404, "BOOK_NOT_FOUND", `Book not found: ${bookId}`);
+    }
+
+    const book = JSON.parse(bookRaw) as Record<string, unknown>;
+
+    // Support both worldId (single) and worldIds (multiple)
+    const ids: string[] = [];
+    if (typeof book.worldId === "string" && book.worldId) {
+      ids.push(book.worldId);
+    }
+    if (Array.isArray(book.worldIds)) {
+      ids.push(...book.worldIds.filter((id: unknown): id is string => typeof id === "string" && id.length > 0));
+    }
+
+    if (ids.length === 0) {
+      return c.json({ worlds: [] });
+    }
+
+    const uniqueIds = [...new Set(ids)];
+    const worlds: WorldConfig[] = [];
+    for (const id of uniqueIds) {
+      const world = await loadWorld(root, id);
+      if (world) worlds.push(world);
+    }
+    return c.json({ worlds });
+  });
+
+  return router;
+}
