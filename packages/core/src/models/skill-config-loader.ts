@@ -10,7 +10,8 @@
 // See: Issue #74 — Skill-1: SkillConfigSchema Zod 定义 + Skill 注册机制
 
 import { readFile, readdir, stat } from "node:fs/promises";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   SkillConfigSchema,
   type SkillConfig,
@@ -148,7 +149,9 @@ function defaultBuiltinRoot(): string | null {
   //   - dist layout (../..)      →  <repo>/packages/defaults (after build)
   //
   // We try both possibilities; the loader is resilient to a missing dir.
-  const here = typeof __dirname !== "undefined" ? __dirname : "";
+  const here = typeof __dirname !== "undefined"
+    ? __dirname
+    : dirname(fileURLToPath(import.meta.url));
   if (!here) return null;
   const candidates = [
     join(here, "..", "..", "..", "..", "defaults"), // dist: packages/core/dist/models → repo root
