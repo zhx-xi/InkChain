@@ -5745,7 +5745,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   app.route("/api/style-profiles", createStyleProfilesRouter(root));
   app.route("/api/consistency", createConsistencyRouter(root));
   app.route("/api/v1/writing", createWritingContinueRouter(root));
-  app.route("/api/project/agent-team", createAgentTeamRouter(root));
+  app.route("/api/v1/project/agent-team", createAgentTeamRouter(root));
 
   // ── Writer's Block Breakthrough (E4 simplified) ──
   // GET  /api/v1/books/:id/writers-block — analyze context and return 3-5 advancement suggestions
