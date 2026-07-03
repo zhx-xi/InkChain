@@ -968,7 +968,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
   // ── Empty state ──
   if (events.length === 0) {
     return (
-      <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+      <><div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
         <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
           <svg
             className="w-12 h-12 text-muted-foreground/30"
@@ -1089,7 +1089,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
             </div>
           </div>
         </div>
-      )}
+      )}</>
     );
   }
 
