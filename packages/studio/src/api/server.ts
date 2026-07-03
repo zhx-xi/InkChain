@@ -124,11 +124,11 @@ import { createSearchRouter } from "./routes/search.js";
 import { createForeshadowingRouter } from "./routes/foreshadowing.js";
 import { createWorldsRouter } from "./routes/worlds.js";
 import { createWorldsExtractRouter } from "./routes/worlds-extract.js";
+import { createWorldsAIGenRouter } from "./routes/worlds-ai-gen.js";
 import { createPublishRouter } from "./routes/publish.js";
 import { createStyleProfilesRouter } from "./routes/style-profiles.js";
 import { createConsistencyRouter } from "./routes/consistency.js";
 import { createRelationLabelerRouter } from "./routes/relation-labeler.js";
-import { createStatsRouter } from "./routes/stats.js";
 
 // -- Pipeline stage definitions per agent type --
 
@@ -5734,15 +5734,9 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   const searchRouter = createSearchRouter(() => root);
   app.route("/api/v1/books", searchRouter);
 
-  // ── Writing Stats (P2-2: 写作统计面板) ──
-  const statsRouter = createStatsRouter(
-    (id: string) => state.bookDir(id),
-    state,
-  );
-  app.route("/api/v1/books", statsRouter);
-
   app.route("/api/skills", createSkillsRouter(root));
   app.route("/api/worlds", createWorldsRouter(root));
+  app.route("/api/worlds", createWorldsAIGenRouter(root));
   app.route("/api/foreshadowing", createForeshadowingRouter(root));
   app.route("/api/publish", createPublishRouter(root));
   app.route("/api/style-profiles", createStyleProfilesRouter(root));
