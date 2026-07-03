@@ -1,0 +1,9 @@
+{
+  "id": "dialogue-polish",
+  "category": "writing",
+  "triggers": [{ "type": "manual" }],
+  "injection": { "mode": "append", "target": "system_prompt", "priority": 50 },
+  "params": {},
+  "enabled": true,
+  "description": "Polish character dialogue to make it more natural and engaging."
+}

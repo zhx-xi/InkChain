@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Sparkles, Shuffle, X } from "lucide-react";
+import { Copy, FileText, Sparkles, X } from "lucide-react";
 import { cn } from "../lib/utils";
 import { fetchJson } from "../hooks/use-api";
 import type { SkillConfig } from "@actalk/inkos-core";
@@ -80,6 +80,7 @@ interface SkillCreateDialogProps {
 
 export function SkillCreateDialog({ isOpen, onClose, onSelectBlank, onSelectTemplate, onAiGenerate }: SkillCreateDialogProps) {
   const [mode, setMode] = useState<"select" | "generate" | null>("select");
+  const [showTemplateList, setShowTemplateList] = useState(false);
   const [description, setDescription] = useState("");
   const [generating, setGenerating] = useState(false);
 
@@ -90,11 +91,10 @@ export function SkillCreateDialog({ isOpen, onClose, onSelectBlank, onSelectTemp
     onClose();
   };
 
-  const handleSurpriseMe = () => {
-    const template = BUILTIN_TEMPLATES[Math.floor(Math.random() * BUILTIN_TEMPLATES.length)];
+  const handleTemplateSelect = (tpl: typeof BUILTIN_TEMPLATES[number]) => {
     const config: Partial<SkillConfig> = {
-      id: template.id,
-      description: template.description,
+      id: tpl.id,
+      description: tpl.description,
       category: "utility" as any,
       triggers: [{ type: "manual" as const }],
       injection: { mode: "append" as const, target: "system_prompt" as const, priority: 50 },
@@ -164,21 +164,49 @@ export function SkillCreateDialog({ isOpen, onClose, onSelectBlank, onSelectTemp
               </div>
             </button>
 
-            {/* Surprise Me */}
+            {/* Template list */}
             <button
               type="button"
-              onClick={handleSurpriseMe}
+              onClick={() => setShowTemplateList(true)}
               className="group flex flex-col items-center gap-3 rounded-xl border border-border/40 bg-card p-6 hover:border-primary/50 hover:bg-primary/5 transition-all text-center"
             >
               <div className="h-10 w-10 rounded-lg bg-muted/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                <Shuffle size={20} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                <Copy size={20} className="text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
               <div>
                 <h3 className="text-sm font-medium mb-1">模板复制</h3>
                 <p className="text-[11px] text-muted-foreground/70 leading-relaxed">
-                  随机选择一个内置模板
+                  从内置模板列表中选择
                 </p>
               </div>
+            </button>
+          </div>
+        )}
+
+        {/* Template list mode */}
+        {showTemplateList && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto pr-1">
+              {BUILTIN_TEMPLATES.map((tpl) => (
+                <button
+                  key={tpl.id}
+                  type="button"
+                  onClick={() => handleTemplateSelect(tpl)}
+                  className="group flex items-start gap-3 rounded-xl border border-border/40 bg-card p-4 hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                >
+                  <div>
+                    <h3 className="text-sm font-medium mb-0.5">{tpl.label}</h3>
+                    <p className="text-[11px] text-muted-foreground/70 leading-relaxed">{tpl.description}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowTemplateList(false)}
+              className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              返回
             </button>
           </div>
         )}
