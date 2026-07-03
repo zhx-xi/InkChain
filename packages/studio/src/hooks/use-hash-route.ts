@@ -29,7 +29,7 @@ export type HashRoute =
   | { page: "agents" }
   | { page: "archive" }
   | { page: "skills" }
-  | { page: "foreshadowing" }
+  | { page: "foreshadowing"; bookId: string }
   | { page: "worlds" }
   | { page: "world-detail"; worldId: string }
   | { page: "world-create" }
@@ -48,7 +48,8 @@ function parseHash(hash: string): HashRoute {
   if (path === "agents") return { page: "agents" };
   if (path === "archive") return { page: "archive" };
   if (path === "skills") return { page: "skills" };
-  if (path === "foreshadowing") return { page: "foreshadowing" };
+  const foreshadowingMatch = path.match(/^foreshadowing\/([^\/]+)$/);
+  if (foreshadowingMatch) return { page: "foreshadowing", bookId: decodeURIComponent(foreshadowingMatch[1]) };
   if (path === "worlds" || path === "worlds/new") return path === "worlds/new" ? { page: "world-create" } : { page: "worlds" };
   const importMatch = path.match(/^import\/(chapters|canon|fanfic|spinoff|imitation)$/);
   if (importMatch) return { page: "import", tab: importMatch[1] as "chapters" | "canon" | "fanfic" | "spinoff" | "imitation" };
@@ -120,7 +121,7 @@ function routeToHash(route: HashRoute): string {
     case "agents": return "#/agents";
     case "archive": return "#/archive";
     case "skills": return "#/skills";
-    case "foreshadowing": return "#/foreshadowing";
+    case "foreshadowing": return `#/foreshadowing/${encodeURIComponent(route.bookId)}`;
     case "worlds": return "#/worlds";
     case "world-create": return "#/worlds/new";
     case "world-detail": return `#/worlds/${encodeURIComponent(route.worldId)}`;
@@ -133,7 +134,7 @@ function routeToHash(route: HashRoute): string {
 
 export { parseHash, routeToHash }; // for testing
 
-const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "worlds", "world-detail", "world-create", "world-geoviz", "publish", "edit-dashboard"]);
+const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "publish", "edit-dashboard"]);
 
 export function useHashRoute() {
   const [route, setRouteState] = useState<HashRoute>(() => parseHash(window.location.hash));

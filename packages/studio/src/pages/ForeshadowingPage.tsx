@@ -56,11 +56,13 @@ function CreateForeshadowingModal({
   onClose,
   onSaved,
   currentChapter,
+  bookId,
 }: {
   isOpen: boolean;
   onClose: () => void;
   onSaved: () => void;
   currentChapter: number;
+  bookId: string;
 }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -99,6 +101,7 @@ function CreateForeshadowingModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id,
+          bookId,
           title: title.trim(),
           description,
           type,
@@ -114,7 +117,7 @@ function CreateForeshadowingModal({
     } finally {
       setSaving(false);
     }
-  }, [title, description, type, createdChapter, expectedPayoffChapter, notes, onSaved, onClose]);
+  }, [title, description, type, createdChapter, expectedPayoffChapter, notes, bookId, onSaved, onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -470,10 +473,10 @@ function EditForeshadowingModal({
   );
 }
 
-export function ForeshadowingPage() {
+export function ForeshadowingPage({ bookId }: { bookId: string }) {
   const { setRoute } = useHashRoute();
   const { data, loading, error, refetch } = useApi<ForeshadowingListResponse>(
-    "/api/foreshadowing?currentChapter=999",
+    `/api/foreshadowing?bookId=${encodeURIComponent(bookId)}&currentChapter=999`,
   );
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | ForeshadowingStatus>("all");
@@ -683,6 +686,7 @@ export function ForeshadowingPage() {
         onClose={() => setShowCreate(false)}
         onSaved={refetch}
         currentChapter={currentChapter}
+        bookId={bookId}
       />
 
       <EditForeshadowingModal

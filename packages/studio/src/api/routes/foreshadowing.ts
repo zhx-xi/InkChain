@@ -81,12 +81,16 @@ export function createForeshadowingRouter(root: string) {
   // GET /api/foreshadowing — list all entries with optional filters
   router.get("/", async (c) => {
     const entries = await listEntries(root);
+    const bookId = c.req.query("bookId") as string | undefined;
     const status = c.req.query("status") as string | undefined;
     const type = c.req.query("type") as string | undefined;
     const currentChapterStr = c.req.query("currentChapter") as string | undefined;
     const forgetThresholdStr = c.req.query("forgetThreshold") as string | undefined;
 
     let filtered = entries;
+    if (bookId) {
+      filtered = filtered.filter((e) => e.bookId === bookId);
+    }
     if (status && ForeshadowingStatusEnum.safeParse(status).success) {
       filtered = filtered.filter((e) => e.status === status);
     }
@@ -120,6 +124,7 @@ export function createForeshadowingRouter(root: string) {
   // GET /api/foreshadowing/forgotten — list forgotten entries
   router.get("/forgotten", async (c) => {
     const entries = await listEntries(root);
+    const bookId = c.req.query("bookId") as string | undefined;
     const currentChapter = Number(c.req.query("currentChapter") ?? "0");
     const threshold = Number(c.req.query("threshold") ?? "10");
     return c.json({ forgotten: findForgottenForeshadowing(entries, currentChapter, threshold) });

@@ -41,6 +41,7 @@ export const FORESHADOWING_STATUS_LABELS: Readonly<Record<ForeshadowingStatus, s
 
 export const ForeshadowingSchema = z.object({
   id: z.string().min(1, "伏笔 ID 不能为空"),
+  bookId: z.string().min(1, "书籍ID不能为空"),
   title: z.string().min(1, "伏笔标题不能为空"),
   description: z.string().default(""),
   type: ForeshadowingTypeEnum.default("情节伏笔"),
