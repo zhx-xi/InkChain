@@ -269,6 +269,16 @@ export {
   type ExtractedSection,
 } from "./ai/world-extractor.js";
 export {
+  extractForeshadowings,
+  type ForeshadowingExtractCandidate,
+  type ForeshadowingExtractResult,
+} from "./ai/foreshadowing-extractor.js";
+export {
+  extractTimelineEvents,
+  type TimelineExtractEvent,
+  type TimelineExtractResult,
+} from "./ai/timeline-extractor.js";
+export {
   planChapters,
   detectArcCoverage,
   DEFAULT_PLANNER_CONFIG,

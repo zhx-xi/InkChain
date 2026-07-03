@@ -6,7 +6,7 @@ import {
   XCircle, Eye, EyeOff, Loader2, Bot,
 } from "lucide-react";
 import { cn } from "../lib/utils";
-import { useApi, fetchJson } from "../hooks/use-api";
+import { useApi, fetchJson, postApi } from "../hooks/use-api";
 import type { Foreshadowing, ForeshadowingType, ForeshadowingStatus } from "@actalk/inkos-core/models/foreshadowing.js";
 import {
   FORESHADOWING_TYPE_LABELS,
@@ -23,6 +23,14 @@ interface ForeshadowingListResponse {
   readonly foreshadowing: ReadonlyArray<ForeshadowingResponseItem>;
   readonly total: number;
   readonly currentChapter: number | null;
+}
+
+interface ForeshadowingExtractCandidate {
+  title: string;
+  type: string;
+  description: string;
+  expectedPayoffChapter: number | null;
+  confidence: number;
 }
 
 const TYPE_COLORS: Record<ForeshadowingType, string> = {
@@ -483,8 +491,29 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
   const [typeFilter, setTypeFilter] = useState<"all" | ForeshadowingType>("all");
   const [showCreate, setShowCreate] = useState(false);
   const [editingEntry, setEditingEntry] = useState<Foreshadowing | null>(null);
+  const [showAiExtract, setShowAiExtract] = useState(false);
+  const [aiExtractResult, setAiExtractResult] = useState<ForeshadowingExtractCandidate[] | null>(null);
+  const [aiExtractLoading, setAiExtractLoading] = useState(false);
+  const [extractChapter, setExtractChapter] = useState(1);
+  const [aiExtractError, setAiExtractError] = useState<string | null>(null);
 
   const currentChapter = data?.currentChapter ?? 0;
+
+  const handleAiExtract = useCallback(async () => {
+    setAiExtractLoading(true);
+    setAiExtractError(null);
+    setAiExtractResult(null);
+    try {
+      const result = await postApi<{ candidates: ForeshadowingExtractCandidate[] }>(
+        `/api/v1/books/${encodeURIComponent(bookId)}/chapters/${extractChapter}/extract/foreshadowing`,
+      );
+      setAiExtractResult(result.candidates);
+    } catch (err) {
+      setAiExtractError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setAiExtractLoading(false);
+    }
+  }, [bookId, extractChapter]);
 
   const filtered = useMemo(() => {
     const list = data?.foreshadowing ?? [];
@@ -518,14 +547,24 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
             创建与追踪故事中的伏笔，监控遗忘风险
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setShowCreate(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
-        >
-          <Plus size={15} />
-          新建伏笔
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => { setAiExtractResult(null); setAiExtractError(null); setShowAiExtract(true); }}
+            className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary shadow-sm transition hover:bg-primary/10"
+          >
+            <Bot size={15} />
+            AI 提取
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowCreate(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+          >
+            <Plus size={15} />
+            新建伏笔
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -696,6 +735,103 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         onClose={() => setEditingEntry(null)}
         onSaved={refetch}
       />
+
+      {/* AI Extract Modal */}
+      {showAiExtract && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px]">
+          <button
+            type="button"
+            aria-label="关闭"
+            className="absolute inset-0 cursor-default"
+            onClick={() => { setShowAiExtract(false); setAiExtractResult(null); }}
+          />
+          <div className="relative w-full max-w-2xl rounded-xl border border-border/55 bg-card shadow-2xl mx-4 max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-border/45 px-6 py-4">
+              <h2 className="text-lg font-semibold text-foreground">AI 提取伏笔</h2>
+              <button
+                type="button"
+                onClick={() => { setShowAiExtract(false); setAiExtractResult(null); }}
+                className="p-1 rounded-md text-muted-foreground hover:bg-secondary/60"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="px-6 py-4 space-y-4">
+              <div className="flex items-center gap-3">
+                <label className="text-sm font-medium text-foreground shrink-0">提取章节：</label>
+                <input
+                  type="number"
+                  min={1}
+                  value={extractChapter}
+                  onChange={(e) => setExtractChapter(Number(e.target.value))}
+                  className="w-24 rounded-lg border border-border/40 bg-background px-3 py-2 text-sm outline-none focus:border-primary/50"
+                />
+                <button
+                  type="button"
+                  onClick={handleAiExtract}
+                  disabled={aiExtractLoading}
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
+                >
+                  {aiExtractLoading ? (
+                    <Loader2 size={14} className="animate-spin" />
+                  ) : (
+                    <Bot size={14} />
+                  )}
+                  开始提取
+                </button>
+              </div>
+
+              {aiExtractError && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                  {aiExtractError}
+                </div>
+              )}
+
+              {aiExtractLoading && (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 size={24} className="animate-spin text-primary" />
+                  <span className="ml-3 text-sm text-muted-foreground">AI 正在分析章节文本，请稍候…</span>
+                </div>
+              )}
+
+              {aiExtractResult !== null && !aiExtractLoading && (
+                <div className="space-y-2">
+                  {aiExtractResult.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">未识别到伏笔。</p>
+                  ) : (
+                    aiExtractResult.map((candidate, idx) => (
+                      <div key={idx} className="rounded-lg border border-border/40 bg-background p-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-sm text-foreground">{candidate.title}</span>
+                            <span className={cn(
+                              "px-1.5 py-0.5 rounded text-[10px] font-medium",
+                              candidate.type === "角色伏笔" ? "bg-[#E88D3A]/10 text-[#E88D3A]" :
+                              candidate.type === "物品伏笔" ? "bg-[#22C55E]/10 text-[#22C55E]" :
+                              candidate.type === "设定伏笔" ? "bg-[#8B5CF6]/10 text-[#8B5CF6]" :
+                              "bg-[#4A90D9]/10 text-[#4A90D9]",
+                            )}>{candidate.type}</span>
+                          </div>
+                          <span className="text-[11px] text-muted-foreground">
+                            置信度：{Math.round(candidate.confidence * 100)}%
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{candidate.description}</p>
+                        {candidate.expectedPayoffChapter && (
+                          <p className="text-[11px] text-muted-foreground/60">
+                            预期回收章节：第 {candidate.expectedPayoffChapter} 章
+                          </p>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

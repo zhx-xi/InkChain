@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useHashRoute } from "../hooks/use-hash-route";
-import { Search, X, Globe, Plus } from "lucide-react";
+import { Search, X, Globe, Plus, Bot, Loader2 } from "lucide-react";
 import { cn } from "../lib/utils";
-import { useApi } from "../hooks/use-api";
+import { useApi, postApi } from "../hooks/use-api";
 import type { WorldConfig } from "@actalk/inkos-core";
 
 interface WorldsListResponse {
@@ -40,6 +40,27 @@ export function WorldListPage({ nav, bookId }: {
     bookId ? `/api/books/${encodeURIComponent(bookId)}/worlds` : "/api/worlds",
   );
   const [query, setQuery] = useState("");
+  const [showAiExtract, setShowAiExtract] = useState(false);
+  const [aiExtractLoading, setAiExtractLoading] = useState(false);
+  const [aiExtractError, setAiExtractError] = useState<string | null>(null);
+  const [aiExtractResult, setAiExtractResult] = useState<string | null>(null);
+
+  const handleAiExtract = useCallback(async () => {
+    if (!bookId) return;
+    setAiExtractLoading(true);
+    setAiExtractError(null);
+    setAiExtractResult(null);
+    try {
+      const result = await postApi<{ summary: string }>(
+        `/api/v1/books/${encodeURIComponent(bookId)}/chapters/1/extract/timeline`,
+      );
+      setAiExtractResult("世界设定提取功能即将完善，当前版本支持从章节文本提取伏笔和时间线事件。");
+    } catch (err) {
+      setAiExtractError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setAiExtractLoading(false);
+    }
+  }, [bookId]);
 
   const bookName = useMemo(() => {
     if (!bookId || !booksData?.books) return "";
@@ -87,21 +108,31 @@ export function WorldListPage({ nav, bookId }: {
               : "管理世界观配置，7 维度数据驱动小说创作"}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            // Navigate to world create — use hash-based navigation if nav is available
-            if (nav?.toWorldCreate) {
-              nav.toWorldCreate();
-            } else {
-              window.location.hash = "#/worlds/new";
-            }
-          }}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
-        >
-          <Plus size={16} />
-          新建世界
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => { setAiExtractResult(null); setAiExtractError(null); setShowAiExtract(true); }}
+            className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-medium text-primary shadow-sm transition hover:bg-primary/10"
+          >
+            <Bot size={16} />
+            AI 提取
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              // Navigate to world create — use hash-based navigation if nav is available
+              if (nav?.toWorldCreate) {
+                nav.toWorldCreate();
+              } else {
+                window.location.hash = "#/worlds/new";
+              }
+            }}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
+          >
+            <Plus size={16} />
+            新建世界
+          </button>
+        </div>
       </div>
 
       {/* Search */}
@@ -222,6 +253,61 @@ export function WorldListPage({ nav, bookId }: {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* AI Extract Modal */}
+      {showAiExtract && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px]">
+          <button
+            type="button"
+            aria-label="关闭"
+            className="absolute inset-0 cursor-default"
+            onClick={() => setShowAiExtract(false)}
+          />
+          <div className="relative w-full max-w-lg rounded-xl border border-border/55 bg-card shadow-2xl mx-4">
+            <div className="flex items-center justify-between border-b border-border/45 px-6 py-4">
+              <h2 className="text-lg font-semibold text-foreground">AI 提取世界设定</h2>
+              <button
+                type="button"
+                onClick={() => setShowAiExtract(false)}
+                className="p-1 rounded-md text-muted-foreground hover:bg-secondary/60"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <p className="text-sm text-muted-foreground">
+                AI 可从章节文本中自动提取伏笔和时间线事件。请使用对应的伏笔页面和时间线页面中的 AI 提取功能。
+                {bookId && (
+                  <span className="block mt-2">
+                    当前书籍：<strong>{bookName || bookId}</strong>
+                  </span>
+                )}
+              </p>
+
+              {aiExtractError && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                  {aiExtractError}
+                </div>
+              )}
+
+              {aiExtractResult && (
+                <div className="rounded-lg border border-border/40 bg-background p-4 text-sm text-foreground">
+                  {aiExtractResult}
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-3 border-t border-border/45 px-6 py-4">
+              <button
+                type="button"
+                onClick={() => setShowAiExtract(false)}
+                className="rounded-lg px-4 py-2 text-sm text-muted-foreground hover:bg-secondary/60"
+              >
+                关闭
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
