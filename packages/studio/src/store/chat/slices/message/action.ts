@@ -154,7 +154,7 @@ export const createMessageSlice: StateCreator<ChatStore, [], [], MessageActions>
   loadSessionList: async (bookId) => {
     const query = bookId === null ? "null" : encodeURIComponent(bookId);
     try {
-      const data = await fetchJson<{ sessions: ReadonlyArray<SessionSummary> }>(`/sessions?bookId=${query}`);
+      const data = await fetchJson<{ sessions: ReadonlyArray<SessionSummary> }>(`/sessions?bookId=${query}&status=active`);
       set((state) => {
         let sessions = state.sessions;
         for (const summary of data.sessions) {

@@ -3762,7 +3762,9 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
 
   app.get("/api/v1/sessions", async (c) => {
     const bookId = c.req.query("bookId");
-    const sessions = await listBookSessions(root, bookId === undefined ? null : bookId === "null" ? null : bookId);
+    const status = c.req.query("status");
+    const statusFilter = status === "active" || status === "archived" ? status : undefined;
+    const sessions = await listBookSessions(root, bookId === undefined ? null : bookId === "null" ? null : bookId, statusFilter);
     return c.json({ sessions });
   });
 
