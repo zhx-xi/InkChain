@@ -1,0 +1,15 @@
+{
+  "id": "interactive-film-authoring-skill",
+  "category": "writing",
+  "triggers": [
+    { "type": "condition", "condition": "session.kind === 'interactive-film' || session.kind === 'interactive-film-authoring'" }
+  ],
+  "injection": {
+    "mode": "append",
+    "target": "system_prompt",
+    "priority": 40
+  },
+  "params": {},
+  "enabled": true,
+  "description": "Interactive film and game-like drama authoring: story graph, variables, endings, and storyboard."
+}

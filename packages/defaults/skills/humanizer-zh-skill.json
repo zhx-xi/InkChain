@@ -1,0 +1,15 @@
+{
+  "id": "humanizer-zh-skill",
+  "category": "writing",
+  "triggers": [
+    { "type": "condition", "condition": "session.kind === 'book' || session.kind === 'book-create' || session.kind === 'edit' || session.kind === 'play' || session.kind === 'interactive-film' || session.kind === 'interactive-film-authoring'" }
+  ],
+  "injection": {
+    "mode": "append",
+    "target": "system_prompt",
+    "priority": 40
+  },
+  "params": {},
+  "enabled": true,
+  "description": "Detect and remove AI writing trace patterns across content, language, style, and communication."
+}

@@ -1,0 +1,15 @@
+{
+  "id": "longform-writing-skill",
+  "category": "writing",
+  "triggers": [
+    { "type": "condition", "condition": "session.kind === 'book' || session.kind === 'book-create'" }
+  ],
+  "injection": {
+    "mode": "append",
+    "target": "system_prompt",
+    "priority": 40
+  },
+  "params": {},
+  "enabled": true,
+  "description": "Long-form serial novel creation: plan chapters, select story context, write, and preserve continuity."
+}
