@@ -133,6 +133,7 @@ import { createWritingContinueRouter } from "./routes/writing-continue.js";
 import { createAgentTeamRouter } from "./routes/agent-team.js";
 import { createForeshadowingExtractRouter } from "./routes/foreshadowing-extract.js";
 import { createTimelineExtractRouter } from "./routes/timeline-extract.js";
+import { createAgentTemplatesRouter } from "./routes/agent-templates.js";
 
 // -- Pipeline stage definitions per agent type --
 
@@ -5756,6 +5757,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   app.route("/api/consistency", createConsistencyRouter(root));
   app.route("/api/v1/writing", createWritingContinueRouter(root));
   app.route("/api/v1/project/agent-team", createAgentTeamRouter(root));
+  app.route("/api/v1/agent-templates", createAgentTemplatesRouter(root));
 
   // ── Writer's Block Breakthrough (E4 simplified) ──
   // GET  /api/v1/books/:id/writers-block — analyze context and return 3-5 advancement suggestions
