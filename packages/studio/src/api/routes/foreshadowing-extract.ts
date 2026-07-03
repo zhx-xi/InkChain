@@ -20,42 +20,42 @@ export function createForeshadowingExtractRouter(
 
   // POST /:id/chapters/:chapterNum/extract/foreshadowing
   router.post("/:id/chapters/:chapterNum/extract/foreshadowing", async (c) => {
-    const id = c.req.param("id");
-    const chapterNumStr = c.req.param("chapterNum");
-
-    if (!isSafeBookId(id)) {
-      throw new ApiError(400, "INVALID_BOOK_ID", `Invalid book id: "${id}"`);
-    }
-
-    const chapterNum = Number(chapterNumStr);
-    if (!Number.isInteger(chapterNum) || chapterNum < 0) {
-      throw new ApiError(400, "INVALID_CHAPTER", `Invalid chapter number: "${chapterNumStr}"`);
-    }
-
-    const dir = bookDir(id);
-
-    // Load project config for LLM settings
-    const config = await loadProjectConfig(dir, { consumer: "studio", requireApiKey: false });
-
-    // Read chapter file
-    const padded = String(chapterNum).padStart(4, "0");
-    const chaptersDir = join(dir, "chapters");
-    const { readdir } = await import("node:fs/promises");
-    let files: string[];
     try {
-      files = await readdir(chaptersDir);
-    } catch {
-      throw new ApiError(404, "CHAPTERS_DIR_NOT_FOUND", "章节目录不存在");
-    }
+      const id = c.req.param("id");
+      const chapterNumStr = c.req.param("chapterNum");
 
-    const chapterFile = files.find((f) => f.startsWith(`${padded}_`) && f.endsWith(".md"));
-    if (!chapterFile) {
-      throw new ApiError(404, "CHAPTER_NOT_FOUND", `第 ${chapterNum} 章文件未找到`);
-    }
+      if (!isSafeBookId(id)) {
+        throw new ApiError(400, "INVALID_BOOK_ID", `Invalid book id: "${id}"`);
+      }
 
-    const text = await readFile(join(chaptersDir, chapterFile), "utf-8");
+      const chapterNum = Number(chapterNumStr);
+      if (!Number.isInteger(chapterNum) || chapterNum < 0) {
+        throw new ApiError(400, "INVALID_CHAPTER", `Invalid chapter number: "${chapterNumStr}"`);
+      }
 
-    try {
+      const dir = bookDir(id);
+
+      // Load project config for LLM settings
+      const config = await loadProjectConfig(dir, { consumer: "studio", requireApiKey: false });
+
+      // Read chapter file
+      const padded = String(chapterNum).padStart(4, "0");
+      const chaptersDir = join(dir, "chapters");
+      const { readdir } = await import("node:fs/promises");
+      let files: string[];
+      try {
+        files = await readdir(chaptersDir);
+      } catch {
+        throw new ApiError(404, "CHAPTERS_DIR_NOT_FOUND", "章节目录不存在");
+      }
+
+      const chapterFile = files.find((f) => f.startsWith(`${padded}_`) && f.endsWith(".md"));
+      if (!chapterFile) {
+        throw new ApiError(404, "CHAPTER_NOT_FOUND", `第 ${chapterNum} 章文件未找到`);
+      }
+
+      const text = await readFile(join(chaptersDir, chapterFile), "utf-8");
+
       const result = await extractForeshadowings(text, chapterNum, { llm: config.llm });
       return c.json({
         candidates: result.candidates,
@@ -63,6 +63,11 @@ export function createForeshadowingExtractRouter(
         chapter: chapterNum,
       });
     } catch (err) {
+      if (err instanceof ApiError) {
+        return c.json({
+          error: { code: err.code, message: err.message },
+        }, err.status);
+      }
       return c.json({
         error: {
           code: "EXTRACT_ERROR",
