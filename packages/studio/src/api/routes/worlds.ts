@@ -275,5 +275,52 @@ export function createBookWorldsRouter(root: string) {
     return c.json({ worlds });
   });
 
+  // POST /:bookId/worlds-associate — Associate a world with a book
+  router.post("/:bookId/worlds-associate", async (c) => {
+    const rawBookId = c.req.param("bookId");
+    let bookId: string;
+    try {
+      bookId = decodeURIComponent(rawBookId);
+    } catch {
+      throw new ApiError(400, "INVALID_BOOK_ID", `Invalid book id: ${rawBookId}`);
+    }
+    if (!isSafeBookId(bookId)) {
+      throw new ApiError(400, "INVALID_BOOK_ID", `Invalid book id: ${rawBookId}`);
+    }
+
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      throw new ApiError(400, "INVALID_JSON", "Request body must be valid JSON");
+    }
+    const { worldId } = body as Record<string, unknown>;
+    if (typeof worldId !== "string" || !worldId) {
+      throw new ApiError(400, "INVALID_WORLD_ID", "worldId is required");
+    }
+
+    const { readFile, writeFile } = await import("node:fs/promises");
+    const { join } = await import("node:path");
+    const bookDir = join(root, "books", bookId);
+    const bookPath = join(bookDir, "book.json");
+
+    let bookRaw: string;
+    try {
+      bookRaw = await readFile(bookPath, "utf-8");
+    } catch {
+      throw new ApiError(404, "BOOK_NOT_FOUND", `Book not found: ${bookId}`);
+    }
+
+    const book = JSON.parse(bookRaw) as Record<string, unknown>;
+    const worldIds: string[] = [];
+    if (typeof book.worldId === "string" && book.worldId) worldIds.push(book.worldId);
+    if (Array.isArray(book.worldIds)) worldIds.push(...book.worldIds.filter((id: unknown): id is string => typeof id === "string"));
+    if (!worldIds.includes(worldId)) worldIds.push(worldId);
+
+    book.worldIds = worldIds;
+    await writeFile(bookPath, JSON.stringify(book, null, 2), "utf-8");
+    return c.json({ ok: true, worldIds });
+  });
+
   return router;
 }
