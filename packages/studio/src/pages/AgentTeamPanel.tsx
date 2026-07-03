@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useHashRoute } from "../hooks/use-hash-route";
 import {
@@ -13,7 +13,11 @@ import {
   X,
   Check,
   AlertTriangle,
+  GripVertical,
+  LayoutGrid,
+  GitBranch,
 } from "lucide-react";
+import { AgentFlowEditor } from "../components/AgentFlowEditor";
 import {
   AgentCard,
   AGENTS,
@@ -154,6 +158,14 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
   const [templateSaveError, setTemplateSaveError] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
+  // View mode state
+  const [viewMode, setViewMode] = useState<"grid" | "flow">("grid");
+  const [agentOrder, setAgentOrder] = useState<ReadonlyArray<string>>([]);
+
+  // Drag reorder state (HTML5 DnD)
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
   // Custom Agent state
   const [customAgents, setCustomAgents] = useState<ReadonlyArray<CustomAgentItem>>([]);
   const [isLoadingCustomAgents, setIsLoadingCustomAgents] = useState(false);
@@ -221,6 +233,23 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
         if (cancelled) return;
         setTemplateLoadError(error instanceof Error ? error.message : String(error));
         setIsLoadingTemplates(false);
+      });
+
+    return () => { cancelled = true; };
+  }, []);
+
+  // Load agent order from backend
+  useEffect(() => {
+    let cancelled = false;
+    fetchJson<{ order: readonly string[] }>("/agent-order")
+      .then((data) => {
+        if (cancelled) return;
+        if (data.order.length > 0) {
+          setAgentOrder(data.order);
+        }
+      })
+      .catch(() => {
+        // Silently fall back to default order
       });
 
     return () => { cancelled = true; };
@@ -417,6 +446,68 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
     setDeleteCustomAgentId(null);
   }, []);
 
+  // ── Agent Order Handlers ──
+
+  // Compute combined agent order (builtins first, then customs)
+  const allAgentIds = useCallback((): readonly string[] => {
+    const ids: string[] = [];
+    // If we have a saved order, use it; otherwise use AGENTS order + custom agents
+    if (agentOrder.length > 0) {
+      return agentOrder;
+    }
+    for (const a of AGENTS) ids.push(a.role);
+    for (const c of customAgents) ids.push(c.id);
+    return ids;
+  }, [agentOrder, customAgents]);
+
+  const saveAgentOrder = useCallback(async (newOrder: readonly string[]) => {
+    setAgentOrder(newOrder);
+    try {
+      await fetchJson("/agent-order", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ order: [...newOrder] }),
+      });
+    } catch {
+      // Silently fail — order still works in-memory
+    }
+  }, []);
+
+  const handleDragStart = useCallback((index: number) => {
+    setDragIndex(index);
+  }, []);
+
+  const handleDragOver = useCallback((index: number) => {
+    setDragOverIndex(index);
+  }, []);
+
+  const handleDragEnd = useCallback(() => {
+    if (dragIndex === null || dragOverIndex === null || dragIndex === dragOverIndex) {
+      setDragIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const ids = [...allAgentIds()];
+    const [moved] = ids.splice(dragIndex, 1);
+    ids.splice(dragOverIndex, 0, moved);
+    saveAgentOrder(ids);
+
+    setDragIndex(null);
+    setDragOverIndex(null);
+  }, [dragIndex, dragOverIndex, allAgentIds, saveAgentOrder]);
+
+  const handleFlowOrderChange = useCallback((newOrder: readonly string[]) => {
+    const ids = [...newOrder];
+    // Filter to only include agents that belong to us
+    const validIds = ids.filter((id) =>
+      AGENTS.some((a) => a.role === id) || customAgents.some((c) => c.id === id),
+    );
+    if (validIds.length > 0) {
+      saveAgentOrder(validIds);
+    }
+  }, [customAgents, saveAgentOrder]);
+
   const handlePresetChange = useCallback((presetId: string) => {
     setSelectedPreset(presetId);
     setShowPresetDropdown(false);
@@ -460,6 +551,65 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
   const getPresetLabel = (id: string): string => {
     return PRESETS.find((p) => p.id === id)?.name ?? "默认预设";
   };
+
+  // ── Helpers to compute ordered agent display ──
+
+  const orderedAgents = useCallback(() => {
+    const order = allAgentIds();
+    if (order.length === 0) {
+      return AGENTS.map((a) => ({ type: "builtin" as const, agent: a, id: a.role }));
+    }
+
+    const result: Array<{ type: "builtin" | "custom"; agent: AgentMetadata; id: string; customItem?: CustomAgentItem }> = [];
+
+    for (const id of order) {
+      const builtin = AGENTS.find((a) => a.role === id);
+      if (builtin) {
+        result.push({ type: "builtin", agent: builtin, id });
+        continue;
+      }
+      const custom = customAgents.find((c) => c.id === id);
+      if (custom) {
+        result.push({
+          type: "custom",
+          agent: {
+            role: custom.role as never,
+            label: custom.name,
+            description: custom.description || custom.role,
+            color: custom.color,
+            icon: custom.icon,
+          },
+          id,
+          customItem: custom,
+        });
+      }
+    }
+
+    // Append any agents not in the order
+    for (const a of AGENTS) {
+      if (!result.some((r) => r.id === a.role)) {
+        result.push({ type: "builtin", agent: a, id: a.role });
+      }
+    }
+    for (const c of customAgents) {
+      if (!result.some((r) => r.id === c.id)) {
+        result.push({
+          type: "custom",
+          agent: {
+            role: c.role as never,
+            label: c.name,
+            description: c.description || c.role,
+            color: c.color,
+            icon: c.icon,
+          },
+          id: c.id,
+          customItem: c,
+        });
+      }
+    }
+
+    return result;
+  }, [allAgentIds, customAgents]);
 
   // ── Loading State ──
 
@@ -506,12 +656,44 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Agent Team</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            7 个协作 Agent 的 Persona 配置面板
+            {viewMode === "grid"
+              ? "拖拽卡片可重排顺序 · 点击内置 Agent 进入 Persona 编辑"
+              : "拖拽节点可调整协作流程 · 连线表示数据流向"}
           </p>
         </div>
 
-        {/* Preset selector */}
+        {/* View mode toggle & Preset selector */}
         <div className="flex items-center gap-3">
+          {/* View mode toggle */}
+          <div className="flex rounded-lg border border-border/40 bg-card/30 p-0.5 gap-0.5">
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all",
+                viewMode === "grid"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground/60 hover:text-foreground",
+              )}
+            >
+              <LayoutGrid size={13} />
+              <span>网格</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("flow")}
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all",
+                viewMode === "flow"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground/60 hover:text-foreground",
+              )}
+            >
+              <GitBranch size={13} />
+              <span>流程</span>
+            </button>
+          </div>
+
           {/* Preset dropdown */}
           <div className="relative">
             <button
@@ -606,106 +788,129 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
         </div>
       </div>
 
-      {/* Agent Grid — clickable cards open Persona edit panel */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-        {AGENTS.map((agent) => (
-          <AgentCard
-            key={agent.role}
-            agent={agent}
-            status={agentStatuses[agent.role]}
-            onClick={() => handleAgentClick(agent.role)}
-          />
-        ))}
-      </div>
-
-      {/* ── Custom Agents Section ── */}
-      {!isLoadingCustomAgents && !customAgentLoadError && customAgents.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-foreground mb-3">
-            自定义 Agent
-            <span className="text-xs text-muted-foreground/60 ml-2 font-normal">
-              ({customAgents.length})
-            </span>
-          </h3>
+      {/* Agent Display — Grid or Flow View */}
+      {viewMode === "grid" ? (
+        <>
+          {/* Agent Grid — ordered, draggable cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {customAgents.map((agent) => (
-              <div key={agent.id} className="relative group">
-                <AgentCard
-                  agent={{
-                    role: agent.role as never,
-                    label: agent.name,
-                    description: agent.description || agent.role,
-                    color: agent.color,
-                    icon: agent.icon,
-                  }}
-                  status="ready"
-                  displayName={agent.name}
-                />
-                {/* Delete button (visible on hover) */}
-                <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {deleteCustomAgentId === agent.id ? (
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteCustomAgent(agent.id)}
-                        className="rounded-lg p-1.5 bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors shadow-sm"
-                        title="确认删除"
-                      >
-                        <Check size={12} />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleCancelDeleteCustomAgent}
-                        className="rounded-lg p-1.5 bg-card text-muted-foreground hover:text-foreground transition-colors shadow-sm border border-border/30"
-                        title="取消"
-                      >
-                        <X size={12} />
-                      </button>
+            {orderedAgents().map((item, index) => {
+              const isCustom = item.type === "custom";
+              const agentId = item.id;
+              const agentMeta = item.agent;
+              const customItem = item.customItem;
+
+              return (
+                <div
+                  key={agentId}
+                  className={cn(
+                    "relative group transition-opacity",
+                    dragIndex === index && "opacity-50",
+                    dragOverIndex === index && "opacity-80 scale-105",
+                  )}
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={(e) => { e.preventDefault(); handleDragOver(index); }}
+                  onDragEnd={handleDragEnd}
+                  onDragLeave={() => setDragOverIndex(null)}
+                >
+                  {/* Drag handle */}
+                  <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-10 opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing">
+                    <div className="rounded-full bg-card border border-border/40 px-2 py-0.5 shadow-sm">
+                      <GripVertical size={12} className="text-muted-foreground/60" />
                     </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteCustomAgent(agent.id)}
-                      className="rounded-lg p-1.5 bg-card/80 text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors shadow-sm border border-border/30"
-                      title="删除自定义 Agent"
-                    >
-                      <Trash2 size={12} />
-                    </button>
+                  </div>
+
+                  <AgentCard
+                    agent={agentMeta}
+                    status={isCustom ? "ready" : agentStatuses[agentMeta.role as AgentRole]}
+                    displayName={isCustom ? customItem?.name : undefined}
+                    onClick={() => !isCustom && handleAgentClick(agentMeta.role as AgentRole)}
+                  />
+
+                  {/* Delete button for custom agents (visible on hover) */}
+                  {isCustom && customItem && (
+                    <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {deleteCustomAgentId === customItem.id ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCustomAgent(customItem.id)}
+                            className="rounded-lg p-1.5 bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors shadow-sm"
+                            title="确认删除"
+                          >
+                            <Check size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleCancelDeleteCustomAgent}
+                            className="rounded-lg p-1.5 bg-card text-muted-foreground hover:text-foreground transition-colors shadow-sm border border-border/30"
+                            title="取消"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteCustomAgent(customItem.id)}
+                          className="rounded-lg p-1.5 bg-card/80 text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors shadow-sm border border-border/30"
+                          title="删除自定义 Agent"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        </div>
-      )}
 
-      {/* Loading state for custom agents */}
-      {isLoadingCustomAgents && (
-        <div className="flex items-center gap-2 py-2">
-          <Loader2 size={14} className="animate-spin text-muted-foreground" />
-          <span className="text-xs text-muted-foreground">加载自定义 Agent…</span>
-        </div>
-      )}
+          {/* Custom agents loading/empty states */}
+          {isLoadingCustomAgents && (
+            <div className="flex items-center gap-2 py-2">
+              <Loader2 size={14} className="animate-spin text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">加载自定义 Agent…</span>
+            </div>
+          )}
 
-      {customAgentLoadError && (
-        <div className="flex items-center gap-2 py-2">
-          <AlertTriangle size={14} className="text-destructive shrink-0" />
-          <span className="text-xs text-destructive">{customAgentLoadError}</span>
-        </div>
-      )}
+          {customAgentLoadError && (
+            <div className="flex items-center gap-2 py-2">
+              <AlertTriangle size={14} className="text-destructive shrink-0" />
+              <span className="text-xs text-destructive">{customAgentLoadError}</span>
+            </div>
+          )}
 
-      {!isLoadingCustomAgents && !customAgentLoadError && customAgents.length === 0 && (
-        <div className="rounded-xl border border-dashed border-border/30 bg-card/20 p-6 text-center">
-          <p className="text-sm text-muted-foreground/60">暂无自定义 Agent</p>
-          <button
-            type="button"
-            onClick={handleAddCustomAgent}
-            className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/5 transition-colors"
-          >
-            <Plus size={12} />
-            <span>添加一个自定义 Agent</span>
-          </button>
-        </div>
+          {!isLoadingCustomAgents && !customAgentLoadError && customAgents.length === 0 && (
+            <div className="rounded-xl border border-dashed border-border/30 bg-card/20 p-6 text-center">
+              <p className="text-sm text-muted-foreground/60">暂无自定义 Agent</p>
+              <button
+                type="button"
+                onClick={handleAddCustomAgent}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/5 transition-colors"
+              >
+                <Plus size={12} />
+                <span>添加一个自定义 Agent</span>
+              </button>
+            </div>
+          )}
+        </>
+      ) : (
+        /* Flow View — ReactFlow visualization */
+        <AgentFlowEditor
+          builtinAgents={AGENTS}
+          customAgents={customAgents.map((c) => ({
+            id: c.id,
+            name: c.name,
+            role: c.role,
+            description: c.description,
+            color: c.color,
+            icon: c.icon,
+          }))}
+          agentOrder={agentOrder.length > 0 ? agentOrder : allAgentIds()}
+          collaborationMode="sequential"
+          onOrderChange={handleFlowOrderChange}
+        />
       )}
 
       {/* Legend / Status Guide */}
