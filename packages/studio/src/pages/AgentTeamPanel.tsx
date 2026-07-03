@@ -90,6 +90,30 @@ interface TemplateResponse {
   readonly template: AgentTemplate;
 }
 
+// ── Custom Agent Types ──
+
+interface CustomAgentItem {
+  readonly id: string;
+  readonly name: string;
+  readonly role: string;
+  readonly description: string;
+  readonly modelRouter?: string;
+  readonly persona?: string;
+  readonly skills?: ReadonlyArray<string>;
+  readonly color: string;
+  readonly icon: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}
+
+interface CustomAgentListResponse {
+  readonly agents: ReadonlyArray<CustomAgentItem>;
+}
+
+interface CustomAgentResponse {
+  readonly agent: CustomAgentItem;
+}
+
 type TemplateDialogMode = "create" | "edit";
 
 // ── Initial Agent States ──
@@ -129,6 +153,21 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
   const [isSavingTemplate, setIsSavingTemplate] = useState(false);
   const [templateSaveError, setTemplateSaveError] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  // Custom Agent state
+  const [customAgents, setCustomAgents] = useState<ReadonlyArray<CustomAgentItem>>([]);
+  const [isLoadingCustomAgents, setIsLoadingCustomAgents] = useState(false);
+  const [customAgentLoadError, setCustomAgentLoadError] = useState<string | null>(null);
+  const [showCustomAgentDialog, setShowCustomAgentDialog] = useState(false);
+  const [customAgentFormName, setCustomAgentFormName] = useState("");
+  const [customAgentFormRole, setCustomAgentFormRole] = useState("");
+  const [customAgentFormDesc, setCustomAgentFormDesc] = useState("");
+  const [customAgentFormModel, setCustomAgentFormModel] = useState("");
+  const [customAgentFormPersona, setCustomAgentFormPersona] = useState("");
+  const [customAgentFormSkills, setCustomAgentFormSkills] = useState("");
+  const [isSavingCustomAgent, setIsSavingCustomAgent] = useState(false);
+  const [customAgentSaveError, setCustomAgentSaveError] = useState<string | null>(null);
+  const [deleteCustomAgentId, setDeleteCustomAgentId] = useState<string | null>(null);
 
   // Load real config from backend
   useEffect(() => {
@@ -182,6 +221,27 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
         if (cancelled) return;
         setTemplateLoadError(error instanceof Error ? error.message : String(error));
         setIsLoadingTemplates(false);
+      });
+
+    return () => { cancelled = true; };
+  }, []);
+
+  // Load custom agents from backend
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoadingCustomAgents(true);
+    setCustomAgentLoadError(null);
+
+    fetchJson<CustomAgentListResponse>("/custom-agents")
+      .then((data) => {
+        if (cancelled) return;
+        setCustomAgents(data.agents);
+        setIsLoadingCustomAgents(false);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        setCustomAgentLoadError(error instanceof Error ? error.message : String(error));
+        setIsLoadingCustomAgents(false);
       });
 
     return () => { cancelled = true; };
@@ -280,6 +340,81 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
 
   const handleCancelDelete = useCallback(() => {
     setDeleteConfirmId(null);
+  }, []);
+
+  // ── Custom Agent Handlers ──
+
+  const handleAddCustomAgent = useCallback(() => {
+    setCustomAgentFormName("");
+    setCustomAgentFormRole("");
+    setCustomAgentFormDesc("");
+    setCustomAgentFormModel("");
+    setCustomAgentFormPersona("");
+    setCustomAgentFormSkills("");
+    setCustomAgentSaveError(null);
+    setShowCustomAgentDialog(true);
+  }, []);
+
+  const handleCustomAgentDialogClose = useCallback(() => {
+    setShowCustomAgentDialog(false);
+    setCustomAgentSaveError(null);
+  }, []);
+
+  const handleCustomAgentSubmit = useCallback(async () => {
+    const name = customAgentFormName.trim();
+    const role = customAgentFormRole.trim().toLowerCase().replace(/\s+/g, "-") || name.toLowerCase().replace(/\s+/g, "-");
+    if (!name) {
+      setCustomAgentSaveError("Agent 名称不能为空");
+      return;
+    }
+
+    setIsSavingCustomAgent(true);
+    setCustomAgentSaveError(null);
+
+    try {
+      const skills = customAgentFormSkills.trim()
+        ? customAgentFormSkills.split(",").map((s) => s.trim()).filter(Boolean)
+        : undefined;
+
+      const result = await fetchJson<CustomAgentResponse>("/custom-agents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          role,
+          description: customAgentFormDesc.trim(),
+          modelRouter: customAgentFormModel.trim() || undefined,
+          persona: customAgentFormPersona.trim() || undefined,
+          skills,
+        }),
+      });
+
+      setCustomAgents((prev) => [...prev, result.agent]);
+      setIsSavingCustomAgent(false);
+      handleCustomAgentDialogClose();
+    } catch (error) {
+      setCustomAgentSaveError(error instanceof Error ? error.message : String(error));
+      setIsSavingCustomAgent(false);
+    }
+  }, [customAgentFormName, customAgentFormRole, customAgentFormDesc, customAgentFormModel, customAgentFormPersona, customAgentFormSkills, handleCustomAgentDialogClose]);
+
+  const handleDeleteCustomAgent = useCallback(async (id: string) => {
+    if (deleteCustomAgentId !== id) {
+      setDeleteCustomAgentId(id);
+      return;
+    }
+
+    try {
+      await fetchJson(`/custom-agents/${id}`, { method: "DELETE" });
+      setCustomAgents((prev) => prev.filter((a) => a.id !== id));
+      setDeleteCustomAgentId(null);
+    } catch (error) {
+      setCustomAgentLoadError(error instanceof Error ? error.message : String(error));
+    }
+  }, [deleteCustomAgentId]);
+
+  const handleCancelDeleteCustomAgent = useCallback(() => {
+    setDeleteCustomAgentId(null);
   }, []);
 
   const handlePresetChange = useCallback((presetId: string) => {
@@ -458,6 +593,16 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
             <Save size={14} className="text-muted-foreground" />
             <span>另存为模板</span>
           </button>
+
+          {/* Add Custom Agent button */}
+          <button
+            type="button"
+            onClick={handleAddCustomAgent}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 px-3.5 py-2 text-sm font-medium transition-all shadow-sm"
+          >
+            <Plus size={14} />
+            <span>添加 Agent</span>
+          </button>
         </div>
       </div>
 
@@ -472,6 +617,96 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
           />
         ))}
       </div>
+
+      {/* ── Custom Agents Section ── */}
+      {!isLoadingCustomAgents && !customAgentLoadError && customAgents.length > 0 && (
+        <div>
+          <h3 className="text-sm font-semibold text-foreground mb-3">
+            自定义 Agent
+            <span className="text-xs text-muted-foreground/60 ml-2 font-normal">
+              ({customAgents.length})
+            </span>
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {customAgents.map((agent) => (
+              <div key={agent.id} className="relative group">
+                <AgentCard
+                  agent={{
+                    role: agent.role as never,
+                    label: agent.name,
+                    description: agent.description || agent.role,
+                    color: agent.color,
+                    icon: agent.icon,
+                  }}
+                  status="ready"
+                  displayName={agent.name}
+                />
+                {/* Delete button (visible on hover) */}
+                <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {deleteCustomAgentId === agent.id ? (
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCustomAgent(agent.id)}
+                        className="rounded-lg p-1.5 bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors shadow-sm"
+                        title="确认删除"
+                      >
+                        <Check size={12} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCancelDeleteCustomAgent}
+                        className="rounded-lg p-1.5 bg-card text-muted-foreground hover:text-foreground transition-colors shadow-sm border border-border/30"
+                        title="取消"
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteCustomAgent(agent.id)}
+                      className="rounded-lg p-1.5 bg-card/80 text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors shadow-sm border border-border/30"
+                      title="删除自定义 Agent"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Loading state for custom agents */}
+      {isLoadingCustomAgents && (
+        <div className="flex items-center gap-2 py-2">
+          <Loader2 size={14} className="animate-spin text-muted-foreground" />
+          <span className="text-xs text-muted-foreground">加载自定义 Agent…</span>
+        </div>
+      )}
+
+      {customAgentLoadError && (
+        <div className="flex items-center gap-2 py-2">
+          <AlertTriangle size={14} className="text-destructive shrink-0" />
+          <span className="text-xs text-destructive">{customAgentLoadError}</span>
+        </div>
+      )}
+
+      {!isLoadingCustomAgents && !customAgentLoadError && customAgents.length === 0 && (
+        <div className="rounded-xl border border-dashed border-border/30 bg-card/20 p-6 text-center">
+          <p className="text-sm text-muted-foreground/60">暂无自定义 Agent</p>
+          <button
+            type="button"
+            onClick={handleAddCustomAgent}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/5 transition-colors"
+          >
+            <Plus size={12} />
+            <span>添加一个自定义 Agent</span>
+          </button>
+        </div>
+      )}
 
       {/* Legend / Status Guide */}
       <div className="rounded-xl border border-border/30 bg-card/30 p-4">
@@ -691,6 +926,151 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                       </span>
                     ) : (
                       templateDialogMode === "create" ? "保存" : "更新"
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Custom Agent Dialog ── */}
+      {showCustomAgentDialog && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+            onClick={handleCustomAgentDialogClose}
+          />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="w-full max-w-lg rounded-2xl border border-border/60 bg-popover p-6 shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-foreground">
+                  添加自定义 Agent
+                </h3>
+                <button
+                  type="button"
+                  onClick={handleCustomAgentDialogClose}
+                  className="rounded-lg p-1.5 text-muted-foreground/50 hover:text-foreground hover:bg-secondary/50 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                    Agent 名称 <span className="text-destructive">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={customAgentFormName}
+                    onChange={(e) => setCustomAgentFormName(e.target.value)}
+                    placeholder="例如：世界构建师"
+                    className="w-full rounded-lg border border-border/60 bg-card/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                    角色标识（可选，自动生成）
+                  </label>
+                  <input
+                    type="text"
+                    value={customAgentFormRole}
+                    onChange={(e) => setCustomAgentFormRole(e.target.value)}
+                    placeholder="例如：world-builder"
+                    className="w-full rounded-lg border border-border/60 bg-card/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                    描述
+                  </label>
+                  <textarea
+                    value={customAgentFormDesc}
+                    onChange={(e) => setCustomAgentFormDesc(e.target.value)}
+                    placeholder="简短描述此 Agent 的职责…"
+                    rows={2}
+                    className="w-full rounded-lg border border-border/60 bg-card/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                    模型路由
+                  </label>
+                  <input
+                    type="text"
+                    value={customAgentFormModel}
+                    onChange={(e) => setCustomAgentFormModel(e.target.value)}
+                    placeholder="例如：gpt-4o, claude-3.5"
+                    className="w-full rounded-lg border border-border/60 bg-card/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                    Persona 配置
+                  </label>
+                  <textarea
+                    value={customAgentFormPersona}
+                    onChange={(e) => setCustomAgentFormPersona(e.target.value)}
+                    placeholder="Agent 的系统提示或 Persona 配置…"
+                    rows={2}
+                    className="w-full rounded-lg border border-border/60 bg-card/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-muted-foreground mb-1.5">
+                    技能（逗号分隔）
+                  </label>
+                  <input
+                    type="text"
+                    value={customAgentFormSkills}
+                    onChange={(e) => setCustomAgentFormSkills(e.target.value)}
+                    placeholder="例如：大纲规划, 章节撰写, 角色对话"
+                    className="w-full rounded-lg border border-border/60 bg-card/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
+
+                {customAgentSaveError && (
+                  <div className="flex items-center gap-2 rounded-lg bg-destructive/5 px-3 py-2">
+                    <AlertTriangle size={14} className="text-destructive shrink-0" />
+                    <span className="text-xs text-destructive">{customAgentSaveError}</span>
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={handleCustomAgentDialogClose}
+                    className="rounded-lg border border-border/60 px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary/50 transition-colors"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCustomAgentSubmit}
+                    disabled={isSavingCustomAgent || !customAgentFormName.trim()}
+                    className={cn(
+                      "rounded-lg px-4 py-2 text-sm font-medium transition-colors",
+                      "bg-primary text-primary-foreground hover:bg-primary/90",
+                      (isSavingCustomAgent || !customAgentFormName.trim()) && "opacity-50 cursor-not-allowed",
+                    )}
+                  >
+                    {isSavingCustomAgent ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 size={14} className="animate-spin" />
+                        保存中…
+                      </span>
+                    ) : (
+                      "确认添加"
                     )}
                   </button>
                 </div>
