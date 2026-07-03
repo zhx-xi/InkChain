@@ -292,6 +292,23 @@ export {
   type GenerateCandidates,
 } from "./ai/world-generator.js";
 export {
+  buildContinueSystemPrompt,
+  buildContinueUserPrompt,
+  parseContinueResponse,
+  checkConflict,
+  filterConflicts,
+  hasBlockingConflicts,
+  DEFAULT_CONTINUE_PARAMS,
+  type ContinueWritingParams,
+  type FullWritingContext,
+  type WorldContext,
+  type RelationContext,
+  type TimelineContext,
+  type ForeshadowingContext,
+  type ContinueCandidate,
+  type ConflictIssue,
+} from "./ai/writing-continue.js";
+export {
   VoiceProfileSchema as CharacterVoiceProfileSchema,
   VoiceProfilesFileSchema,
   VOICE_PRESETS,
