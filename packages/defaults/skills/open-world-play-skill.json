@@ -1,0 +1,15 @@
+{
+  "id": "open-world-play-skill",
+  "category": "utility",
+  "triggers": [
+    { "type": "condition", "condition": "session.kind === 'play'" }
+  ],
+  "injection": {
+    "mode": "append",
+    "target": "system_prompt",
+    "priority": 40
+  },
+  "params": {},
+  "enabled": true,
+  "description": "Open-world and branching interactive fiction: world contracts, character agents, and scene rendering."
+}
