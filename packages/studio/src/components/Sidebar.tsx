@@ -123,6 +123,7 @@ export function Sidebar({ nav, activePage, sse, t }: {
   const activateSession = useChatStore((s) => s.activateSession);
   const createDraftSession = useChatStore((s) => s.createDraftSession);
   const renameSession = useChatStore((s) => s.renameSession);
+  const archiveSession = useChatStore((s) => s.archiveSession);
   const deleteSession = useChatStore((s) => s.deleteSession);
   const setInput = useChatStore((s) => s.setInput);
   const [renameTarget, setRenameTarget] = useState<{ sessionId: string; currentTitle: string } | null>(null);
@@ -417,6 +418,11 @@ export function Sidebar({ nav, activePage, sse, t }: {
                                   <span>改名</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => void archiveSession(session.sessionId)}>
+                                  <Archive size={14} />
+                                  <span>归档</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem
                                   variant="destructive"
                                   onClick={() => setDeleteTarget({ sessionId: session.sessionId, title: label })}
@@ -564,6 +570,11 @@ export function Sidebar({ nav, activePage, sse, t }: {
                             >
                               <Pencil size={14} />
                               <span>改名</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => void archiveSession(session.sessionId)}>
+                              <Archive size={14} />
+                              <span>归档</span>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
