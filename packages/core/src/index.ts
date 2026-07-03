@@ -21,7 +21,6 @@ export {
   RelationsFileSchema,
   RelationType,
   RELATION_LABELS,
-  getRelationDisplayLabel,
   type CharacterRelation,
   type CreateRelation,
   type UpdateRelation,
@@ -276,6 +275,22 @@ export {
   type OutlinePlannerInput,
   type PlannerConfig,
 } from "./ai/outline-planner.js";
+export {
+  buildChapterGeneratePrompt,
+  buildCharacterGeneratePrompt,
+  buildEventGeneratePrompt,
+  parseChapterResponse,
+  parseCharacterResponse,
+  parseEventResponse,
+  generateEntityId,
+  DEFAULT_GENERATION_PARAMS,
+  type GenerationParams,
+  type GenerateType,
+  type ChapterCandidate,
+  type CharacterCandidate,
+  type EventCandidate,
+  type GenerateCandidates,
+} from "./ai/world-generator.js";
 export {
   VoiceProfileSchema as CharacterVoiceProfileSchema,
   VoiceProfilesFileSchema,
@@ -784,7 +799,7 @@ export { loadProjectConfig, GLOBAL_CONFIG_DIR, GLOBAL_ENV_PATH, isApiKeyOptional
 export { resolveEffectiveLLMConfig, type EffectiveLLMConfigResult, type EffectiveLLMDiagnostics, type LLMConfigCliOverrides, type LLMConfigMode, type LLMConsumer, type LLMValueSource } from "./utils/effective-llm-config.js";
 export { loadLLMEnvLayers, mergeEnvMaps, studioIgnoredEnv, cliOverlayEnv, legacyEnv, type LLMEnvLayers, type LLMEnvMap } from "./utils/llm-env.js";
 export type { ContextCompressionCallback, ContextCompressionCategory, ContextCompressionEvent, ContextCompressionPhase } from "./models/context-compression.js";
-export { computeAnalytics, computeWritingStats, type AnalyticsData, type WritingStats, type TokenStats, type ChapterWordTrend } from "./utils/analytics.js";
+export { computeAnalytics, type AnalyticsData, type TokenStats } from "./utils/analytics.js";
 export {
   evaluateBookQuality,
   computeChapterEvalScore,
