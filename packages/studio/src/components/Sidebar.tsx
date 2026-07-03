@@ -678,12 +678,6 @@ export function Sidebar({ nav, activePage, sse, t }: {
               onClick={nav.toAgents}
             />
             <SidebarItem
-              label="伏笔追踪"
-              icon={<AlertTriangle size={16} />}
-              active={activePage === "foreshadowing"}
-              onClick={() => nav.toForeshadowing(books[0]?.id ?? "")}
-            />
-            <SidebarItem
               label="世界设定"
               icon={<Globe size={16} />}
               active={activePage === "worlds" || activePage === "world-create" || activePage.startsWith("world-detail")}
