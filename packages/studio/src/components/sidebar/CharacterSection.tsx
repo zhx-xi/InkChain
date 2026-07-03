@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
-import { Users, ChevronDown, Network, Trash2, Star } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
+import { Users, ChevronDown, Network } from "lucide-react";
 import { useChatStore } from "../../store/chat";
 import { fetchJson } from "../../hooks/use-api";
 import { SidebarCard } from "./SidebarCard";
@@ -65,155 +65,25 @@ function getRoleColor(role: string): string {
   return "bg-zinc-500/15 text-zinc-600 dark:text-zinc-400";
 }
 
-// ── Tier → star count mapping ──
-const TIER_STARS: Record<CharacterTier, number> = {
-  protagonist: 5,
-  supporting: 4,
-  guest: 3,
-  one_shot: 2,
-  scene: 1,
-};
-
-const TIER_FROM_STARS: Record<number, CharacterTier> = {
-  5: "protagonist",
-  4: "supporting",
-  3: "guest",
-  2: "one_shot",
-  1: "scene",
-};
-
 // ── Phase 5 RoleEntry: one file per character ──
 
-interface RoleEntryProps {
-  readonly role: RoleRef;
-  readonly bookId: string;
-  readonly onDeleted: (name: string) => void;
-  readonly onTierChanged: (name: string, newTier: CharacterTier) => void;
-}
-
-function RoleEntry({ role, bookId, onDeleted, onTierChanged }: RoleEntryProps) {
+function RoleEntry({ role }: { readonly role: RoleRef }) {
   const openArtifact = useChatStore((s) => s.openArtifact);
   const badge = TIER_BADGE[role.tier];
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
-
-  const handleDelete = useCallback(async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!confirmingDelete) {
-      setConfirmingDelete(true);
-      return;
-    }
-    setDeleting(true);
-    try {
-      await fetchJson(`/books/${bookId}/characters/${encodeURIComponent(role.name)}`, {
-        method: "DELETE",
-      });
-      onDeleted(role.name);
-    } catch {
-      // Refresh page on error to show original state
-      window.location.reload();
-    }
-    setDeleting(false);
-    setConfirmingDelete(false);
-  }, [confirmingDelete, bookId, role.name, onDeleted]);
-
-  const handleCancelDelete = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    setConfirmingDelete(false);
-  }, []);
-
-  const handleDragStart = useCallback((e: React.DragEvent) => {
-    e.dataTransfer.setData("text/plain", role.name);
-    e.dataTransfer.effectAllowed = "move";
-  }, [role.name]);
-
-  // Build star display: filled=★ empty=☆
-  const starCount = TIER_STARS[role.tier] ?? 3;
-  const stars = [];
-  for (let i = 1; i <= 5; i++) {
-    stars.push(
-      <Star
-        key={i}
-        size={12}
-        className={cn(
-          "cursor-pointer transition-colors",
-          i <= starCount
-            ? "fill-amber-400 text-amber-400"
-            : "fill-none text-muted-foreground/30 hover:text-amber-400/50",
-        )}
-        onClick={(e) => {
-          e.stopPropagation();
-          const newTier = TIER_FROM_STARS[i];
-          if (newTier && newTier !== role.tier) {
-            fetchJson(`/books/${bookId}/characters/${encodeURIComponent(role.name)}/tier`, {
-              method: "PATCH",
-              body: JSON.stringify({ tier: newTier }),
-              headers: { "Content-Type": "application/json" },
-            }).then(() => onTierChanged(role.name, newTier)).catch(() => window.location.reload());
-          }
-        }}
-      />,
-    );
-  }
-
   return (
-    <div
-      draggable
-      onDragStart={handleDragStart}
-      className={cn(
-        "group w-full flex items-center gap-2 px-2.5 py-2 rounded-lg transition-colors",
-        dragOver ? "bg-secondary/70" : "bg-secondary/30 hover:bg-secondary/50",
-      )}
+    <button
+      onClick={() => openArtifact(role.path)}
+      className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg bg-secondary/30 hover:bg-secondary/50 transition-colors text-left"
     >
-      <Users size={16} className="shrink-0 text-muted-foreground/60 cursor-grab active:cursor-grabbing" />
-      <button
-        onClick={() => openArtifact(role.path)}
-        className="flex items-center gap-2 flex-1 min-w-0 text-left"
-      >
-        <span className="text-[15px] leading-6 font-medium text-foreground font-['SimSun','Songti_SC','STSong',serif] truncate">
-          {role.name}
-        </span>
-      </button>
-
-      {/* Star rating */}
-      <div className="flex items-center gap-0.5 shrink-0">
-        {stars}
-      </div>
-
-      {/* Delete button */}
-      {confirmingDelete ? (
-        <div className="flex items-center gap-1 shrink-0">
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={deleting}
-            className="text-[11px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-600 hover:bg-red-500/30"
-          >
-            {deleting ? "..." : "确认"}
-          </button>
-          <button
-            type="button"
-            onClick={handleCancelDelete}
-            className="text-[11px] px-1.5 py-0.5 rounded bg-secondary/50 text-muted-foreground hover:bg-secondary/80"
-          >
-            取消
-          </button>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setConfirmingDelete(true);
-          }}
-          className="shrink-0 p-0.5 rounded text-muted-foreground/40 hover:text-red-500 hover:bg-red-500/10 transition-colors opacity-0 group-hover:opacity-100"
-          title="删除角色"
-        >
-          <Trash2 size={14} />
-        </button>
-      )}
-    </div>
+      <Users size={16} className="shrink-0 text-muted-foreground/60" />
+      <span className="text-[15px] leading-6 font-medium text-foreground font-['SimSun','Songti_SC','STSong',serif] flex-1 truncate">
+        {role.name}
+      </span>
+      <span className={cn("text-[12px] px-1.5 py-0.5 rounded-full shrink-0 flex items-center gap-0.5", badge.color)}>
+        <span className="text-[10px]">{badge.symbol}</span>
+        {badge.label}
+      </span>
+    </button>
   );
 }
 
@@ -298,7 +168,6 @@ export function CharacterSection({ bookId }: CharacterSectionProps) {
   const [roles, setRoles] = useState<ReadonlyArray<RoleRef>>([]);
   const [legacyChars, setLegacyChars] = useState<CharacterInfo[]>([]);
   const [activeTab, setActiveTab] = useState<CharacterTier | "all">("all");
-  const [dropTargetTab, setDropTargetTab] = useState<string | null>(null);
   const bookDataVersion = useChatStore((s) => s.bookDataVersion);
   const { setRoute } = useHashRoute();
 
@@ -363,27 +232,6 @@ export function CharacterSection({ bookId }: CharacterSectionProps) {
     return counts;
   }, [roles]);
 
-  // Callbacks for RoleEntry child
-  const handleDeleted = useCallback((name: string) => {
-    setRoles((prev) => prev.filter((r) => r.name !== name));
-  }, []);
-
-  const handleTierChanged = useCallback((name: string, newTier: CharacterTier) => {
-    setRoles((prev) => prev.map((r) => r.name === name ? { ...r, tier: newTier } : r));
-  }, []);
-
-  const handleTabDrop = useCallback((tier: CharacterTier) => (e: React.DragEvent) => {
-    e.preventDefault();
-    setDropTargetTab(null);
-    const draggedName = e.dataTransfer.getData("text/plain");
-    if (!draggedName) return;
-    fetchJson(`/books/${bookId}/characters/${encodeURIComponent(draggedName)}/tier`, {
-      method: "PATCH",
-      body: JSON.stringify({ tier }),
-      headers: { "Content-Type": "application/json" },
-    }).then(() => handleTierChanged(draggedName, tier)).catch(() => window.location.reload());
-  }, [bookId, handleTierChanged]);
-
   if (roles.length === 0 && legacyChars.length === 0) return null;
 
   // Legacy view — no tab filtering for character_matrix.md mode
@@ -406,26 +254,17 @@ export function CharacterSection({ bookId }: CharacterSectionProps) {
 
   return (
     <SidebarCard title="角色">
-      {/* Tier tab bar — also serves as drop targets for DnD re-tier */}
+      {/* Tier tab bar */}
       <div className="flex gap-1 mb-2 flex-wrap">
         {TIER_TABS.map((tab) => {
           const isActive = activeTab === tab.id;
           const count = tab.id === "all" ? roles.length : (tierCounts[tab.id] ?? 0);
-          const isDropTarget = dropTargetTab === tab.id;
           return (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              onDragOver={(e) => {
-                if (tab.id === "all") return;
-                e.preventDefault();
-                setDropTargetTab(tab.id);
-              }}
-              onDragLeave={() => setDropTargetTab(null)}
-              onDrop={tab.id === "all" ? undefined : handleTabDrop(tab.id as CharacterTier)}
               className={cn(
-                "text-[12px] px-2 py-1 rounded-full transition-all",
-                isDropTarget && tab.id !== "all" && "ring-2 ring-blue-400 scale-110",
+                "text-[12px] px-2 py-1 rounded-full transition-colors",
                 isActive
                   ? "bg-primary text-primary-foreground font-medium"
                   : "bg-secondary/50 text-muted-foreground hover:bg-secondary/80",
@@ -439,15 +278,7 @@ export function CharacterSection({ bookId }: CharacterSectionProps) {
 
       {/* Role list */}
       <div className="space-y-1.5">
-        {filteredRoles.map((role) => (
-          <RoleEntry
-            key={role.path}
-            role={role}
-            bookId={bookId}
-            onDeleted={handleDeleted}
-            onTierChanged={handleTierChanged}
-          />
-        ))}
+        {filteredRoles.map((role) => <RoleEntry key={role.path} role={role} />)}
       </div>
 
       {/* Status bar */}
