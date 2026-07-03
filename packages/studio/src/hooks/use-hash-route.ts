@@ -32,7 +32,7 @@ export type HashRoute =
   | { page: "foreshadowing"; bookId: string }
   | { page: "worlds" }
   | { page: "world-detail"; worldId: string }
-  | { page: "world-create"; bookId?: string }
+  | { page: "world-create" }
   | { page: "world-geoviz"; worldId: string }
   | { page: "publish"; bookId: string }
   | { page: "edit-dashboard"; bookId: string }
@@ -52,8 +52,6 @@ function parseHash(hash: string): HashRoute {
   const foreshadowingMatch = path.match(/^foreshadowing\/([^\/]+)$/);
   if (foreshadowingMatch) return { page: "foreshadowing", bookId: decodeURIComponent(foreshadowingMatch[1]) };
   if (path === "worlds" || path === "worlds/new") return path === "worlds/new" ? { page: "world-create" } : { page: "worlds" };
-  const worldsNewBookMatch = path.match(/^worlds\/new\/(.+)$/);
-  if (worldsNewBookMatch) return { page: "world-create", bookId: decodeURIComponent(worldsNewBookMatch[1]) };
   const importMatch = path.match(/^import\/(chapters|canon|fanfic|spinoff|imitation)$/);
   if (importMatch) return { page: "import", tab: importMatch[1] as "chapters" | "canon" | "fanfic" | "spinoff" | "imitation" };
   if (path === "book/new") return { page: "book-create" };
@@ -126,7 +124,7 @@ function routeToHash(route: HashRoute): string {
     case "skills": return "#/skills";
     case "foreshadowing": return `#/foreshadowing/${encodeURIComponent(route.bookId)}`;
     case "worlds": return "#/worlds";
-    case "world-create": return route.bookId ? `#/worlds/new/${encodeURIComponent(route.bookId)}` : "#/worlds/new";
+    case "world-create": return "#/worlds/new";
     case "world-detail": return `#/worlds/${encodeURIComponent(route.worldId)}`;
     case "world-geoviz": return `#/worlds/${encodeURIComponent(route.worldId)}/geoviz`;
     case "publish": return `#/publish/${encodeURIComponent(route.bookId)}`;

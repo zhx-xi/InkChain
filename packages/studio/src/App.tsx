@@ -122,7 +122,7 @@ export function App() {
     toWorlds: () => setRoute({ page: "worlds" }),
     toWorldDetail: (worldId: string) => setRoute({ page: "world-detail", worldId }),
     toWorldGeoViz: (worldId: string) => setRoute({ page: "world-geoviz", worldId }),
-    toWorldCreate: (bookId?: string) => setRoute({ page: "world-create", ...(bookId ? { bookId } : {}) }),
+    toWorldCreate: () => setRoute({ page: "world-create" }),
     toBookWorlds: (bookId: string) => setRoute({ page: "book-worlds", bookId }),
     toPublish: (bookId: string) => setRoute({ page: "publish", bookId }),
     toEditDashboard: (bookId: string) => setRoute({ page: "edit-dashboard", bookId }),
@@ -414,7 +414,6 @@ export function App() {
               <WorldDetailPage
                 worldId={route.page === "world-detail" ? route.worldId : undefined}
                 nav={nav}
-                bookId={route.page === "world-create" && "bookId" in route ? (route as { bookId?: string }).bookId : undefined}
               />
             </div>
           )}

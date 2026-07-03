@@ -39,7 +39,7 @@ const DIMENSION_COLORS: Record<string, string> = {
 };
 
 export function WorldListPage({ nav, bookId }: {
-  readonly nav?: { toWorldDetail: (id: string) => void; toWorldCreate: (bookId?: string) => void; toBook?: (id: string) => void };
+  readonly nav?: { toWorldDetail: (id: string) => void; toWorldCreate: () => void; toBook?: (id: string) => void };
   readonly bookId?: string;
 }) {
   const { setRoute } = useHashRoute();
@@ -130,9 +130,9 @@ export function WorldListPage({ nav, bookId }: {
             onClick={() => {
               // Navigate to world create — use hash-based navigation if nav is available
               if (nav?.toWorldCreate) {
-                nav.toWorldCreate(bookId);
+                nav.toWorldCreate();
               } else {
-                window.location.hash = bookId ? `#/worlds/new/${encodeURIComponent(bookId)}` : "#/worlds/new";
+                window.location.hash = "#/worlds/new";
               }
             }}
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
@@ -204,8 +204,8 @@ export function WorldListPage({ nav, bookId }: {
             <button
               type="button"
               onClick={() => {
-                if (nav?.toWorldCreate) nav.toWorldCreate(bookId);
-                else window.location.hash = bookId ? `#/worlds/new/${encodeURIComponent(bookId)}` : "#/worlds/new";
+                if (nav?.toWorldCreate) nav.toWorldCreate();
+                else window.location.hash = "#/worlds/new";
               }}
               className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
             >
@@ -381,29 +381,14 @@ export function WorldListPage({ nav, bookId }: {
                 关闭
               </button>
               {aiExtractResult && (
-                <>
-                  {bookId && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowAiExtract(false);
-                        nav?.toWorldCreate ? nav.toWorldCreate(bookId) : (window.location.hash = `#/worlds/new/${encodeURIComponent(bookId)}`);
-                      }}
-                      className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90"
-                    >
-                      <Plus size={16} />
-                      从提取结果创建世界
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => { setAiExtractResult(null); handleAiExtract(); }}
-                    className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-medium text-primary transition hover:bg-primary/10"
-                  >
-                    <Loader2 size={14} className={aiExtractLoading ? "animate-spin" : ""} />
-                    重新提取
-                  </button>
-                </>
+                <button
+                  type="button"
+                  onClick={() => { setAiExtractResult(null); handleAiExtract(); }}
+                  className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-medium text-primary transition hover:bg-primary/10"
+                >
+                  <Loader2 size={14} className={aiExtractLoading ? "animate-spin" : ""} />
+                  重新提取
+                </button>
               )}
             </div>
           </div>
