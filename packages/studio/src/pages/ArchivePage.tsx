@@ -11,7 +11,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef, type KeyboardEvent } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useHashRoute } from "../hooks/use-hash-route";
-import { Archive, Search, ArrowUpDown, RotateCcw, Check, X, Loader2, Inbox } from "lucide-react";
+import { Archive, Search, ArrowUpDown, RotateCcw, Trash2, Check, X, Loader2, Inbox } from "lucide-react";
 import { ConfirmDialog } from "../components/ConfirmDialog";
 import { cn } from "@/lib/utils";
 import { HighlightedText } from "../components/SearchPanel";
@@ -123,7 +123,7 @@ export function ArchivePage() {
 
   // Confirm dialog
   const [confirmTarget, setConfirmTarget] = useState<{
-    type: "single" | "batch";
+    type: "single" | "batch" | "single-delete" | "batch-delete";
     sessionId?: string;
     sessionTitle?: string;
   } | null>(null);
@@ -134,6 +134,10 @@ export function ArchivePage() {
   // Unarchive loading state (per-session)
   const [unarchivingIds, setUnarchivingIds] = useState<Set<string>>(new Set());
   const [batchUnarchiving, setBatchUnarchiving] = useState(false);
+
+  // Delete loading state (per-session)
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
+  const [batchDeleting, setBatchDeleting] = useState(false);
 
   // ── Fetch archived sessions ──
 
@@ -333,6 +337,74 @@ export function ArchivePage() {
     }
   }, [selectedIds]);
 
+  // ── Delete handlers ──
+
+  const handleDeleteSingle = useCallback(
+    async (sessionId: string) => {
+      setDeletingIds((prev) => new Set(prev).add(sessionId));
+      try {
+        const res = await fetch(`/api/v1/project/sessions/${encodeURIComponent(sessionId)}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) {
+          const body = await res.json().catch(() => null);
+          throw new Error(
+            (body as { error?: { message?: string } })?.error?.message ?? `删除失败 (${res.status})`,
+          );
+        }
+        // Remove from local state
+        setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(sessionId);
+          return next;
+        });
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e));
+      } finally {
+        setDeletingIds((prev) => {
+          const next = new Set(prev);
+          next.delete(sessionId);
+          return next;
+        });
+      }
+    },
+    [],
+  );
+
+  const handleBatchDelete = useCallback(async () => {
+    const ids = [...selectedIds];
+    if (ids.length === 0) return;
+    setBatchDeleting(true);
+    try {
+      for (const id of ids) {
+        setDeletingIds((prev) => new Set(prev).add(id));
+        try {
+          const res = await fetch(`/api/v1/project/sessions/${encodeURIComponent(id)}`, {
+            method: "DELETE",
+          });
+          if (!res.ok) {
+            const body = await res.json().catch(() => null);
+            console.warn(`删除失败: ${id}`, body);
+          }
+        } catch (e) {
+          console.warn(`删除失败: ${id}`, e);
+        } finally {
+          setDeletingIds((prev) => {
+            const next = new Set(prev);
+            next.delete(id);
+            return next;
+          });
+        }
+      }
+      // Refresh the full list after batch operation
+      setSessions((prev) => prev.filter((s) => !ids.includes(s.id)));
+      setSelectedIds(new Set());
+    } finally {
+      setBatchDeleting(false);
+    }
+  }, [selectedIds]);
+
   // ── Confirm dialog handlers ──
 
   const handleConfirmUnarchive = useCallback(() => {
@@ -341,9 +413,13 @@ export function ArchivePage() {
       void handleUnarchiveSingle(confirmTarget.sessionId);
     } else if (confirmTarget.type === "batch") {
       void handleBatchUnarchive();
+    } else if (confirmTarget.type === "single-delete" && confirmTarget.sessionId) {
+      void handleDeleteSingle(confirmTarget.sessionId);
+    } else if (confirmTarget.type === "batch-delete") {
+      void handleBatchDelete();
     }
     setConfirmTarget(null);
-  }, [confirmTarget, handleUnarchiveSingle, handleBatchUnarchive]);
+  }, [confirmTarget, handleUnarchiveSingle, handleBatchUnarchive, handleDeleteSingle, handleBatchDelete]);
 
   // ── Search keyboard handlers ──
 
@@ -554,6 +630,23 @@ export function ArchivePage() {
           </button>
           <button
             type="button"
+            onClick={() => setConfirmTarget({ type: "batch-delete" })}
+            disabled={batchDeleting}
+            className={cn(
+              "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors",
+              "text-destructive hover:bg-destructive/10 border border-destructive/30 hover:border-destructive/50",
+              "disabled:opacity-50 disabled:cursor-not-allowed",
+            )}
+          >
+            {batchDeleting ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Trash2 size={14} />
+            )}
+            <span>批量删除</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setSelectedIds(new Set())}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -740,6 +833,33 @@ export function ArchivePage() {
                       )}
                       <span>解档</span>
                     </button>
+
+                    {/* Delete Button */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setConfirmTarget({
+                          type: "single-delete",
+                          sessionId: session.id,
+                          sessionTitle: session.title || "未命名会话",
+                        })
+                      }
+                      disabled={deletingIds.has(session.id)}
+                      className={cn(
+                        "shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+                        "opacity-0 group-hover:opacity-100 focus:opacity-100",
+                        "text-destructive hover:bg-destructive/10 border border-transparent hover:border-destructive/30",
+                        "disabled:opacity-50 disabled:cursor-not-allowed",
+                      )}
+                      title="永久删除"
+                    >
+                      {deletingIds.has(session.id) ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <Trash2 size={14} />
+                      )}
+                      <span>删除</span>
+                    </button>
                   </div>
                 </div>
               );
@@ -814,16 +934,32 @@ export function ArchivePage() {
         title={
           confirmTarget?.type === "single"
             ? "解档会话"
-            : "批量解档"
+            : confirmTarget?.type === "batch"
+            ? "批量解档"
+            : confirmTarget?.type === "single-delete"
+            ? "永久删除会话"
+            : "批量删除会话"
         }
         message={
           confirmTarget?.type === "single"
             ? `确认将会话「${confirmTarget?.sessionTitle ?? ""}」解档？解档后该会话将恢复到活跃会话列表中。`
-            : `确认解档已选择的 ${selectedIds.size} 个会话？解档后这些会话将恢复到活跃会话列表中。`
+            : confirmTarget?.type === "batch"
+            ? `确认解档已选择的 ${selectedIds.size} 个会话？解档后这些会话将恢复到活跃会话列表中。`
+            : confirmTarget?.type === "single-delete"
+            ? `确认永久删除会话「${confirmTarget?.sessionTitle ?? ""}」？此操作不可恢复。`
+            : `确认永久删除已选择的 ${selectedIds.size} 个会话？此操作不可恢复。`
         }
-        confirmLabel="确认解档"
+        confirmLabel={
+          confirmTarget?.type === "single-delete" || confirmTarget?.type === "batch-delete"
+            ? "确认删除"
+            : "确认解档"
+        }
         cancelLabel="取消"
-        variant="default"
+        variant={
+          confirmTarget?.type === "single-delete" || confirmTarget?.type === "batch-delete"
+            ? "danger"
+            : "default"
+        }
         onConfirm={handleConfirmUnarchive}
         onCancel={() => setConfirmTarget(null)}
       />

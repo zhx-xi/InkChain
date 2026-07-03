@@ -16,6 +16,7 @@ import {
   listBookSessions,
   archiveBookSession,
   unarchiveBookSession,
+  deleteBookSession,
   batchArchiveBookSessions,
   mergeBookSessions,
   autoArchiveStaleSessions,
@@ -136,6 +137,20 @@ export function createSessionsRouter(getProjectRoot: () => string): Hono {
     } catch (e) {
       return c.json({
         error: { code: "INTERNAL_ERROR", message: `解档会话失败: ${e instanceof Error ? e.message : String(e)}` },
+      }, 500);
+    }
+  });
+
+  // DELETE /sessions/:id — permanently delete a session
+  app.delete("/sessions/:id", async (c) => {
+    try {
+      const root = getProjectRoot();
+      const sessionId = c.req.param("id");
+      await deleteBookSession(root, sessionId);
+      return c.json({ ok: true });
+    } catch (e) {
+      return c.json({
+        error: { code: "INTERNAL_ERROR", message: `永久删除会话失败: ${e instanceof Error ? e.message : String(e)}` },
       }, 500);
     }
   });
