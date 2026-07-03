@@ -251,6 +251,29 @@ const RAW_BUILTIN_CAPABILITY_SKILLS: CapabilitySkillManifest[] = [
     body: "",
     source: "builtin",
   },
+  {
+    id: "humanizer-zh",
+    name: "Humanizer (\u53BBAI\u5473)",
+    description: "Detect and remove 24 AI writing trace patterns across content, language-grammar, style, and communication modes. Supplement to InkOS built-in anti-AI logic.",
+    whenToUse: "Use as an editing aid: humanize AI-generated prose, remove analytical-report language, AI vocabulary, formulaic structures, overused dashes, and collaborative chatbot traces. Compatible with all session types.",
+    triggers: [
+      "\u53BBAI\u5473",
+      "\u53BBAI",
+      "\u4EBA\u6027\u5316",
+      "humanizer",
+      "\u53BB\u75D5",
+      "AI\u5473",
+      "humanize",
+      "\u6DA6\u8272AI",
+      "de-ai",
+    ],
+    sessionKinds: ["book", "book-create", "edit", "play", "interactive-film", "interactive-film-authoring"],
+    promptPacks: ["humanizer-zh"],
+    toolHints: [],
+    contextNeeds: [],
+    body: "",
+    source: "builtin",
+  },
 ];
 
 export const BUILTIN_CAPABILITY_SKILLS: ReadonlyArray<CapabilitySkillManifest> =
