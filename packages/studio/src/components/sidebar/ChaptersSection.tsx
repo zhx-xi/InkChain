@@ -1,9 +1,8 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { fetchJson } from "../../hooks/use-api";
 import { useChatStore } from "../../store/chat";
 import { SidebarCard } from "./SidebarCard";
 import { cn } from "../../lib/utils";
-import { GripVertical } from "lucide-react";
 
 interface ChapterMeta {
   number: number;
@@ -29,7 +28,6 @@ interface ChaptersSectionProps {
 export function ChaptersSection({ bookId, isZh }: ChaptersSectionProps) {
   const [chapters, setChapters] = useState<ReadonlyArray<ChapterMeta>>([]);
   const bookDataVersion = useChatStore((s) => s.bookDataVersion);
-  const dragStarted = useRef(false);
 
   useEffect(() => {
     fetchJson<{ chapters: ChapterMeta[] }>(`/books/${bookId}`)
@@ -38,9 +36,9 @@ export function ChaptersSection({ bookId, isZh }: ChaptersSectionProps) {
   }, [bookId, bookDataVersion]);
 
   const handleDragStart = useCallback((e: React.DragEvent, chapterNumber: number) => {
-    dragStarted.current = true;
     e.dataTransfer.setData("application/x-chapter-number", String(chapterNumber));
     e.dataTransfer.effectAllowed = "move";
+    // Slight transparency on the drag ghost
     if (e.currentTarget instanceof HTMLElement) {
       e.currentTarget.style.opacity = "0.5";
     }
@@ -50,14 +48,6 @@ export function ChaptersSection({ bookId, isZh }: ChaptersSectionProps) {
     if (e.currentTarget instanceof HTMLElement) {
       e.currentTarget.style.opacity = "1";
     }
-  }, []);
-
-  const handleClick = useCallback((chapterNumber: number) => {
-    // Only open chapter if no drag occurred
-    if (!dragStarted.current) {
-      useChatStore.getState().openChapterArtifact(chapterNumber);
-    }
-    dragStarted.current = false;
   }, []);
 
   return (
@@ -76,14 +66,9 @@ export function ChaptersSection({ bookId, isZh }: ChaptersSectionProps) {
                 draggable
                 onDragStart={(e) => handleDragStart(e, ch.number)}
                 onDragEnd={handleDragEnd}
-                onClick={() => handleClick(ch.number)}
-                className="flex items-center gap-2 py-1 text-[15px] leading-6 text-muted-foreground hover:text-foreground transition-colors rounded px-1 -mx-1 hover:bg-secondary/50"
+                onClick={() => useChatStore.getState().openChapterArtifact(ch.number)}
+                className="flex items-center gap-2 py-1 text-[15px] leading-6 text-muted-foreground cursor-grab active:cursor-grabbing hover:text-foreground transition-colors rounded px-1 -mx-1 hover:bg-secondary/50"
               >
-                <GripVertical
-                  size={14}
-                  className="shrink-0 text-muted-foreground/30 cursor-grab active:cursor-grabbing hover:text-muted-foreground/60"
-                  onMouseDown={() => { dragStarted.current = false; }}
-                />
                 <span className={cn("text-[13px] shrink-0", ind.color)}>{ind.symbol}</span>
                 <span className="truncate flex-1">
                   {String(ch.number).padStart(2, "0")} {ch.title || (isZh ? `第${ch.number}章` : `Chapter ${ch.number}`)}

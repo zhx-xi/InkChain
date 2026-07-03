@@ -268,7 +268,7 @@ export function VolumesSection({ bookId }: VolumesSectionProps) {
   }, [bookId]);
 
   // Handle chapter drop
-  const handleDrop = useCallback(async (volumeId: string | null, chapterNumber: number) => {
+  const handleDrop = useCallback(async (volumeId: string, chapterNumber: number) => {
     setDragOverVolumeId(null);
     try {
       await fetchJson(`/books/${bookId}/chapters/${chapterNumber}/volume`, {
@@ -391,36 +391,14 @@ export function VolumesSection({ bookId }: VolumesSectionProps) {
             );
           })}
 
-          {/* Unassigned chapters — also a drop zone to unassign chapters from volumes */}
-          {unassignedChapters.length > 0 || dragOverVolumeId === "__unassigned__" ? (
-            <div
-              className={cn(
-                "pt-1 mt-1 border-t border-border/20 transition-all",
-                dragOverVolumeId === "__unassigned__" && "bg-blue-50/30 dark:bg-blue-900/10 rounded-lg -mx-1 px-1 pt-2 pb-1 border-blue-300/50",
-              )}
-              onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; }}
-              onDragEnter={() => setDragOverVolumeId("__unassigned__")}
-              onDragLeave={() => setDragOverVolumeId(null)}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDragOverVolumeId(null);
-                const chapterNum = e.dataTransfer.getData("application/x-chapter-number");
-                if (chapterNum) {
-                  // null volumeId = unassign from volume
-                  void handleDrop(null, parseInt(chapterNum, 10));
-                }
-              }}
-            >
-              <p className={cn(
-                "text-[11px] leading-4 px-2",
-                dragOverVolumeId === "__unassigned__" ? "text-blue-500 font-medium" : "text-muted-foreground/40",
-              )}>
-                {dragOverVolumeId === "__unassigned__"
-                  ? "释放以移出分卷"
-                  : `未分配章节: ${unassignedChapters.length}`}
+          {/* Unassigned chapters indicator */}
+          {unassignedChapters.length > 0 && (
+            <div className="pt-1 mt-1 border-t border-border/20">
+              <p className="text-[11px] leading-4 text-muted-foreground/40 px-2">
+                未分配章节: {unassignedChapters.length}
               </p>
             </div>
-          ) : null}
+          )}
         </div>
       )}
     </SidebarCard>
