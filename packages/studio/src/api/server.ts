@@ -125,6 +125,7 @@ import { createForeshadowingRouter } from "./routes/foreshadowing.js";
 import { createWorldsRouter, createBookWorldsRouter } from "./routes/worlds.js";
 import { createWorldsExtractRouter } from "./routes/worlds-extract.js";
 import { createWorldsAIGenRouter } from "./routes/worlds-ai-gen.js";
+import { createMapsAIGenRouter } from "./routes/maps-ai-gen.js";
 import { createPublishRouter } from "./routes/publish.js";
 import { createStyleProfilesRouter } from "./routes/style-profiles.js";
 import { createConsistencyRouter } from "./routes/consistency.js";
@@ -5757,6 +5758,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   app.route("/api/skills", createSkillsRouter(root));
   app.route("/api/worlds", createWorldsRouter(root));
   app.route("/api/worlds", createWorldsAIGenRouter(root));
+  app.route("/api/worlds", createMapsAIGenRouter(root));
   app.route("/api/books", createBookWorldsRouter(root));
   app.route("/api/foreshadowing", createForeshadowingRouter(root));
   app.route("/api/publish", createPublishRouter(root));

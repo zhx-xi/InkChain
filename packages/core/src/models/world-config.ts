@@ -95,6 +95,10 @@ export const WorldRegionSchema = z.object({
   type: WorldRegionTypeEnum,
   description: z.string().default(""),
   sortIndex: z.number().int().min(0).default(0),
+  /** Map coordinate X (percentage 0-100) */
+  x: z.number().min(0).max(100).nullable().default(null),
+  /** Map coordinate Y (percentage 0-100) */
+  y: z.number().min(0).max(100).nullable().default(null),
 });
 export type WorldRegion = z.infer<typeof WorldRegionSchema>;
 

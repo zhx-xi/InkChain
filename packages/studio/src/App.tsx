@@ -26,6 +26,7 @@ import { ForeshadowingPage } from "./pages/ForeshadowingPage";
 import { WorldListPage } from "./pages/WorldListPage";
 import { WorldDetailPage } from "./pages/WorldDetailPage";
 import { WorldGeoVizPanel } from "./pages/WorldGeoVizPanel";
+import { WorldMapViewPanel } from "./pages/WorldMapViewPanel";
 import { PublishPage } from "./pages/PublishPage";
 import { EditDashboard } from "./pages/EditDashboard";
 import { StoryPlayer } from "./pages/StoryPlayer";
@@ -122,6 +123,7 @@ export function App() {
     toWorlds: () => setRoute({ page: "worlds" }),
     toWorldDetail: (worldId: string) => setRoute({ page: "world-detail", worldId }),
     toWorldGeoViz: (worldId: string) => setRoute({ page: "world-geoviz", worldId }),
+    toWorldMap: (worldId: string) => setRoute({ page: "world-map", worldId }),
     toWorldCreate: (bookId?: string) => setRoute({ page: "world-create", ...(bookId ? { bookId } : {}) }),
     toBookWorlds: (bookId: string) => setRoute({ page: "book-worlds", bookId }),
     toPublish: (bookId: string) => setRoute({ page: "publish", bookId }),
@@ -421,6 +423,11 @@ export function App() {
           {route.page === "world-geoviz" && (
             <div className="w-full h-full fade-in">
               <WorldGeoVizPanel worldId={route.worldId} nav={nav} />
+            </div>
+          )}
+          {route.page === "world-map" && (
+            <div className="w-full h-full fade-in">
+              <WorldMapViewPanel worldId={route.worldId} nav={nav} />
             </div>
           )}
           {route.page === "publish" && (
