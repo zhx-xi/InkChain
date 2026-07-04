@@ -34,6 +34,7 @@ import { StoryGraphTree } from "./pages/StoryGraphTree";
 const FlowView = lazy(() => import("./pages/FlowView"));
 const FilmWizard = lazy(() => import("./pages/FilmWizard"));
 import { LanguageSelector } from "./pages/LanguageSelector";
+import { AchievementSystem } from "./components/AchievementSystem";
 import { ArchivePage } from "./pages/ArchivePage";
 import { CharacterTiering } from "./pages/CharacterTiering";
 import { BookSidebar, BookSidebarToggle } from "./components/chat/BookSidebar";
@@ -204,6 +205,15 @@ export function App() {
                <span className="text-muted-foreground/70">/</span>
                <span className="font-serif">InkOS Studio</span>
              </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <AchievementSystem
+              totalChapters={0}
+              totalWords={0}
+              sessionCount={0}
+              consecutiveApproved={0}
+            />
           </div>
 
           <div className="flex items-center gap-3">

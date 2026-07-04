@@ -78,7 +78,7 @@ interface BookSummary {
   readonly chaptersWritten: number;
 }
 
-interface Nav {
+export interface Nav {
   toDashboard: () => void;
   toChat: () => void;
   toBook: (id: string) => void;
