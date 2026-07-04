@@ -96,3 +96,14 @@ export async function seedTimeline(): Promise<void> {
     "utf-8",
   );
 }
+
+/** Reset the timeline state to an empty array */
+export async function clearTimeline(): Promise<void> {
+  const stateDir = join(E2E_ROOT, "books", E2E_TIMELINE_BOOK_ID, "story", "state");
+  await mkdir(stateDir, { recursive: true });
+  await writeFile(
+    join(stateDir, "character_timelines.json"),
+    JSON.stringify({ version: 1, events: [] }, null, 2),
+    "utf-8",
+  );
+}

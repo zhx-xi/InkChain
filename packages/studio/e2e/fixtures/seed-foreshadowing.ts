@@ -100,3 +100,11 @@ export async function seedForeshadowing(): Promise<void> {
     );
   }
 }
+
+/** Delete all foreshadowing entries for the E2E book */
+export async function clearForeshadowing(): Promise<void> {
+  const foreshadowingDir = join(E2E_ROOT, ".inkos", "foreshadowing");
+  const { rm } = await import("node:fs/promises");
+  await rm(foreshadowingDir, { recursive: true, force: true });
+  await mkdir(foreshadowingDir, { recursive: true });
+}
