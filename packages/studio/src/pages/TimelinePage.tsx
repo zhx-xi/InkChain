@@ -524,6 +524,7 @@ interface TimelineExtractEvent {
   relatedCharacters: string[];
   importance: number;
   tags: string[];
+  chapter?: number;
 }
 
 // ── Component ──
@@ -576,8 +577,30 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
   const [showAiExtract, setShowAiExtract] = useState(false);
   const [aiExtractResult, setAiExtractResult] = useState<TimelineExtractEvent[] | null>(null);
   const [aiExtractLoading, setAiExtractLoading] = useState(false);
-  const [aiExtractChapter, setAiExtractChapter] = useState(1);
+  const [aiExtractChapter, setAiExtractChapter] = useState("1");
   const [aiExtractError, setAiExtractError] = useState<string | null>(null);
+  const [checkedEvents, setCheckedEvents] = useState<Set<number>>(new Set());
+  const [aiExtractSaving, setAiExtractSaving] = useState(false);
+
+  // ── Parse chapter range "1-5" → [1,2,3,4,5], "1,2,3" → [1,2,3] ──
+  const parseChapterRange = useCallback((input: string): number[] => {
+    const trimmed = input.trim();
+    if (!trimmed) return [];
+    if (trimmed.includes(",")) {
+      return trimmed.split(",").map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n) && n > 0);
+    }
+    if (trimmed.includes("-")) {
+      const parts = trimmed.split("-").map(s => parseInt(s.trim(), 10));
+      if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1]) && parts[0] > 0 && parts[1] >= parts[0]) {
+        const result: number[] = [];
+        for (let i = parts[0]; i <= parts[1]; i++) result.push(i);
+        return result;
+      }
+      return [];
+    }
+    const n = parseInt(trimmed, 10);
+    return !isNaN(n) && n > 0 ? [n] : [];
+  }, []);
 
   // ── Compute unique chapters and characters (from ALL events, not paginated) ──
   const { uniqueChapters, uniqueCharacters } = useMemo(() => {
@@ -831,20 +854,64 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
 
   // ── AI Extract ──
   const handleAiExtract = useCallback(async () => {
+    const chapters = parseChapterRange(aiExtractChapter);
+    if (chapters.length === 0) {
+      setAiExtractError("请输入有效的章节范围，如 1-5 或 1,2,3");
+      return;
+    }
+
     setAiExtractLoading(true);
     setAiExtractError(null);
     setAiExtractResult(null);
+    setCheckedEvents(new Set());
     try {
-      const result = await postApi<{ events: TimelineExtractEvent[] }>(
-        `/api/v1/books/${encodeURIComponent(bookId)}/chapters/${aiExtractChapter}/extract/timeline`,
-      );
-      setAiExtractResult(result.events);
+      let allEvents: TimelineExtractEvent[] = [];
+      for (const ch of chapters) {
+        const result = await postApi<{ events: TimelineExtractEvent[] }>(
+          `/api/v1/books/${encodeURIComponent(bookId)}/chapters/${ch}/extract/timeline`,
+        );
+        allEvents = [...allEvents, ...result.events.map(ev => ({ ...ev, chapter: ch }))];
+      }
+      setAiExtractResult(allEvents);
     } catch (err) {
       setAiExtractError(err instanceof Error ? err.message : String(err));
     } finally {
       setAiExtractLoading(false);
     }
-  }, [bookId, aiExtractChapter]);
+  }, [bookId, aiExtractChapter, parseChapterRange]);
+
+  // ── Apply extracted events to timeline ──
+  const handleApplyEvents = useCallback(async (indices: number[]) => {
+    if (!aiExtractResult || indices.length === 0) return;
+    setAiExtractSaving(true);
+    setAiExtractError(null);
+    try {
+      for (const idx of indices) {
+        const ev = aiExtractResult[idx];
+        if (!ev) continue;
+        await postApi<{ event: TimelineEvent }>(
+          `/books/${bookId}/timelines`,
+          {
+            timestamp: new Date().toISOString(),
+            eventType: ev.eventType,
+            title: ev.title,
+            description: ev.description,
+            relatedCharacters: ev.relatedCharacters,
+            chapter: ev.chapter ?? 1,
+            importance: ev.importance,
+            ...(ev.tags.length > 0 ? { tags: ev.tags } : {}),
+          },
+        );
+      }
+      setAiExtractResult(null);
+      setShowAiExtract(false);
+      void refetch();
+    } catch (err) {
+      setAiExtractError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setAiExtractSaving(false);
+    }
+  }, [aiExtractResult, bookId, refetch]);
 
   // ── Handle save (create or update) ──
   const handleSaveEvent = useCallback(
@@ -1006,14 +1073,14 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
             type="button"
             aria-label="关闭"
             className="absolute inset-0 cursor-default"
-            onClick={() => { setShowAiExtract(false); setAiExtractResult(null); }}
+            onClick={() => { setShowAiExtract(false); setAiExtractResult(null); setCheckedEvents(new Set()); }}
           />
           <div className="relative w-full max-w-2xl rounded-xl border border-border/55 bg-card shadow-2xl mx-4 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-border/45 px-6 py-4">
               <h2 className="text-lg font-semibold text-foreground">AI 提取时间线事件</h2>
               <button
                 type="button"
-                onClick={() => { setShowAiExtract(false); setAiExtractResult(null); }}
+                onClick={() => { setShowAiExtract(false); setAiExtractResult(null); setCheckedEvents(new Set()); }}
                 className="p-1 rounded-md text-muted-foreground hover:bg-secondary/60"
               >
                 <X size={18} />
@@ -1023,11 +1090,11 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium text-foreground shrink-0">提取章节：</label>
                 <input
-                  type="number"
-                  min={1}
+                  type="text"
+                  placeholder="如 1-5 或 1,2,3"
                   value={aiExtractChapter}
-                  onChange={(e) => setAiExtractChapter(Number(e.target.value))}
-                  className="w-24 rounded-lg border border-border/40 bg-background px-3 py-2 text-sm outline-none focus:border-primary/50"
+                  onChange={(e) => setAiExtractChapter(e.target.value)}
+                  className="w-40 rounded-lg border border-border/40 bg-background px-3 py-2 text-sm outline-none focus:border-primary/50"
                 />
                 <button
                   type="button"
@@ -1061,10 +1128,23 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
                   ) : (
                     aiExtractResult.map((ev, idx) => {
                       const color = EVENT_TYPE_COLORS[ev.eventType] ?? DEFAULT_COLOR;
+                      const checked = checkedEvents.has(idx);
                       return (
                         <div key={idx} className="rounded-lg border border-border/40 bg-background p-4 space-y-2">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => {
+                                  setCheckedEvents(prev => {
+                                    const next = new Set(prev);
+                                    if (next.has(idx)) next.delete(idx); else next.add(idx);
+                                    return next;
+                                  });
+                                }}
+                                className="size-4 accent-primary"
+                              />
                               <span className="font-medium text-sm text-foreground">{ev.title}</span>
                               <span
                                 className="text-[10px] font-medium rounded px-1.5 py-0.5"
@@ -1080,7 +1160,13 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
                     })
                   )}
                   <div className="flex justify-end gap-2 pt-2">
-                    <Button variant="outline" size="sm" onClick={() => { setShowAiExtract(false); setAiExtractResult(null); }}>
+                    <Button variant="default" size="sm" onClick={() => handleApplyEvents(aiExtractResult.map((_, i) => i))} disabled={aiExtractSaving || aiExtractResult.length === 0}>
+                      {aiExtractSaving ? "保存中…" : "全部应用"}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleApplyEvents([...checkedEvents])} disabled={aiExtractSaving || checkedEvents.size === 0}>
+                      选择性应用（{checkedEvents.size}）
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => { setShowAiExtract(false); setAiExtractResult(null); setCheckedEvents(new Set()); }}>
                       关闭
                     </Button>
                   </div>
@@ -1338,6 +1424,20 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
                 </div>
               )}
             </div>
+            <DialogFooter className="flex items-center justify-end gap-2 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSelectedEvent(null);
+                  setEditingEvent(selectedEvent);
+                  setEditDialogOpen(true);
+                }}
+              >
+                <PencilIcon className="size-3.5 mr-1" />
+                编辑
+              </Button>
+            </DialogFooter>
           </DialogContent>
         )}
       </Dialog>
@@ -1426,14 +1526,14 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
             type="button"
             aria-label="关闭"
             className="absolute inset-0 cursor-default"
-            onClick={() => { setShowAiExtract(false); setAiExtractResult(null); }}
+            onClick={() => { setShowAiExtract(false); setAiExtractResult(null); setCheckedEvents(new Set()); }}
           />
           <div className="relative w-full max-w-2xl rounded-xl border border-border/55 bg-card shadow-2xl mx-4 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-border/45 px-6 py-4">
               <h2 className="text-lg font-semibold text-foreground">AI 提取时间线事件</h2>
               <button
                 type="button"
-                onClick={() => { setShowAiExtract(false); setAiExtractResult(null); }}
+                onClick={() => { setShowAiExtract(false); setAiExtractResult(null); setCheckedEvents(new Set()); }}
                 className="p-1 rounded-md text-muted-foreground hover:bg-secondary/60"
               >
                 <X size={18} />
@@ -1444,11 +1544,11 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
               <div className="flex items-center gap-3">
                 <label className="text-sm font-medium text-foreground shrink-0">提取章节：</label>
                 <input
-                  type="number"
-                  min={1}
+                  type="text"
+                  placeholder="如 1-5 或 1,2,3"
                   value={aiExtractChapter}
-                  onChange={(e) => setAiExtractChapter(Number(e.target.value))}
-                  className="w-24 rounded-lg border border-border/40 bg-background px-3 py-2 text-sm outline-none focus:border-primary/50"
+                  onChange={(e) => setAiExtractChapter(e.target.value)}
+                  className="w-40 rounded-lg border border-border/40 bg-background px-3 py-2 text-sm outline-none focus:border-primary/50"
                 />
                 <button
                   type="button"
@@ -1485,10 +1585,23 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
                   ) : (
                     aiExtractResult.map((ev, idx) => {
                       const color = EVENT_TYPE_COLORS[ev.eventType] ?? DEFAULT_COLOR;
+                      const checked = checkedEvents.has(idx);
                       return (
                         <div key={idx} className="rounded-lg border border-border/40 bg-background p-4 space-y-2">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => {
+                                  setCheckedEvents(prev => {
+                                    const next = new Set(prev);
+                                    if (next.has(idx)) next.delete(idx); else next.add(idx);
+                                    return next;
+                                  });
+                                }}
+                                className="size-4 accent-primary"
+                              />
                               <span className="font-medium text-sm text-foreground">{ev.title}</span>
                               <span
                                 className="text-[10px] font-medium rounded px-1.5 py-0.5"
@@ -1520,6 +1633,17 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
                       );
                     })
                   )}
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="default" size="sm" onClick={() => handleApplyEvents(aiExtractResult.map((_, i) => i))} disabled={aiExtractSaving || aiExtractResult.length === 0}>
+                      {aiExtractSaving ? "保存中…" : "全部应用"}
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleApplyEvents([...checkedEvents])} disabled={aiExtractSaving || checkedEvents.size === 0}>
+                      选择性应用（{checkedEvents.size}）
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => { setShowAiExtract(false); setAiExtractResult(null); setCheckedEvents(new Set()); }}>
+                      关闭
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
