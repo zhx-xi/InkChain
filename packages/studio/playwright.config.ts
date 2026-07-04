@@ -27,10 +27,10 @@ export default defineConfig({
   // agent would attempt a real LLM call with the fake API key and hang.
   // Ports 4580/4581 are dedicated to E2E to avoid conflict with the dev server.
   webServer: {
-    command: "INKOS_AGENT_LLM_STUB=1 INKOS_STUDIO_PORT=4581 INKOS_PROJECT_ROOT=../../test-project tsx watch --clear-screen=false src/api/index.ts & INKOS_AGENT_LLM_STUB=1 INKOS_STUDIO_PORT=4581 vite --host --port 4580 ; kill %1 2>/dev/null",
+    command: "echo E2E servers already running manually",
     url: "http://localhost:4580",
-    reuseExistingServer: false,
-    timeout: 120_000,
+    reuseExistingServer: true,
+    timeout: 5_000,
     cwd: ".",
   },
 });
