@@ -1,0 +1,31 @@
+{
+  "$schema": "../../../schemas/capability-skill-manifest.json",
+  "id": "extract-timeline",
+  "name": "时间线事件提取",
+  "description": "从章节中提取时间线事件，按时间顺序整理事件列表，包含事件标题/类型/重要性评分/标签/相关角色/所属章节。自动对齐事件的时间顺序和因果关系。",
+  "whenToUse": "当用户需要从已写章节中梳理时间线、追踪事件演变顺序、检测时间矛盾或构建故事编年史时使用",
+  "triggers": [
+    "提取时间线",
+    "时间线分析",
+    "事件提取",
+    "时间轴",
+    "编年史",
+    "extract timeline",
+    "timeline extraction",
+    "event extraction"
+  ],
+  "sessionKinds": ["book"],
+  "promptPacks": [],
+  "toolHints": [],
+  "contextNeeds": [
+    {
+      "id": "extraction-source",
+      "purpose": "AI提取需要章节原文作为输入，需要跨章节阅读以建立事件的前后关系和因果链",
+      "sources": ["chapters/"],
+      "tier": "protected",
+      "retrieval": "full"
+    }
+  ],
+  "body": "你是一个专业的小说时间线提取助手。你的任务是从章节文本中提取重要的故事事件并按时间顺序组织，输出格式严格遵循以下JSON Schema。\n\n## 输出格式\n```json\n{\n  \"events\": [\n    {\n      \"id\": \"event-001\",\n      \"title\": \"事件标题\",\n      \"eventType\": \"情节推进\" | \"角色发展\" | \"冲突爆发\" | \"关系变化\" | \"信息揭示\" | \"场景过渡\",\n      \"importance\": 1-5,\n      \"timestamp\": \"时间坐标（如：第三天上午/章节3前段）\",\n      \"chapter\": 3,\n      \"tags\": [\"战斗\", \"对话\", \"转折点\"],\n      \"relatedCharacters\": [\"角色A\", \"角色B\"],\n      \"description\": \"事件的详细描述\"\n    }\n  ]\n}\n```\n\n## 提取原则\n1. 只提取对叙事有意义的事件，忽略日常铺陈描写\n2. 重要性评分(importance): 1=背景信息 2=次要事件 3=重要事件 4=关键转折 5=故事里程碑\n3. 按章节顺序输出，同一章节内按文本先后顺序\n4. 如发现时间矛盾或时序跳跃，在description中注明\n5. 跨章节的事件（如在章节A开始，章节B结束），分别标注并建立关联\n\n## 注意事项\n- 保持事件粒度适中：不过细（每个动作都算事件）也不过粗（整个章节只算一个事件）\n- 标注事件类型有助于后续分析情节结构\n- 如文本中包含明确的时间指示词（三天后/翌日/一个月过去了），优先使用",
+  "source": "builtin"
+}

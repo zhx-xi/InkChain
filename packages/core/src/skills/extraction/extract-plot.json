@@ -1,0 +1,32 @@
+{
+  "$schema": "../../../schemas/capability-skill-manifest.json",
+  "id": "extract-plot",
+  "name": "情节结构提取",
+  "description": "从章节中提取情节结构，分析起承转合/情节点/冲突演进/支线脉络。输出情节概要、关键转折点、冲突分析以及主线/支线映射。",
+  "whenToUse": "当用户需要分析故事的情节结构、识别叙事节奏、或检查情节逻辑连贯性时使用，尤其适用于长篇连载的情节复盘",
+  "triggers": [
+    "提取情节",
+    "情节分析",
+    "情节结构",
+    "故事结构",
+    "起承转合",
+    "叙事分析",
+    "extract plot",
+    "plot analysis",
+    "story structure"
+  ],
+  "sessionKinds": ["book"],
+  "promptPacks": [],
+  "toolHints": [],
+  "contextNeeds": [
+    {
+      "id": "extraction-source",
+      "purpose": "AI提取需要章节原文作为输入，需要跨章节阅读以识别完整的情节弧线和结构模式",
+      "sources": ["chapters/"],
+      "tier": "protected",
+      "retrieval": "full"
+    }
+  ],
+  "body": "你是一个专业的小说情节结构分析助手。你的任务是从章节文本中提取情节结构，输出格式严格遵循以下JSON Schema。\n\n## 输出格式\n```json\n{\n  \"arcs\": [\n    {\n      \"id\": \"arc-main\",\n      \"title\": \"主情节弧标题\",\n      \"plotLine\": \"main\" | \"sub-a\" | \"sub-b\" | \"sub-c\",\n      \"startChapter\": 1,\n      \"endChapter\": 12,\n      \"summary\": \"情节弧概要\",\n      \"structure\": {\n        \"起\": {\n          \"chapter\": 1,\n          \"description\": \"开端引入：人物、背景、初始状态\"\n        },\n        \"承\": {\n          \"chapter\": 2,\n          \"description\": \"发展推进：冲突展开、矛盾积累\"\n        },\n        \"转\": {\n          \"chapter\": 8,\n          \"description\": \"转折变化：关键事件、方向改变\"\n        },\n        \"合\": {\n          \"chapter\": 12,\n          \"description\": \"收束解决：高潮与结局\"\n        }\n      },\n      \"plotPoints\": [\n        {\n          \"chapter\": 3,\n          \"type\": \"inciting_incident\" | \"rising_action\" | \"climax\" | \"twist\" | \"reveal\" | \"resolution\",\n          \"title\": \"情节点标题\",\n          \"description\": \"详细描述\"\n        }\n      ],\n      \"conflicts\": [\n        {\n          \"type\": \"角色vs角色\" | \"角色vs社会\" | \"角色vs自身\" | \"角色vs自然\" | \"角色vs命运\",\n          \"parties\": [\"冲突双方\"],\n          \"stakes\": \"冲突的利害关系\",\n          \"resolution\": \"冲突的解决方式（如未解决则标注'待续'）\"\n        }\n      ]\n    }\n  ],\n  \"overallSummary\": \"整体情节综述（300字以内）\",\n  \"pacingNotes\": [\"节奏分析要点\"],\n  \"unresolvedThreads\": [\"未解决的情节线索\"]\n}\n```\n\n## 情节线说明\n- **main**: 主线情节\n- **sub-a/b/c**: 支线A/B/C\n\n## 情节点类型\n- **inciting_incident**: 激励事件，打破平衡\n- **rising_action**: 上升行动，冲突加剧\n- **climax**: 高潮，冲突顶点\n- **twist**: 反转，意料之外的转折\n- **reveal**: 揭示，重要信息的曝光\n- **resolution**: 解决，冲突收束\n\n## 注意事项\n1. 区分主线(main)和支线(sub-*)，每个情节弧独立分析\n2. 起承转合是东方叙事经典结构，适合国产小说分析\n3. 冲突分析要具体到冲突双方和利害关系\n4. 标注所有未解决的情节线索和遗留问题，这对续写至关重要\n5. 如果有多个情节弧（多线叙事），分别提取并标注章节范围\n6. pacingNotes记录节奏感受（是否拖沓、是否仓促等）",
+  "source": "builtin"
+}

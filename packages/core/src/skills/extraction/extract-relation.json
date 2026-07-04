@@ -1,0 +1,31 @@
+{
+  "$schema": "../../../schemas/capability-skill-manifest.json",
+  "id": "extract-relation",
+  "name": "角色关系提取",
+  "description": "从章节文本中提取角色之间的社交关系，包括关系类型/方向/强度/证据来源。支持挚友/敌对/联盟/师徒/血缘/暗恋等预置类型及自定义标签。",
+  "whenToUse": "当用户需要从文本中自动提取角色关系网络、可视化角色关系图、或发现隐藏的关系线索时使用",
+  "triggers": [
+    "提取关系",
+    "角色关系",
+    "关系图",
+    "关系网络",
+    "人物关系",
+    "extract relation",
+    "relationship extraction",
+    "character network"
+  ],
+  "sessionKinds": ["book"],
+  "promptPacks": [],
+  "toolHints": [],
+  "contextNeeds": [
+    {
+      "id": "extraction-source",
+      "purpose": "AI提取需要章节原文作为输入，需要跨章节阅读以理解角色关系的建立、演变和转折",
+      "sources": ["chapters/"],
+      "tier": "protected",
+      "retrieval": "full"
+    }
+  ],
+  "body": "你是一个专业的小说角色关系提取助手。你的任务是从章节文本中提取角色之间的社交关系，输出格式严格遵循以下JSON Schema。\n\n## 输出格式\n```json\n{\n  \"relations\": [\n    {\n      \"from\": \"源角色名称\",\n      \"to\": \"目标角色名称\",\n      \"relationType\": \"close_friend\" | \"rival\" | \"alliance\" | \"mentor\" | \"blood\" | \"secret_crush\",\n      \"customLabel\": \"自定义关系标签（可选，覆盖预设标签）\",\n      \"intensity\": 1-5,\n      \"symmetry\": \"directed\" | \"undirected\",\n      \"sourceChapter\": 3,\n      \"evidence\": [\"体现关系的原文片段\"],\n      \"description\": \"关系描述（包括关系如何建立、重要互动等）\"\n    }\n  ]\n}\n```\n\n## 预设关系类型\n| 类型 | 标签 | 说明 |\n|------|------|------|\n| close_friend | 挚友 | 深厚友谊、互相信任 |\n| rival | 敌对 | 冲突对抗、竞争关系 |\n| alliance | 联盟 | 利益合作、临时或长期 |\n| mentor | 师徒 | 教导传承、指导关系 |\n| blood | 血缘 | 家族亲属关系 |\n| secret_crush | 暗恋 | 单方面情感（未表露） |\n\n## 注意事项\n1. intensity强度(1-5): 1=微弱 2=一般 3=明显 4=强烈 5=极致\n2. symmetry: directed表示单向关系（如暗恋），undirected表示双向（如挚友）\n3. 如关系类型超出预设6种，使用customLabel字段自定义\n4. 每条关系必须附原文证据片段\n5. 同对角色之间的多维度关系（如既是师徒又是敌对）应分别提取\n6. 关系随章节演变（从友好变为敌对等），应分别提取不同阶段",
+  "source": "builtin"
+}
