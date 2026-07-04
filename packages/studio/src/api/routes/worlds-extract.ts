@@ -41,12 +41,25 @@ export function createWorldsExtractRouter(
       throw new ApiError(404, "BOOK_NOT_FOUND", `Book not found: ${id}`);
     }
 
-    // Read chapter files
-    const chaptersDir = join(dir, "chapters");
-    const maxChapters: number = 5; // Default: first 5 chapters
-
     let textParts: string[] = [];
 
+    // 1. Prefer reading setting files (.md) from settings/ directory first
+    const settingsDir = join(dir, "settings");
+    try {
+      await access(settingsDir);
+      const settingsFiles = await readdir(settingsDir);
+      const mdFiles = settingsFiles.filter((f) => f.endsWith(".md") && !f.startsWith("."));
+      for (const file of mdFiles) {
+        const content = await readFile(join(settingsDir, file), "utf-8");
+        textParts.push(`## ${file}\n\n${content}`);
+      }
+    } catch {
+      // No settings directory — fine
+    }
+
+    // 2. Supplement with chapter text (if fewer than 5 chapters read from settings)
+    const maxChapters: number = 5;
+    const chaptersDir = join(dir, "chapters");
     try {
       const chapterFiles = await readdir(chaptersDir);
       const sortedChapters = chapterFiles
@@ -59,21 +72,7 @@ export function createWorldsExtractRouter(
         textParts.push(`## 第 ${i + 1} 章\n\n${content}`);
       }
     } catch {
-      // No chapters directory — continue with setting files only
-    }
-
-    // Try reading setting files from story/ directory
-    const storyDir = join(dir, "story");
-    try {
-      await access(storyDir);
-      const storyFiles = await readdir(storyDir);
-      const mdFiles = storyFiles.filter((f) => f.endsWith(".md") && !f.startsWith("."));
-      for (const file of mdFiles) {
-        const content = await readFile(join(storyDir, file), "utf-8");
-        textParts.push(`## ${file}\n\n${content}`);
-      }
-    } catch {
-      // No story directory — fine
+      // No chapters directory — continue with settings files only
     }
 
     const text = textParts.join("\n\n---\n\n");

@@ -7,9 +7,18 @@ import { useApi, postApi } from "../hooks/use-api";
 import type { WorldConfig } from "@actalk/inkos-core";
 
 interface AiExtractResponse {
+  readonly world: {
+    readonly settings: string;
+    readonly roles: string;
+    readonly relations: string;
+    readonly regions: string;
+    readonly institutions: string;
+    readonly history: string;
+    readonly rules: string;
+  };
+  readonly entities: Array<{ dimension: string; name: string; description: string; sourceLine: number }>;
+  readonly sections: Array<{ readonly dimension: string; readonly heading: string; readonly content: string; readonly lineStart: number; readonly lineEnd: number }>;
   readonly summary: string;
-  readonly entities: Array<{ type: string; name: string; description?: string }>;
-  readonly sections: Array<{ readonly type: string; readonly name: string; readonly description?: string }>;
   readonly textLength: number;
   readonly chaptersRead: number;
 }
@@ -358,7 +367,7 @@ export function WorldListPage({ nav, bookId }: {
                             <FileText size={14} className="mt-0.5 shrink-0 text-primary" />
                             <div>
                               <span className="font-medium text-foreground">{entity.name}</span>
-                              <span className="text-muted-foreground ml-2">({entity.type})</span>
+                              <span className="text-muted-foreground ml-2">({entity.dimension})</span>
                               {entity.description && (
                                 <p className="text-xs text-muted-foreground mt-0.5">{entity.description}</p>
                               )}
@@ -379,7 +388,7 @@ export function WorldListPage({ nav, bookId }: {
                             key={idx}
                             className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
                           >
-                            {DIMENSION_LABELS[section.type] || section.name}
+                            {DIMENSION_LABELS[section.dimension] || section.heading}
                           </span>
                         ))}
                       </div>
@@ -402,6 +411,22 @@ export function WorldListPage({ nav, bookId }: {
                     <button
                       type="button"
                       onClick={() => {
+                        // Store extraction data in sessionStorage for the create page to pick up
+                        if (aiExtractResult.world) {
+                          try {
+                            sessionStorage.setItem(
+                              "@inkos/ai-extract-data",
+                              JSON.stringify({
+                                bookId,
+                                world: aiExtractResult.world,
+                                entities: aiExtractResult.entities,
+                                sections: aiExtractResult.sections,
+                              }),
+                            );
+                          } catch {
+                            // sessionStorage may be full or unavailable — proceed anyway
+                          }
+                        }
                         setShowAiExtract(false);
                         nav?.toWorldCreate ? nav.toWorldCreate(bookId) : (window.location.hash = `#/worlds/new/${encodeURIComponent(bookId)}`);
                       }}
