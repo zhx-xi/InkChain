@@ -852,6 +852,22 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
     }
   }, [deleteConfirmEvent, bookId, refetch]);
 
+  // ── Refs for scroll/viewport preservation ──
+  const headerRef = useRef<HTMLDivElement>(null);
+  const savedScrollYRef = useRef(0);
+
+  // ── Save scroll position before AI extraction modal opens ──
+  const saveScrollPosition = useCallback(() => {
+    savedScrollYRef.current = window.scrollY;
+  }, []);
+
+  // ── Restore scroll position after AI extraction modal closes ──
+  const restoreScrollPosition = useCallback(() => {
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: savedScrollYRef.current, behavior: "instant" as ScrollBehavior });
+    });
+  }, []);
+
   // ── AI Extract ──
   const handleAiExtract = useCallback(async () => {
     const chapters = parseChapterRange(aiExtractChapter);
@@ -906,6 +922,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
       setAiExtractResult(null);
       setShowAiExtract(false);
       void refetch();
+      restoreScrollPosition();
     } catch (err) {
       setAiExtractError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -1059,7 +1076,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
             </Button>
             <Button
               variant="outline"
-              onClick={() => { setAiExtractResult(null); setAiExtractError(null); setShowAiExtract(true); }}
+              onClick={() => { saveScrollPosition(); setAiExtractResult(null); setAiExtractError(null); setShowAiExtract(true); }}
             >
               <Bot className="size-4" />
               AI 提取事件
@@ -1184,7 +1201,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
     <div className="flex h-full min-h-0">
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header with filters */}
-        <div className="flex items-center justify-between px-6 py-3 shrink-0 border-b border-border/10">
+        <div ref={headerRef} className="flex items-center justify-between px-6 py-3 shrink-0 border-b border-border/10 sticky top-0 z-10 bg-background">
           <div className="flex items-center gap-3">
             <h2 className="text-base font-semibold text-foreground">时间线</h2>
             <span className="text-xs text-muted-foreground/60">
@@ -1245,9 +1262,9 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
 
             {/* Add event button */}
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon-sm"
-              onClick={() => { setAiExtractResult(null); setAiExtractError(null); setShowAiExtract(true); }}
+              onClick={() => { saveScrollPosition(); setAiExtractResult(null); setAiExtractError(null); setShowAiExtract(true); }}
               title="AI 提取事件"
             >
               <Bot className="size-4" />
