@@ -86,14 +86,15 @@ export function createChapterVersionsRouter(
     }
 
     const currentContent = await readFile(join(chaptersDir, chapterFile), "utf-8");
-    const summary = await snapshotChapterVersion(dir, chapterNum, currentContent);
+    const timestamp = await snapshotChapterVersion(dir, chapterNum, currentContent);
+    if (!timestamp) {
+      throw new ApiError(500, "SNAPSHOT_FAILED", "创建快照失败");
+    }
 
     return c.json({
       ok: true,
       chapterNum,
-      timestamp: summary.timestamp,
-      wordCount: summary.wordCount,
-      label: summary.label,
+      timestamp,
     });
   });
 
