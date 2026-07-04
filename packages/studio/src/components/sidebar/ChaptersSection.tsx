@@ -3,7 +3,7 @@ import { fetchJson } from "../../hooks/use-api";
 import { useChatStore } from "../../store/chat";
 import { SidebarCard } from "./SidebarCard";
 import { cn } from "../../lib/utils";
-import { GripVertical } from "lucide-react";
+import { GripVertical, FileSearch, Trash2 } from "lucide-react";
 
 interface ChapterMeta {
   number: number;
@@ -60,6 +60,21 @@ export function ChaptersSection({ bookId, isZh }: ChaptersSectionProps) {
     dragStarted.current = false;
   }, []);
 
+  const handleDeleteChapter = useCallback(
+    async (chapterNumber: number) => {
+      if (!confirm(`确定删除第 ${chapterNumber} 章？删除后不可恢复。`)) return;
+      try {
+        await fetchJson(`/books/${bookId}/chapters/${chapterNumber}`, {
+          method: "DELETE",
+        });
+        useChatStore.getState().bumpBookDataVersion();
+      } catch (err) {
+        console.error("Failed to delete chapter:", err);
+      }
+    },
+    [bookId],
+  );
+
   return (
     <SidebarCard title={isZh ? "章节" : "Chapters"}>
       {chapters.length === 0 ? (
@@ -91,6 +106,26 @@ export function ChaptersSection({ bookId, isZh }: ChaptersSectionProps) {
                 <span className="tabular-nums text-[13px] text-muted-foreground/50 shrink-0">
                   {(ch.wordCount ?? 0).toLocaleString()}
                 </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    useChatStore.getState().openChapterArtifact(ch.number);
+                  }}
+                  className="w-6 h-6 rounded flex items-center justify-center text-muted-foreground/30 hover:text-primary hover:bg-primary/10 transition-colors shrink-0"
+                  title="审计"
+                >
+                  <FileSearch size={13} />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    void handleDeleteChapter(ch.number);
+                  }}
+                  className="w-6 h-6 rounded flex items-center justify-center text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                  title="删除"
+                >
+                  <Trash2 size={13} />
+                </button>
               </li>
             );
           })}
