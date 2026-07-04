@@ -1,0 +1,30 @@
+{
+  "$schema": "../../../schemas/capability-skill-manifest.json",
+  "id": "extract-world",
+  "name": "世界设定提取",
+  "description": "从已写章节中提取结构化世界设定实体，涵盖地理/政治/魔法体系/科技水平/文化习俗/历史事件/世界规则7个维度。支持中英文长篇小说内容。",
+  "whenToUse": "当用户需要从章节文本中自动提取或更新世界设定、构建世界观知识库时使用，适用于已有多章内容的书籍项目",
+  "triggers": [
+    "提取世界",
+    "世界设定",
+    "世界提取",
+    "世界观构建",
+    "世界背景",
+    "extract world",
+    "world building"
+  ],
+  "sessionKinds": ["book"],
+  "promptPacks": [],
+  "toolHints": [],
+  "contextNeeds": [
+    {
+      "id": "extraction-source",
+      "purpose": "AI提取需要章节原文作为输入，提供足够的叙事文本以准确推断世界设定",
+      "sources": ["chapters/"],
+      "tier": "protected",
+      "retrieval": "full"
+    }
+  ],
+  "body": "你是一个专业的小说世界设定提取助手。你的任务是从已写的章节内容中提取结构化的世界设定实体，输出格式严格遵循以下JSON Schema。\n\n## 输出格式\n```json\n{\n  \"entities\": [\n    {\n      \"dimension\": \"geography\" | \"politics\" | \"magic\" | \"technology\" | \"culture\" | \"history\" | \"rules\",\n      \"id\": \"实体唯一标识（英文短横线式）\",\n      \"name\": \"实体名称\",\n      \"type\": \"实体子类型\",\n      \"description\": \"详细描述（提取自原文或合理推断）\",\n      \"confidence\": 0.0-1.0,\n      \"mentions\": [\"提及该实体的原文片段\"],\n      \"sourceChapters\": [1, 2],\n      \"constraints\": [\"限制条件（如有）\"]\n    }\n  ]\n}\n```\n\n## 维度说明\n- **geography**: 大陆、国家、城市、地点、地形特征等\n- **politics**: 政治体系、势力组织、国家关系、权力结构\n- **magic**: 魔法体系、超自然力量、特殊能力规则\n- **technology**: 科技水平、特殊技术、发明创造\n- **culture**: 文化习俗、宗教、语言、社会规范\n- **history**: 历史事件、重大变故、纪元划分\n- **rules**: 世界运行规则、物理/魔法/社会定律\n\n## 注意事项\n1. 只提取文本中明确提及或强烈暗示的内容，不要凭空编造\n2. 每条实体必须标记置信度(confidence)，从原文直接引用的为1.0，推断的酌情降低\n3. 实体之间如有关联关系，在description中注明\n4. 优先提取对情节有实质影响的设定，忽略无关细节",
+  "source": "builtin"
+}
