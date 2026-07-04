@@ -36,7 +36,8 @@ export type HashRoute =
   | { page: "world-geoviz"; worldId: string }
   | { page: "publish"; bookId: string }
   | { page: "edit-dashboard"; bookId: string }
-  | { page: "book-worlds"; bookId: string };
+  | { page: "book-worlds"; bookId: string }
+  | { page: "consistency"; bookId: string };
 
 function parseHash(hash: string): HashRoute {
   const path = hash.replace(/^#\/?/, "");
@@ -100,6 +101,9 @@ function parseHash(hash: string): HashRoute {
   const editDashboardMatch = path.match(/^edit-dashboard\/([^/]+)$/);
   if (editDashboardMatch) return { page: "edit-dashboard", bookId: decodeURIComponent(editDashboardMatch[1]) };
 
+  const consistencyMatch = path.match(/^consistency\/([^/]+)$/);
+  if (consistencyMatch) return { page: "consistency", bookId: decodeURIComponent(consistencyMatch[1]) };
+
   return { page: "dashboard" };
 }
 
@@ -131,13 +135,14 @@ function routeToHash(route: HashRoute): string {
     case "world-geoviz": return `#/worlds/${encodeURIComponent(route.worldId)}/geoviz`;
     case "publish": return `#/publish/${encodeURIComponent(route.bookId)}`;
     case "edit-dashboard": return `#/edit-dashboard/${encodeURIComponent(route.bookId)}`;
+    case "consistency": return `#/consistency/${encodeURIComponent(route.bookId)}`;
     default: return "";
   }
 }
 
 export { parseHash, routeToHash }; // for testing
 
-const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "publish", "edit-dashboard"]);
+const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "publish", "edit-dashboard", "consistency"]);
 
 export function useHashRoute() {
   const [route, setRouteState] = useState<HashRoute>(() => parseHash(window.location.hash));
