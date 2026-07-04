@@ -43,7 +43,8 @@ export type HashRoute =
   | { page: "chapter-wizard"; bookId: string }
   | { page: "consistency"; bookId: string }
   | { page: "volume-management"; bookId: string }
-  | { page: "character-tiering"; bookId: string };
+  | { page: "character-tiering"; bookId: string }
+  | { page: "book-style"; bookId: string };
 
 function parseHash(hash: string): HashRoute {
   const path = hash.replace(/^#\/?/, "");
@@ -125,6 +126,9 @@ function parseHash(hash: string): HashRoute {
   const charTierMatch = path.match(/^characters\/([^\/]+)\/tiers$/);
   if (charTierMatch) return { page: "character-tiering", bookId: decodeURIComponent(charTierMatch[1]) };
 
+  const bookStyleMatch = path.match(/^book\/([^\/]+)\/style$/);
+  if (bookStyleMatch) return { page: "book-style", bookId: decodeURIComponent(bookStyleMatch[1]) };
+
   return { page: "dashboard" };
 }
 
@@ -164,13 +168,14 @@ function routeToHash(route: HashRoute): string {
     case "consistency": return `#/consistency/${encodeURIComponent(route.bookId)}`;
     case "volume-management": return `#/book/${encodeURIComponent(route.bookId)}/volumes`;
     case "character-tiering": return `#/characters/${encodeURIComponent(route.bookId)}/tiers`;
+    case "book-style": return `#/book/${encodeURIComponent(route.bookId)}/style`;
     default: return "";
   }
 }
 
 export { parseHash, routeToHash }; // for testing
 
-const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "style", "style-consistency", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "world-map", "world-inheritance", "publish", "edit-dashboard", "chapter-wizard", "consistency", "volume-management", "character-tiering"]);
+const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "style", "style-consistency", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "world-map", "world-inheritance", "publish", "edit-dashboard", "chapter-wizard", "consistency", "volume-management", "character-tiering", "book-style"]);
 
 export function useHashRoute() {
   const [route, setRouteState] = useState<HashRoute>(() => parseHash(window.location.hash));
