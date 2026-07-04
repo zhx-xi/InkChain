@@ -314,7 +314,7 @@ export function RelationExtractionReviewPanel({
   const rejectedCount = proposals.filter((p) => p.status === "rejected").length;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm pt-[72px]">
       <div className="absolute inset-0" onClick={onClose} />
 
       <div className="relative w-full max-w-4xl max-h-[90vh] flex flex-col bg-card border border-border/60 rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-200">

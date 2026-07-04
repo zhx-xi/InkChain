@@ -177,7 +177,7 @@ export function PersonaEditPanel({ agentRole, onClose }: PersonaEditPanelProps) 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm pt-[72px]"
       onKeyDown={handleKeyDown}
     >
       {/* Overlay */}
