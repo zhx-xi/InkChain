@@ -16,6 +16,8 @@ import {
   FileText,
   ArrowRight,
   Sparkles,
+  BookOpen,
+  Layers,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { postApi } from "../hooks/use-api";
@@ -84,8 +86,11 @@ export function RelationExtractionReviewPanel({
   bookId,
   onClose,
 }: RelationExtractionReviewPanelProps) {
+  const [extractMode, setExtractMode] = useState<"text" | "chapters" | "combined">("text");
   const [prose, setProse] = useState("");
   const [chapterNumbersInput, setChapterNumbersInput] = useState("");
+  const [chapterStart, setChapterStart] = useState("");
+  const [chapterEnd, setChapterEnd] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [proposals, setProposals] = useState<ProposalState[]>([]);
@@ -112,7 +117,10 @@ export function RelationExtractionReviewPanel({
   // ── Extract relations handler ──
 
   const handleExtract = useCallback(async () => {
-    if (!prose.trim()) return;
+    // Validate based on mode
+    if (extractMode === "text" && !prose.trim()) return;
+    if (extractMode === "chapters" && (!chapterStart || !chapterEnd)) return;
+    if (extractMode === "combined" && !prose.trim()) return;
 
     setLoading(true);
     setError(null);
@@ -120,16 +128,29 @@ export function RelationExtractionReviewPanel({
     setProposals([]);
 
     try {
-      const chapterNumbers = chapterNumbersInput
-        .split(/[,，\s]+/)
-        .map((s) => parseInt(s.trim(), 10))
-        .filter((n) => !Number.isNaN(n) && n > 0);
+      let chapterNumbers: number[];
+
+      if (extractMode === "chapters" || extractMode === "combined") {
+        const start = parseInt(chapterStart, 10);
+        const end = parseInt(chapterEnd, 10);
+        if (!isNaN(start) && !isNaN(end) && start > 0 && end >= start) {
+          chapterNumbers = Array.from({ length: end - start + 1 }, (_, i) => start + i);
+        } else {
+          chapterNumbers = [];
+        }
+      } else {
+        chapterNumbers = chapterNumbersInput
+          .split(/[,，\s]+/)
+          .map((s) => parseInt(s.trim(), 10))
+          .filter((n) => !Number.isNaN(n) && n > 0);
+      }
 
       const data = await postApi<ExtractionResponse>(
         `/books/${bookId}/relation-extraction`,
         {
           prose: prose.trim(),
           chapterNumbers,
+          extractMode,
         },
       );
 
@@ -143,7 +164,7 @@ export function RelationExtractionReviewPanel({
     } finally {
       setLoading(false);
     }
-  }, [prose, chapterNumbersInput, bookId]);
+  }, [prose, chapterNumbersInput, chapterStart, chapterEnd, extractMode, bookId]);
 
   // ── Toggle proposal expansion ──
 
@@ -345,36 +366,118 @@ export function RelationExtractionReviewPanel({
           {/* Left: Input area */}
           <div className="w-80 border-r border-border/30 flex flex-col">
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {/* Source text input */}
+              {/* Mode selector */}
               <div>
                 <label className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider mb-1.5 block">
-                  叙事文本
+                  提取模式
                 </label>
-                <textarea
-                  value={prose}
-                  onChange={(e) => setProse(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="粘贴小说叙事文本，AI 将分析其中的角色关系…"
-                  rows={12}
-                  className="w-full px-3 py-2 rounded-xl border border-border/40 bg-background text-sm text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-blue-500/50 resize-none"
-                  disabled={loading}
-                />
+                <div className="flex gap-1 rounded-xl bg-secondary/30 p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setExtractMode("text")}
+                    className={cn(
+                      "flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+                      extractMode === "text"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground/50 hover:text-foreground/70",
+                    )}
+                  >
+                    <FileText size={14} />
+                    仅文本
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExtractMode("chapters")}
+                    className={cn(
+                      "flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+                      extractMode === "chapters"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground/50 hover:text-foreground/70",
+                    )}
+                  >
+                    <BookOpen size={14} />
+                    仅章节
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setExtractMode("combined")}
+                    className={cn(
+                      "flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+                      extractMode === "combined"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground/50 hover:text-foreground/70",
+                    )}
+                  >
+                    <Layers size={14} />
+                    文本+章节
+                  </button>
+                </div>
               </div>
 
-              {/* Chapter numbers */}
-              <div>
-                <label className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider mb-1.5 block">
-                  章节编号（可选，逗号分隔）
-                </label>
-                <input
-                  type="text"
-                  value={chapterNumbersInput}
-                  onChange={(e) => setChapterNumbersInput(e.target.value)}
-                  placeholder="如：1, 2, 3"
-                  className="w-full px-3 py-2 rounded-xl border border-border/40 bg-background text-sm text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-blue-500/50"
-                  disabled={loading}
-                />
-              </div>
+              {/* Source text input (text and combined modes) */}
+              {(extractMode === "text" || extractMode === "combined") && (
+                <div>
+                  <label className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider mb-1.5 block">
+                    叙事文本
+                  </label>
+                  <textarea
+                    value={prose}
+                    onChange={(e) => setProse(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="粘贴小说叙事文本，AI 将分析其中的角色关系…"
+                    rows={12}
+                    className="w-full px-3 py-2 rounded-xl border border-border/40 bg-background text-sm text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-blue-500/50 resize-none"
+                    disabled={loading}
+                  />
+                </div>
+              )}
+
+              {/* Chapter range (chapters and combined modes) */}
+              {(extractMode === "chapters" || extractMode === "combined") && (
+                <div>
+                  <label className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider mb-1.5 block">
+                    章节范围
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min={1}
+                      value={chapterStart}
+                      onChange={(e) => setChapterStart(e.target.value)}
+                      placeholder="起始章节"
+                      className="w-full px-3 py-2 rounded-xl border border-border/40 bg-background text-sm text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-blue-500/50"
+                      disabled={loading}
+                    />
+                    <span className="text-muted-foreground/40 text-xs">至</span>
+                    <input
+                      type="number"
+                      min={1}
+                      value={chapterEnd}
+                      onChange={(e) => setChapterEnd(e.target.value)}
+                      placeholder="结束章节"
+                      className="w-full px-3 py-2 rounded-xl border border-border/40 bg-background text-sm text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-blue-500/50"
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Chapter numbers (text mode only, optional) */}
+              {extractMode === "text" && (
+                <div>
+                  <label className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wider mb-1.5 block">
+                    章节编号（可选，逗号分隔）
+                  </label>
+                  <input
+                    type="text"
+                    value={chapterNumbersInput}
+                    onChange={(e) => setChapterNumbersInput(e.target.value)}
+                    placeholder="如：1, 2, 3"
+                    className="w-full px-3 py-2 rounded-xl border border-border/40 bg-background text-sm text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-blue-500/50"
+                    disabled={loading}
+                  />
+                </div>
+              )}
 
               {/* Stats */}
               {proposals.length > 0 && (
@@ -426,10 +529,20 @@ export function RelationExtractionReviewPanel({
               <button
                 type="button"
                 onClick={handleExtract}
-                disabled={!prose.trim() || loading}
+                disabled={
+                  (extractMode === "text" && !prose.trim()) ||
+                  (extractMode === "chapters" && (!chapterStart || !chapterEnd)) ||
+                  (extractMode === "combined" && !prose.trim()) ||
+                  loading
+                }
                 className={cn(
                   "w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all",
-                  prose.trim() && !loading
+                  !loading &&
+                    !(
+                      (extractMode === "text" && !prose.trim()) ||
+                      (extractMode === "chapters" && (!chapterStart || !chapterEnd)) ||
+                      (extractMode === "combined" && !prose.trim())
+                    )
                     ? "bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
                     : "bg-muted-foreground/10 text-muted-foreground/30 cursor-not-allowed",
                 )}

@@ -1,7 +1,6 @@
 import { useMemo, useState, useCallback } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Search, X, Sparkles, Plus, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Edit2, Code, MessageSquare, Puzzle } from "lucide-react";
 import { useHashRoute } from "../hooks/use-hash-route";
-import { Search, X, Sparkles, Edit2, Plus } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useApi, fetchJson } from "../hooks/use-api";
 import type { SkillConfig, SkillCategory } from "@actalk/inkos-core/models/skill-config.js";
@@ -35,6 +34,38 @@ const CATEGORY_BG: Record<SkillCategory, string> = {
   utility: "bg-[#9CA3AF]/10 text-[#9CA3AF]",
 };
 
+const ZH_CATEGORY_LABELS: Record<SkillCategory, string> = {
+  writing: "写作",
+  analysis: "分析",
+  world: "世界",
+  character: "角色",
+  utility: "实用",
+};
+
+const BUILTIN_ZH_DESCRIPTIONS: Record<string, string> = {
+  "writing-style-imitation": "学习并模仿指定作者的写作风格，统一全书文风",
+  "world-consistency-check": "检查新章节是否符合已设定的世界规则",
+  "character-voice": "确保每个角色的对话风格保持一致",
+  "plot-advancement": "分析当前情节状态，给出推进建议",
+  "dialogue-polish": "优化角色对话，使其更自然流畅",
+  "humanizer-zh-skill": "检测并消除文中的 AI 写作痕迹，使文本更自然",
+  "longform-writing-skill": "长篇小说创作：规划章节、选择故事上下文、写作并保持连续性",
+  "interactive-film-authoring-skill": "交互式剧本创作与编辑",
+  "open-world-play-skill": "开放世界自由游玩模式",
+};
+
+const BUILTIN_ZH_CATEGORY: Record<string, SkillCategory> = {
+  "writing-style-imitation": "writing",
+  "world-consistency-check": "world",
+  "character-voice": "character",
+  "plot-advancement": "analysis",
+  "dialogue-polish": "writing",
+  "humanizer-zh-skill": "writing",
+  "longform-writing-skill": "writing",
+  "interactive-film-authoring-skill": "writing",
+  "open-world-play-skill": "world",
+};
+
 type StatusFilter = "all" | "enabled" | "disabled";
 
 export function SkillListPage() {
@@ -45,9 +76,13 @@ export function SkillListPage() {
   const [status, setStatus] = useState<StatusFilter>("all");
   const [toggling, setToggling] = useState<Set<string>>(new Set());
   const [editingSkillId, setEditingSkillId] = useState<string | null>(null);
+  const [editingSkillSource, setEditingSkillSource] = useState<"project" | "builtin" | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [createMode, setCreateMode] = useState<"blank" | "template" | "ai" | null>(null);
   const [aiDraft, setAiDraft] = useState<Partial<SkillConfig> | null>(null);
+  const [expandedSkillId, setExpandedSkillId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const filteredSkills = useMemo(() => {
     const list = data?.skills ?? [];
@@ -60,11 +95,19 @@ export function SkillListPage() {
         const q = query.toLowerCase();
         const nameMatch = config.id.toLowerCase().includes(q);
         const descMatch = (config.description?.toLowerCase() ?? "").includes(q);
-        if (!nameMatch && !descMatch) return false;
+        const zhDesc = BUILTIN_ZH_DESCRIPTIONS[config.id];
+        const zhMatch = zhDesc ? zhDesc.includes(q) : false;
+        if (!nameMatch && !descMatch && !zhMatch) return false;
       }
       return true;
     });
   }, [data, category, status, query]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredSkills.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const pagedSkills = useMemo(() => {
+    return filteredSkills.slice((safeCurrentPage - 1) * pageSize, safeCurrentPage * pageSize);
+  }, [filteredSkills, safeCurrentPage, pageSize]);
 
   const handleToggle = useCallback(async (id: string) => {
     if (toggling.has(id)) return;
@@ -80,6 +123,55 @@ export function SkillListPage() {
       });
     }
   }, [toggling, refetch]);
+
+  const handleCardClick = useCallback((id: string) => {
+    setExpandedSkillId((prev) => (prev === id ? null : id));
+  }, []);
+
+  const handleEditSkill = useCallback((id: string, source: "project" | "builtin") => {
+    setEditingSkillId(id);
+    setEditingSkillSource(source);
+  }, []);
+
+  const getDisplayDescription = (config: SkillConfig, source: "project" | "builtin"): string => {
+    if (source === "builtin") {
+      return BUILTIN_ZH_DESCRIPTIONS[config.id] || config.description || "无描述";
+    }
+    return config.description || "无描述";
+  };
+
+  const getDisplayCategory = (config: SkillConfig, source: "project" | "builtin"): { label: string; key: SkillCategory } => {
+    if (source === "builtin" && BUILTIN_ZH_CATEGORY[config.id]) {
+      const zhCat = BUILTIN_ZH_CATEGORY[config.id];
+      return { label: ZH_CATEGORY_LABELS[zhCat], key: zhCat };
+    }
+    return { label: ZH_CATEGORY_LABELS[config.category], key: config.category };
+  };
+
+  // Generate page numbers to display
+  const pageNumbers = useMemo(() => {
+    const maxVisible = 5;
+    const pages: (number | "...")[] = [];
+    if (totalPages <= maxVisible + 2) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      let start = Math.max(2, safeCurrentPage - 1);
+      let end = Math.min(totalPages - 1, safeCurrentPage + 1);
+      if (safeCurrentPage <= 3) {
+        start = 2;
+        end = Math.min(totalPages - 1, 4);
+      } else if (safeCurrentPage >= totalPages - 2) {
+        start = Math.max(2, totalPages - 3);
+        end = totalPages - 1;
+      }
+      if (start > 2) pages.push("...");
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (end < totalPages - 1) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
+  }, [totalPages, safeCurrentPage]);
 
   return (
     <div className="space-y-6">
@@ -139,7 +231,7 @@ export function SkillListPage() {
         >
           <option value="all">全部分类</option>
           {(Object.keys(SKILL_CATEGORY_LABELS) as SkillCategory[]).map((key) => (
-            <option key={key} value={key}>{SKILL_CATEGORY_LABELS[key]}</option>
+            <option key={key} value={key}>{ZH_CATEGORY_LABELS[key]}</option>
           ))}
         </select>
 
@@ -191,83 +283,288 @@ export function SkillListPage() {
 
       {/* Grid */}
       {!loading && filteredSkills.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filteredSkills.map((item) => {
-            const config = item.config;
-            const cat = config.category;
-            return (
-              <div
-                key={config.id}
-                className={cn(
-                  "rounded-xl border border-border/40 bg-card p-4 transition-opacity",
-                  !config.enabled && "opacity-60"
-                )}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium text-foreground truncate">
-                        {config.id}
-                      </h3>
-                      <span
-                        className={cn(
-                          "px-1.5 py-0.5 rounded text-[10px] font-medium shrink-0",
-                          CATEGORY_BG[cat]
+        <div className="space-y-4">
+          {/* Total count */}
+          <div className="text-xs text-muted-foreground/60">
+            共 {filteredSkills.length} 个 Skill
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {pagedSkills.map((item) => {
+              const config = item.config;
+              const source = item.source;
+              const isExpanded = expandedSkillId === config.id;
+              const displayInfo = getDisplayCategory(config, source);
+              const cat = displayInfo.key;
+              return (
+                <div key={config.id} className="space-y-0">
+                  {/* Card */}
+                  <div
+                    className={cn(
+                      "rounded-xl border border-border/40 bg-card p-4 transition-all cursor-pointer hover:border-border/70",
+                      !config.enabled && "opacity-60",
+                      isExpanded && "rounded-b-none border-b-0 shadow-sm"
+                    )}
+                    onClick={() => handleCardClick(config.id)}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          {source === "builtin" && (
+                            <Puzzle size={14} className="text-muted-foreground/40 shrink-0" />
+                          )}
+                          <h3 className="font-medium text-foreground truncate">
+                            {config.id}
+                          </h3>
+                          <span
+                            className={cn(
+                              "px-1.5 py-0.5 rounded text-[10px] font-medium shrink-0",
+                              CATEGORY_BG[cat]
+                            )}
+                          >
+                            {displayInfo.label}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                          {getDisplayDescription(config, source)}
+                        </p>
+                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground/60">
+                          <span
+                            className="h-1.5 w-1.5 rounded-full"
+                            style={{ backgroundColor: CATEGORY_COLORS[cat] }}
+                          />
+                          <span>{source === "project" ? "项目级" : "内置"}</span>
+                          {isExpanded ? (
+                            <ChevronUp size={12} className="ml-auto text-muted-foreground/30" />
+                          ) : (
+                            <ChevronDown size={12} className="ml-auto text-muted-foreground/30" />
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-end gap-2" onClick={(e) => e.stopPropagation()}>
+                        {source === "project" && (
+                          <button
+                            type="button"
+                            onClick={() => handleEditSkill(config.id, source)}
+                            className="rounded-lg border border-border/40 p-1.5 text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors"
+                            title="编辑 Skill"
+                          >
+                            <Edit2 size={14} />
+                          </button>
                         )}
-                      >
-                        {SKILL_CATEGORY_LABELS[cat]}
-                      </span>
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={config.enabled}
+                          disabled={toggling.has(config.id)}
+                          onClick={() => handleToggle(config.id)}
+                          className={cn(
+                            "relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+                            config.enabled ? "bg-primary" : "bg-muted-foreground/30",
+                            toggling.has(config.id) && "opacity-60 cursor-wait"
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform",
+                              config.enabled ? "translate-x-[18px]" : "translate-x-1"
+                            )}
+                          />
+                        </button>
+                        <span className={cn("text-[10px]", config.enabled ? "text-primary" : "text-muted-foreground")}>
+                          {config.enabled ? "已启用" : "已禁用"}
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                      {config.description || "无描述"}
-                    </p>
-                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground/60">
-                      <span
-                        className="h-1.5 w-1.5 rounded-full"
-                        style={{ backgroundColor: CATEGORY_COLORS[cat] }}
-                      />
-                      <span>{item.source === "project" ? "项目级" : "内置"}</span>
-                    </div>
+
+                    {config.triggers && config.triggers.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-border/30">
+                        <p className="text-[10px] text-muted-foreground/60">
+                          触发器：{config.triggers.length} 个
+                        </p>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="flex flex-col items-end gap-2">
+                  {/* Expanded Detail Panel */}
+                  {isExpanded && (
+                    <div className="rounded-b-xl border border-t-0 border-border/40 bg-card/50 p-4 space-y-3 text-sm animate-in slide-in-from-top-1 duration-150">
+                      {/* Description */}
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+                          <MessageSquare size={12} />
+                          <span>描述</span>
+                        </div>
+                        <p className="text-xs text-foreground/80 leading-relaxed pl-5">
+                          {getDisplayDescription(config, source)}
+                        </p>
+                      </div>
+
+                      {/* Triggers */}
+                      {config.triggers && config.triggers.length > 0 && (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+                            <Code size={12} />
+                            <span>触发器 ({config.triggers.length} 个)</span>
+                          </div>
+                          <div className="pl-5 space-y-1">
+                            {config.triggers.map((t, i) => (
+                              <div key={i} className="text-[11px] text-foreground/70">
+                                <span className="font-mono text-muted-foreground/60">type: </span>
+                                <span>{t.type}</span>
+                                {t.condition && (
+                                  <>
+                                    <span className="font-mono text-muted-foreground/60 ml-2">condition: </span>
+                                    <span className="font-mono text-[10px]">{t.condition}</span>
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Injection */}
+                      {config.injection && (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+                            <Puzzle size={12} />
+                            <span>注入配置</span>
+                          </div>
+                          <div className="pl-5 grid grid-cols-3 gap-2 text-[11px]">
+                            <div>
+                              <span className="text-muted-foreground/60">模式：</span>
+                              <span className="text-foreground/80">{config.injection.mode}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground/60">目标：</span>
+                              <span className="text-foreground/80">{config.injection.target}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground/60">优先级：</span>
+                              <span className="text-foreground/80">{config.injection.priority}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Prompt */}
+                      {config.prompt && (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground">
+                            <MessageSquare size={12} />
+                            <span>Prompt</span>
+                          </div>
+                          <div className="pl-5">
+                            <pre className="text-[11px] text-foreground/70 bg-muted/30 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed max-h-40 overflow-y-auto">
+                              {config.prompt}
+                            </pre>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Edit button inside detail panel for project skills */}
+                      {source === "project" && (
+                        <div className="pt-2 border-t border-border/20">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditSkill(config.id, source);
+                            }}
+                            className="inline-flex items-center gap-1.5 text-[11px] text-primary hover:text-primary/80 transition-colors"
+                          >
+                            <Edit2 size={12} />
+                            编辑此 Skill
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4 border-t border-border/20">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>每页</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="px-2 py-1 rounded border border-border/40 bg-background text-xs outline-none focus:border-primary/50"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                </select>
+                <span>条</span>
+                <span className="text-muted-foreground/50">
+                  — 第 {(safeCurrentPage - 1) * pageSize + 1}-{Math.min(safeCurrentPage * pageSize, filteredSkills.length)} 条，共 {filteredSkills.length} 条
+                </span>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  disabled={safeCurrentPage <= 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  className={cn(
+                    "rounded-lg border border-border/40 p-1.5 transition-colors",
+                    safeCurrentPage <= 1
+                      ? "text-muted-foreground/20 cursor-not-allowed"
+                      : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                  )}
+                >
+                  <ChevronLeft size={14} />
+                </button>
+
+                {pageNumbers.map((page, idx) =>
+                  page === "..." ? (
+                    <span key={`ellipsis-${idx}`} className="px-1.5 text-xs text-muted-foreground/30">
+                      ...
+                    </span>
+                  ) : (
                     <button
+                      key={page}
                       type="button"
-                      role="switch"
-                      aria-checked={config.enabled}
-                      disabled={toggling.has(config.id)}
-                      onClick={() => handleToggle(config.id)}
+                      onClick={() => setCurrentPage(page)}
                       className={cn(
-                        "relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
-                        config.enabled ? "bg-primary" : "bg-muted-foreground/30",
-                        toggling.has(config.id) && "opacity-60 cursor-wait"
+                        "min-w-[28px] h-7 rounded-lg text-xs font-medium transition-colors",
+                        page === safeCurrentPage
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground border border-border/40"
                       )}
                     >
-                      <span
-                        className={cn(
-                          "inline-block h-3.5 w-3.5 rounded-full bg-white transition-transform",
-                          config.enabled ? "translate-x-[18px]" : "translate-x-1"
-                        )}
-                      />
+                      {page}
                     </button>
-                    <span className={cn("text-[10px]", config.enabled ? "text-primary" : "text-muted-foreground")}>
-                      {config.enabled ? "已启用" : "已禁用"}
-                    </span>
-                  </div>
-                </div>
-
-                {config.triggers && config.triggers.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-border/30">
-                    <p className="text-[10px] text-muted-foreground/60">
-                      触发器：{config.triggers.length} 个
-                    </p>
-                  </div>
+                  )
                 )}
+
+                <button
+                  type="button"
+                  disabled={safeCurrentPage >= totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  className={cn(
+                    "rounded-lg border border-border/40 p-1.5 transition-colors",
+                    safeCurrentPage >= totalPages
+                      ? "text-muted-foreground/20 cursor-not-allowed"
+                      : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                  )}
+                >
+                  <ChevronRight size={14} />
+                </button>
               </div>
-            );
-          })}
+            </div>
+          )}
         </div>
       )}
+
       {/* Create dialog */}
       <SkillCreateDialog
         isOpen={showCreateDialog}
@@ -281,9 +578,10 @@ export function SkillListPage() {
       <SkillEditSheet
         skillId={createMode === "blank" ? "__create__" : (createMode ? "__create__" : editingSkillId)}
         isOpen={createMode !== null || editingSkillId !== null}
-        onClose={() => { setEditingSkillId(null); setCreateMode(null); setAiDraft(null); }}
+        onClose={() => { setEditingSkillId(null); setEditingSkillSource(null); setCreateMode(null); setAiDraft(null); }}
         onSaved={() => { refetch(); setCreateMode(null); setAiDraft(null); }}
         createDraft={createMode ? aiDraft ?? undefined : undefined}
+        skillSource={editingSkillSource}
       />
     </div>
   );
