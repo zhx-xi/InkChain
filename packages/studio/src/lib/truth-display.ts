@@ -117,7 +117,7 @@ export interface RoleRef {
 }
 
 // Directory name → tier mapping for roleFromPath resolution.
-const TIER_DIR_MAP: Record<string, CharacterTier> = {
+export const TIER_DIR_MAP: Record<string, CharacterTier> = {
   // Chinese directory names
   "主角": "protagonist",
   "重要": "supporting",

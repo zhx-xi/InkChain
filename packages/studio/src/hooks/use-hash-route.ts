@@ -39,12 +39,11 @@ export type HashRoute =
   | { page: "publish"; bookId: string }
   | { page: "edit-dashboard"; bookId: string }
   | { page: "book-worlds"; bookId: string }
-  | { page: "world-inheritance"; worldId: string };
+  | { page: "world-inheritance"; worldId: string }
   | { page: "chapter-wizard"; bookId: string }
   | { page: "consistency"; bookId: string }
   | { page: "volume-management"; bookId: string }
   | { page: "character-tiering"; bookId: string };
->>>>>>> origin/main
 
 function parseHash(hash: string): HashRoute {
   const path = hash.replace(/^#\/?/, "");
@@ -101,13 +100,9 @@ function parseHash(hash: string): HashRoute {
   if (worldInheritMatch) return { page: "world-inheritance", worldId: decodeURIComponent(worldInheritMatch[1]) };
   const worldMapMatch = path.match(/^worlds\/([^/]+)\/map$/);
   if (worldMapMatch) return { page: "world-map", worldId: decodeURIComponent(worldMapMatch[1]) };
->>>>>>> origin/main
 
   const worldGeoVizMatch = path.match(/^worlds\/([^/]+)\/geoviz$/);
   if (worldGeoVizMatch) return { page: "world-geoviz", worldId: decodeURIComponent(worldGeoVizMatch[1]) };
-
-  const worldMapMatch = path.match(/^worlds\/([^/]+)\/map$/);
-  if (worldMapMatch) return { page: "world-map", worldId: decodeURIComponent(worldMapMatch[1]) };
 
   const worldDetailMatch = path.match(/^worlds\/([^/]+)$/);
   if (worldDetailMatch) return { page: "world-detail", worldId: decodeURIComponent(worldDetailMatch[1]) };
@@ -162,8 +157,6 @@ function routeToHash(route: HashRoute): string {
     case "world-map": return `#/worlds/${encodeURIComponent(route.worldId)}/map`;
     case "world-inheritance": return `#/worlds/${encodeURIComponent(route.worldId)}/inherit`;
     case "world-map": return `#/worlds/${encodeURIComponent(route.worldId)}/map`;
->>>>>>> origin/main
->>>>>>> origin/main
     case "publish": return `#/publish/${encodeURIComponent(route.bookId)}`;
     case "edit-dashboard": return `#/edit-dashboard/${encodeURIComponent(route.bookId)}`;
     case "style-consistency": return "#/style-consistency";
@@ -177,11 +170,7 @@ function routeToHash(route: HashRoute): string {
 
 export { parseHash, routeToHash }; // for testing
 
-const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "world-map", "publish", "edit-dashboard"]);
-const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "world-inheritance", "publish", "edit-dashboard"]);
-const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "style", "style-consistency", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "world-map", "publish", "edit-dashboard", "chapter-wizard", "consistency", "volume-management", "character-tiering"]);
->>>>>>> origin/main
->>>>>>> origin/main
+const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "style", "style-consistency", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "world-map", "world-inheritance", "publish", "edit-dashboard", "chapter-wizard", "consistency", "volume-management", "character-tiering"]);
 
 export function useHashRoute() {
   const [route, setRouteState] = useState<HashRoute>(() => parseHash(window.location.hash));
