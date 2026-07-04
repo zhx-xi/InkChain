@@ -4,3 +4,4 @@ allowBuilds:
   esbuild: false
   msw: false
   protobufjs: false
+confirmModulesPurge: false

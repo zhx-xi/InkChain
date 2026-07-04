@@ -139,7 +139,7 @@ function isMissingPathError(error: unknown): boolean {
     && (error as { code?: unknown }).code === "ENOENT";
 }
 
-function defaultBuiltinRoot(): string | null {
+export function defaultBuiltinRoot(): string | null {
   // The defaults package lives at packages/defaults/ relative to the
   // monorepo root. This file is at packages/core/src/models/ — so we walk
   // up three levels to the repo root and then into packages/defaults.
@@ -157,7 +157,7 @@ function defaultBuiltinRoot(): string | null {
     join(here, "..", "..", "..", "..", "defaults"), // dist: packages/core/dist/models → repo root
     join(here, "..", "..", "..", "defaults"),       // src:  packages/core/src/models → repo root
   ];
-  return candidates[0]; // Best guess; the loader handles ENOENT.
+  return candidates[1]; // 3 ".." walks to repo root in both src and dist layouts.
 }
 
 // ── Pure helpers (exported for testing and downstream use) ──
