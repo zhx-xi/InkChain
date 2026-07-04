@@ -16,6 +16,7 @@ describe("ForeshadowingSchema (Issue #84)", () => {
       const parsed = ForeshadowingSchema.parse({
         id: "foreshadow-001",
         title: "神秘戒指",
+        bookId: "test-book",
       });
       expect(parsed.id).toBe("foreshadow-001");
       expect(parsed.title).toBe("神秘戒指");
@@ -33,6 +34,7 @@ describe("ForeshadowingSchema (Issue #84)", () => {
     it("accepts a full foreshadowing entry", () => {
       const raw: Foreshadowing = {
         id: "foreshadow-002",
+        bookId: "test-book",
         title: "钥匙之谜",
         description: "一把古老的钥匙出现在第一章",
         type: "物品伏笔",
@@ -54,6 +56,7 @@ describe("ForeshadowingSchema (Issue #84)", () => {
       const parsed = ForeshadowingSchema.parse({
         id: "foreshadow-003",
         title: "预言",
+        bookId: "test-book",
         status: "paid_off",
         payoffChapter: 20,
       });
@@ -65,6 +68,7 @@ describe("ForeshadowingSchema (Issue #84)", () => {
       const parsed = ForeshadowingSchema.parse({
         id: "foreshadow-004",
         title: "放弃的线索",
+        bookId: "test-book",
         status: "abandoned",
       });
       expect(parsed.status).toBe("abandoned");
@@ -98,6 +102,7 @@ describe("ForeshadowingSchema (Issue #84)", () => {
       const ok = ForeshadowingCreateSchema.parse({
         id: "f-001",
         title: "A foreshadow",
+        bookId: "test-book",
       });
       expect(ok.id).toBe("f-001");
       expect(ok.title).toBe("A foreshadow");
