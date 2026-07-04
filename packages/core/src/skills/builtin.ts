@@ -314,6 +314,9 @@ const EXTRACTION_DIR = join(__dirname, "extraction");
 function loadJsonSkill(filePath: string): CapabilitySkillManifest {
   const raw = readFileSync(filePath, "utf-8");
   const parsed = JSON.parse(raw) as Record<string, unknown>;
+  // All skills from the extraction/ directory are system skills,
+  // regardless of what source is set in the JSON file
+  parsed.source = "system";
   return CapabilitySkillManifestSchema.parse(parsed);
 }
 

@@ -11,6 +11,13 @@ describe("capability skill registry", () => {
 
     expect(ids).toEqual([
       "content-extractor",
+      "extract-character",
+      "extract-foreshadowing",
+      "extract-plot",
+      "extract-relation",
+      "extract-style",
+      "extract-timeline",
+      "extract-world",
       "humanizer-zh",
       "interactive-film-authoring",
       "longform-writing",
@@ -89,7 +96,17 @@ describe("capability skill registry", () => {
     expect(registry.resolveSkills({
       sessionKind: "book",
       instruction: "继续写下一章，注意伏笔一致性",
-    }).usedSkills.map((skill) => skill.id)).toEqual(["humanizer-zh", "longform-writing"]);
+    }).usedSkills.map((skill) => skill.id)).toEqual([
+      "extract-character",
+      "extract-foreshadowing",
+      "extract-plot",
+      "extract-relation",
+      "extract-style",
+      "extract-timeline",
+      "extract-world",
+      "humanizer-zh",
+      "longform-writing",
+    ]);
   });
 
   it("keeps built-in manifests schema-valid at module load time", () => {
