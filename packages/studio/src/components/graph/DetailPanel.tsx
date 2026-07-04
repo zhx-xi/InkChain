@@ -55,7 +55,7 @@ export function DetailPanel({
   return (
     <div
       className={cn(
-        "w-72 shrink-0 rounded-xl border border-border/30 bg-card/95 backdrop-blur-sm shadow-xl overflow-hidden animate-in slide-in-from-right-2",
+        "w-72 shrink-0 rounded-xl border border-border/30 bg-card/95 backdrop-blur-sm shadow-xl overflow-hidden animate-in slide-in-from-right-2 mt-[72px]",
         className,
       )}
     >

@@ -118,7 +118,7 @@ export function SkillCreateDialog({ isOpen, onClose, onSelectBlank, onSelectTemp
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 pt-[72px]" onClick={onClose}>
       <div className="bg-card rounded-xl border border-border/60 shadow-xl p-6 w-full max-w-xl mx-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold">创建 Skill</h2>

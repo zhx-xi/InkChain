@@ -177,7 +177,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft 
         className="absolute inset-0 cursor-default"
         onClick={handleClose}
       />
-      <aside className="relative flex h-full w-[min(680px,calc(100vw-24px))] flex-col border-l border-border/55 bg-background shadow-2xl">
+      <aside className="relative flex h-full w-[min(680px,calc(100vw-24px))] flex-col border-l border-border/55 bg-background shadow-2xl pt-[72px]">
         <header className="flex items-start justify-between gap-4 border-b border-border/45 px-6 py-5">
           <div className="min-w-0">
             <div className="text-[13px] font-medium uppercase tracking-[0.18em] text-muted-foreground/65">

@@ -103,7 +103,7 @@ export function WorldMapViewPanel({ worldId, nav }: WorldMapViewProps) {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full pt-[72px]">
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-3 border-b border-border/40 shrink-0">
         <div className="flex items-center gap-3">
@@ -378,7 +378,7 @@ export function WorldMapViewPanel({ worldId, nav }: WorldMapViewProps) {
 
         {/* AI Generation sidebar */}
         {showAIGen && (
-          <div className="w-96 border-l border-border/40 overflow-y-auto p-4 bg-card/50">
+          <div className="w-96 border-l border-border/40 overflow-y-auto p-4 pt-[72px] bg-card/50">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-medium">AI 生成区域</h3>
               <button

@@ -261,7 +261,7 @@ export function MapGenPanel({ worldId, worldName, onSaved }: MapGenPanelProps) {
   const sortedRegions = sortRegions(editableRegions);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pt-[72px]">
       {/* Header */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Globe size={16} className="text-primary" />
