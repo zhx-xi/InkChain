@@ -613,7 +613,7 @@ export function ChapterVolumeSection({ bookId }: ChapterVolumeSectionProps) {
                 onAuditChapter={(chapterNumber) => {
                   useChatStore.getState().openChapterArtifact(chapterNumber);
                 }}
-                onDrop={(e) => handleDropOnVolume(e, volume.id)}}
+                onDrop={(e) => handleDropOnVolume(e, volume.id)}
                 onDragOver={handleDragOver}
                 onDragEnter={(e) => handleDragEnter(e, volume.id)}
                 onDragLeave={handleDragLeave}
