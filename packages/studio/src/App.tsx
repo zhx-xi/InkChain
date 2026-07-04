@@ -21,6 +21,7 @@ import { DoctorView } from "./pages/DoctorView";
 import { RelationGraphPanel } from "./pages/RelationGraphPanel";
 import { TimelinePage } from "./pages/TimelinePage";
 import { AgentTeamPanel } from "./pages/AgentTeamPanel";
+import AgentPipelineView from "./pages/AgentPipelineView";
 import { SkillListPage } from "./pages/SkillListPage";
 import { ForeshadowingPage } from "./pages/ForeshadowingPage";
 import { WorldListPage } from "./pages/WorldListPage";
@@ -116,6 +117,7 @@ export function App() {
     toFilmAuthor: (projectId: string) => setRoute({ page: "film-author", projectId }),
     toFilmStudio: (projectId: string) => setRoute({ page: "film-studio", projectId }),
     toAgents: () => setRoute({ page: "agents" }),
+    toAgentPipeline: () => setRoute({ page: "agent-pipeline" }),
     toArchive: () => setRoute({ page: "archive" }),
     toSkills: () => setRoute({ page: "skills" }),
     toForeshadowing: (bookId: string) => setRoute({ page: "foreshadowing", bookId }),
@@ -387,6 +389,11 @@ export function App() {
           {route.page === "agents" && (
             <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <AgentTeamPanel nav={nav} />
+            </div>
+          )}
+          {route.page === "agent-pipeline" && (
+            <div className="absolute inset-0 flex min-w-0">
+              <AgentPipelineView nav={nav} />
             </div>
           )}
           {route.page === "archive" && (
