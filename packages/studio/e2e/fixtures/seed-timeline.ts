@@ -77,11 +77,33 @@ export async function seedTimeline(): Promise<void> {
             tags: ["秘境", "探险"],
             timestamp: now,
           },
+          {
+            id: "tl-e2e-4",
+            title: "获得传承",
+            eventType: "plot",
+            description: "主角在秘境中获得上古传承",
+            relatedCharacters: ["叶云", "上古大能"],
+            chapter: 5,
+            importance: 5,
+            tags: ["传承", "关键事件", "力量提升"],
+            timestamp: now,
+          },
         ],
       },
       null,
       2,
     ),
+    "utf-8",
+  );
+}
+
+/** Reset the timeline state to an empty array */
+export async function clearTimeline(): Promise<void> {
+  const stateDir = join(E2E_ROOT, "books", E2E_TIMELINE_BOOK_ID, "story", "state");
+  await mkdir(stateDir, { recursive: true });
+  await writeFile(
+    join(stateDir, "character_timelines.json"),
+    JSON.stringify({ version: 1, events: [] }, null, 2),
     "utf-8",
   );
 }
