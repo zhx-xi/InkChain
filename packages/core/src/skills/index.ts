@@ -1,4 +1,4 @@
-export { BUILTIN_CAPABILITY_SKILLS } from "./builtin.js";
+export { BUILTIN_CAPABILITY_SKILLS, loadSystemExtractionSkills } from "./builtin.js";
 export { BUILTIN_PROMPTS, BUILTIN_PROMPT_PACKS, type BuiltinPrompt } from "./builtin-prompts.js";
 export {
   buildSkillContextPlan,

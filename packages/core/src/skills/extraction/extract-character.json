@@ -1,0 +1,31 @@
+{
+  "$schema": "../../../schemas/capability-skill-manifest.json",
+  "id": "extract-character",
+  "name": "角色信息提取",
+  "description": "从文本中提取角色的完整信息档案，涵盖基本属性（名称/性别/年龄/外貌）/性格特征/背景故事/能力体系/角色层级。支持多章节聚合及角色演变追踪。",
+  "whenToUse": "当用户需要从已写章节中自动构建角色档案、提取角色详细信息、或更新已有角色资料时使用",
+  "triggers": [
+    "提取角色",
+    "角色信息",
+    "角色档案",
+    "角色提取",
+    "人物设定",
+    "extract character",
+    "character extraction",
+    "character profile"
+  ],
+  "sessionKinds": ["book"],
+  "promptPacks": [],
+  "toolHints": [],
+  "contextNeeds": [
+    {
+      "id": "extraction-source",
+      "purpose": "AI提取需要章节原文作为输入，需要跨章节阅读以获取角色的完整画像和演变轨迹",
+      "sources": ["chapters/"],
+      "tier": "protected",
+      "retrieval": "full"
+    }
+  ],
+  "body": "你是一个专业的小说角色提取助手。你的任务是从章节文本中提取结构化的角色信息，输出格式严格遵循以下JSON Schema。\n\n## 输出格式\n```json\n{\n  \"characters\": [\n    {\n      \"name\": \"角色名称\",\n      \"aliases\": [\"别名/昵称/代号\"],\n      \"tier\": \"protagonist\" | \"supporting\" | \"guest\" | \"one_shot\" | \"scene\",\n      \"basicInfo\": {\n        \"gender\": \"男/女/其他/未知\",\n        \"age\": \"具体年龄或年龄段（如：20岁/中年/老年）\",\n        \"appearance\": \"外貌描述（提取自原文）\",\n        \"occupation\": \"身份/职业\"\n      },\n      \"personality\": {\n        \"traits\": [\"性格特征：勇敢/狡猾/温柔\"],\n        \"motivation\": \"核心动机/目标\",\n        \"fears\": [\"恐惧/弱点\"],\n        \"quirks\": [\"习惯/小动作\"]\n      },\n      \"background\": {\n        \"origin\": \"出身/来历\",\n        \"keyEvents\": [\"关键经历\"],\n        \"relationships\": [\"与其他角色的关系简述\"]\n      },\n      \"abilities\": [\n        {\n          \"name\": \"能力名称\",\n          \"type\": \"战斗/魔法/知识/社交/其他\",\n          \"description\": \"能力描述\",\n          \"level\": \"能力水平描述\"\n        }\n      ],\n      \"firstAppearance\": 1,\n      \"lastAppearance\": 5,\n      \"chapterMentions\": [1, 2, 3, 5],\n      \"evolution\": [\n        {\n          \"chapter\": 3,\n          \"change\": \"角色在这一章发生的变化（如：态度转变/能力觉醒）\"\n        }\n      ]\n    }\n  ]\n}\n```\n\n## 角色层级定义\n- **protagonist**(主角): 全程推动核心叙事\n- **supporting**(重要): 关键段落/支线驱动\n- **guest**(次要): 阶段性辅助/转变\n- **one_shot**(客串): 场景NPC/群像\n- **scene**(一次性): 1-2句出场\n\n## 注意事项\n1. 角色名称保持与原文一致，收集所有别名\n2. 未明确的信息留空，不要编造\n3. personality.traits使用具体描述词（如'思维缜密'）而非笼统评价（如'好人'）\n4. abilities包含所有文中表现出的能力（即使没有明确命名也需提取）\n5. evolution记录角色随时间的变化，这对于长篇创作至关重要\n6. 如果角色跨多个章节出现，检查是否有性格或立场的变化",
+  "source": "builtin"
+}
