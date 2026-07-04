@@ -10,6 +10,8 @@ export const TimelineEventSchema = z.object({
   title: z.string().min(1),
   description: z.string().default(""),
   relatedCharacters: z.array(z.string()).default([]),
+  /** Associated world region ID for map visualization */
+  regionId: z.string().optional(),
   chapter: z.number().int().min(0),
   importance: z.number().int().min(1).max(5),
   tags: z.array(z.string()).optional(),
