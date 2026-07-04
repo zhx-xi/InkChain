@@ -38,6 +38,7 @@ export type HashRoute =
   | { page: "publish"; bookId: string }
   | { page: "edit-dashboard"; bookId: string }
   | { page: "book-worlds"; bookId: string }
+  | { page: "chapter-wizard"; bookId: string }
   | { page: "consistency"; bookId: string }
   | { page: "volume-management"; bookId: string }
   | { page: "character-tiering"; bookId: string };
@@ -107,13 +108,16 @@ function parseHash(hash: string): HashRoute {
   const editDashboardMatch = path.match(/^edit-dashboard\/([^/]+)$/);
   if (editDashboardMatch) return { page: "edit-dashboard", bookId: decodeURIComponent(editDashboardMatch[1]) };
 
-  const consistencyMatch = path.match(/^consistency\/([^/]+)$/);
+  const chapterWizardMatch = path.match(/^chapter-wizard\/([^\/]+)$/);
+  if (chapterWizardMatch) return { page: "chapter-wizard", bookId: decodeURIComponent(chapterWizardMatch[1]) };
+
+  const consistencyMatch = path.match(/^consistency\/([^\/]+)$/);
   if (consistencyMatch) return { page: "consistency", bookId: decodeURIComponent(consistencyMatch[1]) };
 
-  const volMgmtMatch = path.match(/^book\/([^/]+)\/volumes$/);
+  const volMgmtMatch = path.match(/^book\/([^\/]+)\/volumes$/);
   if (volMgmtMatch) return { page: "volume-management", bookId: decodeURIComponent(volMgmtMatch[1]) };
 
-  const charTierMatch = path.match(/^characters\/([^/]+)\/tiers$/);
+  const charTierMatch = path.match(/^characters\/([^\/]+)\/tiers$/);
   if (charTierMatch) return { page: "character-tiering", bookId: decodeURIComponent(charTierMatch[1]) };
 
   return { page: "dashboard" };
@@ -148,6 +152,7 @@ function routeToHash(route: HashRoute): string {
     case "world-map": return `#/worlds/${encodeURIComponent(route.worldId)}/map`;
     case "publish": return `#/publish/${encodeURIComponent(route.bookId)}`;
     case "edit-dashboard": return `#/edit-dashboard/${encodeURIComponent(route.bookId)}`;
+    case "chapter-wizard": return `#/chapter-wizard/${encodeURIComponent(route.bookId)}`;
     case "consistency": return `#/consistency/${encodeURIComponent(route.bookId)}`;
     case "volume-management": return `#/book/${encodeURIComponent(route.bookId)}/volumes`;
     case "character-tiering": return `#/characters/${encodeURIComponent(route.bookId)}/tiers`;
@@ -157,7 +162,7 @@ function routeToHash(route: HashRoute): string {
 
 export { parseHash, routeToHash }; // for testing
 
-const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "world-map", "publish", "edit-dashboard", "consistency", "volume-management", "character-tiering"]);
+const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "world-map", "publish", "edit-dashboard", "chapter-wizard", "consistency", "volume-management", "character-tiering"]);
 
 export function useHashRoute() {
   const [route, setRouteState] = useState<HashRoute>(() => parseHash(window.location.hash));
