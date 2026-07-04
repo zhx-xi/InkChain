@@ -3,7 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { useHashRoute } from "../hooks/use-hash-route";
 import {
   Search, X, Sparkles, Plus, AlertTriangle, CheckCircle2, Clock,
-  XCircle, Eye, EyeOff, Loader2, Bot,
+  XCircle, Eye, EyeOff, Loader2, Bot, Network,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useApi, fetchJson, postApi } from "../hooks/use-api";
@@ -32,6 +32,13 @@ interface ForeshadowingExtractCandidate {
   expectedPayoffChapter: number | null;
   confidence: number;
   chapter?: number;
+}
+
+interface ForeshadowingRelation {
+  type: string;
+  sourceIdx: number;
+  targetIdx: number;
+  label: string;
 }
 
 const TYPE_COLORS: Record<ForeshadowingType, string> = {
@@ -500,6 +507,9 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
   const [aiExtractError, setAiExtractError] = useState<string | null>(null);
   const [selectedExtractIndices, setSelectedExtractIndices] = useState<Set<number>>(new Set());
   const [applyingIndices, setApplyingIndices] = useState<Set<number>>(new Set());
+  const [extractProgress, setExtractProgress] = useState<{ current: number; total: number } | null>(null);
+  const [relations, setRelations] = useState<ForeshadowingRelation[] | null>(null);
+  const [relationsLoading, setRelationsLoading] = useState(false);
 
   const currentChapter = data?.currentChapter ?? 0;
   const maxChapter = Math.max(1, currentChapter);
@@ -509,11 +519,15 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
     setAiExtractLoading(true);
     setAiExtractError(null);
     setAiExtractResult(null);
+    setRelations(null);
+    setRelationsLoading(false);
     setSelectedExtractIndices(new Set());
     try {
       const allCandidates: ForeshadowingExtractCandidate[] = [];
       const from = Math.min(extractChapterFrom, extractChapterTo);
       const to = Math.max(extractChapterFrom, extractChapterTo);
+      const totalChapters = to - from + 1;
+      setExtractProgress({ current: 0, total: totalChapters });
       for (let ch = from; ch <= to; ch++) {
         const result = await postApi<{ candidates: ForeshadowingExtractCandidate[] }>(
           `/api/v1/books/${encodeURIComponent(bookId)}/chapters/${ch}/extract/foreshadowing`,
@@ -521,12 +535,30 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         for (const c of result.candidates) {
           allCandidates.push({ ...c, chapter: ch });
         }
+        setExtractProgress({ current: ch - from + 1, total: totalChapters });
       }
       setAiExtractResult(allCandidates);
+
+      // After all chapters extracted, find cross-chapter relations
+      if (allCandidates.length > 0) {
+        setRelationsLoading(true);
+        try {
+          const relResult = await postApi<{ relations: ForeshadowingRelation[] }>(
+            `/api/v1/books/${encodeURIComponent(bookId)}/foreshadowing/relations`,
+            { candidates: allCandidates },
+          );
+          setRelations(relResult.relations.filter((r) => r.label));
+        } catch {
+          // Relations are non-critical, ignore errors
+        } finally {
+          setRelationsLoading(false);
+        }
+      }
     } catch (err) {
       setAiExtractError(err instanceof Error ? err.message : String(err));
     } finally {
       setAiExtractLoading(false);
+      setExtractProgress(null);
     }
   }, [bookId, extractChapterFrom, extractChapterTo]);
 
@@ -535,6 +567,14 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
     if (!candidate) return false;
     try {
       setApplyingIndices((prev) => new Set(prev).add(idx));
+
+      // 去重检测：检查是否已有同名伏笔
+      const existingTitles = (data?.foreshadowing ?? []).map((f) => f.title.trim().toLowerCase());
+      const candidateTitle = candidate.title.trim().toLowerCase();
+      if (existingTitles.includes(candidateTitle)) {
+        return false;
+      }
+
       await fetchJson(`/api/books/${encodeURIComponent(bookId)}/foreshadowing`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -557,19 +597,33 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         return next;
       });
     }
-  }, [aiExtractResult, bookId, extractChapterFrom]);
+  }, [aiExtractResult, data, bookId, extractChapterFrom]);
 
   const handleApplySelected = useCallback(async () => {
     const indices = aiExtractResult
       ?.map((_, i) => i)
       .filter((i) => selectedExtractIndices.has(i)) ?? [];
-    let allOk = true;
+    const succeeded: number[] = [];
+    const failed: number[] = [];
     for (const idx of indices) {
       const ok = await applyCandidate(idx);
-      if (!ok) allOk = false;
+      if (ok) {
+        succeeded.push(idx);
+      } else {
+        failed.push(idx);
+      }
     }
-    if (allOk) {
+    if (failed.length > 0) {
+      // 移除成功项，保留失败项
+      setAiExtractResult((prev) => {
+        if (!prev) return prev;
+        return prev.filter((_, i) => failed.includes(i));
+      });
+      setSelectedExtractIndices(new Set(failed));
+    } else {
       setAiExtractResult(null);
+    }
+    if (succeeded.length > 0) {
       refetch();
     }
   }, [aiExtractResult, selectedExtractIndices, applyCandidate, refetch]);
@@ -577,13 +631,27 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
   const handleApplyAll = useCallback(async () => {
     if (!aiExtractResult) return;
     const allIndices = aiExtractResult.map((_, i) => i);
-    let allOk = true;
+    const succeeded: number[] = [];
+    const failed: number[] = [];
     for (const idx of allIndices) {
       const ok = await applyCandidate(idx);
-      if (!ok) allOk = false;
+      if (ok) {
+        succeeded.push(idx);
+      } else {
+        failed.push(idx);
+      }
     }
-    if (allOk) {
+    if (failed.length > 0) {
+      // 移除成功项，保留失败项
+      setAiExtractResult((prev) => {
+        if (!prev) return prev;
+        return prev.filter((_, i) => failed.includes(i));
+      });
+      setSelectedExtractIndices(new Set(failed));
+    } else {
       setAiExtractResult(null);
+    }
+    if (succeeded.length > 0) {
       refetch();
     }
   }, [aiExtractResult, applyCandidate, refetch]);
@@ -841,14 +909,14 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
             type="button"
             aria-label="关闭"
             className="absolute inset-0 cursor-default"
-            onClick={() => { setShowAiExtract(false); setAiExtractResult(null); }}
+            onClick={() => { setShowAiExtract(false); setAiExtractResult(null); setExtractProgress(null); setRelations(null); }}
           />
           <div className="relative w-full max-w-2xl rounded-xl border border-border/55 bg-card shadow-2xl mx-4 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-border/45 px-6 py-4">
               <h2 className="text-lg font-semibold text-foreground">AI 提取伏笔</h2>
               <button
                 type="button"
-                onClick={() => { setShowAiExtract(false); setAiExtractResult(null); }}
+                onClick={() => { setShowAiExtract(false); setAiExtractResult(null); setExtractProgress(null); setRelations(null); }}
                 className="p-1 rounded-md text-muted-foreground hover:bg-secondary/60"
               >
                 <X size={18} />
@@ -902,7 +970,30 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                 </div>
               )}
 
-              {aiExtractLoading && (
+              {aiExtractLoading && extractProgress && (
+                <div className="space-y-3 py-4">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      第 {extractProgress.current}/{extractProgress.total} 章提取中…
+                    </span>
+                    <span className="text-muted-foreground">
+                      {Math.round((extractProgress.current / extractProgress.total) * 100)}%
+                    </span>
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-300"
+                      style={{ width: `${(extractProgress.current / extractProgress.total) * 100}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                    <Loader2 size={14} className="animate-spin" />
+                    AI 正在分析章节文本，请稍候…
+                  </div>
+                </div>
+              )}
+
+              {aiExtractLoading && !extractProgress && (
                 <div className="flex items-center justify-center py-8">
                   <Loader2 size={24} className="animate-spin text-primary" />
                   <span className="ml-3 text-sm text-muted-foreground">AI 正在分析章节文本，请稍候…</span>
@@ -959,6 +1050,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                       {aiExtractResult.map((candidate, idx) => (
                         <div
                           key={idx}
+                          id={`candidate-${idx}`}
                           className={cn(
                             "rounded-lg border p-4 space-y-2 transition-colors",
                             selectedExtractIndices.has(idx)
@@ -1012,6 +1104,67 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                         </div>
                       ))}
                     </>
+                  )}
+
+                  {/* Relations section */}
+                  {relationsLoading && (
+                    <div className="flex items-center justify-center py-4 gap-2 text-sm text-muted-foreground">
+                      <Loader2 size={14} className="animate-spin" />
+                      正在分析伏笔关系…
+                    </div>
+                  )}
+                  {relations !== null && relations.length > 0 && (
+                    <div className="mt-4 rounded-lg border border-primary/20 bg-primary/[0.02] p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Network size={15} className="text-primary" />
+                        <span className="text-sm font-medium text-foreground">跨章节伏笔关系</span>
+                        <span className="text-xs text-muted-foreground">（{relations.length} 条）</span>
+                      </div>
+                      <div className="space-y-2">
+                        {relations.map((rel, idx) => {
+                          const source = aiExtractResult?.[rel.sourceIdx];
+                          const target = aiExtractResult?.[rel.targetIdx];
+                          return (
+                            <div key={idx} className="flex items-start gap-2 text-xs">
+                              <div className={cn(
+                                "mt-0.5 w-1.5 h-1.5 rounded-full shrink-0",
+                                rel.type === "same_topic" ? "bg-amber-400" : "bg-emerald-400",
+                              )} />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-muted-foreground">{rel.label}</p>
+                                <div className="flex items-center gap-2 mt-0.5">
+                                  {source && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const el = document.getElementById(`candidate-${rel.sourceIdx}`);
+                                        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                                      }}
+                                      className="text-primary/70 hover:text-primary underline underline-offset-2"
+                                    >
+                                      第 {source.chapter} 章 · {source.title}
+                                    </button>
+                                  )}
+                                  <span className="text-muted-foreground/40">→</span>
+                                  {target && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const el = document.getElementById(`candidate-${rel.targetIdx}`);
+                                        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                                      }}
+                                      className="text-primary/70 hover:text-primary underline underline-offset-2"
+                                    >
+                                      第 {target.chapter} 章 · {target.title}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   )}
                 </div>
               )}

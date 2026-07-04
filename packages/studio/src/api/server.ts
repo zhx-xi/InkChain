@@ -134,6 +134,7 @@ import { createRelationLabelerRouter } from "./routes/relation-labeler.js";
 import { createWritingContinueRouter } from "./routes/writing-continue.js";
 import { createAgentTeamRouter } from "./routes/agent-team.js";
 import { createForeshadowingExtractRouter } from "./routes/foreshadowing-extract.js";
+import { createForeshadowingRelationsRouter } from "./routes/foreshadowing-relations.js";
 import { createTimelineExtractRouter } from "./routes/timeline-extract.js";
 import { createChapterVersionsRouter } from "./routes/chapter-versions.js";
 import { createAgentTemplatesRouter } from "./routes/agent-templates.js";
@@ -5704,6 +5705,10 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // ── AI Foreshadowing Extraction (Issue #211) ──
   const foreshadowingExtractRouter = createForeshadowingExtractRouter((id) => state.bookDir(id), root);
   app.route("/api/v1/books", foreshadowingExtractRouter);
+
+  // ── Foreshadowing Relations (Issue #324) ──
+  const foreshadowingRelationsRouter = createForeshadowingRelationsRouter();
+  app.route("/api/v1/books", foreshadowingRelationsRouter);
 
   // ── AI Timeline Extraction (Issue #211) ──
   const timelineExtractRouter = createTimelineExtractRouter((id) => state.bookDir(id), root);
