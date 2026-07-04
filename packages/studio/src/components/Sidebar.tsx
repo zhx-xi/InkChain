@@ -687,14 +687,8 @@ export function Sidebar({ nav, activePage, sse, t }: {
             <SidebarItem
               label="Agent Team"
               icon={<Users size={16} />}
-              active={activePage === "agents"}
+              active={activePage === "agents" || activePage === "agent-pipeline"}
               onClick={nav.toAgents}
-            />
-            <SidebarItem
-              label="Agent Pipeline"
-              icon={<GitBranch size={16} />}
-              active={activePage === "agent-pipeline"}
-              onClick={nav.toAgentPipeline}
             />
             <SidebarItem
               label="世界设定"
