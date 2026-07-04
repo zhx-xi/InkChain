@@ -14,6 +14,7 @@ import type {
   WorldSearchResult,
   WorldReference,
 } from "@actalk/inkos-core/models/world-config.js";
+import type { ExtractedWorld } from "@actalk/inkos-core";
 import {
   WORLD_DIMENSION_KEYS,
   WorldConfigSchema,
@@ -927,6 +928,219 @@ function CreateBookDialog({ world, onClose, nav }: {
   );
 }
 
+// ── AI Extraction → Draft Converter ──
+
+/** Parse entity patterns (名字：描述) from dimension text and return structured entries. */
+function parseTextToEntries(text: string): Array<{ name: string; description: string }> {
+  const entries: Array<{ name: string; description: string }> = [];
+  const lines = text.split("\n");
+  // "名字：描述" pattern
+  const colonRe = /^[-*]\s*(.+?)[：:]\s*(.+)$/;
+  // "名字 —— 描述" pattern
+  const dashRe = /^[-*]\s*(.+?)\s*[-—]{1,2}\s*(.+)$/;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    let match = colonRe.exec(trimmed);
+    if (match) {
+      entries.push({ name: match[1].trim(), description: match[2].trim() });
+      continue;
+    }
+    match = dashRe.exec(trimmed);
+    if (match) {
+      entries.push({ name: match[1].trim(), description: match[2].trim() });
+    }
+  }
+  return entries;
+}
+
+/** Convert ExtractedWorld (free-text per dimension) into WorldDraft structured entries. */
+function extractedWorldToDraft(world: ExtractedWorld): Partial<WorldDraft> {
+  const draft: Partial<WorldDraft> = {};
+
+  // Settings: parse structured entries
+  if (world.settings.trim()) {
+    const parsed = parseTextToEntries(world.settings);
+    if (parsed.length > 0) {
+      draft.settings = parsed.map((e, i) => ({
+        id: genId(),
+        name: e.name,
+        type: "物理规则" as const,
+        description: e.description,
+        constraints: [],
+        sortIndex: i,
+      }));
+    } else {
+      // Fallback: single entry with full text
+      draft.settings = [{
+        id: genId(),
+        name: "世界观设定",
+        type: "物理规则" as const,
+        description: world.settings.substring(0, 2000),
+        constraints: [],
+        sortIndex: 0,
+      }];
+    }
+  }
+
+  // Roles
+  if (world.roles.trim()) {
+    const parsed = parseTextToEntries(world.roles);
+    if (parsed.length > 0) {
+      draft.roles = parsed.map((e, i) => ({
+        id: genId(),
+        name: e.name,
+        role: "配角" as const,
+        description: e.description,
+        significance: 3,
+        sortIndex: i,
+        institutionIds: [],
+        regionIds: [],
+      }));
+    } else {
+      draft.roles = [{
+        id: genId(),
+        name: "角色",
+        role: "配角" as const,
+        description: world.roles.substring(0, 2000),
+        significance: 3,
+        sortIndex: 0,
+        institutionIds: [],
+        regionIds: [],
+      }];
+    }
+  }
+
+  // Relations
+  if (world.relations.trim()) {
+    const parsed = parseTextToEntries(world.relations);
+    if (parsed.length > 0) {
+      draft.relations = parsed.map((e, i) => ({
+        id: genId(),
+        sourceId: "",
+        targetId: "",
+        type: e.name,
+        description: e.description,
+        sortIndex: i,
+      }));
+    } else {
+      draft.relations = [{
+        id: genId(),
+        sourceId: "",
+        targetId: "",
+        type: "关联",
+        description: world.relations.substring(0, 2000),
+        sortIndex: 0,
+      }];
+    }
+  }
+
+  // Regions
+  if (world.regions.trim()) {
+    const parsed = parseTextToEntries(world.regions);
+    if (parsed.length > 0) {
+      draft.regions = parsed.map((e, i) => ({
+        id: genId(),
+        name: e.name,
+        type: "地点" as const,
+        parentId: null,
+        description: e.description,
+        sortIndex: i,
+      }));
+    } else {
+      draft.regions = [{
+        id: genId(),
+        name: "区域",
+        type: "地点" as const,
+        parentId: null,
+        description: world.regions.substring(0, 2000),
+        sortIndex: 0,
+      }];
+    }
+  }
+
+  // Institutions
+  if (world.institutions.trim()) {
+    const parsed = parseTextToEntries(world.institutions);
+    if (parsed.length > 0) {
+      draft.institutions = parsed.map((e, i) => ({
+        id: genId(),
+        name: e.name,
+        type: "组织" as const,
+        leaderId: null,
+        members: [],
+        description: e.description,
+        sortIndex: i,
+        regionId: null,
+      }));
+    } else {
+      draft.institutions = [{
+        id: genId(),
+        name: "组织",
+        type: "组织" as const,
+        leaderId: null,
+        members: [],
+        description: world.institutions.substring(0, 2000),
+        sortIndex: 0,
+        regionId: null,
+      }];
+    }
+  }
+
+  // History
+  if (world.history.trim()) {
+    const parsed = parseTextToEntries(world.history);
+    if (parsed.length > 0) {
+      draft.history = parsed.map((e, i) => ({
+        id: genId(),
+        title: e.name,
+        timestamp: "",
+        description: e.description,
+        affectedRegions: [],
+        significance: 3,
+        sortIndex: i,
+      }));
+    } else {
+      draft.history = [{
+        id: genId(),
+        title: "历史事件",
+        timestamp: "",
+        description: world.history.substring(0, 2000),
+        affectedRegions: [],
+        significance: 3,
+        sortIndex: 0,
+      }];
+    }
+  }
+
+  // Rules
+  if (world.rules.trim()) {
+    const parsed = parseTextToEntries(world.rules);
+    if (parsed.length > 0) {
+      draft.rules = parsed.map((e, i) => ({
+        id: genId(),
+        name: e.name,
+        type: "叙事" as const,
+        description: e.description,
+        constraints: [],
+        sortIndex: i,
+      }));
+    } else {
+      draft.rules = [{
+        id: genId(),
+        name: "规则",
+        type: "叙事" as const,
+        description: world.rules.substring(0, 2000),
+        constraints: [],
+        sortIndex: 0,
+      }];
+    }
+  }
+
+  return draft;
+}
+
 // ── Main Component ──
 
 export function WorldDetailPage({ worldId, bookId, nav }: WorldDetailProps) {
@@ -953,6 +1167,38 @@ export function WorldDetailPage({ worldId, bookId, nav }: WorldDetailProps) {
       setDraft(worldToDraft(data.world));
     }
   }, [data, isCreateMode]);
+
+  // On create mode, check for AI extraction data in sessionStorage
+  useEffect(() => {
+    if (isCreateMode) {
+      try {
+        const stored = sessionStorage.getItem("@inkos/ai-extract-data");
+        if (stored) {
+          const parsed = JSON.parse(stored) as {
+            bookId?: string;
+            world: ExtractedWorld;
+            entities?: unknown[];
+            sections?: unknown[];
+          };
+          if (parsed.world) {
+            const dims = extractedWorldToDraft(parsed.world);
+            // Pre-fill name from first line of settings if available
+            const nameFromSettings = dims.settings?.[0]?.name ?? "";
+            setDraft((prev) => ({
+              ...prev,
+              ...dims,
+              name: prev.name || nameFromSettings || "AI提取世界",
+              description: prev.description || `通过 AI 从书籍自动提取的世界设定`,
+            }));
+          }
+          // Clear the stored data so it doesn't re-apply on re-mount
+          sessionStorage.removeItem("@inkos/ai-extract-data");
+        }
+      } catch {
+        // Ignore sessionStorage read errors
+      }
+    }
+  }, [isCreateMode]);
 
   // Jump to search result
   const handleJumpToSearchResult = useCallback((dimension: string, entityId: string) => {
@@ -987,9 +1233,13 @@ export function WorldDetailPage({ worldId, bookId, nav }: WorldDetailProps) {
         if (bookId) {
           try {
             await postApi(`/books/${encodeURIComponent(bookId)}/worlds-associate`, { worldId: wid });
-          } catch { /* non-critical */ }
+            if (nav?.toWorlds) nav.toWorlds();
+          } catch (err) {
+            setSaveError(`世界已创建成功，但关联到书籍时出现问题: ${err instanceof Error ? err.message : String(err)}。您可以稍后手动关联。`);
+          }
+        } else {
+          if (nav?.toWorlds) nav.toWorlds();
         }
-        if (nav?.toWorlds) nav.toWorlds();
       } else {
         const update: WorldConfigUpdate & { bookIds?: string[] } = {
           name: draft.name,
