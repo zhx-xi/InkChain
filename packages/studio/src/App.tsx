@@ -30,6 +30,7 @@ import { WorldGeoVizPanel } from "./pages/WorldGeoVizPanel";
 import { WorldMapPage } from "./pages/WorldMapPage";
 import { PublishPage } from "./pages/PublishPage";
 import { EditDashboard } from "./pages/EditDashboard";
+import { ConsistencyCheck } from "./pages/ConsistencyCheck";
 import { StoryPlayer } from "./pages/StoryPlayer";
 import { StoryGraphTree } from "./pages/StoryGraphTree";
 const FlowView = lazy(() => import("./pages/FlowView"));
@@ -37,6 +38,7 @@ const FilmWizard = lazy(() => import("./pages/FilmWizard"));
 import { LanguageSelector } from "./pages/LanguageSelector";
 import { AchievementSystem } from "./components/AchievementSystem";
 import { ArchivePage } from "./pages/ArchivePage";
+import { VolumeManagement } from "./pages/VolumeManagement";
 import { CharacterTiering } from "./pages/CharacterTiering";
 import { BookSidebar, BookSidebarToggle } from "./components/chat/BookSidebar";
 import { useSSE } from "./hooks/use-sse";
@@ -130,8 +132,10 @@ export function App() {
     toWorldMap: (worldId: string) => setRoute({ page: "world-map", worldId }),
     toWorldCreate: (bookId?: string) => setRoute({ page: "world-create", ...(bookId ? { bookId } : {}) }),
     toBookWorlds: (bookId: string) => setRoute({ page: "book-worlds", bookId }),
+    toConsistency: (bookId: string) => setRoute({ page: "consistency", bookId }),
     toPublish: (bookId: string) => setRoute({ page: "publish", bookId }),
     toEditDashboard: (bookId: string) => setRoute({ page: "edit-dashboard", bookId }),
+    toVolumeManagement: (bookId: string) => setRoute({ page: "volume-management", bookId }),
     toCharacterTiering: (bookId: string) => setRoute({ page: "character-tiering", bookId }),
   };
 
@@ -457,6 +461,16 @@ export function App() {
           {route.page === "edit-dashboard" && (
             <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <EditDashboard bookId={route.bookId} nav={nav} />
+            </div>
+          )}
+          {route.page === "consistency" && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <ConsistencyCheck bookId={route.bookId} nav={nav} />
+            </div>
+          )}
+          {route.page === "volume-management" && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <VolumeManagement bookId={route.bookId} nav={nav} />
             </div>
           )}
           {route.page === "character-tiering" && (
