@@ -1,8 +1,9 @@
 import { cn } from "../lib/utils";
 
-// ── Agent Role Type (matching AgentRoleEnum from @actalk/inkos-core) ──
+// ── Agent Role Type ──
+// Built-in roles are fixed; custom agents use arbitrary string ids.
 
-export type AgentRole = "writer" | "auditor" | "editor" | "architect" | "planner" | "observer" | "reviser";
+export type AgentRole = string;
 
 export type AgentStatus = "ready" | "busy" | "error" | "disabled";
 
@@ -14,6 +15,7 @@ export interface AgentMetadata {
   readonly description: string;
   readonly color: string;
   readonly icon: string;
+  readonly isCustom?: boolean;
 }
 
 export const AGENTS: ReadonlyArray<AgentMetadata> = [
@@ -64,6 +66,14 @@ export function AgentCard({ agent, status, displayName, onClick, className }: Ag
       disabled={status === "disabled"}
       style={{ borderColor: status !== "disabled" ? `${agent.color}30` : undefined }}
     >
+      {/* Custom badge */}
+      {agent.isCustom && (
+        <div className="absolute -top-2 -left-2 z-10 rounded-full px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wider shadow-sm"
+          style={{ backgroundColor: agent.color, color: "#fff" }}>
+          自定义
+        </div>
+      )}
+
       {/* Status dot - top right */}
       <div className="absolute top-2 right-2 flex items-center gap-1.5">
         <span className={cn("h-2 w-2 rounded-full", statusCfg.dotClass)} />

@@ -1,1 +1,6 @@
-{"title":"feat: 伏笔AI提取添加章节范围和应用按钮 (#309)","head":"feat-309-foreshadowing-ai","base":"master","body":"Closes #309\n\n## 变更\n- 章节选择改为范围选择器(起始/结束)\n- 提取结果添加[应用全部]和选择性应用按钮\n- 支持checkbox勾选单个伏笔应用\n- 添加单元测试"}
+{
+  "title": "feat: Agent Team UI优化 — 模板合并+Tab切换+自定义Agent (#326)",
+  "head": "326-agent-team",
+  "base": "main",
+  "body": "Closes #326\n\n## 变更内容\n1. 预设和用户模板合并统一列表展示\n2. 预设带\"预设\"特殊标记，一键还原，不可删除\n3. [团队配置] [流程编辑] Tab切换\n4. 修复AgentFlowEditor filter永真bug（line 181 || true）\n5. 暖白文学风配色（#FDF6F0背景，#8B3A3A品牌色）\n6. 自定义Agent CRUD（添加/删除自定义角色）\n7. 每个模板有独立流程配置"
+}

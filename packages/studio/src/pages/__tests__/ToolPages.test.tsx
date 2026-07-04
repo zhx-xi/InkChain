@@ -36,6 +36,24 @@ vi.mock("../../hooks/use-api", () => ({
   postApi: vi.fn(),
 }));
 
+// ── Mock @xyflow/react (used by AgentFlowEditor imported from AgentTeamPanel) ──
+vi.mock("@xyflow/react", () => ({
+  ReactFlow: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="react-flow">{children}</div>
+  ),
+  Background: () => null,
+  Controls: () => null,
+  MiniMap: () => null,
+  Handle: () => null,
+  Position: { Left: "left", Right: "right" },
+  useNodesState: vi.fn(() => [[], vi.fn(), vi.fn()]),
+  useEdgesState: vi.fn(() => [[], vi.fn(), vi.fn()]),
+  BackgroundVariant: { Dots: "dots" },
+  MarkerType: { ArrowClosed: "arrowclosed" },
+  BaseEdge: () => null,
+  getBezierPath: vi.fn(() => ["", ""]),
+}));
+
 // ── Mock inkos-core models (used by ForeshadowingPage) ──
 vi.mock("@actalk/inkos-core/models/foreshadowing.js", () => ({
   FORESHADOWING_TYPE_LABELS: {
@@ -349,24 +367,36 @@ describe("AgentTeamPanel", () => {
   });
 
   it("14. renders 7 Agent cards when data loads successfully", async () => {
-    vi.mocked(fetchJson)
-      .mockResolvedValueOnce({
-        config: {
-          schemaVersion: "1.0",
-          agents: [
-            { role: "writer", enabled: true },
-            { role: "auditor", enabled: true },
-            { role: "editor", enabled: true },
-            { role: "architect", enabled: true },
-            { role: "planner", enabled: true },
-            { role: "observer", enabled: true },
-            { role: "reviser", enabled: true },
-          ],
-          defaultModel: "gpt-4",
-          collaborationMode: "sequential" as const,
-        },
-      })
-      .mockResolvedValueOnce({ templates: [] });
+    vi.mocked(fetchJson).mockImplementation((path: string) => {
+      if (path.includes("/project/agent-team")) {
+        return Promise.resolve({
+          config: {
+            schemaVersion: "1.0",
+            agents: [
+              { role: "writer", enabled: true },
+              { role: "auditor", enabled: true },
+              { role: "editor", enabled: true },
+              { role: "architect", enabled: true },
+              { role: "planner", enabled: true },
+              { role: "observer", enabled: true },
+              { role: "reviser", enabled: true },
+            ],
+            defaultModel: "gpt-4",
+            collaborationMode: "sequential" as const,
+          },
+        });
+      }
+      if (path.includes("/agent-order")) {
+        return Promise.resolve({ order: ["writer", "auditor", "editor", "architect", "planner", "observer", "reviser"] });
+      }
+      if (path.includes("/agent-templates")) {
+        return Promise.resolve({ templates: [] });
+      }
+      if (path.includes("/custom-agents")) {
+        return Promise.resolve({ agents: [] });
+      }
+      return Promise.resolve(null);
+    });
     const { AgentTeamPanel } = await import("../AgentTeamPanel");
     const { container, queryByText, cleanup } = renderIntoContainer(
       <AgentTeamPanel nav={{ toDashboard: vi.fn() }} />,
@@ -388,16 +418,21 @@ describe("AgentTeamPanel", () => {
   });
 
   it("15. back button navigates to project-settings", async () => {
-    vi.mocked(fetchJson)
-      .mockResolvedValueOnce({
-        config: {
-          schemaVersion: "1.0",
-          agents: [],
-          defaultModel: "gpt-4",
-          collaborationMode: "sequential" as const,
-        },
-      })
-      .mockResolvedValueOnce({ templates: [] });
+    vi.mocked(fetchJson).mockImplementation((path: string) => {
+      if (path.includes("/project/agent-team")) {
+        return Promise.resolve({ config: { schemaVersion: "1.0", agents: [], defaultModel: "gpt-4", collaborationMode: "sequential" as const } });
+      }
+      if (path.includes("/agent-order")) {
+        return Promise.resolve({ order: [] });
+      }
+      if (path.includes("/agent-templates")) {
+        return Promise.resolve({ templates: [] });
+      }
+      if (path.includes("/custom-agents")) {
+        return Promise.resolve({ agents: [] });
+      }
+      return Promise.resolve(null);
+    });
     const { AgentTeamPanel } = await import("../AgentTeamPanel");
     const { container, cleanup } = renderIntoContainer(
       <AgentTeamPanel nav={{ toDashboard: vi.fn() }} />,
@@ -416,16 +451,21 @@ describe("AgentTeamPanel", () => {
   });
 
   it("16. preset selector exists", async () => {
-    vi.mocked(fetchJson)
-      .mockResolvedValueOnce({
-        config: {
-          schemaVersion: "1.0",
-          agents: [],
-          defaultModel: "gpt-4",
-          collaborationMode: "sequential" as const,
-        },
-      })
-      .mockResolvedValueOnce({ templates: [] });
+    vi.mocked(fetchJson).mockImplementation((path: string) => {
+      if (path.includes("/project/agent-team")) {
+        return Promise.resolve({ config: { schemaVersion: "1.0", agents: [], defaultModel: "gpt-4", collaborationMode: "sequential" as const } });
+      }
+      if (path.includes("/agent-order")) {
+        return Promise.resolve({ order: [] });
+      }
+      if (path.includes("/agent-templates")) {
+        return Promise.resolve({ templates: [] });
+      }
+      if (path.includes("/custom-agents")) {
+        return Promise.resolve({ agents: [] });
+      }
+      return Promise.resolve(null);
+    });
     const { AgentTeamPanel } = await import("../AgentTeamPanel");
     const { queryByText, cleanup } = renderIntoContainer(
       <AgentTeamPanel nav={{ toDashboard: vi.fn() }} />,
