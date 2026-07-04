@@ -106,6 +106,9 @@ function parseHash(hash: string): HashRoute {
   const worldGeoVizMatch = path.match(/^worlds\/([^/]+)\/geoviz$/);
   if (worldGeoVizMatch) return { page: "world-geoviz", worldId: decodeURIComponent(worldGeoVizMatch[1]) };
 
+  const worldMapMatch = path.match(/^worlds\/([^/]+)\/map$/);
+  if (worldMapMatch) return { page: "world-map", worldId: decodeURIComponent(worldMapMatch[1]) };
+
   const worldDetailMatch = path.match(/^worlds\/([^/]+)$/);
   if (worldDetailMatch) return { page: "world-detail", worldId: decodeURIComponent(worldDetailMatch[1]) };
 
@@ -156,8 +159,10 @@ function routeToHash(route: HashRoute): string {
     case "world-create": return route.bookId ? `#/worlds/new/${encodeURIComponent(route.bookId)}` : "#/worlds/new";
     case "world-detail": return `#/worlds/${encodeURIComponent(route.worldId)}`;
     case "world-geoviz": return `#/worlds/${encodeURIComponent(route.worldId)}/geoviz`;
+    case "world-map": return `#/worlds/${encodeURIComponent(route.worldId)}/map`;
     case "world-inheritance": return `#/worlds/${encodeURIComponent(route.worldId)}/inherit`;
     case "world-map": return `#/worlds/${encodeURIComponent(route.worldId)}/map`;
+>>>>>>> origin/main
 >>>>>>> origin/main
     case "publish": return `#/publish/${encodeURIComponent(route.bookId)}`;
     case "edit-dashboard": return `#/edit-dashboard/${encodeURIComponent(route.bookId)}`;
@@ -172,8 +177,10 @@ function routeToHash(route: HashRoute): string {
 
 export { parseHash, routeToHash }; // for testing
 
+const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "world-map", "publish", "edit-dashboard"]);
 const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "world-inheritance", "publish", "edit-dashboard"]);
 const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "style", "style-consistency", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "world-map", "publish", "edit-dashboard", "chapter-wizard", "consistency", "volume-management", "character-tiering"]);
+>>>>>>> origin/main
 >>>>>>> origin/main
 
 export function useHashRoute() {

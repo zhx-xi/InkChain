@@ -307,6 +307,16 @@ export {
   type GenerateCandidates,
 } from "./ai/world-generator.js";
 export {
+  buildMapGeneratePrompt,
+  buildImageAnalyzePrompt,
+  parseMapGenerateResponse,
+  parseImageAnalysisResponse,
+  generateRegionId,
+  type MapRegionCandidate,
+  type ImageRegionResult,
+  type ImageAnalysisResult,
+} from "./ai/map-generator.js";
+export {
   buildContinueSystemPrompt,
   buildContinueUserPrompt,
   parseContinueResponse,
