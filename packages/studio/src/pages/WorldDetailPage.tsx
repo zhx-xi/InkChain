@@ -21,8 +21,6 @@ import {
 } from "@actalk/inkos-core/models/world-config.js";
 import {
   ArrowLeft, Save, Trash2, Plus, BookPlus, X, Globe, Search, ChevronUp, ChevronDown, Download, Upload, ListChecks, Check, GripVertical, ChevronRight, ChevronLeft, Link2, ExternalLink, AlertTriangle, Map,
-  ArrowLeft, Save, Trash2, Plus, BookPlus, X, Globe, Map, Search, ChevronUp, ChevronDown, Download, Upload, ListChecks, Check, GripVertical, ChevronRight, ChevronLeft, Link2, ExternalLink, AlertTriangle,
->>>>>>> origin/main
 } from "lucide-react";
 import { cn } from "../lib/utils";
 
