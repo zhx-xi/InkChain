@@ -29,6 +29,7 @@ import { WorldGeoVizPanel } from "./pages/WorldGeoVizPanel";
 import { PublishPage } from "./pages/PublishPage";
 import { EditDashboard } from "./pages/EditDashboard";
 import { StoryPlayer } from "./pages/StoryPlayer";
+const ChapterWizard = lazy(() => import("./pages/ChapterWizard"));
 import { StoryGraphTree } from "./pages/StoryGraphTree";
 const FlowView = lazy(() => import("./pages/FlowView"));
 const FilmWizard = lazy(() => import("./pages/FilmWizard"));
@@ -126,6 +127,7 @@ export function App() {
     toBookWorlds: (bookId: string) => setRoute({ page: "book-worlds", bookId }),
     toPublish: (bookId: string) => setRoute({ page: "publish", bookId }),
     toEditDashboard: (bookId: string) => setRoute({ page: "edit-dashboard", bookId }),
+    toChapterWizard: (bookId: string) => setRoute({ page: "chapter-wizard", bookId }),
   };
 
   const activeBookId = deriveActiveBookId(route);
@@ -432,6 +434,11 @@ export function App() {
             <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <EditDashboard bookId={route.bookId} nav={nav} />
             </div>
+          )}
+          {route.page === "chapter-wizard" && (
+            <Suspense fallback={<div className="p-6 text-sm">加载章节生成管道…</div>}>
+              <ChapterWizard bookId={route.bookId} nav={nav} theme={theme} t={t} />
+            </Suspense>
           )}
         </main>
       </div>
