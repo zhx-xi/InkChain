@@ -30,6 +30,8 @@ import {
   WorldReferenceCreateSchema,
   type WorldConfig,
 } from "@actalk/inkos-core";
+import { join } from "node:path";
+import { readFile } from "node:fs/promises";
 import { ApiError } from "../errors.js";
 import { isSafeBookId } from "../safety.js";
 
