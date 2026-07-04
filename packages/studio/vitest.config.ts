@@ -12,6 +12,7 @@ export default defineConfig({
       "@actalk/inkos-core/interactive-film/evaluator": resolve(__dirname, "../core/src/interactive-film/evaluator.ts"),
       "@actalk/inkos-core/interactive-film/graph-schema": resolve(__dirname, "../core/src/interactive-film/graph-schema.ts"),
       "@actalk/inkos-core/models/persona-config.js": resolve(__dirname, "../core/src/models/persona-config.ts"),
+      "@actalk/inkos-core/models/foreshadowing.js": resolve(__dirname, "../core/src/models/foreshadowing.ts"),
       "@actalk/inkos-core": resolve(__dirname, "../core/src/index.ts"),
     },
   },
