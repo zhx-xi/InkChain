@@ -9,7 +9,7 @@ import type { WorldConfig } from "@actalk/inkos-core";
 interface AiExtractResponse {
   readonly summary: string;
   readonly entities: Array<{ type: string; name: string; description?: string }>;
-  readonly sections: string[];
+  readonly sections: Array<{ readonly type: string; readonly name: string; readonly description?: string }>;
   readonly textLength: number;
   readonly chaptersRead: number;
 }
@@ -379,7 +379,7 @@ export function WorldListPage({ nav, bookId }: {
                             key={idx}
                             className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
                           >
-                            {DIMENSION_LABELS[section] || section}
+                            {DIMENSION_LABELS[section.type] || section.name}
                           </span>
                         ))}
                       </div>
