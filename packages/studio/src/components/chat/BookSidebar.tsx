@@ -10,9 +10,8 @@ import { cjk } from "@streamdown/cjk";
 import { ProgressSection } from "../sidebar/ProgressSection";
 import { FoundationSection } from "../sidebar/FoundationSection";
 import { SummarySection } from "../sidebar/SummarySection";
-import { ChaptersSection } from "../sidebar/ChaptersSection";
+import { ChapterVolumeSection } from "../sidebar/ChapterVolumeSection";
 import { CharacterSection } from "../sidebar/CharacterSection";
-import { VolumesSection } from "../sidebar/VolumesSection";
 import { FrontmatterCards } from "../sidebar/FrontmatterCards";
 import { PendingHooksView } from "../sidebar/PendingHooksView";
 import {
@@ -252,8 +251,7 @@ function PanelView({ bookId, theme: _theme, t, sse }: BookSidebarProps) {
         </div>
       )}
       <ProgressSection sse={sse} />
-      <VolumesSection bookId={bookId} />
-      <ChaptersSection bookId={bookId} isZh={isZh} />
+      <ChapterVolumeSection bookId={bookId} />
       <CharacterSection bookId={bookId} />
       <FoundationSection bookId={bookId} />
       <SummarySection bookId={bookId} />
