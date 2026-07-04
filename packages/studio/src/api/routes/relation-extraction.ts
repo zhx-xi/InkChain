@@ -68,19 +68,38 @@ export function createRelationExtractionRouter(
       return c.json({ error: { code: "INVALID_JSON", message: "请求体不是有效的 JSON" } }, 400);
     }
 
-    const prose =
-      typeof (body as Record<string, unknown>).prose === "string"
-        ? ((body as Record<string, unknown>).prose as string).trim()
+    const bodyRecord = body as Record<string, unknown>;
+    const extractMode = String(bodyRecord.extractMode ?? "text") as "text" | "chapters" | "combined";
+
+    let prose =
+      typeof bodyRecord.prose === "string"
+        ? (bodyRecord.prose as string).trim()
         : "";
+
+    const rawChapterNumbers = bodyRecord.chapterNumbers;
+    const chapterNumbers: number[] = Array.isArray(rawChapterNumbers)
+      ? rawChapterNumbers.filter((n): n is number => typeof n === "number" && Number.isInteger(n) && n > 0)
+      : [];
+
+    // Auto-load chapter content when prose is not provided but chapters are specified
+    if (!prose && chapterNumbers.length > 0 && (extractMode === "chapters" || extractMode === "combined")) {
+      const chapterParts: string[] = [];
+      for (const ch of chapterNumbers) {
+        try {
+          const chContent = await readFile(join(dir, "chapters", `${ch}.md`), "utf-8");
+          chapterParts.push(`# 第${ch}章\n\n${chContent.trim()}`);
+        } catch {
+          // Skip missing chapter files
+        }
+      }
+      if (chapterParts.length > 0) {
+        prose = chapterParts.join("\n\n");
+      }
+    }
 
     if (!prose) {
       return c.json({ error: { code: "VALIDATION_ERROR", message: "prose 文本不能为空" } }, 400);
     }
-
-    const rawChapterNumbers = (body as Record<string, unknown>).chapterNumbers;
-    const chapterNumbers: number[] = Array.isArray(rawChapterNumbers)
-      ? rawChapterNumbers.filter((n): n is number => typeof n === "number" && Number.isInteger(n) && n > 0)
-      : [];
 
     // Load existing relations for context
     const relationsFile = await loadRelations(dir);
