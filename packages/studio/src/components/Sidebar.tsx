@@ -102,6 +102,7 @@ export interface Nav {
   toForeshadowing: (bookId: string) => void;
   toWorlds: () => void;
   toWorldDetail: (worldId: string) => void;
+  toWorldMap: (worldId: string) => void;
   toWorldCreate: () => void;
   toPublish: (bookId: string) => void;
   toBookWorlds: (bookId: string) => void;

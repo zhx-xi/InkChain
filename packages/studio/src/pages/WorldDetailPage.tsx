@@ -20,7 +20,7 @@ import {
   WorldConfigUpdateSchema,
 } from "@actalk/inkos-core/models/world-config.js";
 import {
-  ArrowLeft, Save, Trash2, Plus, BookPlus, X, Globe, Search, ChevronUp, ChevronDown, Download, Upload, ListChecks, Check, GripVertical, ChevronRight, ChevronLeft, Link2, ExternalLink, AlertTriangle,
+  ArrowLeft, Save, Trash2, Plus, BookPlus, X, Globe, Map, Search, ChevronUp, ChevronDown, Download, Upload, ListChecks, Check, GripVertical, ChevronRight, ChevronLeft, Link2, ExternalLink, AlertTriangle,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 
@@ -68,7 +68,7 @@ function importDimension<T extends Record<string, unknown>>(json: string): T[] |
 interface WorldDetailProps {
   readonly worldId?: string;
   readonly bookId?: string;
-  readonly nav?: { toWorlds: () => void; toBook: (bookId: string) => void; toWorldGeoViz?: (worldId: string) => void };
+  readonly nav?: { toWorlds: () => void; toBook: (bookId: string) => void; toWorldGeoViz?: (worldId: string) => void; toWorldMap?: (worldId: string) => void };
 }
 
 // ── Draft state ──
@@ -1183,6 +1183,10 @@ export function WorldDetailPage({ worldId, bookId, nav }: WorldDetailProps) {
             <button type="button" onClick={() => { if (nav?.toWorldGeoViz) nav.toWorldGeoViz(worldId); }}
               className="inline-flex items-center gap-1.5 rounded-lg border border-border/40 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors">
               <Globe size={14} />地理可视化
+            </button>
+            <button type="button" onClick={() => { if (nav?.toWorldMap) nav.toWorldMap(worldId); }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border/40 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors">
+              <Map size={14} />交互式地图
             </button>
           </div>
         )}
