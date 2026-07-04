@@ -191,10 +191,16 @@ test.describe("Volume DnD — drag to unassigned", () => {
     expect(beforeV1).toBe(2);
     const beforeUn = await countUnassignedChapters(page);
 
+    // Verify source and target exist before dragging
+    await expect(page.locator("xpath=//li[@draggable][contains(.,'04 第四章')]")).toBeVisible({ timeout: 3000 });
+    await expect(page.getByText(/未分配章节/)).toBeVisible({ timeout: 3000 });
+
     await simulateDragDrop(page, "04 第四章", "未分配章节", 4);
 
-    await page.waitForTimeout(1000);
-    expect(await countChaptersInVolume(page, "第一卷")).toBe(1);
+    // Wait for the volume card to show only 1 chapter li
+    await expect(async () => {
+      expect(await countChaptersInVolume(page, "第一卷")).toBe(1);
+    }).toPass({ timeout: 5_000 });
     expect(await countUnassignedChapters(page)).toBe(beforeUn + 1);
   });
 
@@ -205,8 +211,9 @@ test.describe("Volume DnD — drag to unassigned", () => {
 
     await simulateDragDrop(page, "03 第三章", "未分配章节", 3);
 
-    await page.waitForTimeout(1000);
-    expect(await countChaptersInVolume(page, "第二卷")).toBe(0);
+    await expect(async () => {
+      expect(await countChaptersInVolume(page, "第二卷")).toBe(0);
+    }).toPass({ timeout: 5_000, intervals: [500] });
     expect(await countUnassignedChapters(page)).toBe(beforeUn + 1);
   });
 });
