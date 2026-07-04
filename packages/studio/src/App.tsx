@@ -15,26 +15,37 @@ import { DaemonControl } from "./pages/DaemonControl";
 import { LogViewer } from "./pages/LogViewer";
 import { GenreManager } from "./pages/GenreManager";
 import { StyleManager } from "./pages/StyleManager";
+import { ConsistencyPanel } from "./pages/ConsistencyPanel";
 import { ImportManager } from "./pages/ImportManager";
 import { RadarView } from "./pages/RadarView";
 import { DoctorView } from "./pages/DoctorView";
 import { RelationGraphPanel } from "./pages/RelationGraphPanel";
 import { TimelinePage } from "./pages/TimelinePage";
 import { AgentTeamPanel } from "./pages/AgentTeamPanel";
+import AgentPipelineView from "./pages/AgentPipelineView";
 import { SkillListPage } from "./pages/SkillListPage";
 import { ForeshadowingPage } from "./pages/ForeshadowingPage";
 import { WorldListPage } from "./pages/WorldListPage";
 import { WorldDetailPage } from "./pages/WorldDetailPage";
 import { WorldGeoVizPanel } from "./pages/WorldGeoVizPanel";
 import { WorldMapViewPanel } from "./pages/WorldMapViewPanel";
+import { WorldInheritancePage } from "./pages/WorldInheritancePage";
+import { WorldMapPage } from "./pages/WorldMapPage";
+>>>>>>> origin/main
+>>>>>>> origin/main
 import { PublishPage } from "./pages/PublishPage";
 import { EditDashboard } from "./pages/EditDashboard";
+import { ConsistencyCheck } from "./pages/ConsistencyCheck";
 import { StoryPlayer } from "./pages/StoryPlayer";
+const ChapterWizard = lazy(() => import("./pages/ChapterWizard"));
 import { StoryGraphTree } from "./pages/StoryGraphTree";
 const FlowView = lazy(() => import("./pages/FlowView"));
 const FilmWizard = lazy(() => import("./pages/FilmWizard"));
 import { LanguageSelector } from "./pages/LanguageSelector";
+import { AchievementSystem } from "./components/AchievementSystem";
 import { ArchivePage } from "./pages/ArchivePage";
+import { VolumeManagement } from "./pages/VolumeManagement";
+import { CharacterTiering } from "./pages/CharacterTiering";
 import { BookSidebar, BookSidebarToggle } from "./components/chat/BookSidebar";
 import { useSSE } from "./hooks/use-sse";
 import { useSessionEvents } from "./hooks/use-session-events";
@@ -106,6 +117,7 @@ export function App() {
     toLogs: () => setRoute({ page: "logs" }),
     toGenres: () => setRoute({ page: "genres" }),
     toStyle: () => setRoute({ page: "style" }),
+    toStyleConsistency: () => setRoute({ page: "style-consistency" }),
     toImport: (tab?: "chapters" | "canon" | "fanfic" | "spinoff" | "imitation") => setRoute({ page: "import", ...(tab ? { tab } : {}) }),
     toRadar: () => setRoute({ page: "radar" }),
     toDoctor: () => setRoute({ page: "doctor" }),
@@ -117,6 +129,7 @@ export function App() {
     toFilmAuthor: (projectId: string) => setRoute({ page: "film-author", projectId }),
     toFilmStudio: (projectId: string) => setRoute({ page: "film-studio", projectId }),
     toAgents: () => setRoute({ page: "agents" }),
+    toAgentPipeline: () => setRoute({ page: "agent-pipeline" }),
     toArchive: () => setRoute({ page: "archive" }),
     toSkills: () => setRoute({ page: "skills" }),
     toForeshadowing: (bookId: string) => setRoute({ page: "foreshadowing", bookId }),
@@ -124,10 +137,18 @@ export function App() {
     toWorldDetail: (worldId: string) => setRoute({ page: "world-detail", worldId }),
     toWorldGeoViz: (worldId: string) => setRoute({ page: "world-geoviz", worldId }),
     toWorldMap: (worldId: string) => setRoute({ page: "world-map", worldId }),
+    toWorldInheritance: (worldId: string) => setRoute({ page: "world-inheritance", worldId }),
+    toWorldMap: (worldId: string) => setRoute({ page: "world-map", worldId }),
+>>>>>>> origin/main
+>>>>>>> origin/main
     toWorldCreate: (bookId?: string) => setRoute({ page: "world-create", ...(bookId ? { bookId } : {}) }),
     toBookWorlds: (bookId: string) => setRoute({ page: "book-worlds", bookId }),
+    toConsistency: (bookId: string) => setRoute({ page: "consistency", bookId }),
     toPublish: (bookId: string) => setRoute({ page: "publish", bookId }),
     toEditDashboard: (bookId: string) => setRoute({ page: "edit-dashboard", bookId }),
+    toChapterWizard: (bookId: string) => setRoute({ page: "chapter-wizard", bookId }),
+    toVolumeManagement: (bookId: string) => setRoute({ page: "volume-management", bookId }),
+    toCharacterTiering: (bookId: string) => setRoute({ page: "character-tiering", bookId }),
   };
 
   const activeBookId = deriveActiveBookId(route);
@@ -202,6 +223,15 @@ export function App() {
                <span className="text-muted-foreground/70">/</span>
                <span className="font-serif">InkOS Studio</span>
              </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <AchievementSystem
+              totalChapters={0}
+              totalWords={0}
+              sessionCount={0}
+              consecutiveApproved={0}
+            />
           </div>
 
           <div className="flex items-center gap-3">
@@ -333,6 +363,11 @@ export function App() {
               <StyleManager nav={nav} theme={theme} t={t} />
             </div>
           )}
+          {route.page === "style-consistency" && (
+            <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <ConsistencyPanel nav={nav} theme={theme} t={t} />
+            </div>
+          )}
           {route.page === "import" && (
             <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <ImportManager nav={nav} theme={theme} t={t} initialTab={route.tab} />
@@ -391,6 +426,11 @@ export function App() {
               <AgentTeamPanel nav={nav} />
             </div>
           )}
+          {route.page === "agent-pipeline" && (
+            <div className="absolute inset-0 flex min-w-0">
+              <AgentPipelineView nav={nav} />
+            </div>
+          )}
           {route.page === "archive" && (
             <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <ArchivePage />
@@ -428,6 +468,14 @@ export function App() {
           {route.page === "world-map" && (
             <div className="w-full h-full fade-in">
               <WorldMapViewPanel worldId={route.worldId} nav={nav} />
+          {route.page === "world-inheritance" && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <WorldInheritancePage worldId={route.worldId} />
+          {route.page === "world-map" && (
+            <div className="w-full h-full fade-in">
+              <WorldMapPage worldId={route.worldId} nav={nav} />
+>>>>>>> origin/main
+>>>>>>> origin/main
             </div>
           )}
           {route.page === "publish" && (
@@ -439,6 +487,24 @@ export function App() {
             <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <EditDashboard bookId={route.bookId} nav={nav} />
             </div>
+          )}
+          {route.page === "chapter-wizard" && (
+            <Suspense fallback={<div className="p-6 text-sm">加载章节生成管道…</div>}>
+              <ChapterWizard bookId={route.bookId} nav={nav} theme={theme} t={t} />
+            </Suspense>
+          )}
+          {route.page === "consistency" && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <ConsistencyCheck bookId={route.bookId} nav={nav} />
+            </div>
+          )}
+          {route.page === "volume-management" && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <VolumeManagement bookId={route.bookId} nav={nav} />
+            </div>
+          )}
+          {route.page === "character-tiering" && (
+            <CharacterTiering bookId={route.bookId} />
           )}
         </main>
       </div>

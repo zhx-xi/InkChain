@@ -21,6 +21,8 @@ import {
 } from "@actalk/inkos-core/models/world-config.js";
 import {
   ArrowLeft, Save, Trash2, Plus, BookPlus, X, Globe, Search, ChevronUp, ChevronDown, Download, Upload, ListChecks, Check, GripVertical, ChevronRight, ChevronLeft, Link2, ExternalLink, AlertTriangle, Map,
+  ArrowLeft, Save, Trash2, Plus, BookPlus, X, Globe, Map, Search, ChevronUp, ChevronDown, Download, Upload, ListChecks, Check, GripVertical, ChevronRight, ChevronLeft, Link2, ExternalLink, AlertTriangle,
+>>>>>>> origin/main
 } from "lucide-react";
 import { cn } from "../lib/utils";
 
@@ -1187,6 +1189,10 @@ export function WorldDetailPage({ worldId, bookId, nav }: WorldDetailProps) {
             <button type="button" onClick={() => { if (nav?.toWorldGeoViz) nav.toWorldGeoViz(worldId); }}
               className="inline-flex items-center gap-1.5 rounded-lg border border-border/40 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors">
               <Globe size={14} />地理可视化
+            </button>
+            <button type="button" onClick={() => { if (nav?.toWorldMap) nav.toWorldMap(worldId); }}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border/40 px-3 py-1.5 text-xs text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors">
+              <Map size={14} />交互式地图
             </button>
           </div>
         )}

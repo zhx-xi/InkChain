@@ -128,6 +128,7 @@ import { createWorldsAIGenRouter } from "./routes/worlds-ai-gen.js";
 import { createMapsAIGenRouter } from "./routes/maps-ai-gen.js";
 import { createPublishRouter } from "./routes/publish.js";
 import { createStyleProfilesRouter } from "./routes/style-profiles.js";
+import { createStyleConsistencyRouter } from "./routes/style-consistency.js";
 import { createConsistencyRouter } from "./routes/consistency.js";
 import { createRelationLabelerRouter } from "./routes/relation-labeler.js";
 import { createWritingContinueRouter } from "./routes/writing-continue.js";
@@ -136,6 +137,11 @@ import { createForeshadowingExtractRouter } from "./routes/foreshadowing-extract
 import { createTimelineExtractRouter } from "./routes/timeline-extract.js";
 import { createChapterVersionsRouter } from "./routes/chapter-versions.js";
 import { createAgentTemplatesRouter } from "./routes/agent-templates.js";
+
+import { createChapterVersionsRouter } from "./routes/chapter-versions.js";
+import { createAgentTemplatesRouter } from "./routes/agent-templates.js";
+import { createCustomAgentsRouter } from "./routes/custom-agents.js";
+import { createAgentOrderRouter } from "./routes/agent-order.js";
 
 // -- Pipeline stage definitions per agent type --
 
@@ -5764,9 +5770,14 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   app.route("/api/publish", createPublishRouter(root));
   app.route("/api/style-profiles", createStyleProfilesRouter(root));
   app.route("/api/consistency", createConsistencyRouter(root));
+  app.route("/api/style-consistency", createStyleConsistencyRouter(root));
   app.route("/api/v1/writing", createWritingContinueRouter(root));
   app.route("/api/v1/project/agent-team", createAgentTeamRouter(root));
   app.route("/api/v1/agent-templates", createAgentTemplatesRouter(root));
+
+  app.route("/api/v1/agent-templates", createAgentTemplatesRouter(root));
+  app.route("/api/v1/custom-agents", createCustomAgentsRouter(root));
+  app.route("/api/v1/agent-order", createAgentOrderRouter(root));
 
   // ── Writer's Block Breakthrough (E4 simplified) ──
   // GET  /api/v1/books/:id/writers-block — analyze context and return 3-5 advancement suggestions

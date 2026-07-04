@@ -44,6 +44,8 @@ export const WorldRoleSchema = z.object({
   sortIndex: z.number().int().min(0).default(0),
   institutionIds: z.array(z.string()).default([]),
   regionIds: z.array(z.string()).default([]),
+  /** Current/primary region where this character is located */
+  currentRegionId: z.string().optional(),
 });
 export type WorldRole = z.infer<typeof WorldRoleSchema>;
 
@@ -88,6 +90,17 @@ export type WorldReferenceCreate = z.infer<typeof WorldReferenceCreateSchema>;
 export const WorldRegionTypeEnum = z.enum(["大陆", "国家", "城市", "地点"]);
 export type WorldRegionType = z.infer<typeof WorldRegionTypeEnum>;
 
+/** English region level type for frontend map layout */
+export const WorldRegionLevelEnum = z.enum(["continent", "country", "city", "location"]);
+export type WorldRegionLevel = z.infer<typeof WorldRegionLevelEnum>;
+
+/** 2D coordinates for map layout */
+export const CoordinatesSchema = z.object({
+  x: z.number(),
+  y: z.number(),
+});
+export type Coordinates = z.infer<typeof CoordinatesSchema>;
+
 export const WorldRegionSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
@@ -99,6 +112,11 @@ export const WorldRegionSchema = z.object({
   x: z.number().min(0).max(100).nullable().default(null),
   /** Map coordinate Y (percentage 0-100) */
   y: z.number().min(0).max(100).nullable().default(null),
+  /** Frontend layout coordinates (undefined/null = auto-layout) */
+  coordinates: CoordinatesSchema.optional(),
+  /** English region level for frontend map hierarchy */
+  regionType: WorldRegionLevelEnum.optional(),
+>>>>>>> origin/main
 });
 export type WorldRegion = z.infer<typeof WorldRegionSchema>;
 

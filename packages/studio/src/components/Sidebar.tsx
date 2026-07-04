@@ -54,6 +54,7 @@ import {
   AlertTriangle,
   Globe,
   Upload,
+  BarChart3,
 } from "lucide-react";
 import { InkosLogo } from "./InkosLogo";
 
@@ -78,7 +79,7 @@ interface BookSummary {
   readonly chaptersWritten: number;
 }
 
-interface Nav {
+export interface Nav {
   toDashboard: () => void;
   toChat: () => void;
   toBook: (id: string) => void;
@@ -89,6 +90,7 @@ interface Nav {
   toLogs: () => void;
   toGenres: () => void;
   toStyle: () => void;
+  toStyleConsistency: () => void;
   toImport: (tab?: "chapters" | "canon" | "fanfic" | "spinoff" | "imitation") => void;
   toRadar: () => void;
   toDoctor: () => void;
@@ -96,14 +98,17 @@ interface Nav {
   toTimeline: (bookId: string) => void;
   toFilmStudio: (id: string) => void;
   toAgents: () => void;
+  toAgentPipeline: () => void;
   toArchive: () => void;
   toSkills: () => void;
   toForeshadowing: (bookId: string) => void;
   toWorlds: () => void;
   toWorldDetail: (worldId: string) => void;
+  toWorldMap: (worldId: string) => void;
   toWorldCreate: () => void;
   toPublish: (bookId: string) => void;
   toBookWorlds: (bookId: string) => void;
+  toChapterWizard: (bookId: string) => void;
 }
 
 export function Sidebar({ nav, activePage, sse, t }: {
@@ -478,6 +483,14 @@ export function Sidebar({ nav, activePage, sse, t }: {
                       </button>
                       <button
                         type="button"
+                        onClick={() => nav.toChapterWizard(book.id)}
+                        className="w-full flex items-center gap-2 pl-9 pr-2 py-1.5 text-[13px] text-muted-foreground/50 hover:text-foreground hover:text-primary transition-colors"
+                      >
+                        <Sparkles size={12} />
+                        <span>生成章节</span>
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => void handleCreateSession(book.id)}
                         className="w-full flex items-center gap-2 pl-9 pr-2 py-1.5 text-[13px] text-muted-foreground/50 hover:text-foreground transition-colors"
                       >
@@ -678,6 +691,12 @@ export function Sidebar({ nav, activePage, sse, t }: {
               onClick={nav.toAgents}
             />
             <SidebarItem
+              label="Agent Pipeline"
+              icon={<GitBranch size={16} />}
+              active={activePage === "agent-pipeline"}
+              onClick={nav.toAgentPipeline}
+            />
+            <SidebarItem
               label="世界设定"
               icon={<Globe size={16} />}
               active={activePage === "worlds" || activePage === "world-create" || activePage.startsWith("world-detail")}
@@ -700,6 +719,12 @@ export function Sidebar({ nav, activePage, sse, t }: {
               icon={<Wand2 size={16} />}
               active={activePage === "style"}
               onClick={nav.toStyle}
+            />
+            <SidebarItem
+              label="文风统一检测"
+              icon={<BarChart3 size={16} />}
+              active={activePage === "style-consistency"}
+              onClick={nav.toStyleConsistency}
             />
             <SidebarItem
               label={t("nav.import")}

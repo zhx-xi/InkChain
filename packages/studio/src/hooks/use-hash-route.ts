@@ -16,6 +16,7 @@ export type HashRoute =
   | { page: "logs" }
   | { page: "genres" }
   | { page: "style" }
+  | { page: "style-consistency" }
   | { page: "import"; tab?: "chapters" | "canon" | "fanfic" | "spinoff" | "imitation" }
   | { page: "radar" }
   | { page: "doctor" }
@@ -37,7 +38,13 @@ export type HashRoute =
   | { page: "world-map"; worldId: string }
   | { page: "publish"; bookId: string }
   | { page: "edit-dashboard"; bookId: string }
-  | { page: "book-worlds"; bookId: string };
+  | { page: "book-worlds"; bookId: string }
+  | { page: "world-inheritance"; worldId: string };
+  | { page: "chapter-wizard"; bookId: string }
+  | { page: "consistency"; bookId: string }
+  | { page: "volume-management"; bookId: string }
+  | { page: "character-tiering"; bookId: string };
+>>>>>>> origin/main
 
 function parseHash(hash: string): HashRoute {
   const path = hash.replace(/^#\/?/, "");
@@ -48,6 +55,7 @@ function parseHash(hash: string): HashRoute {
   if (path === "settings") return { page: "project-settings" };
   if (path === "import") return { page: "import" };
   if (path === "agents") return { page: "agents" };
+  if (path === "style-consistency") return { page: "style-consistency" };
   if (path === "archive") return { page: "archive" };
   if (path === "skills") return { page: "skills" };
   const foreshadowingMatch = path.match(/^foreshadowing\/([^\/]+)$/);
@@ -89,6 +97,12 @@ function parseHash(hash: string): HashRoute {
   const timelineMatch = path.match(/^timeline\/([^/]+)$/);
   if (timelineMatch) return { page: "timeline", bookId: decodeURIComponent(timelineMatch[1]) };
 
+  const worldInheritMatch = path.match(/^worlds\/([^/]+)\/inherit$/);
+  if (worldInheritMatch) return { page: "world-inheritance", worldId: decodeURIComponent(worldInheritMatch[1]) };
+  const worldMapMatch = path.match(/^worlds\/([^/]+)\/map$/);
+  if (worldMapMatch) return { page: "world-map", worldId: decodeURIComponent(worldMapMatch[1]) };
+>>>>>>> origin/main
+
   const worldGeoVizMatch = path.match(/^worlds\/([^/]+)\/geoviz$/);
   if (worldGeoVizMatch) return { page: "world-geoviz", worldId: decodeURIComponent(worldGeoVizMatch[1]) };
 
@@ -103,6 +117,18 @@ function parseHash(hash: string): HashRoute {
 
   const editDashboardMatch = path.match(/^edit-dashboard\/([^/]+)$/);
   if (editDashboardMatch) return { page: "edit-dashboard", bookId: decodeURIComponent(editDashboardMatch[1]) };
+
+  const chapterWizardMatch = path.match(/^chapter-wizard\/([^\/]+)$/);
+  if (chapterWizardMatch) return { page: "chapter-wizard", bookId: decodeURIComponent(chapterWizardMatch[1]) };
+
+  const consistencyMatch = path.match(/^consistency\/([^\/]+)$/);
+  if (consistencyMatch) return { page: "consistency", bookId: decodeURIComponent(consistencyMatch[1]) };
+
+  const volMgmtMatch = path.match(/^book\/([^\/]+)\/volumes$/);
+  if (volMgmtMatch) return { page: "volume-management", bookId: decodeURIComponent(volMgmtMatch[1]) };
+
+  const charTierMatch = path.match(/^characters\/([^\/]+)\/tiers$/);
+  if (charTierMatch) return { page: "character-tiering", bookId: decodeURIComponent(charTierMatch[1]) };
 
   return { page: "dashboard" };
 }
@@ -134,8 +160,17 @@ function routeToHash(route: HashRoute): string {
     case "world-detail": return `#/worlds/${encodeURIComponent(route.worldId)}`;
     case "world-geoviz": return `#/worlds/${encodeURIComponent(route.worldId)}/geoviz`;
     case "world-map": return `#/worlds/${encodeURIComponent(route.worldId)}/map`;
+    case "world-inheritance": return `#/worlds/${encodeURIComponent(route.worldId)}/inherit`;
+    case "world-map": return `#/worlds/${encodeURIComponent(route.worldId)}/map`;
+>>>>>>> origin/main
+>>>>>>> origin/main
     case "publish": return `#/publish/${encodeURIComponent(route.bookId)}`;
     case "edit-dashboard": return `#/edit-dashboard/${encodeURIComponent(route.bookId)}`;
+    case "style-consistency": return "#/style-consistency";
+    case "chapter-wizard": return `#/chapter-wizard/${encodeURIComponent(route.bookId)}`;
+    case "consistency": return `#/consistency/${encodeURIComponent(route.bookId)}`;
+    case "volume-management": return `#/book/${encodeURIComponent(route.bookId)}/volumes`;
+    case "character-tiering": return `#/characters/${encodeURIComponent(route.bookId)}/tiers`;
     default: return "";
   }
 }
@@ -143,6 +178,10 @@ function routeToHash(route: HashRoute): string {
 export { parseHash, routeToHash }; // for testing
 
 const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "world-map", "publish", "edit-dashboard"]);
+const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "world-inheritance", "publish", "edit-dashboard"]);
+const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "style", "style-consistency", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "world-map", "publish", "edit-dashboard", "chapter-wizard", "consistency", "volume-management", "character-tiering"]);
+>>>>>>> origin/main
+>>>>>>> origin/main
 
 export function useHashRoute() {
   const [route, setRouteState] = useState<HashRoute>(() => parseHash(window.location.hash));
