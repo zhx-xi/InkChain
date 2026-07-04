@@ -8,6 +8,7 @@ import {
   GripVertical,
   ChevronLeft,
   ChevronRight,
+  FileSearch,
 } from "lucide-react";
 import { fetchJson } from "../../hooks/use-api";
 import { useChatStore } from "../../store/chat";
@@ -115,6 +116,8 @@ function VolumeCard({
   readonly isDragOver: boolean;
   readonly onEdit: () => void;
   readonly onDelete: () => void;
+  readonly onDeleteChapter: (chapterNumber: number) => void;
+  readonly onAuditChapter: (chapterNumber: number) => void;
   readonly onDrop: (e: React.DragEvent) => void;
   readonly onDragOver: (e: React.DragEvent) => void;
   readonly onDragEnter: (e: React.DragEvent) => void;
@@ -267,6 +270,26 @@ function VolumeCard({
                 <span className="tabular-nums text-[11px] text-muted-foreground/40 shrink-0">
                   {(ch.wordCount ?? 0).toLocaleString()}
                 </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAuditChapter(ch.number);
+                  }}
+                  className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground/30 hover:text-primary hover:bg-primary/10 transition-colors shrink-0"
+                  title="审计"
+                >
+                  <FileSearch size={11} />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteChapter(ch.number);
+                  }}
+                  className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                  title="删除"
+                >
+                  <Trash2 size={11} />
+                </button>
               </li>
             );
           })}
@@ -304,7 +327,7 @@ function PaginationBar({
       <select
         value={pageSize}
         onChange={(e) => onPageSizeChange(Number(e.target.value))}
-        className="text-[11px] bg-transparent border border-border/20 rounded px-1 py-0.5 outline-none text-muted-foreground/60"
+        className="text-[12px] bg-transparent border border-border/30 rounded px-1.5 py-0.5 outline-none text-muted-foreground/70 font-medium"
       >
         {PAGE_SIZES.map((s) => (
           <option key={s} value={s}>
@@ -312,22 +335,22 @@ function PaginationBar({
           </option>
         ))}
       </select>
-      <span className="text-[11px] text-muted-foreground/50 flex-1 tabular-nums">
-        {total > 0 ? `显示 ${start}-${end} / ${total} 个` : "0 个章节"}
+      <span className="text-[12px] text-muted-foreground/60 flex-1 tabular-nums font-medium">
+        {total > 0 ? `显示 ${start}-${end} / ${total}` : "0 个章节"}
       </span>
       <button
         onClick={() => onPageChange(page - 1)}
         disabled={page <= 1}
-        className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-secondary/50 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+        className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-secondary/60 transition-colors disabled:opacity-20 disabled:cursor-not-allowed border border-border/20"
       >
-        <ChevronLeft size={12} />
+        <ChevronLeft size={14} />
       </button>
       <button
         onClick={() => onPageChange(page + 1)}
         disabled={page >= totalPages}
-        className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-secondary/50 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+        className="w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground/50 hover:text-foreground hover:bg-secondary/60 transition-colors disabled:opacity-20 disabled:cursor-not-allowed border border-border/20"
       >
-        <ChevronRight size={12} />
+        <ChevronRight size={14} />
       </button>
     </div>
   );
@@ -424,6 +447,22 @@ export function ChapterVolumeSection({ bookId }: ChapterVolumeSectionProps) {
         setVolumes((prev) => prev.map((v) => (v.id === volumeId ? volume : v)));
       } catch (err) {
         console.error("Failed to rename volume:", err);
+      }
+    },
+    [bookId],
+  );
+
+  // Delete chapter
+  const handleDeleteChapter = useCallback(
+    async (chapterNumber: number) => {
+      if (!confirm(`确定删除第 ${chapterNumber} 章？删除后不可恢复。`)) return;
+      try {
+        await fetchJson(`/books/${bookId}/chapters/${chapterNumber}`, {
+          method: "DELETE",
+        });
+        useChatStore.getState().bumpBookDataVersion();
+      } catch (err) {
+        console.error("Failed to delete chapter:", err);
       }
     },
     [bookId],
@@ -570,7 +609,11 @@ export function ChapterVolumeSection({ bookId }: ChapterVolumeSectionProps) {
                     void handleDelete(volume.id);
                   }
                 }}
-                onDrop={(e) => handleDropOnVolume(e, volume.id)}
+                onDeleteChapter={handleDeleteChapter}
+                onAuditChapter={(chapterNumber) => {
+                  useChatStore.getState().openChapterArtifact(chapterNumber);
+                }}
+                onDrop={(e) => handleDropOnVolume(e, volume.id)}}
                 onDragOver={handleDragOver}
                 onDragEnter={(e) => handleDragEnter(e, volume.id)}
                 onDragLeave={handleDragLeave}
@@ -679,6 +722,26 @@ export function ChapterVolumeSection({ bookId }: ChapterVolumeSectionProps) {
                   <span className="tabular-nums text-[12px] text-muted-foreground/50 shrink-0">
                     {(ch.wordCount ?? 0).toLocaleString()}
                   </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      useChatStore.getState().openChapterArtifact(ch.number);
+                    }}
+                    className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground/30 hover:text-primary hover:bg-primary/10 transition-colors shrink-0"
+                    title="审计"
+                  >
+                    <FileSearch size={12} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      void handleDeleteChapter(ch.number);
+                    }}
+                    className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
+                    title="删除"
+                  >
+                    <Trash2 size={12} />
+                  </button>
                 </li>
               );
             })}
