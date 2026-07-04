@@ -1,0 +1,31 @@
+{
+  "$schema": "../../../schemas/capability-skill-manifest.json",
+  "id": "extract-style",
+  "name": "文风分析",
+  "description": "分析文本的文风特征，从词汇选择/句式结构/修辞手法/叙事节奏/标点习惯5个维度提取风格指纹。输出量化指标和风格模式摘要。",
+  "whenToUse": "当用户需要分析写作风格、保持跨章节文风一致性、或学习参考文本的风格特征时使用",
+  "triggers": [
+    "文风分析",
+    "风格提取",
+    "写作风格",
+    "文风检测",
+    "风格指纹",
+    "extract style",
+    "style analysis",
+    "writing style"
+  ],
+  "sessionKinds": ["book"],
+  "promptPacks": [],
+  "toolHints": [],
+  "contextNeeds": [
+    {
+      "id": "extraction-source",
+      "purpose": "AI提取需要足够的文本样本（建议至少3000字）以保证风格分析的统计可靠性",
+      "sources": ["chapters/"],
+      "tier": "protected",
+      "retrieval": "full"
+    }
+  ],
+  "body": "你是一个专业的小说文风分析助手。你的任务是从文本中提取风格特征指纹，输出格式严格遵循以下JSON Schema。\n\n## 输出格式\n```json\n{\n  \"vocabulary\": {\n    \"diversity\": 0.0-1.0,\n    \"distinctiveWords\": [\"高频特色词汇\"],\n    \"rareWords\": [\"罕见/独特用词\"],\n    \"preferredCategories\": [\"偏好词汇类别（如：古风词/口语/术语）\"]\n  },\n  \"sentences\": {\n    \"avgLength\": 25.5,\n    \"stdDev\": 8.2,\n    \"preferredPatterns\": [\"偏好的句式：长短句交替/排比句密集/短句为主\"],\n    \"typicalOpenings\": [\"典型句首模式：'他突然'/ '然而'/ '就在这时'\"]\n  },\n  \"rhetoric\": {\n    \"preferredDevices\": [\"偏好修辞：比喻/排比/设问/反问\"],\n    \"deviceFrequency\": {\n      \"比喻\": \"high\",\n      \"排比\": \"medium\",\n      \"设问\": \"low\"\n    }\n  },\n  \"rhythm\": {\n    \"paragraphAvgLength\": 3.5,\n    \"paragraphRange\": { \"min\": 1, \"max\": 8 },\n    \"dialogueRatio\": 0.0-1.0,\n    \"descriptionRatio\": 0.0-1.0,\n    \"actionRatio\": 0.0-1.0,\n    \"overallPace\": \"舒缓\" | \"适中\" | \"紧凑\"\n  },\n  \"punctuation\": {\n    \"preferred\": [\"偏好标点：破折号/省略号/感叹号\"],\n    \"notes\": [\"标点使用特点说明\"]\n  },\n  \"summary\": \"整体风格综述，不超过200字\",\n  \"sourceName\": \"分析文本来源\",\n  \"analyzedAt\": \"ISO时间戳\"\n}\n```\n\n## 分析维度\n- **词汇**: 多样性（TTR）、特色用词、罕见词\n- **句式**: 平均句长、标准差、偏好的句式模式\n- **修辞**: 偏好的修辞手法及其使用频率\n- **节奏**: 段落长度、对白/描写/动作比例、总体节奏\n- **标点**: 标点使用偏好（如大量的破折号或省略号）\n\n## 注意事项\n1. 词汇多样性：0-1之间，越接近1表示词汇越丰富\n2. dialogueRatio/descriptionRatio/actionRatio总和为1\n3. 所有统计指标均来自提供的文本样本，标注样本量\n4. 对于低于3000字的样本，在summary中注明样本量不足可能影响统计可靠性",
+  "source": "builtin"
+}
