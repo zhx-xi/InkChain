@@ -37,6 +37,7 @@ const FilmWizard = lazy(() => import("./pages/FilmWizard"));
 import { LanguageSelector } from "./pages/LanguageSelector";
 import { AchievementSystem } from "./components/AchievementSystem";
 import { ArchivePage } from "./pages/ArchivePage";
+import { VolumeManagement } from "./pages/VolumeManagement";
 import { CharacterTiering } from "./pages/CharacterTiering";
 import { BookSidebar, BookSidebarToggle } from "./components/chat/BookSidebar";
 import { useSSE } from "./hooks/use-sse";
@@ -132,6 +133,7 @@ export function App() {
     toConsistency: (bookId: string) => setRoute({ page: "consistency", bookId }),
     toPublish: (bookId: string) => setRoute({ page: "publish", bookId }),
     toEditDashboard: (bookId: string) => setRoute({ page: "edit-dashboard", bookId }),
+    toVolumeManagement: (bookId: string) => setRoute({ page: "volume-management", bookId }),
     toCharacterTiering: (bookId: string) => setRoute({ page: "character-tiering", bookId }),
   };
 
@@ -457,6 +459,11 @@ export function App() {
           {route.page === "consistency" && (
             <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <ConsistencyCheck bookId={route.bookId} nav={nav} />
+            </div>
+          )}
+          {route.page === "volume-management" && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <VolumeManagement bookId={route.bookId} nav={nav} />
             </div>
           )}
           {route.page === "character-tiering" && (
