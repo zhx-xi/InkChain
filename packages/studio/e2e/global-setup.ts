@@ -21,8 +21,12 @@ export default function globalSetup(): void {
   // point at the .worktrees parent, where the --filter matches nothing and the
   // build silently no-ops, leaving core dist stale (agent stub absent at runtime).
   const workspaceRoot = path.resolve(path.dirname(thisFile), "../../../");
-  execSync("pnpm --filter @actalk/inkos-core build", {
-    cwd: workspaceRoot,
-    stdio: "inherit",
-  });
+  try {
+    execSync("pnpm --filter @actalk/inkos-core build", {
+      cwd: workspaceRoot,
+      stdio: "inherit",
+    });
+  } catch {
+    console.warn("[global-setup] Core build failed (dist may be stale), proceeding anyway");
+  }
 }

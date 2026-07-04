@@ -272,7 +272,9 @@ export function createVolumesRouter(bookDir: (id: string) => string) {
     const id = c.req.param("id");
     const num = parseInt(c.req.param("num"), 10);
     const dir = bookDir(id);
-    const chaptersDir = join(dir, "story", "chapters");
+    // Note: StateManager.loadChapterIndex reads from chapters/index.json (no "story" prefix).
+    // We write to the SAME path so that GET /books/:id returns the updated data.
+    const chaptersDir = join(dir, "chapters");
     const indexPath = join(chaptersDir, "index.json");
 
     let body: unknown;
@@ -300,15 +302,24 @@ export function createVolumesRouter(bookDir: (id: string) => string) {
     }
 
     // Load chapter index
-    let chapterIndex: { chapters: Array<Record<string, unknown>> };
+    // StateManager.loadChapterIndex reads chapters/index.json as a plain array.
+    // Support both plain array and { chapters: [...] } formats for resilience.
+    let chapters: Array<Record<string, unknown>>;
     try {
       const raw = await readFile(indexPath, "utf-8");
-      chapterIndex = JSON.parse(raw) as { chapters: Array<Record<string, unknown>> };
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        chapters = parsed;
+      } else if (parsed && typeof parsed === "object" && "chapters" in (parsed as Record<string, unknown>) && Array.isArray((parsed as Record<string, unknown>).chapters)) {
+        chapters = (parsed as { chapters: Array<Record<string, unknown>> }).chapters;
+      } else {
+        return c.json({ error: { code: "INVALID_INDEX", message: "章节索引格式无效" } }, 500);
+      }
     } catch {
       return c.json({ error: { code: "NOT_FOUND", message: "章节索引文件不存在" } }, 404);
     }
 
-    const chIdx = chapterIndex.chapters.findIndex(
+    const chIdx = chapters.findIndex(
       (ch) => typeof ch.number === "number" && ch.number === num,
     );
     if (chIdx === -1) {
@@ -316,14 +327,15 @@ export function createVolumesRouter(bookDir: (id: string) => string) {
     }
 
     // Update volumeId
-    chapterIndex.chapters[chIdx] = {
-      ...chapterIndex.chapters[chIdx],
+    chapters[chIdx] = {
+      ...chapters[chIdx],
       volumeId: volumeId as string | null,
       updatedAt: new Date().toISOString(),
     };
 
     await mkdir(chaptersDir, { recursive: true });
-    await writeFile(indexPath, JSON.stringify(chapterIndex, null, 2), "utf-8");
+    // Write as plain array matching StateManager.saveChapterIndex format
+    await writeFile(indexPath, JSON.stringify(chapters, null, 2), "utf-8");
 
     return c.json({
       ok: true,
@@ -345,7 +357,7 @@ export function createVolumesRouter(bookDir: (id: string) => string) {
 
     let chapters: Array<{ number: number; title: string; status: string; wordCount: number; volumeId: string | null }> = [];
     try {
-      const raw = await readFile(join(dir, "story", "chapters", "index.json"), "utf-8");
+      const raw = await readFile(join(dir, "chapters", "index.json"), "utf-8");
       const allChapters = JSON.parse(raw) as Record<string, unknown>;
       chapters = (Array.isArray(allChapters.chapters) ? allChapters.chapters : []).filter(
         (ch: unknown) => isRecord(ch) && (ch.volumeId ?? null) === volumeId,

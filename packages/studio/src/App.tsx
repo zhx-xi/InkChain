@@ -22,19 +22,26 @@ import { DoctorView } from "./pages/DoctorView";
 import { RelationGraphPanel } from "./pages/RelationGraphPanel";
 import { TimelinePage } from "./pages/TimelinePage";
 import { AgentTeamPanel } from "./pages/AgentTeamPanel";
+import AgentPipelineView from "./pages/AgentPipelineView";
 import { SkillListPage } from "./pages/SkillListPage";
 import { ForeshadowingPage } from "./pages/ForeshadowingPage";
 import { WorldListPage } from "./pages/WorldListPage";
 import { WorldDetailPage } from "./pages/WorldDetailPage";
 import { WorldGeoVizPanel } from "./pages/WorldGeoVizPanel";
+import { WorldMapPage } from "./pages/WorldMapPage";
 import { PublishPage } from "./pages/PublishPage";
 import { EditDashboard } from "./pages/EditDashboard";
+import { ConsistencyCheck } from "./pages/ConsistencyCheck";
 import { StoryPlayer } from "./pages/StoryPlayer";
+const ChapterWizard = lazy(() => import("./pages/ChapterWizard"));
 import { StoryGraphTree } from "./pages/StoryGraphTree";
 const FlowView = lazy(() => import("./pages/FlowView"));
 const FilmWizard = lazy(() => import("./pages/FilmWizard"));
 import { LanguageSelector } from "./pages/LanguageSelector";
+import { AchievementSystem } from "./components/AchievementSystem";
 import { ArchivePage } from "./pages/ArchivePage";
+import { VolumeManagement } from "./pages/VolumeManagement";
+import { CharacterTiering } from "./pages/CharacterTiering";
 import { BookSidebar, BookSidebarToggle } from "./components/chat/BookSidebar";
 import { useSSE } from "./hooks/use-sse";
 import { useSessionEvents } from "./hooks/use-session-events";
@@ -118,16 +125,22 @@ export function App() {
     toFilmAuthor: (projectId: string) => setRoute({ page: "film-author", projectId }),
     toFilmStudio: (projectId: string) => setRoute({ page: "film-studio", projectId }),
     toAgents: () => setRoute({ page: "agents" }),
+    toAgentPipeline: () => setRoute({ page: "agent-pipeline" }),
     toArchive: () => setRoute({ page: "archive" }),
     toSkills: () => setRoute({ page: "skills" }),
     toForeshadowing: (bookId: string) => setRoute({ page: "foreshadowing", bookId }),
     toWorlds: () => setRoute({ page: "worlds" }),
     toWorldDetail: (worldId: string) => setRoute({ page: "world-detail", worldId }),
     toWorldGeoViz: (worldId: string) => setRoute({ page: "world-geoviz", worldId }),
+    toWorldMap: (worldId: string) => setRoute({ page: "world-map", worldId }),
     toWorldCreate: (bookId?: string) => setRoute({ page: "world-create", ...(bookId ? { bookId } : {}) }),
     toBookWorlds: (bookId: string) => setRoute({ page: "book-worlds", bookId }),
+    toConsistency: (bookId: string) => setRoute({ page: "consistency", bookId }),
     toPublish: (bookId: string) => setRoute({ page: "publish", bookId }),
     toEditDashboard: (bookId: string) => setRoute({ page: "edit-dashboard", bookId }),
+    toChapterWizard: (bookId: string) => setRoute({ page: "chapter-wizard", bookId }),
+    toVolumeManagement: (bookId: string) => setRoute({ page: "volume-management", bookId }),
+    toCharacterTiering: (bookId: string) => setRoute({ page: "character-tiering", bookId }),
   };
 
   const activeBookId = deriveActiveBookId(route);
@@ -202,6 +215,15 @@ export function App() {
                <span className="text-muted-foreground/70">/</span>
                <span className="font-serif">InkOS Studio</span>
              </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <AchievementSystem
+              totalChapters={0}
+              totalWords={0}
+              sessionCount={0}
+              consecutiveApproved={0}
+            />
           </div>
 
           <div className="flex items-center gap-3">
@@ -396,6 +418,11 @@ export function App() {
               <AgentTeamPanel nav={nav} />
             </div>
           )}
+          {route.page === "agent-pipeline" && (
+            <div className="absolute inset-0 flex min-w-0">
+              <AgentPipelineView nav={nav} />
+            </div>
+          )}
           {route.page === "archive" && (
             <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <ArchivePage />
@@ -430,6 +457,11 @@ export function App() {
               <WorldGeoVizPanel worldId={route.worldId} nav={nav} />
             </div>
           )}
+          {route.page === "world-map" && (
+            <div className="w-full h-full fade-in">
+              <WorldMapPage worldId={route.worldId} nav={nav} />
+            </div>
+          )}
           {route.page === "publish" && (
             <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <PublishPage bookId={route.bookId} nav={nav} />
@@ -439,6 +471,24 @@ export function App() {
             <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <EditDashboard bookId={route.bookId} nav={nav} />
             </div>
+          )}
+          {route.page === "chapter-wizard" && (
+            <Suspense fallback={<div className="p-6 text-sm">加载章节生成管道…</div>}>
+              <ChapterWizard bookId={route.bookId} nav={nav} theme={theme} t={t} />
+            </Suspense>
+          )}
+          {route.page === "consistency" && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <ConsistencyCheck bookId={route.bookId} nav={nav} />
+            </div>
+          )}
+          {route.page === "volume-management" && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <VolumeManagement bookId={route.bookId} nav={nav} />
+            </div>
+          )}
+          {route.page === "character-tiering" && (
+            <CharacterTiering bookId={route.bookId} />
           )}
         </main>
       </div>
