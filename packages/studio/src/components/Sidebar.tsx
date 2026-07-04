@@ -54,6 +54,7 @@ import {
   AlertTriangle,
   Globe,
   Upload,
+  BarChart3,
 } from "lucide-react";
 import { InkosLogo } from "./InkosLogo";
 
@@ -89,6 +90,7 @@ export interface Nav {
   toLogs: () => void;
   toGenres: () => void;
   toStyle: () => void;
+  toStyleConsistency: () => void;
   toImport: (tab?: "chapters" | "canon" | "fanfic" | "spinoff" | "imitation") => void;
   toRadar: () => void;
   toDoctor: () => void;
@@ -717,6 +719,12 @@ export function Sidebar({ nav, activePage, sse, t }: {
               icon={<Wand2 size={16} />}
               active={activePage === "style"}
               onClick={nav.toStyle}
+            />
+            <SidebarItem
+              label="文风统一检测"
+              icon={<BarChart3 size={16} />}
+              active={activePage === "style-consistency"}
+              onClick={nav.toStyleConsistency}
             />
             <SidebarItem
               label={t("nav.import")}
