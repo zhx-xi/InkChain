@@ -15,6 +15,7 @@ import { DaemonControl } from "./pages/DaemonControl";
 import { LogViewer } from "./pages/LogViewer";
 import { GenreManager } from "./pages/GenreManager";
 import { StyleManager } from "./pages/StyleManager";
+import { ConsistencyPanel } from "./pages/ConsistencyPanel";
 import { ImportManager } from "./pages/ImportManager";
 import { RadarView } from "./pages/RadarView";
 import { DoctorView } from "./pages/DoctorView";
@@ -105,6 +106,7 @@ export function App() {
     toLogs: () => setRoute({ page: "logs" }),
     toGenres: () => setRoute({ page: "genres" }),
     toStyle: () => setRoute({ page: "style" }),
+    toStyleConsistency: () => setRoute({ page: "style-consistency" }),
     toImport: (tab?: "chapters" | "canon" | "fanfic" | "spinoff" | "imitation") => setRoute({ page: "import", ...(tab ? { tab } : {}) }),
     toRadar: () => setRoute({ page: "radar" }),
     toDoctor: () => setRoute({ page: "doctor" }),
@@ -329,6 +331,11 @@ export function App() {
           {route.page === "style" && (
             <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <StyleManager nav={nav} theme={theme} t={t} />
+            </div>
+          )}
+          {route.page === "style-consistency" && (
+            <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <ConsistencyPanel nav={nav} theme={theme} t={t} />
             </div>
           )}
           {route.page === "import" && (
