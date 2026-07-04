@@ -57,12 +57,17 @@ export function StyleManager({ nav, theme, t }: { nav: Nav; theme: Theme; t: TFu
     setProfile(null);
     setAnalyzeStatus("");
     try {
-      const data = await fetchJson<StyleProfile>("/style/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, sourceName: sourceName || "sample" }),
-      });
-      setProfile(data);
+      const response = await postApi<{ success: boolean; data: { profile: StyleProfile; summary: string } }>(
+        `/api/extract`,
+        {
+          skillId: "extract-style",
+          params: {
+            texts: [text],
+            id: sourceName || "sample",
+          },
+        },
+      );
+      setProfile(response.data.profile);
     } catch (e) {
       setAnalyzeStatus(`Error: ${e instanceof Error ? e.message : String(e)}`);
     }
