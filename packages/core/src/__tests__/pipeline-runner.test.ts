@@ -4218,12 +4218,12 @@ describe("PipelineRunner", () => {
 
     vi.spyOn(WriterAgent.prototype, "writeChapter").mockResolvedValue(
       createWriterOutput({
-        chapterNumber: 3,
+        chapterNumber: 1,
         title: "回声",
         content: "夜色慢慢压低了屋檐。林越先停在门外，随后才抬手去碰那道旧债印。风从更深的巷子里吹了出来。",
         wordCount: "夜色慢慢压低了屋檐。林越先停在门外，随后才抬手去碰那道旧债印。风从更深的巷子里吹了出来。".length,
         updatedState: createStateCard({
-          chapter: 3,
+          chapter: 1,
           location: "Ashen ferry crossing",
           protagonistState: "Lin Yue still hides the oath token.",
           goal: "Find the vanished mentor.",
@@ -4273,12 +4273,12 @@ describe("PipelineRunner", () => {
 
     vi.spyOn(WriterAgent.prototype, "writeChapter").mockResolvedValue(
       createWriterOutput({
-        chapterNumber: 3,
+        chapterNumber: 1,
         title: "回声",
         content: "夜色慢慢压低了屋檐。林越先停在门外，随后才抬手去碰那道旧债印。",
         wordCount: "夜色慢慢压低了屋檐。林越先停在门外，随后才抬手去碰那道旧债印。".length,
         updatedState: createStateCard({
-          chapter: 3,
+          chapter: 1,
           location: "Ashen ferry crossing",
           protagonistState: "Lin Yue still hides the oath token.",
           goal: "Find the vanished mentor.",
@@ -4286,7 +4286,7 @@ describe("PipelineRunner", () => {
         }),
         updatedLedger: "",
         updatedHooks: "# Pending Hooks\n",
-        chapterSummary: "| 3 | 回声 | 林越 | 继续潜伏 | 目标未变 | 债印未解 | 克制 | 布局 |",
+        chapterSummary: "| 1 | 回声 | 林越 | 继续潜伏 | 目标未变 | 债印未解 | 克制 | 布局 |",
         hookHealthIssues: [{
           severity: "warning",
           category: "伏笔债务",
@@ -4308,6 +4308,7 @@ describe("PipelineRunner", () => {
       const driftFile = await readFile(join(storyDir, "audit_drift.md"), "utf-8");
       const currentState = await readFile(join(storyDir, "current_state.md"), "utf-8");
       const savedIndex = await state.loadChapterIndex(bookId);
+
 
       expect(result.auditResult.issues.some((issue) => issue.category === "伏笔债务")).toBe(true);
       expect(driftFile).toContain("伏笔债务");

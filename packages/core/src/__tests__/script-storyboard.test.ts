@@ -196,9 +196,9 @@ describe("script and storyboard creation helpers", () => {
     });
 
     expect(manifest.kind).toBe("storyboard_assets");
-    expect(manifest.assetsDir).toBe("storyboards/cold-ledger/assets");
-    expect(manifest.generatedDir).toBe("storyboards/cold-ledger/assets/generated");
-    expect(manifest.selectedDir).toBe("storyboards/cold-ledger/assets/selected");
+    expect(manifest.assetsDir.replace(/\\/g, "/")).toBe("storyboards/cold-ledger/assets");
+    expect(manifest.generatedDir.replace(/\\/g, "/")).toBe("storyboards/cold-ledger/assets/generated");
+    expect(manifest.selectedDir.replace(/\\/g, "/")).toBe("storyboards/cold-ledger/assets/selected");
     expect(manifest.assets).toEqual([
       {
         shotId: "shot-001",

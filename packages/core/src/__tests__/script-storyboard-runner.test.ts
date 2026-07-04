@@ -53,8 +53,8 @@ describe("storyboard creation runner", () => {
       aspectRatio: "9:16",
     });
 
-    expect(result.assetsManifestPath).toBe("storyboards/cold-ledger/assets.json");
-    expect(result.assetsDir).toBe("storyboards/cold-ledger/assets");
+    expect(result.assetsManifestPath.replace(/\\/g, "/")).toBe("storyboards/cold-ledger/assets.json");
+    expect(result.assetsDir.replace(/\\/g, "/")).toBe("storyboards/cold-ledger/assets");
     expect((await stat(join(root, "storyboards/cold-ledger/assets/source"))).isDirectory()).toBe(true);
     expect((await stat(join(root, "storyboards/cold-ledger/assets/generated"))).isDirectory()).toBe(true);
     expect((await stat(join(root, "storyboards/cold-ledger/assets/selected"))).isDirectory()).toBe(true);
@@ -157,10 +157,8 @@ describe("storyboard creation runner", () => {
       referenceMode: "盛世天下式多走向",
     });
 
-    expect(result.baseDir).toBe("interactive-films/shengshi-ledger");
-    expect(result).toMatchObject({
-      storyGraphPath: "interactive-films/shengshi-ledger/story-graph.json",
-    });
+    expect(result.baseDir.replace(/\\/g, "/")).toBe("interactive-films/shengshi-ledger");
+    expect(result.storyGraphPath.replace(/\\/g, "/")).toBe("interactive-films/shengshi-ledger/story-graph.json");
     await expect(readFile(join(root, result.specPath), "utf-8")).resolves.toContain("互动影游创作规格");
     await expect(readFile(join(root, result.storyTreePath), "utf-8")).resolves.toContain("N1 入宫查账");
     await expect(readFile(join(root, result.flagsPath), "utf-8")).resolves.toContain("trust_guard");
@@ -218,7 +216,7 @@ describe("storyboard creation runner", () => {
       episodeCount: 3,
     });
 
-    expect(result.storyGraphPath).toBe("interactive-films/echo-theater/story-graph.json");
+    expect(result.storyGraphPath.replace(/\\/g, "/")).toBe("interactive-films/echo-theater/story-graph.json");
     const graph = await loadStoryGraph(root, "echo-theater");
     expect(graph).not.toBeNull();
     if (!graph) throw new Error("Expected fallback story graph");

@@ -233,8 +233,15 @@ describe("runAgentSession cache — bookId switch", () => {
     evictAgentCache("play-session");
     evictAgentCache("play-active-session");
     evictAgentCache("play-confirmed-session");
-    await rm(projectRoot, { recursive: true, force: true });
-    if (otherProjectRoot) await rm(otherProjectRoot, { recursive: true, force: true });
+    evictAgentCache("play-revise-terminal-session");
+    // Best-effort cleanup — EBUSY on Windows means SQLite WAL is still locked
+    for (const dir of [projectRoot, otherProjectRoot].filter(Boolean)) {
+      try {
+        await rm(dir!, { recursive: true, force: true });
+      } catch {
+        // Temp dirs cleaned up by OS; not critical if rm fails on Windows
+      }
+    }
   });
 
   it("rebuilds Agent when bookId changes for same sessionId", async () => {
