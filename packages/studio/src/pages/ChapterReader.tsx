@@ -18,7 +18,9 @@ import {
   Pencil,
   Save,
   Eye,
+  Maximize2,
 } from "lucide-react";
+import { ImmersiveWritingPanel } from "../components/ImmersiveWritingPanel";
 
 interface ChapterData {
   readonly chapterNumber: number;
@@ -45,6 +47,7 @@ export function ChapterReader({ bookId, chapterNumber, nav, theme, t }: {
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
   const [saving, setSaving] = useState(false);
+  const [immersiveOpen, setImmersiveOpen] = useState(false);
 
   const handleStartEdit = () => {
     if (!data) return;
@@ -176,6 +179,16 @@ export function ChapterReader({ bookId, chapterNumber, nav, theme, t }: {
             </button>
           )}
 
+          {/* Immersive Writing Button */}
+          <button
+            onClick={() => setImmersiveOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 text-xs font-bold bg-primary/10 text-primary rounded-xl hover:bg-primary hover:text-primary-foreground transition-all border border-primary/20 shadow-sm"
+            title={t("reader.immersiveWriting") || "沉浸写作模式"}
+          >
+            <Maximize2 size={14} />
+            {t("reader.immersiveWriting") || "沉浸写作"}
+          </button>
+
           <button
             onClick={handleApprove}
             className="flex items-center gap-2 px-4 py-2 text-xs font-bold bg-emerald-500/10 text-emerald-600 rounded-xl hover:bg-emerald-500 hover:text-white transition-all border border-emerald-500/20 shadow-sm"
@@ -261,6 +274,22 @@ export function ChapterReader({ bookId, chapterNumber, nav, theme, t }: {
           <div />
         )}
       </div>
+
+      {/* Immersive Writing Mode Overlay */}
+      <ImmersiveWritingPanel
+        isOpen={immersiveOpen}
+        content={body}
+        chapterTitle={title}
+        chapterNumber={chapterNumber}
+        onClose={() => setImmersiveOpen(false)}
+        onContentChange={(newContent) => {
+          if (editing) {
+            setEditContent(newContent);
+          }
+        }}
+        theme={theme}
+        t={t}
+      />
     </div>
   );
 }
