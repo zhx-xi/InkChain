@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Trophy, X } from "lucide-react";
+import { Trophy, X, Flame } from "lucide-react";
+import { StreakTracker } from "./StreakTracker";
+import { cn } from "@/lib/utils";
 
 export interface Achievement {
   id: string;
@@ -104,6 +106,7 @@ export function AchievementSystem({
   }, [totalChapters, totalWords, sessionCount, consecutiveApproved, achievements]);
 
   const [showDialog, setShowDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState<"achievements" | "streak">("achievements");
 
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
 
@@ -114,15 +117,15 @@ export function AchievementSystem({
         type="button"
         onClick={() => setShowDialog(true)}
         className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-colors"
-        title="成就"
+        title="成就 · 连续打卡"
       >
         <Trophy size={14} />
         <span>{unlockedCount}/{achievements.length}</span>
       </button>
 
-      {/* Achievement dialog */}
+      {/* Achievement / Streak dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Trophy size={18} className="text-amber-500" />
@@ -132,33 +135,72 @@ export function AchievementSystem({
               </span>
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-            {achievements.map((a) => (
-              <div
-                key={a.id}
-                className={`flex items-center gap-3 rounded-lg p-3 transition-colors ${
-                  a.unlocked
-                    ? "bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/30"
-                    : "bg-muted/20 border border-border/10 opacity-50"
-                }`}
-              >
-                <span className="text-xl">{a.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${a.unlocked ? "text-foreground" : "text-muted-foreground"}`}>
-                    {a.title}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground/70">
-                    {a.description}
-                  </p>
-                </div>
-                {a.unlocked && (
-                  <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
-                    已解锁
-                  </span>
-                )}
-              </div>
-            ))}
+
+          {/* Tab bar */}
+          <div className="flex gap-1 border-b border-border/50 pb-2 -mt-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab("achievements")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+                activeTab === "achievements"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent/30"
+              )}
+            >
+              <Trophy size={13} />
+              成就
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("streak")}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+                activeTab === "streak"
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:text-foreground hover:bg-accent/30"
+              )}
+            >
+              <Flame size={13} />
+              连续打卡
+            </button>
           </div>
+
+          {activeTab === "achievements" && (
+            <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+              {achievements.map((a) => (
+                <div
+                  key={a.id}
+                  className={`flex items-center gap-3 rounded-lg p-3 transition-colors ${
+                    a.unlocked
+                      ? "bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/30"
+                      : "bg-muted/20 border border-border/10 opacity-50"
+                  }`}
+                >
+                  <span className="text-xl">{a.icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${a.unlocked ? "text-foreground" : "text-muted-foreground"}`}>
+                      {a.title}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground/70">
+                      {a.description}
+                    </p>
+                  </div>
+                  {a.unlocked && (
+                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-medium">
+                      已解锁
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {activeTab === "streak" && (
+            <div className="max-h-[520px] overflow-y-auto pr-1 -mr-1 scrollbar-thin">
+              <StreakTracker />
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
