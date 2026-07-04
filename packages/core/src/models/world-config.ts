@@ -116,7 +116,6 @@ export const WorldRegionSchema = z.object({
   coordinates: CoordinatesSchema.optional(),
   /** English region level for frontend map hierarchy */
   regionType: WorldRegionLevelEnum.optional(),
->>>>>>> origin/main
 });
 export type WorldRegion = z.infer<typeof WorldRegionSchema>;
 
