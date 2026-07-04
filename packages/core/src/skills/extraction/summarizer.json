@@ -1,0 +1,13 @@
+{
+  "id": "summarizer",
+  "name": "Summarizer",
+  "description": "Generate concise summaries of long-form content for context compression and memory management.",
+  "whenToUse": "Used internally when content needs to be summarized for context compression or episodic memory updates.",
+  "triggers": [],
+  "sessionKinds": [],
+  "promptPacks": [],
+  "toolHints": [],
+  "contextNeeds": [],
+  "body": "",
+  "source": "system"
+}

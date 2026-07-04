@@ -65,7 +65,7 @@
     "prepack": "node ../../scripts/prepare-package-for-publish.mjs",
     "postpack": "node ../../scripts/restore-package-json.mjs",
     "prepublishOnly": "node ../../scripts/verify-no-workspace-protocol.mjs .",
-    "build": "tsc",
+    "build": "tsc && node -e \"import('node:fs').then(({cpSync})=>{try{cpSync('src/skills/extraction','dist/skills/extraction',{recursive:true})}catch(e){console.warn('extraction copy skipped:',e.message)}})\"",
     "dev": "tsc --watch",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
