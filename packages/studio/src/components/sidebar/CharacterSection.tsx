@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { Users, ChevronDown, Network, Trash2, Star } from "lucide-react";
+import { Users, ChevronDown, Network, Trash2, Star, ChevronLeft, ChevronRight } from "lucide-react";
 import { useChatStore } from "../../store/chat";
 import { fetchJson } from "../../hooks/use-api";
 import { SidebarCard } from "./SidebarCard";
@@ -299,6 +299,8 @@ export function CharacterSection({ bookId }: CharacterSectionProps) {
   const [legacyChars, setLegacyChars] = useState<CharacterInfo[]>([]);
   const [activeTab, setActiveTab] = useState<CharacterTier | "all">("all");
   const [dropTargetTab, setDropTargetTab] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const bookDataVersion = useChatStore((s) => s.bookDataVersion);
   const { setRoute } = useHashRoute();
 
@@ -353,6 +355,11 @@ export function CharacterSection({ bookId }: CharacterSectionProps) {
     if (activeTab === "all") return roles.filter((r) => r.tier !== "scene");
     return roles.filter((r) => r.tier === activeTab);
   }, [roles, activeTab]);
+
+  // Reset pagination when tab changes
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab]);
 
   // Count per tier for tab badges
   const tierCounts = useMemo(() => {
@@ -437,24 +444,62 @@ export function CharacterSection({ bookId }: CharacterSectionProps) {
         })}
       </div>
 
-      {/* Role list */}
+      {/* Role list (Phase 5 — paginated) */}
       <div className="space-y-1.5">
-        {filteredRoles.map((role) => (
-          <RoleEntry
-            key={role.path}
-            role={role}
-            bookId={bookId}
-            onDeleted={handleDeleted}
-            onTierChanged={handleTierChanged}
-          />
-        ))}
+        {filteredRoles
+          .slice((page - 1) * pageSize, page * pageSize)
+          .map((role) => (
+            <RoleEntry
+              key={role.path}
+              role={role}
+              bookId={bookId}
+              onDeleted={handleDeleted}
+              onTierChanged={handleTierChanged}
+            />
+          ))}
       </div>
 
-      {/* Status bar */}
+      {/* Pagination controls */}
       {filteredRoles.length > 0 && (
-        <p className="text-[11px] text-muted-foreground/50 mt-2 px-0.5">
-          显示 {filteredRoles.length} / {roles.length} 个角色
-        </p>
+        <div className="flex items-center gap-2 mt-2 px-0.5">
+          <select
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setPage(1);
+            }}
+            className="text-[11px] bg-transparent border border-border/20 rounded px-1 py-0.5 outline-none text-muted-foreground/60"
+          >
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+          </select>
+          <span className="text-[11px] text-muted-foreground/50 flex-1 tabular-nums">
+            {(() => {
+              const start = (page - 1) * pageSize + 1;
+              const end = Math.min(page * pageSize, filteredRoles.length);
+              return `显示 ${start}-${end} / ${filteredRoles.length} 个角色`;
+            })()}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-secondary/50 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+          >
+            <ChevronLeft size={12} />
+          </button>
+          <button
+            onClick={() =>
+              setPage((p) =>
+                Math.min(Math.ceil(filteredRoles.length / pageSize), p + 1),
+              )
+            }
+            disabled={page >= Math.ceil(filteredRoles.length / pageSize)}
+            className="w-5 h-5 rounded flex items-center justify-center text-muted-foreground/40 hover:text-foreground hover:bg-secondary/50 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
+          >
+            <ChevronRight size={12} />
+          </button>
+        </div>
       )}
 
       {/* Relation graph entry */}
