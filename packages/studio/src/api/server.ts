@@ -143,6 +143,7 @@ import { createChapterVersionsRouter } from "./routes/chapter-versions.js";
 import { createAgentTemplatesRouter } from "./routes/agent-templates.js";
 import { createCustomAgentsRouter } from "./routes/custom-agents.js";
 import { createAgentOrderRouter } from "./routes/agent-order.js";
+import { createAuditRouter } from "./routes/audit.js";
 
 // -- Pipeline stage definitions per agent type --
 
@@ -5771,6 +5772,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   app.route("/api/worlds", createWorldsAIGenRouter(root));
   app.route("/api/worlds", createMapsAIGenRouter(root));
   app.route("/api/books", createBookWorldsRouter(root));
+  app.route("/api/books", createAuditRouter(root));
   app.route("/api/foreshadowing", createForeshadowingRouter(root));
   app.route("/api/publish", createPublishRouter(root));
   app.route("/api/style-profiles", createStyleProfilesRouter(root));

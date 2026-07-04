@@ -55,6 +55,7 @@ import {
   Globe,
   Upload,
   BarChart3,
+  ClipboardCheck,
 } from "lucide-react";
 import { InkosLogo } from "./InkosLogo";
 
@@ -107,6 +108,7 @@ export interface Nav {
   toWorldMap: (worldId: string) => void;
   toWorldCreate: () => void;
   toPublish: (bookId: string) => void;
+  toAudit: (bookId: string) => void;
   toBookWorlds: (bookId: string) => void;
   toChapterWizard: (bookId: string) => void;
 }
@@ -480,6 +482,14 @@ export function Sidebar({ nav, activePage, sse, t }: {
                       >
                         <Upload size={12} />
                         <span>发布</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => nav.toAudit(book.id)}
+                        className="w-full flex items-center gap-2 pl-9 pr-2 py-1.5 text-[13px] text-muted-foreground/50 hover:text-foreground hover:text-primary transition-colors"
+                      >
+                        <ClipboardCheck size={12} />
+                        <span>章节审计</span>
                       </button>
                       <button
                         type="button"
