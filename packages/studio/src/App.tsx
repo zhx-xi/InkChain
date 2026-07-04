@@ -21,6 +21,7 @@ import { DoctorView } from "./pages/DoctorView";
 import { RelationGraphPanel } from "./pages/RelationGraphPanel";
 import { TimelinePage } from "./pages/TimelinePage";
 import { AgentTeamPanel } from "./pages/AgentTeamPanel";
+import AgentPipelineView from "./pages/AgentPipelineView";
 import { SkillListPage } from "./pages/SkillListPage";
 import { ForeshadowingPage } from "./pages/ForeshadowingPage";
 import { WorldListPage } from "./pages/WorldListPage";
@@ -34,6 +35,7 @@ import { StoryGraphTree } from "./pages/StoryGraphTree";
 const FlowView = lazy(() => import("./pages/FlowView"));
 const FilmWizard = lazy(() => import("./pages/FilmWizard"));
 import { LanguageSelector } from "./pages/LanguageSelector";
+import { AchievementSystem } from "./components/AchievementSystem";
 import { ArchivePage } from "./pages/ArchivePage";
 import { CharacterTiering } from "./pages/CharacterTiering";
 import { BookSidebar, BookSidebarToggle } from "./components/chat/BookSidebar";
@@ -118,6 +120,7 @@ export function App() {
     toFilmAuthor: (projectId: string) => setRoute({ page: "film-author", projectId }),
     toFilmStudio: (projectId: string) => setRoute({ page: "film-studio", projectId }),
     toAgents: () => setRoute({ page: "agents" }),
+    toAgentPipeline: () => setRoute({ page: "agent-pipeline" }),
     toArchive: () => setRoute({ page: "archive" }),
     toSkills: () => setRoute({ page: "skills" }),
     toForeshadowing: (bookId: string) => setRoute({ page: "foreshadowing", bookId }),
@@ -204,6 +207,15 @@ export function App() {
                <span className="text-muted-foreground/70">/</span>
                <span className="font-serif">InkOS Studio</span>
              </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <AchievementSystem
+              totalChapters={0}
+              totalWords={0}
+              sessionCount={0}
+              consecutiveApproved={0}
+            />
           </div>
 
           <div className="flex items-center gap-3">
@@ -391,6 +403,11 @@ export function App() {
           {route.page === "agents" && (
             <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <AgentTeamPanel nav={nav} />
+            </div>
+          )}
+          {route.page === "agent-pipeline" && (
+            <div className="absolute inset-0 flex min-w-0">
+              <AgentPipelineView nav={nav} />
             </div>
           )}
           {route.page === "archive" && (

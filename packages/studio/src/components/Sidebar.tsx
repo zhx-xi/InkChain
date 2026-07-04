@@ -78,7 +78,7 @@ interface BookSummary {
   readonly chaptersWritten: number;
 }
 
-interface Nav {
+export interface Nav {
   toDashboard: () => void;
   toChat: () => void;
   toBook: (id: string) => void;
@@ -96,6 +96,7 @@ interface Nav {
   toTimeline: (bookId: string) => void;
   toFilmStudio: (id: string) => void;
   toAgents: () => void;
+  toAgentPipeline: () => void;
   toArchive: () => void;
   toSkills: () => void;
   toForeshadowing: (bookId: string) => void;
@@ -676,6 +677,12 @@ export function Sidebar({ nav, activePage, sse, t }: {
               icon={<Users size={16} />}
               active={activePage === "agents"}
               onClick={nav.toAgents}
+            />
+            <SidebarItem
+              label="Agent Pipeline"
+              icon={<GitBranch size={16} />}
+              active={activePage === "agent-pipeline"}
+              onClick={nav.toAgentPipeline}
             />
             <SidebarItem
               label="世界设定"
