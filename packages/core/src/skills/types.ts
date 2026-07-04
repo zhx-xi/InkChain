@@ -27,7 +27,7 @@ export const CapabilitySkillManifestSchema = z.object({
   toolHints: z.array(z.string().min(1)).default([]),
   contextNeeds: z.array(SkillContextNeedSchema).default([]),
   body: z.string().default(""),
-  source: z.enum(["builtin", "project", "user", "external"]).default("builtin"),
+  source: z.enum(["system", "builtin", "project", "user", "external"]).default("builtin"),
 });
 export type CapabilitySkillManifest = z.infer<typeof CapabilitySkillManifestSchema>;
 
@@ -36,7 +36,7 @@ export const PromptPackManifestSchema = z.object({
   title: z.string().min(1),
   description: z.string().min(1),
   prompts: z.array(z.string().min(1)).default([]),
-  source: z.enum(["builtin", "project", "user", "external"]).default("builtin"),
+  source: z.enum(["system", "builtin", "project", "user", "external"]).default("builtin"),
 });
 export type PromptPackManifest = z.infer<typeof PromptPackManifestSchema>;
 
@@ -63,6 +63,7 @@ export interface SkillResolutionResult {
 
 export interface SkillRegistry {
   listSkills(): ReadonlyArray<CapabilitySkillManifest>;
+  listUserVisibleSkills(): ReadonlyArray<CapabilitySkillManifest>;
   getSkill(id: string): CapabilitySkillManifest | undefined;
   resolveSkills(input: SkillResolutionInput): SkillResolutionResult;
 }

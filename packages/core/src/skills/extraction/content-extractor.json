@@ -1,0 +1,13 @@
+{
+  "id": "content-extractor",
+  "name": "Content Extractor",
+  "description": "Extract structured content, entities, and relationships from unstructured text for downstream processing.",
+  "whenToUse": "Used internally when structured data extraction is needed from raw text input.",
+  "triggers": [],
+  "sessionKinds": [],
+  "promptPacks": [],
+  "toolHints": [],
+  "contextNeeds": [],
+  "body": "",
+  "source": "system"
+}

@@ -5,17 +5,30 @@ import {
 } from "../skills/index.js";
 
 describe("capability skill registry", () => {
-  it("ships the first built-in writing/play/film skills with context needs", () => {
+  it("ships system + built-in skills, and user-visible ones exclude system", () => {
     const registry = createSkillRegistry();
     const ids = registry.listSkills().map((skill) => skill.id).sort();
 
     expect(ids).toEqual([
+      "content-extractor",
+      "humanizer-zh",
+      "interactive-film-authoring",
+      "longform-writing",
+      "open-world-play",
+      "summarizer",
+    ]);
+
+    const visibleIds = registry.listUserVisibleSkills().map((skill) => skill.id).sort();
+    expect(visibleIds).toEqual([
       "humanizer-zh",
       "interactive-film-authoring",
       "longform-writing",
       "open-world-play",
     ]);
+
+    // System skills have no context needs / prompt packs; built-in ones do
     for (const skill of registry.listSkills()) {
+      if (skill.source === "system") continue;
       expect(skill.contextNeeds.length).toBeGreaterThan(0);
       expect(skill.promptPacks.length).toBeGreaterThan(0);
     }

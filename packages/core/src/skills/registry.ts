@@ -1,4 +1,4 @@
-import { BUILTIN_CAPABILITY_SKILLS } from "./builtin.js";
+import { BUILTIN_CAPABILITY_SKILLS, loadSystemExtractionSkills } from "./builtin.js";
 import type {
   CapabilitySkillManifest,
   SkillRegistry,
@@ -13,6 +13,7 @@ export interface CreateSkillRegistryOptions {
 export function createSkillRegistry(options: CreateSkillRegistryOptions = {}): SkillRegistry {
   const skills = dedupeSkills([
     ...BUILTIN_CAPABILITY_SKILLS,
+    ...loadSystemExtractionSkills(),
     ...(options.skills ?? []),
   ]);
   const byId = new Map(skills.map((skill) => [skill.id, skill]));
@@ -20,6 +21,9 @@ export function createSkillRegistry(options: CreateSkillRegistryOptions = {}): S
   return {
     listSkills() {
       return skills;
+    },
+    listUserVisibleSkills() {
+      return skills.filter((s) => s.source !== "system");
     },
     getSkill(id: string) {
       return byId.get(normalizeSkillId(id));
