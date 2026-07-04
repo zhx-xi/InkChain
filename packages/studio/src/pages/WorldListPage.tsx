@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useHashRoute } from "../hooks/use-hash-route";
-import { Search, X, Globe, Plus, Bot, Loader2, FileText } from "lucide-react";
+import { Search, X, Globe, Plus, Bot, Loader2, FileText, BookOpen } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useApi, postApi } from "../hooks/use-api";
 import type { WorldConfig } from "@actalk/inkos-core";
@@ -39,7 +39,7 @@ const DIMENSION_COLORS: Record<string, string> = {
 };
 
 export function WorldListPage({ nav, bookId }: {
-  readonly nav?: { toWorldDetail: (id: string) => void; toWorldCreate: (bookId?: string) => void; toBook?: (id: string) => void };
+  readonly nav?: { toWorldDetail: (id: string) => void; toWorldCreate: (bookId?: string) => void; toWorldInheritance?: (worldId: string) => void; toBook?: (id: string) => void };
   readonly bookId?: string;
 }) {
   const { setRoute } = useHashRoute();
@@ -258,6 +258,22 @@ export function WorldListPage({ nav, bookId }: {
                     </span>
                   );
                 })}
+              </div>
+
+              {/* 继承操作 */}
+              <div className="mt-3 pt-3 border-t border-border/20 flex justify-end">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (nav?.toWorldInheritance) nav.toWorldInheritance(world.id);
+                    else window.location.hash = `#/worlds/${encodeURIComponent(world.id)}/inherit`;
+                  }}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium text-muted-foreground hover:text-primary hover:bg-primary/5 border border-transparent hover:border-primary/20 transition-all"
+                >
+                  <BookOpen size={12} />
+                  选择性继承
+                </button>
               </div>
             </div>
           ))}

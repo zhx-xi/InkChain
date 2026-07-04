@@ -28,7 +28,9 @@ import { ForeshadowingPage } from "./pages/ForeshadowingPage";
 import { WorldListPage } from "./pages/WorldListPage";
 import { WorldDetailPage } from "./pages/WorldDetailPage";
 import { WorldGeoVizPanel } from "./pages/WorldGeoVizPanel";
+import { WorldInheritancePage } from "./pages/WorldInheritancePage";
 import { WorldMapPage } from "./pages/WorldMapPage";
+>>>>>>> origin/main
 import { PublishPage } from "./pages/PublishPage";
 import { EditDashboard } from "./pages/EditDashboard";
 import { ConsistencyCheck } from "./pages/ConsistencyCheck";
@@ -132,7 +134,9 @@ export function App() {
     toWorlds: () => setRoute({ page: "worlds" }),
     toWorldDetail: (worldId: string) => setRoute({ page: "world-detail", worldId }),
     toWorldGeoViz: (worldId: string) => setRoute({ page: "world-geoviz", worldId }),
+    toWorldInheritance: (worldId: string) => setRoute({ page: "world-inheritance", worldId }),
     toWorldMap: (worldId: string) => setRoute({ page: "world-map", worldId }),
+>>>>>>> origin/main
     toWorldCreate: (bookId?: string) => setRoute({ page: "world-create", ...(bookId ? { bookId } : {}) }),
     toBookWorlds: (bookId: string) => setRoute({ page: "book-worlds", bookId }),
     toConsistency: (bookId: string) => setRoute({ page: "consistency", bookId }),
@@ -457,9 +461,13 @@ export function App() {
               <WorldGeoVizPanel worldId={route.worldId} nav={nav} />
             </div>
           )}
+          {route.page === "world-inheritance" && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <WorldInheritancePage worldId={route.worldId} />
           {route.page === "world-map" && (
             <div className="w-full h-full fade-in">
               <WorldMapPage worldId={route.worldId} nav={nav} />
+>>>>>>> origin/main
             </div>
           )}
           {route.page === "publish" && (
