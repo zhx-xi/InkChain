@@ -31,6 +31,7 @@ interface ForeshadowingExtractCandidate {
   description: string;
   expectedPayoffChapter: number | null;
   confidence: number;
+  chapter?: number;
 }
 
 const TYPE_COLORS: Record<ForeshadowingType, string> = {
@@ -494,26 +495,123 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
   const [showAiExtract, setShowAiExtract] = useState(false);
   const [aiExtractResult, setAiExtractResult] = useState<ForeshadowingExtractCandidate[] | null>(null);
   const [aiExtractLoading, setAiExtractLoading] = useState(false);
-  const [extractChapter, setExtractChapter] = useState(1);
+  const [extractChapterFrom, setExtractChapterFrom] = useState(1);
+  const [extractChapterTo, setExtractChapterTo] = useState(1);
   const [aiExtractError, setAiExtractError] = useState<string | null>(null);
+  const [selectedExtractIndices, setSelectedExtractIndices] = useState<Set<number>>(new Set());
+  const [applyingIndices, setApplyingIndices] = useState<Set<number>>(new Set());
 
   const currentChapter = data?.currentChapter ?? 0;
+  const maxChapter = Math.max(1, currentChapter);
+  const chapterOptions = Array.from({ length: maxChapter }, (_, i) => i + 1);
 
   const handleAiExtract = useCallback(async () => {
     setAiExtractLoading(true);
     setAiExtractError(null);
     setAiExtractResult(null);
+    setSelectedExtractIndices(new Set());
     try {
-      const result = await postApi<{ candidates: ForeshadowingExtractCandidate[] }>(
-        `/api/v1/books/${encodeURIComponent(bookId)}/chapters/${extractChapter}/extract/foreshadowing`,
-      );
-      setAiExtractResult(result.candidates);
+      const allCandidates: ForeshadowingExtractCandidate[] = [];
+      const from = Math.min(extractChapterFrom, extractChapterTo);
+      const to = Math.max(extractChapterFrom, extractChapterTo);
+      for (let ch = from; ch <= to; ch++) {
+        const result = await postApi<{ candidates: ForeshadowingExtractCandidate[] }>(
+          `/api/v1/books/${encodeURIComponent(bookId)}/chapters/${ch}/extract/foreshadowing`,
+        );
+        for (const c of result.candidates) {
+          allCandidates.push({ ...c, chapter: ch });
+        }
+      }
+      setAiExtractResult(allCandidates);
     } catch (err) {
       setAiExtractError(err instanceof Error ? err.message : String(err));
     } finally {
       setAiExtractLoading(false);
     }
-  }, [bookId, extractChapter]);
+  }, [bookId, extractChapterFrom, extractChapterTo]);
+
+  const applyCandidate = useCallback(async (idx: number): Promise<boolean> => {
+    const candidate = aiExtractResult?.[idx];
+    if (!candidate) return false;
+    try {
+      setApplyingIndices((prev) => new Set(prev).add(idx));
+      await fetchJson(`/api/books/${encodeURIComponent(bookId)}/foreshadowing`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: candidate.title,
+          type: candidate.type,
+          description: candidate.description,
+          expectedPayoffChapter: candidate.expectedPayoffChapter,
+          confidence: candidate.confidence,
+          chapter: candidate.chapter ?? extractChapterFrom,
+        }),
+      });
+      return true;
+    } catch {
+      return false;
+    } finally {
+      setApplyingIndices((prev) => {
+        const next = new Set(prev);
+        next.delete(idx);
+        return next;
+      });
+    }
+  }, [aiExtractResult, bookId, extractChapterFrom]);
+
+  const handleApplySelected = useCallback(async () => {
+    const indices = aiExtractResult
+      ?.map((_, i) => i)
+      .filter((i) => selectedExtractIndices.has(i)) ?? [];
+    let allOk = true;
+    for (const idx of indices) {
+      const ok = await applyCandidate(idx);
+      if (!ok) allOk = false;
+    }
+    if (allOk) {
+      setAiExtractResult(null);
+      refetch();
+    }
+  }, [aiExtractResult, selectedExtractIndices, applyCandidate, refetch]);
+
+  const handleApplyAll = useCallback(async () => {
+    if (!aiExtractResult) return;
+    const allIndices = aiExtractResult.map((_, i) => i);
+    let allOk = true;
+    for (const idx of allIndices) {
+      const ok = await applyCandidate(idx);
+      if (!ok) allOk = false;
+    }
+    if (allOk) {
+      setAiExtractResult(null);
+      refetch();
+    }
+  }, [aiExtractResult, applyCandidate, refetch]);
+
+  const toggleSelectExtract = useCallback((idx: number) => {
+    setSelectedExtractIndices((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) {
+        next.delete(idx);
+      } else {
+        next.add(idx);
+      }
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAllExtract = useCallback(() => {
+    setSelectedExtractIndices((prev) => {
+      if (!aiExtractResult) return prev;
+      const total = aiExtractResult.length;
+      if (prev.size === total) {
+        return new Set<number>();
+      }
+      return new Set(aiExtractResult.map((_, i) => i));
+    });
+  }, [aiExtractResult]);
+
+  const selectedCount = selectedExtractIndices.size;
 
   const filtered = useMemo(() => {
     const list = data?.foreshadowing ?? [];
@@ -758,15 +856,31 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
             </div>
 
             <div className="px-6 py-4 space-y-4">
-              <div className="flex items-center gap-3">
-                <label className="text-sm font-medium text-foreground shrink-0">提取章节：</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={extractChapter}
-                  onChange={(e) => setExtractChapter(Number(e.target.value))}
-                  className="w-24 rounded-lg border border-border/40 bg-background px-3 py-2 text-sm outline-none focus:border-primary/50"
-                />
+              <div className="flex items-center gap-3 flex-wrap">
+                <label className="text-sm font-medium text-foreground shrink-0">章节范围：</label>
+                <select
+                  value={extractChapterFrom}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    setExtractChapterFrom(v);
+                    if (v > extractChapterTo) setExtractChapterTo(v);
+                  }}
+                  className="w-20 rounded-lg border border-border/40 bg-background px-3 py-2 text-sm outline-none focus:border-primary/50"
+                >
+                  {chapterOptions.map((ch) => (
+                    <option key={ch} value={ch}>第{ch}章</option>
+                  ))}
+                </select>
+                <span className="text-sm text-muted-foreground">至</span>
+                <select
+                  value={extractChapterTo}
+                  onChange={(e) => setExtractChapterTo(Number(e.target.value))}
+                  className="w-20 rounded-lg border border-border/40 bg-background px-3 py-2 text-sm outline-none focus:border-primary/50"
+                >
+                  {chapterOptions.filter((ch) => ch >= extractChapterFrom).map((ch) => (
+                    <option key={ch} value={ch}>第{ch}章</option>
+                  ))}
+                </select>
                 <button
                   type="button"
                   onClick={handleAiExtract}
@@ -800,31 +914,104 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                   {aiExtractResult.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-4">未识别到伏笔。</p>
                   ) : (
-                    aiExtractResult.map((candidate, idx) => (
-                      <div key={idx} className="rounded-lg border border-border/40 bg-background p-4 space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-sm text-foreground">{candidate.title}</span>
-                            <span className={cn(
-                              "px-1.5 py-0.5 rounded text-[10px] font-medium",
-                              candidate.type === "角色伏笔" ? "bg-[#E88D3A]/10 text-[#E88D3A]" :
-                              candidate.type === "物品伏笔" ? "bg-[#22C55E]/10 text-[#22C55E]" :
-                              candidate.type === "设定伏笔" ? "bg-[#8B5CF6]/10 text-[#8B5CF6]" :
-                              "bg-[#4A90D9]/10 text-[#4A90D9]",
-                            )}>{candidate.type}</span>
+                    <>
+                      <div className="flex items-center justify-between mb-2">
+                        <button
+                          type="button"
+                          onClick={toggleSelectAllExtract}
+                          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                        >
+                          <div className={cn(
+                            "w-4 h-4 rounded border flex items-center justify-center transition-colors",
+                            selectedCount === aiExtractResult.length
+                              ? "bg-primary border-primary text-primary-foreground"
+                              : "border-border/60",
+                          )}>
+                            {selectedCount === aiExtractResult.length && (
+                              <span className="text-[10px] leading-none">✓</span>
+                            )}
                           </div>
-                          <span className="text-[11px] text-muted-foreground">
-                            置信度：{Math.round(candidate.confidence * 100)}%
+                          全选
+                        </button>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">
+                            共 {aiExtractResult.length} 条，已选 {selectedCount} 条
                           </span>
+                          <button
+                            type="button"
+                            onClick={handleApplyAll}
+                            disabled={applyingIndices.size > 0}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
+                          >
+                            {applyingIndices.size > 0 && <Loader2 size={12} className="animate-spin" />}
+                            应用全部
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleApplySelected}
+                            disabled={selectedCount === 0 || applyingIndices.size > 0}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary shadow-sm transition hover:bg-primary/10 disabled:opacity-60"
+                          >
+                            应用
+                          </button>
                         </div>
-                        <p className="text-xs text-muted-foreground">{candidate.description}</p>
-                        {candidate.expectedPayoffChapter && (
-                          <p className="text-[11px] text-muted-foreground/60">
-                            预期回收章节：第 {candidate.expectedPayoffChapter} 章
-                          </p>
-                        )}
                       </div>
-                    ))
+                      {aiExtractResult.map((candidate, idx) => (
+                        <div
+                          key={idx}
+                          className={cn(
+                            "rounded-lg border p-4 space-y-2 transition-colors",
+                            selectedExtractIndices.has(idx)
+                              ? "border-primary/40 bg-primary/[0.02]"
+                              : "border-border/40 bg-background",
+                            applyingIndices.has(idx) && "opacity-60 pointer-events-none",
+                          )}
+                        >
+                          <div className="flex items-start gap-3">
+                            <button
+                              type="button"
+                              onClick={() => toggleSelectExtract(idx)}
+                              className={cn(
+                                "mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors",
+                                selectedExtractIndices.has(idx)
+                                  ? "bg-primary border-primary text-primary-foreground"
+                                  : "border-border/60 hover:border-primary/50",
+                              )}
+                            >
+                              {selectedExtractIndices.has(idx) && (
+                                <span className="text-[10px] leading-none">✓</span>
+                              )}
+                            </button>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-sm text-foreground">{candidate.title}</span>
+                                  <span className={cn(
+                                    "px-1.5 py-0.5 rounded text-[10px] font-medium",
+                                    candidate.type === "角色伏笔" ? "bg-[#E88D3A]/10 text-[#E88D3A]" :
+                                    candidate.type === "物品伏笔" ? "bg-[#22C55E]/10 text-[#22C55E]" :
+                                    candidate.type === "设定伏笔" ? "bg-[#8B5CF6]/10 text-[#8B5CF6]" :
+                                    "bg-[#4A90D9]/10 text-[#4A90D9]",
+                                  )}>{candidate.type}</span>
+                                </div>
+                                <span className="text-[11px] text-muted-foreground">
+                                  置信度：{Math.round(candidate.confidence * 100)}%
+                                </span>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-1">{candidate.description}</p>
+                              <div className="flex items-center gap-3 mt-1 text-[11px] text-muted-foreground/60">
+                                {candidate.chapter && (
+                                  <span>源自：第 {candidate.chapter} 章</span>
+                                )}
+                                {candidate.expectedPayoffChapter && (
+                                  <span>预期回收：第 {candidate.expectedPayoffChapter} 章</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </>
                   )}
                 </div>
               )}

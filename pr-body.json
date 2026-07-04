@@ -1,0 +1,1 @@
+{"title":"feat: 伏笔AI提取添加章节范围和应用按钮 (#309)","head":"feat-309-foreshadowing-ai","base":"master","body":"Closes #309\n\n## 变更\n- 章节选择改为范围选择器(起始/结束)\n- 提取结果添加[应用全部]和选择性应用按钮\n- 支持checkbox勾选单个伏笔应用\n- 添加单元测试"}
