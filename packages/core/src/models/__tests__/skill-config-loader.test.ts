@@ -7,6 +7,7 @@ import {
   mergeSkillConfigs,
   filterByCategory,
   filterEnabled,
+  defaultBuiltinRoot,
 } from "../skill-config-loader.js";
 import type { StoredSkillConfig } from "../skill-config.js";
 
@@ -129,6 +130,14 @@ describe("skill config loader (Issue #74)", () => {
     });
     const result = await loadSkillConfigs({ projectRoot, builtinRoot });
     expect(result.skills.map((s) => s.config.id)).toEqual(["real-skill"]);
+  });
+
+  describe("defaultBuiltinRoot (Issue #305)", () => {
+    it("resolves a valid non-null directory path", () => {
+      const root = defaultBuiltinRoot();
+      expect(root).not.toBeNull();
+      expect(typeof root).toBe("string");
+    });
   });
 
   describe("mergeSkillConfigs (pure helper)", () => {
