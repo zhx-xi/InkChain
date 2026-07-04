@@ -233,6 +233,15 @@ h3 { font-size: 1.25rem; }
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Panel slide-in from right for overlay panels */
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+.animate-slide-in-right {
+  animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* ── Premium Layout Utilities ── */
 .glass-panel {
   backdrop-blur: 16px;

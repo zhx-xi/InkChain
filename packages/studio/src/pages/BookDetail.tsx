@@ -6,6 +6,7 @@ import type { SSEMessage } from "../hooks/use-sse";
 import { useColors } from "../hooks/use-colors";
 import { deriveBookActivity, shouldRefetchBookView } from "../hooks/use-book-activity";
 import { ConfirmDialog } from "../components/ConfirmDialog";
+import { ChapterHistoryPanel } from "../components/ChapterHistoryPanel";
 import {
   ChevronLeft,
   Zap,
@@ -20,6 +21,7 @@ import {
   Check,
   X,
   ShieldCheck,
+  Clock,
   RotateCcw,
   RefreshCw,
   Sparkles,
@@ -104,6 +106,7 @@ export function BookDetail({
   const [rewritingChapters, setRewritingChapters] = useState<ReadonlyArray<number>>([]);
   const [revisingChapters, setRevisingChapters] = useState<ReadonlyArray<number>>([]);
   const [syncingChapters, setSyncingChapters] = useState<ReadonlyArray<number>>([]);
+  const [historyPanelChapter, setHistoryPanelChapter] = useState<number | null>(null);
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsWordCount, setSettingsWordCount] = useState<number | null>(null);
   const [settingsTargetChapters, setSettingsTargetChapters] = useState<number | null>(null);
@@ -796,6 +799,13 @@ export function BookDetail({
                             : <Settings2 size={14} />}
                         </button>
                       )}
+                      <button
+                        onClick={() => setHistoryPanelChapter(ch.number)}
+                        className="p-2 rounded-lg bg-secondary text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all shadow-sm"
+                        title="章节履历"
+                      >
+                        <Clock size={14} />
+                      </button>
                       <select
                         disabled={revisingChapters.includes(ch.number)}
                         value=""
@@ -833,6 +843,15 @@ export function BookDetail({
           </div>
         )}
       </div>
+
+      {historyPanelChapter !== null && (
+        <ChapterHistoryPanel
+          bookId={bookId}
+          chapterNum={historyPanelChapter}
+          chapterTitle={chapters.find((ch) => ch.number === historyPanelChapter)?.title}
+          onClose={() => setHistoryPanelChapter(null)}
+        />
+      )}
 
       <ConfirmDialog
         open={confirmDeleteOpen}
