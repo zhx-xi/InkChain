@@ -79,6 +79,9 @@ vi.mock("@xyflow/react", () => ({
   useNodesState: vi.fn(() => [[], vi.fn(), vi.fn()]),
   useEdgesState: vi.fn(() => [[], vi.fn(), vi.fn()]),
   BackgroundVariant: { Dots: "dots" },
+  MarkerType: { ArrowClosed: "arrowclosed" },
+  BaseEdge: () => null,
+  getBezierPath: vi.fn(() => ["", ""]),
 }));
 
 // ── Mock useGraphStore (used by RelationGraphPanel) ──

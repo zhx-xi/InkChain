@@ -58,13 +58,26 @@ interface AgentNodeData {
   isCustom?: boolean;
 }
 
+const WARM_LITERARY = {
+  bg: "#FDF6F0",
+  bgCard: "#FFFBF7",
+  border: "#E8D8C8",
+  brand: "#8B3A3A",
+  brandLight: "rgba(139,58,58,0.1)",
+  text: "#3a2a1a",
+  textMuted: "#8a7a6a",
+  accent1: "#8B3A3A",
+  accent2: "#D4A855",
+  accent3: "#6a8ac0",
+};
+
 function AgentFlowNode({ data }: NodeProps<AgentNodeData>) {
   return (
     <div
       className="relative flex items-center gap-3 rounded-xl border-2 px-4 py-3 shadow-sm min-w-[180px] transition-shadow hover:shadow-md"
       style={{
-        borderColor: `${data.color}40`,
-        backgroundColor: `${data.color}08`,
+        borderColor: data.status === "disabled" ? `${WARM_LITERAL.border}` : `${data.color}60`,
+        backgroundColor: data.status === "disabled" ? `${WARM_LITERAL.bgCard}` : `${data.color}10`,
       }}
     >
       {/* Status dot */}
@@ -72,9 +85,9 @@ function AgentFlowNode({ data }: NodeProps<AgentNodeData>) {
         className={cn(
           "absolute top-2 right-2 h-2 w-2 rounded-full",
           data.status === "ready" && "bg-emerald-500",
-          data.status === "busy" && "bg-yellow-500 animate-pulse",
+          data.status === "busy" && "bg-amber-500 animate-pulse",
           data.status === "error" && "bg-red-500",
-          data.status === "disabled" && "bg-muted-foreground/30",
+          data.status === "disabled" && "bg-zinc-300",
         )}
       />
 
@@ -88,10 +101,10 @@ function AgentFlowNode({ data }: NodeProps<AgentNodeData>) {
 
       {/* Info */}
       <div className="flex flex-col min-w-0">
-        <span className="text-sm font-semibold text-foreground truncate">
+        <span className="text-sm font-semibold truncate" style={{ color: WARM_LITERAL.text }}>
           {data.label}
         </span>
-        <span className="text-[11px] text-muted-foreground/60 truncate leading-tight">
+        <span className="text-[11px] truncate leading-tight" style={{ color: WARM_LITERAL.textMuted }}>
           {data.description}
         </span>
       </div>
@@ -178,7 +191,7 @@ function buildNodes(
   agentOrder.forEach((id, idx) => orderMap.set(id, idx));
 
   const builtinEntries = builtinAgents
-    .filter((a) => orderMap.has(a.role) || true)
+    .filter((a) => orderMap.has(a.role))
     .map((a) => ({
       id: a.role,
       label: a.label,
@@ -191,7 +204,7 @@ function buildNodes(
     }));
 
   const customEntries = customAgents
-    .filter((a) => orderMap.has(a.id) || true)
+    .filter((a) => orderMap.has(a.id))
     .map((a) => ({
       id: a.id,
       label: a.name,
@@ -256,13 +269,13 @@ function buildEdges(
       type: "flowEdge",
       animated: isParallel || isConditional,
       style: {
-        stroke: isConditional ? "#F59E0B" : isParallel ? "#8B5CF6" : "#94a3b8",
+        stroke: isConditional ? "#D4A855" : isParallel ? "#6a8ac0" : "#c4b4a0",
         strokeWidth: 2,
         strokeDasharray: isConditional ? "6 3" : isParallel ? "3 3" : undefined,
       },
       markerEnd: {
         type: MarkerType.ArrowClosed,
-        color: isConditional ? "#F59E0B" : isParallel ? "#8B5CF6" : "#94a3b8",
+        color: isConditional ? "#D4A855" : isParallel ? "#6a8ac0" : "#c4b4a0",
       },
       data: {
         label: isConditional
@@ -343,10 +356,10 @@ export function AgentFlowEditor({
     <div
       ref={flowWrapperRef}
       className={cn(
-        "rounded-xl border border-border/30 bg-card/10 overflow-hidden",
+        "rounded-xl border overflow-hidden",
         className,
       )}
-      style={{ height: 420 }}
+      style={{ height: 420, backgroundColor: WARM_LITERAL.bg, borderColor: WARM_LITERAL.border }}
     >
       <ReactFlow
         nodes={nodes}
@@ -363,14 +376,18 @@ export function AgentFlowEditor({
         defaultEdgeOptions={{
           type: "flowEdge",
         }}
+        style={{ backgroundColor: WARM_LITERAL.bg }}
       >
-        <Background color="#888" gap={20} size={1} />
-        <Controls showInteractive={false} className="[&>button]:border-border/30 [&>button]:bg-card/80" />
+        <Background color="#D4C8B8" gap={20} size={1} />
+        <Controls
+          showInteractive={false}
+          className="[&>button]:border-[#E8D8C8] [&>button]:bg-[#FFFBF7] [&>button]:text-[#3a2a1a]"
+        />
         <MiniMap
-          nodeColor={(node) => node.data?.color ?? "#94a3b8"}
-          maskColor="rgba(0,0,0,0.1)"
-          className="rounded-lg border border-border/20"
-          style={{ width: 120, height: 80 }}
+          nodeColor={(node) => node.data?.color ?? "#c4b4a0"}
+          maskColor="rgba(139,58,58,0.06)"
+          className="rounded-lg border"
+          style={{ width: 120, height: 80, borderColor: WARM_LITERAL.border }}
         />
       </ReactFlow>
     </div>
