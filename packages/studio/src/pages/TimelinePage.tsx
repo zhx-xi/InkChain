@@ -73,7 +73,7 @@ const EVENT_TYPE_OPTIONS = [
 const NODE_WIDTH = 160;
 const NODE_HEIGHT = 52;
 const COLUMN_GAP_X = 220;
-const ROW_GAP_Y = 76;
+const ROW_GAP_Y = 76;  // Base row gap; auto-adjusted when nodes overlap
 const LEFT_MARGIN = 160;   // Space for character Y-axis labels
 const TOP_MARGIN = 80;     // Space for chapter X-axis labels
 const HEADER_NODE_WIDTH = 140;
@@ -663,7 +663,33 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
       });
     }
 
-    // Character header nodes (Y-axis)
+    // Character header nodes (Y-axis) — placed after dynamic gap computation
+    // (moved below after cell count pass to use dynamicRowGap)
+
+    // First pass: count events per (chapter, character) cell
+    const cellCounts = new Map<string, number>();
+    for (const e of filteredEvents) {
+      const chIdx = chapterIndexMap.get(e.chapter);
+      if (chIdx === undefined) continue;
+
+      if (e.relatedCharacters.length === 0) {
+        const cellKey = `ch-${e.chapter}-norole`;
+        cellCounts.set(cellKey, (cellCounts.get(cellKey) ?? 0) + 1);
+      } else {
+        for (const character of e.relatedCharacters) {
+          const charIdx = characterIndexMap.get(character);
+          if (charIdx === undefined) continue;
+          const cellKey = `ch-${e.chapter}-char-${character}`;
+          cellCounts.set(cellKey, (cellCounts.get(cellKey) ?? 0) + 1);
+        }
+      }
+    }
+
+    // Compute dynamic row gap based on max events in any cell
+    const maxCellEvents = Math.max(...Array.from(cellCounts.values()), 1);
+    const dynamicRowGap = Math.max(ROW_GAP_Y, (NODE_HEIGHT + 4) * maxCellEvents + 16);
+
+    // Character header nodes (Y-axis) — use dynamic row gap
     for (const ch of uniqueCharacters) {
       const idx = characterIndexMap.get(ch)!;
       nodes.push({
@@ -671,7 +697,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
         type: "characterHeader",
         position: {
           x: 0,
-          y: TOP_MARGIN + idx * ROW_GAP_Y + (ROW_GAP_Y - HEADER_NODE_HEIGHT) / 2,
+          y: TOP_MARGIN + idx * dynamicRowGap + (dynamicRowGap - HEADER_NODE_HEIGHT) / 2,
         },
         data: { label: ch },
         draggable: false,
@@ -680,10 +706,8 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
       });
     }
 
-    // Event nodes
-    // Track (chapter, character) counts for staggering
-    const cellCounts = new Map<string, number>();
-
+    // Event nodes (second pass)
+    const eventCellCounts = new Map<string, number>();
     for (const e of filteredEvents) {
       const chIdx = chapterIndexMap.get(e.chapter);
       if (chIdx === undefined) continue;
@@ -694,8 +718,8 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
       if (e.relatedCharacters.length === 0) {
         // Events with no character — place at top of the chapter column
         const cellKey = `ch-${e.chapter}-norole`;
-        const count = cellCounts.get(cellKey) ?? 0;
-        cellCounts.set(cellKey, count + 1);
+        const count = eventCellCounts.get(cellKey) ?? 0;
+        eventCellCounts.set(cellKey, count + 1);
         nodes.push({
           id: e.id,
           type: "timelineEvent",
@@ -720,15 +744,15 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
           if (charIdx === undefined) continue;
 
           const cellKey = `ch-${e.chapter}-char-${character}`;
-          const count = cellCounts.get(cellKey) ?? 0;
-          cellCounts.set(cellKey, count + 1);
+          const count = eventCellCounts.get(cellKey) ?? 0;
+          eventCellCounts.set(cellKey, count + 1);
 
           nodes.push({
             id: `${e.id}-${character}`,
             type: "timelineEvent",
             position: {
               x: baseX,
-              y: baseY + charIdx * ROW_GAP_Y + count * (NODE_HEIGHT + 4),
+              y: baseY + charIdx * dynamicRowGap + count * (NODE_HEIGHT + 4),
             },
             data: {
               id: e.id,
