@@ -10,7 +10,6 @@ describe("capability skill registry", () => {
     const ids = registry.listSkills().map((skill) => skill.id).sort();
 
     expect(ids).toEqual([
-      "content-extractor",
       "extract-character",
       "extract-foreshadowing",
       "extract-plot",
@@ -22,7 +21,6 @@ describe("capability skill registry", () => {
       "interactive-film-authoring",
       "longform-writing",
       "open-world-play",
-      "summarizer",
     ]);
 
     const visibleIds = registry.listUserVisibleSkills().map((skill) => skill.id).sort();
