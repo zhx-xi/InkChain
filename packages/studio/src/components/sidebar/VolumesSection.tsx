@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
-import { Plus, Pencil, Trash2, X, Check, GripVertical } from "lucide-react";
+import { useEffect, useState, useCallback, useRef, createPortal } from "react";
+import { Plus, Pencil, Trash2, X, Check, GripVertical, BookOpen, Trash } from "lucide-react";
 import { fetchJson } from "../../hooks/use-api";
 import { useChatStore } from "../../store/chat";
 import { SidebarCard } from "./SidebarCard";
@@ -190,6 +190,125 @@ function CreateVolumeForm({ onSubmit, onCancel }: {
   );
 }
 
+// ── Volume Delete Confirmation Dialog (暖白文学风) ──
+
+interface VolumeDeleteDialogProps {
+  readonly open: boolean;
+  readonly volumeTitle: string;
+  readonly chapterCount: number;
+  readonly onUnlink: () => void;
+  readonly onCascade: () => void;
+  readonly onCancel: () => void;
+}
+
+function VolumeDeleteDialog({
+  open,
+  volumeTitle,
+  chapterCount,
+  onUnlink,
+  onCascade,
+  onCancel,
+}: VolumeDeleteDialogProps) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCancel();
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [open, onCancel]);
+
+  if (!open) return null;
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
+    <div
+      ref={overlayRef}
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm pt-[72px]"
+      onClick={(e) => { if (e.target === overlayRef.current) onCancel(); }}
+    >
+      <div
+        className="w-full max-w-sm mx-4 rounded-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200"
+        style={{ background: "#FDF6F0", border: "1px solid #E8D5C0" }}
+      >
+        {/* Header */}
+        <div className="px-6 pt-5 pb-3" style={{ borderBottom: "1px solid #E8D5C0" }}>
+          <h3 className="text-base font-semibold" style={{ color: "#8B3A3A", fontFamily: "Georgia, serif" }}>
+            删除分卷
+          </h3>
+          <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "#8B7D6B" }}>
+            确定要删除分卷「{volumeTitle}」吗？
+            {chapterCount > 0 && (
+              <>该卷下共有 <span style={{ color: "#8B3A3A", fontWeight: 600 }}>{chapterCount}</span> 个章节。</>
+            )}
+          </p>
+        </div>
+
+        {/* Options */}
+        <div className="px-6 py-4 space-y-2">
+          {/* Option 1: 移至未分卷 (default, recommended) */}
+          <button
+            onClick={onUnlink}
+            className="w-full flex items-start gap-3 p-3 rounded-xl transition-all duration-150 text-left hover:scale-[1.02] active:scale-[0.98]"
+            style={{ background: "#FFFBF7", border: "1px solid #E8D5C0" }}
+          >
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+              style={{ background: "#FFF0E0" }}
+            >
+              <BookOpen size={16} style={{ color: "#8B3A3A" }} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium" style={{ color: "#5C4A3A" }}>
+                将章节移至未分卷
+              </p>
+              <p className="text-xs mt-0.5" style={{ color: "#9C8B78" }}>
+                章节保留，移出当前分卷
+              </p>
+            </div>
+          </button>
+
+          {/* Option 2: 级联删除 */}
+          <button
+            onClick={onCascade}
+            className="w-full flex items-start gap-3 p-3 rounded-xl transition-all duration-150 text-left hover:scale-[1.02] active:scale-[0.98]"
+            style={{ background: "#FFFBF7", border: "1px solid #F0D0C0" }}
+          >
+            <div
+              className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+              style={{ background: "#FFE8E0" }}
+            >
+              <Trash size={16} style={{ color: "#C0392B" }} />
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-medium" style={{ color: "#C0392B" }}>
+                级联删除章节
+              </p>
+              <p className="text-xs mt-0.5" style={{ color: "#9C8B78" }}>
+                连章节文件一起删除（不可恢复）
+              </p>
+            </div>
+          </button>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 pb-4 pt-1" style={{ borderTop: "1px solid #E8D5C0" }}>
+          <button
+            onClick={onCancel}
+            className="w-full py-2.5 rounded-xl text-sm font-medium transition-all"
+            style={{ color: "#9C8B78", background: "#F0E8E0" }}
+          >
+            取消
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 // ── Main component ──
 
 interface VolumesSectionProps {
@@ -204,6 +323,7 @@ export function VolumesSection({ bookId }: VolumesSectionProps) {
   const [creating, setCreating] = useState(false);
   const [activeVolumeId, setActiveVolumeId] = useState<string | null>(null);
   const [dragOverVolumeId, setDragOverVolumeId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Volume | null>(null);
   const bookDataVersion = useChatStore((s) => s.bookDataVersion);
 
   // Fetch volumes
@@ -243,11 +363,14 @@ export function VolumesSection({ bookId }: VolumesSectionProps) {
     }
   }, [bookId]);
 
-  // Delete volume
-  const handleDelete = useCallback(async (volumeId: string) => {
+  // Delete volume (with cascade option)
+  const handleDelete = useCallback(async (volumeId: string, cascade: boolean) => {
+    setDeleteTarget(null);
     try {
-      await fetchJson(`/books/${bookId}/volumes/${volumeId}`, { method: "DELETE" });
+      const qs = cascade ? "?cascade=true" : "";
+      await fetchJson(`/books/${bookId}/volumes/${volumeId}${qs}`, { method: "DELETE" });
       setVolumes((prev) => prev.filter((v) => v.id !== volumeId));
+      useChatStore.getState().bumpBookDataVersion();
     } catch (err) {
       console.error("Failed to delete volume:", err);
     }
@@ -379,9 +502,7 @@ export function VolumesSection({ bookId }: VolumesSectionProps) {
                   }
                 }}
                 onDelete={() => {
-                  if (confirm(`确定删除分卷「${volume.title}」？`)) {
-                    void handleDelete(volume.id);
-                  }
+                  setDeleteTarget(volume);
                 }}
                 onDrop={(e) => handleDropOnVolume(e, volume.id)}
                 onDragOver={handleDragOver}
@@ -423,6 +544,20 @@ export function VolumesSection({ bookId }: VolumesSectionProps) {
           ) : null}
         </div>
       )}
+
+      {/* Delete confirmation dialog */}
+      <VolumeDeleteDialog
+        open={deleteTarget !== null}
+        volumeTitle={deleteTarget?.title ?? ""}
+        chapterCount={deleteTarget ? allChapters.filter((ch) => ch.volumeId === deleteTarget.id).length : 0}
+        onUnlink={() => {
+          if (deleteTarget) void handleDelete(deleteTarget.id, false);
+        }}
+        onCascade={() => {
+          if (deleteTarget) void handleDelete(deleteTarget.id, true);
+        }}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </SidebarCard>
   );
 }
