@@ -1,4 +1,5 @@
 // ── 章节审计 Dashboard (Issue #329) ──
+// Batch audit support (Issue #365)
 
 import { useState, useEffect, useCallback } from "react";
 import {
@@ -13,6 +14,8 @@ import {
   CheckCircle2,
   XCircle,
   Loader2,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import { fetchJson, postApi } from "../hooks/use-api";
 
@@ -60,6 +63,20 @@ interface AuditResponse {
   };
 }
 
+interface BatchAuditResponse {
+  batchSize: number;
+  totalRequested: number;
+  skipped: number;
+  results: Array<{ chapterNumber: number; status: AuditStatus }>;
+}
+
+interface BatchProgress {
+  total: number;
+  completed: number;
+  currentChapter: number | null;
+  results: Array<{ chapterNumber: number; status: AuditStatus }>;
+}
+
 // ── Helpers ──
 
 const SEVERITY_CONFIG: Record<string, { icon: typeof AlertTriangle; color: string; label: string }> = {
@@ -105,6 +122,10 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
   const [expandedChapters, setExpandedChapters] = useState<Set<number>>(new Set());
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
   const [refreshing, setRefreshing] = useState(false);
+
+  // Batch audit state
+  const [selectedChapters, setSelectedChapters] = useState<Set<number>>(new Set());
+  const [batchProgress, setBatchProgress] = useState<BatchProgress | null>(null);
 
   const fetchAudit = useCallback(async () => {
     try {
@@ -187,6 +208,76 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
     fetchAudit();
   };
 
+  // ── Batch Selection ──
+
+  const toggleSelection = (chapterNumber: number) => {
+    setSelectedChapters((prev) => {
+      const next = new Set(prev);
+      if (next.has(chapterNumber)) {
+        next.delete(chapterNumber);
+      } else {
+        next.add(chapterNumber);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    const chapters = data?.chapters ?? [];
+    if (selectedChapters.size === chapters.length) {
+      setSelectedChapters(new Set());
+    } else {
+      setSelectedChapters(new Set(chapters.map((c) => c.chapterNumber)));
+    }
+  };
+
+  // ── Batch Audit ──
+
+  const handleBatchAudit = async () => {
+    if (selectedChapters.size === 0) return;
+    const chapterNumbers = Array.from(selectedChapters).sort((a, b) => a - b);
+
+    setBatchProgress({
+      total: chapterNumbers.length,
+      completed: 0,
+      currentChapter: null,
+      results: [],
+    });
+
+    try {
+      // Sequential batch audit: each chapter is audited individually
+      // so progress can be tracked per-chapter
+      for (let i = 0; i < chapterNumbers.length; i++) {
+        const chNum = chapterNumbers[i];
+        setBatchProgress((prev) => ({
+          ...prev!,
+          currentChapter: chNum,
+        }));
+
+        await postApi<AuditResponse>(
+          `/api/books/${encodeURIComponent(bookId)}/chapters/${chNum}/audit`,
+        );
+
+        setBatchProgress((prev) => ({
+          ...prev!,
+          completed: i + 1,
+          currentChapter: i < chapterNumbers.length - 1 ? chapterNumbers[i + 1] : null,
+          results: [
+            ...(prev?.results ?? []),
+            { chapterNumber: chNum, status: "pass" as AuditStatus },
+          ],
+        }));
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "批量审计失败");
+    }
+
+    // Reload audit data
+    await fetchAudit();
+    setSelectedChapters(new Set());
+    setBatchProgress(null);
+  };
+
   // ── Loading State ──
 
   if (loading) {
@@ -220,6 +311,7 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
 
   const chapters = data?.chapters ?? [];
   const summary = data?.summary ?? { totalChapters: 0, auditedChapters: 0, passedChapters: 0, warnChapters: 0, failedChapters: 0 };
+  const allSelected = chapters.length > 0 && selectedChapters.size === chapters.length;
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
@@ -289,6 +381,85 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
         />
       </div>
 
+      {/* ── Batch Audit Toolbar ── */}
+      <div className="flex items-center justify-between mb-4 px-1">
+        <div className="flex items-center gap-2">
+          {/* Select All Checkbox */}
+          <button
+            onClick={toggleSelectAll}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            title={allSelected ? "取消全选" : "全选"}
+          >
+            {allSelected ? <CheckSquare size={14} /> : <Square size={14} />}
+            <span>{allSelected ? "取消全选" : "全选"}</span>
+          </button>
+          {selectedChapters.size > 0 && (
+            <span className="text-xs text-muted-foreground">
+              已选 {selectedChapters.size} 章
+            </span>
+          )}
+        </div>
+
+        {/* Batch Audit Button */}
+        {selectedChapters.size > 0 && !batchProgress && (
+          <button
+            onClick={handleBatchAudit}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-all"
+          >
+            <ShieldCheck size={14} />
+            批量审计 ({selectedChapters.size} 章)
+          </button>
+        )}
+      </div>
+
+      {/* ── Batch Progress ── */}
+      {batchProgress && (
+        <div className="mb-6 p-4 rounded-xl border border-primary/20 bg-primary/5">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-foreground flex items-center gap-2">
+              <Loader2 size={14} className="animate-spin" />
+              批量审计中…
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {batchProgress.completed} / {batchProgress.total} 章
+            </span>
+          </div>
+          {/* Progress bar */}
+          <div className="w-full h-2 rounded-full bg-secondary/50 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-300"
+              style={{ width: `${(batchProgress.completed / batchProgress.total) * 100}%` }}
+            />
+          </div>
+          {batchProgress.currentChapter !== null && (
+            <p className="text-xs text-muted-foreground mt-2">
+              正在审计第 {batchProgress.currentChapter} 章…
+            </p>
+          )}
+          {/* Result summary */}
+          {batchProgress.results.length > 0 && (
+            <div className="mt-3 flex gap-2 flex-wrap">
+              {batchProgress.results.map((r) => (
+                <span
+                  key={r.chapterNumber}
+                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
+                    r.status === "pass" ? "bg-emerald-50 text-emerald-600" :
+                    r.status === "warn" ? "bg-amber-50 text-amber-600" :
+                    r.status === "fail" ? "bg-red-50 text-red-600" :
+                    "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  #{r.chapterNumber}
+                  {r.status === "pass" && <CheckCircle2 size={10} />}
+                  {r.status === "warn" && <AlertTriangle size={10} />}
+                  {r.status === "fail" && <XCircle size={10} />}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Chapter Audit List ── */}
       <div className="space-y-2">
         {chapters.length === 0 && (
@@ -305,55 +476,78 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
           const auditKey = `audit-${chapter.chapterNumber}`;
           const approveKey = `approve-${chapter.chapterNumber}`;
           const reauditKey = `reaudit-${chapter.chapterNumber}`;
+          const isSelected = selectedChapters.has(chapter.chapterNumber);
 
           return (
             <div
               key={chapter.chapterNumber}
-              className={`rounded-xl border border-border/60 overflow-hidden transition-all ${
-                isExpanded ? "shadow-sm" : ""
-              }`}
+              className={`rounded-xl border overflow-hidden transition-all ${
+                isSelected
+                  ? "border-primary/40 ring-1 ring-primary/20"
+                  : "border-border/60"
+              } ${isExpanded ? "shadow-sm" : ""}`}
             >
               {/* Chapter Header (always visible) */}
-              <button
-                onClick={() => toggleChapter(chapter.chapterNumber)}
-                className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-secondary/20 transition-colors"
-              >
-                <div className={`w-2 h-2 rounded-full shrink-0 ${
-                  chapter.status === "pass" || chapter.status === "approved"
-                    ? "bg-emerald-500"
-                    : chapter.status === "warn"
-                      ? "bg-amber-500"
-                      : chapter.status === "fail"
-                        ? "bg-red-500"
-                        : "bg-gray-300 dark:bg-gray-600"
-                }`} />
-
-                <span className="text-sm font-medium text-foreground min-w-[4rem]">
-                  第{chapter.chapterNumber}章
-                </span>
-
-                <span className="text-sm text-muted-foreground truncate flex-1">
-                  {chapter.title}
-                </span>
-
-                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusCfg.bg} ${statusCfg.color}`}>
-                  {statusIcon(chapter.status)}
-                  {statusCfg.label}
-                </span>
-
-                {hasIssues && (
-                  <span className="text-xs text-muted-foreground/70 shrink-0">
-                    {chapter.issues.length} 个问题
-                  </span>
+              <div className="flex items-center">
+                {/* Checkbox */}
+                {!batchProgress && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleSelection(chapter.chapterNumber);
+                    }}
+                    className="pl-4 py-3.5 text-muted-foreground hover:text-foreground transition-colors"
+                    title={isSelected ? "取消选择" : "选择"}
+                  >
+                    {isSelected ? (
+                      <CheckSquare size={16} className="text-primary" />
+                    ) : (
+                      <Square size={16} />
+                    )}
+                  </button>
                 )}
 
-                <ChevronDown
-                  size={14}
-                  className={`text-muted-foreground/50 transition-transform shrink-0 ${
-                    isExpanded ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
+                <button
+                  onClick={() => toggleChapter(chapter.chapterNumber)}
+                  className="flex-1 flex items-center gap-3 px-3 py-3.5 text-left hover:bg-secondary/20 transition-colors"
+                >
+                  <div className={`w-2 h-2 rounded-full shrink-0 ${
+                    chapter.status === "pass" || chapter.status === "approved"
+                      ? "bg-emerald-500"
+                      : chapter.status === "warn"
+                        ? "bg-amber-500"
+                        : chapter.status === "fail"
+                          ? "bg-red-500"
+                          : "bg-gray-300 dark:bg-gray-600"
+                  }`} />
+
+                  <span className="text-sm font-medium text-foreground min-w-[4rem]">
+                    第{chapter.chapterNumber}章
+                  </span>
+
+                  <span className="text-sm text-muted-foreground truncate flex-1">
+                    {chapter.title}
+                  </span>
+
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${statusCfg.bg} ${statusCfg.color}`}>
+                    {statusIcon(chapter.status)}
+                    {statusCfg.label}
+                  </span>
+
+                  {hasIssues && (
+                    <span className="text-xs text-muted-foreground/70 shrink-0">
+                      {chapter.issues.length} 个问题
+                    </span>
+                  )}
+
+                  <ChevronDown
+                    size={14}
+                    className={`text-muted-foreground/50 transition-transform shrink-0 ${
+                      isExpanded ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+              </div>
 
               {/* Expanded Content */}
               {isExpanded && (

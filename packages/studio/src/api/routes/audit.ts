@@ -318,5 +318,59 @@ export function createAuditRouter(root: string) {
     return c.json({ audit: result });
   });
 
+  // POST /api/books/:bookId/chapters/audit/batch — 批量审计 (Issue #365)
+  router.post("/:bookId/chapters/audit/batch", async (c) => {
+    const bookId = c.req.param("bookId");
+
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json({ error: { code: "INVALID_JSON", message: "请求体不是有效 JSON" } }, 400);
+    }
+
+    if (typeof body !== "object" || body === null) {
+      return c.json({ error: { code: "VALIDATION_ERROR", message: "请求体必须是 JSON 对象" } }, 400);
+    }
+
+    const raw = body as Record<string, unknown>;
+    const chapterNumbersRaw = raw.chapterNumbers;
+
+    if (!Array.isArray(chapterNumbersRaw) || chapterNumbersRaw.length === 0) {
+      return c.json({ error: { code: "VALIDATION_ERROR", message: "chapterNumbers 必须是包含章节序号的非空数组" } }, 400);
+    }
+
+    const chapterNumbers = chapterNumbersRaw
+      .map((n) => (typeof n === "number" ? n : Number.parseInt(String(n), 10)))
+      .filter((n) => Number.isInteger(n) && n > 0);
+
+    if (chapterNumbers.length === 0) {
+      return c.json({ error: { code: "VALIDATION_ERROR", message: "未提供有效的章节序号" } }, 400);
+    }
+
+    // Validate chapters exist
+    const chapters = await loadChaptersList(root, bookId);
+    const validChapters = chapterNumbers.filter((num) => chapters.some((ch) => ch.number === num));
+
+    if (validChapters.length === 0) {
+      return c.json({ error: { code: "CHAPTERS_NOT_FOUND", message: "指定的章节不存在" } }, 404);
+    }
+
+    // Run audit for each valid chapter
+    const results: Array<{ chapterNumber: number; status: AuditStatus }> = [];
+    for (const chapterNumber of validChapters) {
+      const result = runMockAudit(chapterNumber);
+      await writeChapterAudit(root, bookId, result);
+      results.push({ chapterNumber: result.chapterNumber, status: result.status });
+    }
+
+    return c.json({
+      batchSize: results.length,
+      totalRequested: chapterNumbers.length,
+      skipped: chapterNumbers.length - validChapters.length,
+      results,
+    });
+  });
+
   return router;
 }
