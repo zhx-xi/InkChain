@@ -45,6 +45,11 @@ interface ExtractionResponse {
   existingRelationsCount: number;
 }
 
+interface ExtractApiResponse {
+  success: boolean;
+  data: ExtractionResponse;
+}
+
 // ── Relationship Type Display Config ──
 
 const RELATION_LABELS: Record<string, string> = {
@@ -145,14 +150,19 @@ export function RelationExtractionReviewPanel({
           .filter((n) => !Number.isNaN(n) && n > 0);
       }
 
-      const data = await postApi<ExtractionResponse>(
-        `/books/${bookId}/relation-extraction`,
+      const response = await postApi<ExtractApiResponse>(
+        `/api/extract`,
         {
-          prose: prose.trim(),
-          chapterNumbers,
-          extractMode,
+          skillId: "extract-relation",
+          bookId,
+          params: {
+            prose: prose.trim(),
+            chapterNumbers,
+            extractMode,
+          },
         },
       );
+      const data = response.data;
 
       setProposals(
         data.proposals.map((p) => ({ ...p, status: "pending" as ProposalStatus })),
