@@ -529,10 +529,11 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       const totalChapters = to - from + 1;
       setExtractProgress({ current: 0, total: totalChapters });
       for (let ch = from; ch <= to; ch++) {
-        const result = await postApi<{ candidates: ForeshadowingExtractCandidate[] }>(
-          `/api/v1/books/${encodeURIComponent(bookId)}/chapters/${ch}/extract/foreshadowing`,
+        const result = await postApi<{ success: boolean; data: { candidates: ForeshadowingExtractCandidate[] } }>(
+          `/api/extract`,
+          { skillId: "extract-foreshadowing", bookId, chapterNumber: ch },
         );
-        for (const c of result.candidates) {
+        for (const c of result.data.candidates) {
           allCandidates.push({ ...c, chapter: ch });
         }
         setExtractProgress({ current: ch - from + 1, total: totalChapters });
