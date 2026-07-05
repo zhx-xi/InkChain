@@ -6,7 +6,7 @@ import { cn } from "../lib/utils";
 import { useApi, postApi } from "../hooks/use-api";
 import type { WorldConfig } from "@actalk/inkos-core";
 
-interface AiExtractResponse {
+interface AiExtractData {
   readonly world: {
     readonly settings: string;
     readonly roles: string;
@@ -60,7 +60,7 @@ export function WorldListPage({ nav, bookId }: {
   const [showAiExtract, setShowAiExtract] = useState(false);
   const [aiExtractLoading, setAiExtractLoading] = useState(false);
   const [aiExtractError, setAiExtractError] = useState<string | null>(null);
-  const [aiExtractResult, setAiExtractResult] = useState<AiExtractResponse | null>(null);
+  const [aiExtractResult, setAiExtractResult] = useState<AiExtractData | null>(null);
 
   const handleAiExtract = useCallback(async () => {
     if (!bookId) return;
@@ -68,10 +68,11 @@ export function WorldListPage({ nav, bookId }: {
     setAiExtractError(null);
     setAiExtractResult(null);
     try {
-      const result = await postApi<AiExtractResponse>(
-        `/api/v1/books/${encodeURIComponent(bookId)}/worlds/ai-extract-from-book`,
+      const result = await postApi<{ success: boolean; data: AiExtractData }>(
+        `/api/extract`,
+        { skillId: "extract-world", bookId },
       );
-      setAiExtractResult(result);
+      setAiExtractResult(result.data);
     } catch (err) {
       setAiExtractError(err instanceof Error ? err.message : String(err));
     } finally {
