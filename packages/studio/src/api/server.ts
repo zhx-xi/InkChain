@@ -127,6 +127,7 @@ import { createWorldsExtractRouter } from "./routes/worlds-extract.js";
 import { createWorldsAIGenRouter } from "./routes/worlds-ai-gen.js";
 import { createMapsAIGenRouter } from "./routes/maps-ai-gen.js";
 import { createPublishRouter } from "./routes/publish.js";
+import { createBookStyleRouter } from "./routes/book-style.js";
 import { createStyleProfilesRouter } from "./routes/style-profiles.js";
 import { createStyleConsistencyRouter } from "./routes/style-consistency.js";
 import { createConsistencyRouter } from "./routes/consistency.js";
@@ -5719,6 +5720,10 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // ── Volumes CRUD ──
   const volumesRouter = createVolumesRouter((id) => state.bookDir(id));
   app.route("/api/v1/books", volumesRouter);
+
+  // ── Per-Book Style Analysis (Issue #328) ──
+  const bookStyleRouter = createBookStyleRouter((id) => state.bookDir(id));
+  app.route("/api/v1/books", bookStyleRouter);
 
   // ── Chapter Versions (Issue #235) ──
   const chapterVersionsRouter = createChapterVersionsRouter((id) => state.bookDir(id));

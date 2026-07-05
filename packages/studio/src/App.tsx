@@ -36,6 +36,7 @@ import { ConsistencyCheck } from "./pages/ConsistencyCheck";
 import { StoryPlayer } from "./pages/StoryPlayer";
 const ChapterWizard = lazy(() => import("./pages/ChapterWizard"));
 import { StoryGraphTree } from "./pages/StoryGraphTree";
+import { BookStylePage } from "./pages/BookStylePage";
 const FlowView = lazy(() => import("./pages/FlowView"));
 const FilmWizard = lazy(() => import("./pages/FilmWizard"));
 import { LanguageSelector } from "./pages/LanguageSelector";
@@ -144,6 +145,7 @@ export function App() {
     toChapterWizard: (bookId: string) => setRoute({ page: "chapter-wizard", bookId }),
     toVolumeManagement: (bookId: string) => setRoute({ page: "volume-management", bookId }),
     toCharacterTiering: (bookId: string) => setRoute({ page: "character-tiering", bookId }),
+    toBookStyle: (bookId: string) => setRoute({ page: "book-style", bookId }),
   };
 
   const activeBookId = deriveActiveBookId(route);
@@ -497,6 +499,11 @@ export function App() {
           )}
           {route.page === "character-tiering" && (
             <CharacterTiering bookId={route.bookId} />
+          )}
+          {route.page === "book-style" && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <BookStylePage bookId={route.bookId} nav={nav} theme={theme} t={t} />
+            </div>
           )}
         </main>
       </div>
