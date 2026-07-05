@@ -1556,20 +1556,32 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
           </div>
 
           {/* ReactFlow Agent Flow Editor */}
-          <AgentFlowEditor
-            builtinAgents={AGENTS}
-            customAgents={customAgents.map((a) => ({
-              id: a.id,
-              name: a.name,
-              role: a.role,
-              description: a.description,
-              color: a.color,
-              icon: a.icon,
-            }))}
-            agentOrder={agentOrder}
-            collaborationMode={collaborationMode}
-            onOrderChange={(newOrder) => setAgentOrder(newOrder)}
-          />
+          {agentOrder.length > 0 ? (
+            <AgentFlowEditor
+              builtinAgents={AGENTS}
+              customAgents={customAgents.map((a) => ({
+                id: a.id,
+                name: a.name,
+                role: a.role,
+                description: a.description,
+                color: a.color,
+                icon: a.icon,
+              }))}
+              agentOrder={agentOrder}
+              collaborationMode={collaborationMode}
+              onOrderChange={(newOrder) => setAgentOrder(newOrder)}
+            />
+          ) : (
+            <div
+              className="flex items-center justify-center rounded-xl"
+              style={{ height: 420, border: "1px solid #E8D8C8", backgroundColor: "rgba(255,251,247,0.7)" }}
+            >
+              <div className="flex flex-col items-center gap-3">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#8B3A3A] border-t-transparent" />
+                <span className="text-sm" style={{ color: "#8a7a6a" }}>加载流程编辑器中…</span>
+              </div>
+            </div>
+          )}
 
           {/* Agent order list */}
           <div className="rounded-xl p-4" style={{ border: "1px solid #E8D8C8", backgroundColor: "rgba(255,251,247,0.7)" }}>
