@@ -262,16 +262,29 @@ export function createExtractRouter(
 
           // Auto-load chapter content when prose is not provided but chapters are specified
           if (!prose && chapterNumbers.length > 0) {
+            const chaptersDir = join(dir, "chapters");
+            let files: string[];
+            try {
+              files = await readdir(chaptersDir);
+            } catch {
+              files = [];
+            }
             const chapterParts: string[] = [];
             for (const ch of chapterNumbers) {
-              try {
-                const chContent = await readFile(
-                  join(dir, "chapters", `${ch}.md`),
-                  "utf-8",
-                );
-                chapterParts.push(`# 第${ch}章\n\n${chContent.trim()}`);
-              } catch {
-                // Skip missing chapter files
+              const padded = String(ch).padStart(4, "0");
+              const chapterFile = files.find(
+                (f) => f.startsWith(`${padded}_`) && f.endsWith(".md"),
+              );
+              if (chapterFile) {
+                try {
+                  const chContent = await readFile(
+                    join(chaptersDir, chapterFile),
+                    "utf-8",
+                  );
+                  chapterParts.push(`# 第${ch}章\n\n${chContent.trim()}`);
+                } catch {
+                  // Skip unreadable chapter files
+                }
               }
             }
             if (chapterParts.length > 0) {

@@ -576,10 +576,13 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         return false;
       }
 
-      await fetchJson(`/api/books/${encodeURIComponent(bookId)}/foreshadowing`, {
+      const id = `fs-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+      await fetchJson("/api/foreshadowing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          id,
+          bookId,
           title: candidate.title,
           type: candidate.type,
           description: candidate.description,
@@ -905,7 +908,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
 
       {/* AI Extract Modal */}
       {showAiExtract && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px]">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px] pt-16">
           <button
             type="button"
             aria-label="关闭"
