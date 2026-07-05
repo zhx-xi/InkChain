@@ -209,10 +209,14 @@ export function createVolumesRouter(bookDir: (id: string) => string) {
   });
 
   // DELETE /:id/volumes/:volumeId — delete a volume
+  // Query params:
+  //   cascade=true — also delete chapter files and remove from index
+  //   cascade=false (default) — unlink chapters from volume (set volumeId=null)
   router.delete("/:id/volumes/:volumeId", async (c) => {
     const id = c.req.param("id");
     const volumeId = c.req.param("volumeId");
     const dir = bookDir(id);
+    const cascade = c.req.query("cascade") === "true";
 
     const data = await loadVolumes(dir);
     const idx = data.volumes.findIndex((v) => v.id === volumeId);
@@ -220,9 +224,75 @@ export function createVolumesRouter(bookDir: (id: string) => string) {
       return c.json({ error: { code: "NOT_FOUND", message: `分卷 ${volumeId} 不存在` } }, 404);
     }
 
+    // Remove volume entry
+    const volumeTitle = data.volumes[idx].title;
     data.volumes.splice(idx, 1);
     await saveVolumes(dir, data);
-    return c.json({ deleted: true });
+
+    // Handle chapters belonging to this volume
+    const chaptersDir = join(dir, "chapters");
+    const indexPath = join(chaptersDir, "index.json");
+    try {
+      const raw = await readFile(indexPath, "utf-8");
+      const parsed = JSON.parse(raw) as unknown;
+      let chapters: Array<Record<string, unknown>>;
+      let isWrappedFormat = false; // {chapters:[...]} vs plain array
+      if (Array.isArray(parsed)) {
+        chapters = parsed;
+      } else if (
+        parsed && typeof parsed === "object" &&
+        "chapters" in (parsed as Record<string, unknown>) &&
+        Array.isArray((parsed as Record<string, unknown>).chapters)
+      ) {
+        chapters = (parsed as { chapters: Array<Record<string, unknown>> }).chapters;
+        isWrappedFormat = true;
+      } else {
+        return c.json({ deleted: true, volumeId, cascade });
+      }
+
+      // Helper: write back in the original format
+      const writeChapters = async (data: Array<Record<string, unknown>>) => {
+        const payload = isWrappedFormat ? { chapters: data } : data;
+        await mkdir(chaptersDir, { recursive: true });
+        await writeFile(indexPath, JSON.stringify(payload, null, 2), "utf-8");
+      };
+
+      if (cascade) {
+        // Cascade delete: remove chapter entries and their files
+        const kept: Array<Record<string, unknown>> = [];
+        const deletedNumbers: number[] = [];
+        for (const ch of chapters) {
+          if ((ch.volumeId ?? null) === volumeId && typeof ch.number === "number") {
+            deletedNumbers.push(ch.number);
+          } else {
+            kept.push(ch);
+          }
+        }
+        // Delete chapter files on disk
+        const { rm } = await import("node:fs/promises");
+        await Promise.allSettled(
+          deletedNumbers.map((n) => rm(join(chaptersDir, `chapter-${n}.md`), { force: true })),
+        );
+        // Write updated index preserving format
+        await writeChapters(kept);
+      } else {
+        // Unlink chapters from this volume (set volumeId=null)
+        let changed = false;
+        for (const ch of chapters) {
+          if ((ch.volumeId ?? null) === volumeId) {
+            ch.volumeId = null;
+            changed = true;
+          }
+        }
+        if (changed) {
+          await writeChapters(chapters);
+        }
+      }
+    } catch {
+      // Chapters index doesn't exist — nothing to update
+    }
+
+    return c.json({ deleted: true, volumeId, cascade, title: volumeTitle });
   });
 
   // PATCH /:id/volumes/reorder — reorder volumes
