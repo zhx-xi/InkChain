@@ -883,10 +883,11 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
     try {
       let allEvents: TimelineExtractEvent[] = [];
       for (const ch of chapters) {
-        const result = await postApi<{ events: TimelineExtractEvent[] }>(
-          `/api/v1/books/${encodeURIComponent(bookId)}/chapters/${ch}/extract/timeline`,
+        const result = await postApi<{ success: boolean; data: { events: TimelineExtractEvent[] } }>(
+          `/api/extract`,
+          { skillId: "extract-timeline", bookId, chapterNumber: ch },
         );
-        allEvents = [...allEvents, ...result.events.map(ev => ({ ...ev, chapter: ch }))];
+        allEvents = [...allEvents, ...result.data.events.map(ev => ({ ...ev, chapter: ch }))];
       }
       setAiExtractResult(allEvents);
     } catch (err) {

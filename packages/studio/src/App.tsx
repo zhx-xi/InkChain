@@ -30,6 +30,7 @@ import { WorldGeoVizPanel } from "./pages/WorldGeoVizPanel";
 import { WorldInheritancePage } from "./pages/WorldInheritancePage";
 import { WorldMapPage } from "./pages/WorldMapPage";
 import { PublishPage } from "./pages/PublishPage";
+import { AuditPage } from "./pages/AuditPage";
 import { EditDashboard } from "./pages/EditDashboard";
 import { ConsistencyCheck } from "./pages/ConsistencyCheck";
 import { StoryPlayer } from "./pages/StoryPlayer";
@@ -139,6 +140,7 @@ export function App() {
     toBookWorlds: (bookId: string) => setRoute({ page: "book-worlds", bookId }),
     toConsistency: (bookId: string) => setRoute({ page: "consistency", bookId }),
     toPublish: (bookId: string) => setRoute({ page: "publish", bookId }),
+    toAudit: (bookId: string) => setRoute({ page: "audit", bookId }),
     toEditDashboard: (bookId: string) => setRoute({ page: "edit-dashboard", bookId }),
     toChapterWizard: (bookId: string) => setRoute({ page: "chapter-wizard", bookId }),
     toVolumeManagement: (bookId: string) => setRoute({ page: "volume-management", bookId }),
@@ -468,6 +470,11 @@ export function App() {
           {route.page === "publish" && (
             <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
               <PublishPage bookId={route.bookId} nav={nav} />
+            </div>
+          )}
+          {route.page === "audit" && (
+            <div className="max-w-5xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+              <AuditPage bookId={route.bookId} nav={nav} />
             </div>
           )}
           {route.page === "edit-dashboard" && (
