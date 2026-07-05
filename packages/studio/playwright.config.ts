@@ -26,6 +26,12 @@ export default defineConfig({
   // if an existing dev server (started without the stub) were reused, the
   // agent would attempt a real LLM call with the fake API key and hang.
   // Ports 4580/4581 are dedicated to E2E to avoid conflict with the dev server.
+  //
+  // To run E2E tests against real LLM APIs (requires configured API keys):
+  //   set INKOS_E2E_REAL_LLM=1 && pnpm --filter @inkos/studio exec playwright test
+  // This skips page.route() mocking for AI extraction endpoints, letting
+  // requests pass through to the real backend. See e2e/fixtures/mock-llm-helper.ts.
+  // CI always runs with Mock mode (default).
   webServer: {
     command: "echo E2E servers already running manually",
     url: "http://localhost:4580",

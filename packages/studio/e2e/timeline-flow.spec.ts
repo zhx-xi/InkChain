@@ -4,6 +4,7 @@ import {
   clearTimeline,
   E2E_TIMELINE_BOOK_ID,
 } from "./fixtures/seed-timeline";
+import { conditionalMock } from "./fixtures/mock-llm-helper";
 
 // ── Shared helpers ──────────────────────────────────────────────
 
@@ -22,11 +23,13 @@ async function createEventViaUI(
 
 /** Mock the AI timeline extraction endpoint to return given events */
 function mockAiTimelineExtract(page: Page, events: Array<Record<string, unknown>>) {
-  return page.route("**/api/v1/books/**/timelines/extract*", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ ok: true, data: events }),
+  conditionalMock(() => {
+    page.route("**/api/v1/books/**/timelines/extract*", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true, data: events }),
+      });
     });
   });
 }

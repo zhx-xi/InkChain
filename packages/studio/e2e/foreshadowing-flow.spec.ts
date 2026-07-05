@@ -4,6 +4,7 @@ import {
   clearForeshadowing,
   E2E_FORES_BOOK_ID,
 } from "./fixtures/seed-foreshadowing";
+import { conditionalMock } from "./fixtures/mock-llm-helper";
 
 // ── Shared helpers ──────────────────────────────────────────────
 
@@ -22,18 +23,21 @@ async function createForeshadowingViaUI(
 
 /** Mock the AI extraction endpoint to return given entries */
 function mockAiExtract(page: Page, entries: Array<Record<string, unknown>>) {
-  return page.route("**/api/foreshadowing/extract*", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ ok: true, data: entries }),
+  conditionalMock(() => {
+    page.route("**/api/foreshadowing/extract*", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true, data: entries }),
+      });
     });
   });
 }
 
 /** Mock the AI extraction endpoint to simulate progress events */
 function mockAiExtractWithProgress(page: Page) {
-  return page.route("**/api/foreshadowing/extract*", async (route) => {
+  conditionalMock(() => {
+    page.route("**/api/foreshadowing/extract*", async (route) => {
     // Simulate a streaming response with progress chunks
     await route.fulfill({
       status: 200,
@@ -70,6 +74,7 @@ function mockAiExtractWithProgress(page: Page) {
         "",
       ].join("\n"),
     });
+  });
   });
 }
 
