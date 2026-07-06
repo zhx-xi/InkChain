@@ -1268,6 +1268,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
                 className="rounded-lg bg-card/80 border border-border/30 px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer max-w-[130px] truncate"
                 title="按分卷筛选"
               >
+                <option value="">所有卷</option>
                 {volumes.map((v) => (
                   <option key={v.id} value={v.id}>
                     {v.title}

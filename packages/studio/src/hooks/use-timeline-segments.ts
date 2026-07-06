@@ -81,10 +81,8 @@ export function useTimelineSegments(bookId: string) {
     try {
       const data = await fetchJson<{ volumes: readonly Volume[] }>(`/books/${bookId}/volumes`);
       setVolumes(data.volumes);
-      // If no volume is selected yet and volumes exist, auto-select the first one
-      if (data.volumes.length > 0) {
-        setSelectedVolumeId((prev) => prev ?? data.volumes[0].id);
-      } else {
+      // Always default to "all volumes" (null) instead of auto-selecting the first volume
+      if (data.volumes.length === 0) {
         setSelectedVolumeId(null);
       }
     } catch (err) {
