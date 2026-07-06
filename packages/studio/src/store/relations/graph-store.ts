@@ -138,6 +138,8 @@ async function doLoadGraph(
         intensity: r.intensity,
         isForgotten,
         description: r.description,
+        validFromChapter: r.validFromChapter,
+        validUntilChapter: r.validUntilChapter,
       };
     });
 
