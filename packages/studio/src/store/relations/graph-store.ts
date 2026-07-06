@@ -102,11 +102,22 @@ async function doLoadGraph(
         (r) => r.sourceRoleId === charId || r.targetRoleId === charId,
       ).length;
 
+      // Resolve role path: try direct lookup first, then fuzzy match
+      let resolvedRolePath = charId;
+      if (roleRef) {
+        resolvedRolePath = charId;
+      } else {
+        const matched = fuzzyMatchRoleId(charId, roleMap);
+        if (matched) {
+          resolvedRolePath = matched;
+        }
+      }
+
       nodeMap.set(charId, {
-        id: charId,
+        id: resolvedRolePath,
         label: roleRef?.name ?? simpleId,
         tier: roleRef?.tier ?? "scene",
-        rolePath: charId,
+        rolePath: resolvedRolePath,
         chapterAppearances: appearances,
       });
     }
