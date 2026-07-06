@@ -515,6 +515,8 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [graphViewForeshadowing, setGraphViewForeshadowing] = useState<ForeshadowingResponseItem[]>([]);
   const [graphViewRelations, setGraphViewRelations] = useState<{source: string; target: string; label: string}[]>([]);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
 
   const currentChapter = data?.currentChapter ?? 0;
   const maxChapter = Math.max(1, currentChapter);
@@ -724,6 +726,19 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
     });
   }, []);
 
+  // Pagination
+  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const paginated = useMemo(() => {
+    const start = (safePage - 1) * pageSize;
+    return sorted.slice(start, start + pageSize);
+  }, [sorted, safePage, pageSize]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [query, statusFilter, typeFilter, pageSize]);
+
   return (
     <div className="space-y-6">
       {/* Back button */}
@@ -861,7 +876,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       {/* Card List */}
       {!loading && filtered.length > 0 && viewMode === "card" && (
         <div className="space-y-2">
-          {filtered.map((f) => (
+          {paginated.map((f) => (
             <button
               key={f.id}
               type="button"
@@ -1045,6 +1060,64 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!loading && filtered.length > 0 && (
+        <div className="flex items-center justify-between border-t border-border/30 pt-4">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span>共 {filtered.length} 条</span>
+            <span className="text-border/50">|</span>
+            <span>第 {safePage}/{totalPages} 页</span>
+            <select
+              value={pageSize}
+              onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}
+              className="ml-2 rounded border border-border/30 bg-background px-2 py-1 text-xs outline-none focus:border-primary/50"
+            >
+              <option value={10}>10条/页</option>
+              <option value={20}>20条/页</option>
+              <option value={50}>50条/页</option>
+            </select>
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              disabled={safePage <= 1}
+              onClick={() => setPage(safePage - 1)}
+              className="rounded-lg border border-border/30 bg-background px-3 py-1.5 text-xs transition hover:bg-secondary/40 disabled:opacity-30 disabled:pointer-events-none"
+            >
+              上一页
+            </button>
+            {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+              const startPage = Math.max(1, Math.min(safePage - 3, totalPages - 6));
+              const p = startPage + i;
+              if (p > totalPages) return null;
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPage(p)}
+                  className={cn(
+                    "min-w-[2rem] rounded-lg px-2.5 py-1.5 text-xs transition",
+                    p === safePage
+                      ? "bg-primary text-primary-foreground"
+                      : "border border-border/30 bg-background hover:bg-secondary/40",
+                  )}
+                >
+                  {p}
+                </button>
+              );
+            })}
+            <button
+              type="button"
+              disabled={safePage >= totalPages}
+              onClick={() => setPage(safePage + 1)}
+              className="rounded-lg border border-border/30 bg-background px-3 py-1.5 text-xs transition hover:bg-secondary/40 disabled:opacity-30 disabled:pointer-events-none"
+            >
+              下一页
+            </button>
           </div>
         </div>
       )}
