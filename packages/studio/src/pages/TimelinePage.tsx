@@ -79,6 +79,28 @@ const TOP_MARGIN = 80;     // Space for chapter X-axis labels
 const HEADER_NODE_WIDTH = 140;
 const HEADER_NODE_HEIGHT = 36;
 
+// ── Gap computation helpers (exported for testing) ──
+
+/** Compute the vertical gap between character rows based on max events in any cell */
+export function computeDynamicRowGap(maxCellEvents: number): number {
+  return Math.max(ROW_GAP_Y, (NODE_HEIGHT + 4) * maxCellEvents + 16);
+}
+
+/** Compute the horizontal gap between chapter columns based on max events in any cell */
+export function computeColumnGap(maxCellEvents: number): number {
+  return Math.max(COLUMN_GAP_X, NODE_WIDTH + (NODE_HEIGHT + 4) * maxCellEvents * 1.2);
+}
+
+/** Compute the Y offset for no-role events (below all character rows) */
+export function computeNoRoleY(
+  baseY: number,
+  charCount: number,
+  charRowGap: number,
+  eventIndex: number,
+): number {
+  return baseY + charCount * charRowGap + eventIndex * (NODE_HEIGHT + 4);
+}
+
 // ── FPS Counter (dev-mode only) ──
 
 function FpsCounter() {
@@ -646,27 +668,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
     const characterIndexMap = new Map<string, number>();
     uniqueCharacters.forEach((ch, i) => characterIndexMap.set(ch, i));
 
-    // Chapter header nodes (X-axis)
-    for (const ch of uniqueChapters) {
-      const idx = chapterIndexMap.get(ch)!;
-      nodes.push({
-        id: `chapter-${ch}`,
-        type: "chapterHeader",
-        position: {
-          x: LEFT_MARGIN + idx * COLUMN_GAP_X + (COLUMN_GAP_X - HEADER_NODE_WIDTH) / 2,
-          y: 0,
-        },
-        data: { label: `第 ${ch} 章` },
-        draggable: false,
-        deletable: false,
-        selectable: false,
-      });
-    }
-
-    // Character header nodes (Y-axis) — placed after dynamic gap computation
-    // (moved below after cell count pass to use dynamicRowGap)
-
-    // First pass: count events per (chapter, character) cell
+    // First pass: count events per (chapter, character) cell (needed for gap computation)
     const cellCounts = new Map<string, number>();
     for (const e of filteredEvents) {
       const chIdx = chapterIndexMap.get(e.chapter);
@@ -685,9 +687,29 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
       }
     }
 
-    // Compute dynamic row gap based on max events in any cell
+    // Compute dynamic gaps based on max events in any cell
     const maxCellEvents = Math.max(...Array.from(cellCounts.values()), 1);
     const dynamicRowGap = Math.max(ROW_GAP_Y, (NODE_HEIGHT + 4) * maxCellEvents + 16);
+
+    // Dynamic column gap: widen columns when cells are dense (many events stacked vertically)
+    const columnGap = Math.max(COLUMN_GAP_X, NODE_WIDTH + (NODE_HEIGHT + 4) * maxCellEvents * 1.2);
+
+    // Chapter header nodes (X-axis) — use dynamic column gap
+    for (const ch of uniqueChapters) {
+      const idx = chapterIndexMap.get(ch)!;
+      nodes.push({
+        id: `chapter-${ch}`,
+        type: "chapterHeader",
+        position: {
+          x: LEFT_MARGIN + idx * columnGap + (columnGap - HEADER_NODE_WIDTH) / 2,
+          y: 0,
+        },
+        data: { label: `第 ${ch} 章` },
+        draggable: false,
+        deletable: false,
+        selectable: false,
+      });
+    }
 
     // Character header nodes (Y-axis) — use dynamic row gap
     for (const ch of uniqueCharacters) {
@@ -712,7 +734,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
       const chIdx = chapterIndexMap.get(e.chapter);
       if (chIdx === undefined) continue;
 
-      const baseX = LEFT_MARGIN + chIdx * COLUMN_GAP_X + (COLUMN_GAP_X - NODE_WIDTH) / 2;
+      const baseX = LEFT_MARGIN + chIdx * columnGap + (columnGap - NODE_WIDTH) / 2;
       const baseY = TOP_MARGIN;
 
       if (e.relatedCharacters.length === 0) {
@@ -723,7 +745,10 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
         nodes.push({
           id: e.id,
           type: "timelineEvent",
-          position: { x: baseX, y: baseY + count * (NODE_HEIGHT + 4) },
+          position: {
+            x: baseX,
+            y: baseY + uniqueCharacters.length * dynamicRowGap + count * (NODE_HEIGHT + 4),
+          },
           data: {
             id: e.id,
             title: e.title,
