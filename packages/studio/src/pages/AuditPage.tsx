@@ -78,6 +78,18 @@ interface BatchProgress {
   results: Array<{ chapterNumber: number; status: AuditStatus }>;
 }
 
+interface Volume {
+  id: string;
+  title: string;
+  status: string;
+  order: number;
+}
+
+interface ChapterIndexEntry {
+  number: number;
+  volumeId: string | null;
+}
+
 // ── Helpers ──
 
 const SEVERITY_CONFIG: Record<string, { icon: typeof AlertTriangle; color: string; label: string }> = {
@@ -169,6 +181,15 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
   // Audit mode: "rule" (default, fast) or "ai" (deep, thorough) (PR #431)
   const [auditMode, setAuditMode] = useState<"rule" | "ai">("rule");
 
+  // Volume filter state
+  const [volumes, setVolumes] = useState<Volume[]>([]);
+  const [volumeFilter, setVolumeFilter] = useState("");
+  const [chapterVolumeMap, setChapterVolumeMap] = useState<Record<number, string>>({});
+
+  // Pagination state
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   // Batch audit state
   const [selectedChapters, setSelectedChapters] = useState<Set<number>>(new Set());
   const [batchProgress, setBatchProgress] = useState<BatchProgress | null>(null);
@@ -191,6 +212,29 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
   useEffect(() => {
     fetchAudit();
   }, [fetchAudit]);
+
+  // Fetch volumes and chapter→volume mapping
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const [volsRes, bookRes] = await Promise.all([
+          fetchJson<{ volumes: Volume[] }>(`/books/${encodeURIComponent(bookId)}/volumes`),
+          fetchJson<{ chapters: ChapterIndexEntry[] }>(`/books/${encodeURIComponent(bookId)}`),
+        ]);
+        setVolumes(volsRes.volumes);
+        const map: Record<number, string> = {};
+        for (const ch of bookRes.chapters) {
+          if (ch.volumeId) {
+            map[ch.number] = ch.volumeId;
+          }
+        }
+        setChapterVolumeMap(map);
+      } catch {
+        // Volumes are optional – silently ignore failures
+      }
+    };
+    init();
+  }, [bookId]);
 
   const toggleChapter = (chapterNumber: number) => {
     setExpandedChapters((prev) => {
@@ -357,6 +401,18 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
 
   const chapters = data?.chapters ?? [];
   const summary = data?.summary ?? { totalChapters: 0, auditedChapters: 0, passedChapters: 0, warnChapters: 0, failedChapters: 0 };
+
+  // Filter by volume
+  const filteredChapters = volumeFilter
+    ? chapters.filter((c) => chapterVolumeMap[c.chapterNumber] === volumeFilter)
+    : chapters;
+
+  // Pagination
+  const totalItems = filteredChapters.reduce((sum, c) => sum + c.issues.length, 0);
+  const totalPages = Math.max(1, Math.ceil(filteredChapters.length / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const paginatedChapters = filteredChapters.slice((safePage - 1) * pageSize, safePage * pageSize);
+
   const allSelected = chapters.length > 0 && selectedChapters.size === chapters.length;
 
   return (
@@ -447,9 +503,26 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
         />
       </div>
 
-      {/* ── Batch Audit Toolbar ── */}
+      {/* ── Volume Filter + Batch Audit Toolbar ── */}
       <div className="flex items-center justify-between mb-4 px-1">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Volume Filter Dropdown */}
+          <select
+            value={volumeFilter}
+            onChange={(e) => {
+              setVolumeFilter(e.target.value);
+              setPage(1);
+            }}
+            className="rounded-lg border border-border/40 bg-background px-3 py-1.5 text-xs text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
+          >
+            <option value="">全部卷</option>
+            {volumes.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.title}
+              </option>
+            ))}
+          </select>
+
           {/* Select All Checkbox */}
           <button
             onClick={toggleSelectAll}
@@ -528,14 +601,16 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
 
       {/* ── Chapter Audit List ── */}
       <div className="space-y-2">
-        {chapters.length === 0 && (
+        {filteredChapters.length === 0 && (
           <div className="text-center py-16 text-muted-foreground">
             <ShieldCheck size={40} className="mx-auto mb-4 opacity-30" />
-            <p className="text-sm">暂无章节数据</p>
+            <p className="text-sm">
+              {volumeFilter ? "该卷下暂无章节数据" : "暂无章节数据"}
+            </p>
           </div>
         )}
 
-        {chapters.map((chapter) => {
+        {paginatedChapters.map((chapter) => {
           const statusCfg = STATUS_CONFIG[chapter.status];
           const isExpanded = expandedChapters.has(chapter.chapterNumber);
           const hasIssues = chapter.issues.length > 0;
@@ -725,6 +800,46 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
           );
         })}
       </div>
+
+      {/* ── Pagination ── */}
+      {filteredChapters.length > 0 && (
+        <div className="flex items-center justify-between px-1 mt-4">
+          <span className="text-xs text-muted-foreground">
+            第{safePage}页 / 共{totalPages}页 · 总计{totalItems}个问题
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="px-3 py-1.5 rounded-lg border border-border/60 bg-card text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/30 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+            >
+              上一页
+            </button>
+            <span className="text-xs text-muted-foreground min-w-[3rem] text-center">
+              {safePage}/{totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="px-3 py-1.5 rounded-lg border border-border/60 bg-card text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/30 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+            >
+              下一页
+            </button>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setPage(1);
+              }}
+              className="rounded-lg border border-border/40 bg-background px-2 py-1.5 text-xs text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary/30"
+            >
+              <option value={10}>10条/页</option>
+              <option value={20}>20条/页</option>
+              <option value={50}>50条/页</option>
+            </select>
+          </div>
+        </div>
+      )}
 
       {/* ── Location Context Popup ── */}
       {(contextPopup || contextLoading) && (
