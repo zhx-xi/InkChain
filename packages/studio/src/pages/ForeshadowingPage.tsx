@@ -510,6 +510,11 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
   const [extractProgress, setExtractProgress] = useState<{ current: number; total: number } | null>(null);
   const [relations, setRelations] = useState<ForeshadowingRelation[] | null>(null);
   const [relationsLoading, setRelationsLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<"card" | "table" | "graph">("table");
+  const [sortField, setSortField] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [graphViewForeshadowing, setGraphViewForeshadowing] = useState<ForeshadowingResponseItem[]>([]);
+  const [graphViewRelations, setGraphViewRelations] = useState<{source: string; target: string; label: string}[]>([]);
 
   const currentChapter = data?.currentChapter ?? 0;
   const maxChapter = Math.max(1, currentChapter);
@@ -698,6 +703,27 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
     });
   }, [data, statusFilter, typeFilter, query]);
 
+  const sorted = useMemo(() => {
+    if (!sortField) return filtered;
+    return [...filtered].sort((a, b) => {
+      const aVal = String((a as any)[sortField] ?? "");
+      const bVal = String((b as any)[sortField] ?? "");
+      const cmp = aVal.localeCompare(bVal, "zh-CN");
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+  }, [filtered, sortField, sortDir]);
+
+  const handleSort = useCallback((field: string) => {
+    setSortField((prev) => {
+      if (prev === field) {
+        setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+        return field;
+      }
+      setSortDir("asc");
+      return field;
+    });
+  }, []);
+
   return (
     <div className="space-y-6">
       {/* Back button */}
@@ -718,6 +744,24 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* View toggle */}
+          <div className="flex items-center rounded-lg border border-border/30 bg-background p-0.5 mr-1">
+            {(["card", "table", "graph"] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setViewMode(mode)}
+                className={cn(
+                  "px-2.5 py-1.5 text-xs rounded-md transition font-medium",
+                  viewMode === mode
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {mode === "card" ? "卡片" : mode === "table" ? "表格" : "关系图"}
+              </button>
+            ))}
+          </div>
           <button
             type="button"
             onClick={() => { setAiExtractResult(null); setAiExtractError(null); setShowAiExtract(true); }}
@@ -814,8 +858,8 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         </div>
       )}
 
-      {/* List */}
-      {!loading && filtered.length > 0 && (
+      {/* Card List */}
+      {!loading && filtered.length > 0 && viewMode === "card" && (
         <div className="space-y-2">
           {filtered.map((f) => (
             <button
@@ -887,6 +931,121 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
               </div>
             </button>
           ))}
+        </div>
+      )}
+
+      {/* Table View */}
+      {!loading && filtered.length > 0 && viewMode === "table" && (
+        <div className="overflow-x-auto rounded-xl border border-border/40 bg-card">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/30 bg-muted/30">
+                {[
+                  { key: "title", label: "标题" },
+                  { key: "type", label: "类型" },
+                  { key: "createdChapter", label: "创建章" },
+                  { key: "lastMentionedChapter", label: "最近提及" },
+                  { key: "expectedPayoffChapter", label: "预期回收" },
+                  { key: "status", label: "状态" },
+                ].map((col) => (
+                  <th
+                    key={col.key}
+                    onClick={() => handleSort(col.key)}
+                    className={cn(
+                      "px-4 py-3 text-left text-xs font-medium text-muted-foreground cursor-pointer select-none hover:text-foreground transition-colors",
+                      sortField === col.key && "text-foreground",
+                    )}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      {col.label}
+                      {sortField === col.key && (
+                        <span className="text-[10px]">{sortDir === "asc" ? "▲" : "▼"}</span>
+                      )}
+                    </span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map((f) => (
+                <tr
+                  key={f.id}
+                  onClick={() => setEditingEntry(f as unknown as Foreshadowing)}
+                  className={cn(
+                    "border-b border-border/20 transition-colors cursor-pointer",
+                    f._forgotten ? "bg-destructive/[0.02] hover:bg-destructive/[0.04]" : "hover:bg-muted/20",
+                  )}
+                >
+                  <td className={cn(
+                    "px-4 py-3 font-medium",
+                    f._forgotten ? "text-destructive" : "text-foreground",
+                  )}>
+                    {f.title}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={cn(
+                      "px-1.5 py-0.5 rounded text-[10px] font-medium",
+                      TYPE_BG[f.type as ForeshadowingType],
+                    )}>
+                      {FORESHADOWING_TYPE_LABELS[f.type as ForeshadowingType]}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">第 {f.createdChapter} 章</td>
+                  <td className="px-4 py-3 text-muted-foreground">第 {f.lastMentionedChapter} 章</td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {f.expectedPayoffChapter ? `第 ${f.expectedPayoffChapter} 章` : <span className="text-muted-foreground/40">—</span>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={cn(
+                      "inline-flex items-center gap-1 text-xs font-medium",
+                      STATUS_COLORS[f.status as ForeshadowingStatus],
+                    )}>
+                      {STATUS_ICONS[f.status as ForeshadowingStatus]}
+                      {FORESHADOWING_STATUS_LABELS[f.status as ForeshadowingStatus]}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Relation Graph View */}
+      {!loading && filtered.length > 0 && viewMode === "graph" && (
+        <div className="rounded-xl border border-border/40 bg-card p-8">
+          <p className="text-sm text-muted-foreground text-center">
+            关系图视图：通过 predecessor/successor 连线展示伏笔之间的关系。
+          </p>
+          <div className="mt-6 space-y-4 max-w-lg mx-auto">
+            {filtered.map((f) => (
+              <div
+                key={f.id}
+                onClick={() => setEditingEntry(f as unknown as Foreshadowing)}
+                className="rounded-lg border border-border/30 bg-background p-4 cursor-pointer hover:shadow-sm transition-shadow"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-medium text-sm text-foreground">{f.title}</span>
+                  <span className={cn(
+                    "px-1.5 py-0.5 rounded text-[10px] font-medium",
+                    TYPE_BG[f.type as ForeshadowingType],
+                  )}>
+                    {FORESHADOWING_TYPE_LABELS[f.type as ForeshadowingType]}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 text-[11px] text-muted-foreground/60">
+                  <span>第 {f.createdChapter} 章</span>
+                  <span className={cn(
+                    "inline-flex items-center gap-1 text-xs font-medium",
+                    STATUS_COLORS[f.status as ForeshadowingStatus],
+                  )}>
+                    {STATUS_ICONS[f.status as ForeshadowingStatus]}
+                    {FORESHADOWING_STATUS_LABELS[f.status as ForeshadowingStatus]}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
