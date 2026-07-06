@@ -8,7 +8,7 @@ import {
 // ── Helpers ───────────────────────────────────────────────────────
 
 function mockAiExtract(page: Page, entries: Array<Record<string, unknown>>) {
-  page.route("**/api/extract*", async (route) => {
+  page.route("**/api/extract", async (route) => {
     if (route.request().method() === "POST") {
       await route.fulfill({
         status: 200,
@@ -85,8 +85,8 @@ test.describe("伏笔提取 — lastMentionedChapter 与 大纲未指定", () =>
     await expect(page.getByText("玉佩的秘密")).toBeVisible({ timeout: 8_000 });
 
     // Verify lastMentionedChapter is displayed
-    await expect(page.getByText("最近提及：第 5 章")).toBeVisible({ timeout: 3_000 });
-    await expect(page.getByText("最近提及：第 4 章")).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("最近提及：第 5 章").first()).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("最近提及：第 4 章").first()).toBeVisible({ timeout: 3_000 });
 
     // Apply selected
     await page.getByRole("button", { name: "应用选中" }).click();
@@ -128,11 +128,11 @@ test.describe("伏笔提取 — lastMentionedChapter 与 大纲未指定", () =>
     await expect(page.getByText("古井暗道")).toBeVisible({ timeout: 8_000 });
 
     // "大纲未指定" should appear instead of empty expectedPayoffChapter
-    await expect(page.getByText("预期回收：大纲未指定")).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("预期回收：大纲未指定").first()).toBeVisible({ timeout: 3_000 });
 
     // lastMentionedChapter should still be visible
-    await expect(page.getByText("最近提及：第 3 章")).toBeVisible({ timeout: 3_000 });
-    await expect(page.getByText("最近提及：第 6 章")).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("最近提及：第 3 章").first()).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("最近提及：第 6 章").first()).toBeVisible({ timeout: 3_000 });
 
     // Apply and verify in main list
     await page.getByRole("button", { name: "应用选中" }).click();
@@ -162,10 +162,12 @@ test.describe("伏笔提取 — lastMentionedChapter 与 大纲未指定", () =>
     await expect(page.getByText("暗红信封")).toBeVisible({ timeout: 8_000 });
 
     // Both fields should display
-    await expect(page.getByText("最近提及：第 4 章")).toBeVisible({ timeout: 3_000 });
-    await expect(page.getByText("预期回收：第 10 章")).toBeVisible({ timeout: 3_000 });
-    // "大纲未指定" should NOT appear
-    await expect(page.getByText("大纲未指定")).not.toBeVisible({ timeout: 2_000 });
+    await expect(page.getByText("最近提及：第 4 章").first()).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("预期回收：第 10 章").first()).toBeVisible({ timeout: 3_000 });
+    // "大纲未指定" should NOT appear in the extraction results (only expected normal)
+    // Scope to the extraction modal content area to avoid seed data matches
+    const modal = page.getByText("AI 提取伏笔").locator("..");
+    await expect(modal.getByText("大纲未指定")).not.toBeVisible({ timeout: 2_000 });
   });
 
   test("4. 已有伏笔列表中 expectedPayoffChapter=null 显示「大纲未指定」", async ({ page }) => {
@@ -190,6 +192,6 @@ test.describe("伏笔提取 — lastMentionedChapter 与 大纲未指定", () =>
 
     // The created entry should show "大纲未指定"
     await expect(page.getByText("无名信件")).toBeVisible({ timeout: 3_000 });
-    await expect(page.getByText("预期回收：大纲未指定")).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("预期回收：大纲未指定").first()).toBeVisible({ timeout: 3_000 });
   });
 });
