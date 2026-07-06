@@ -198,7 +198,7 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
     try {
       setError(null);
       const result = await fetchJson<AuditListResponse>(
-        `/books/${encodeURIComponent(bookId)}/audit`,
+        `/api/books/${encodeURIComponent(bookId)}/audit`,
       );
       setData(result);
     } catch (err) {
@@ -253,7 +253,7 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
     setActionLoading((prev) => ({ ...prev, [key]: true }));
     try {
       await postApi<AuditResponse>(
-        `/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}/audit${auditMode === "ai" ? `?mode=ai` : ""}`,
+        `/api/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}/audit${auditMode === "ai" ? `?mode=ai` : ""}`,
       );
       await fetchAudit();
     } catch (err) {
@@ -268,7 +268,7 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
     setActionLoading((prev) => ({ ...prev, [key]: true }));
     try {
       await postApi<AuditResponse>(
-        `/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}/audit/approve`,
+        `/api/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}/audit/approve`,
       );
       await fetchAudit();
     } catch (err) {
@@ -283,7 +283,7 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
     setActionLoading((prev) => ({ ...prev, [key]: true }));
     try {
       await postApi<AuditResponse>(
-        `/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}/audit/reaudit${auditMode === "ai" ? `?mode=ai` : ""}`,
+        `/api/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}/audit/reaudit${auditMode === "ai" ? `?mode=ai` : ""}`,
       );
       await fetchAudit();
     } catch (err) {
@@ -345,7 +345,7 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
         }));
 
         await postApi<AuditResponse>(
-          `/books/${encodeURIComponent(bookId)}/chapters/${chNum}/audit`,
+          `/api/books/${encodeURIComponent(bookId)}/chapters/${chNum}/audit`,
         );
 
         setBatchProgress((prev) => ({
