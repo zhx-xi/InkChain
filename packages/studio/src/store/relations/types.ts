@@ -22,4 +22,8 @@ export interface GraphEdgeData {
   intensity: number;
   isForgotten: boolean;
   description?: string;
+  /** The chapter where this relation first becomes active (1-based) */
+  validFromChapter?: number;
+  /** The chapter where this relation ceases to be active (1-based, inclusive) */
+  validUntilChapter?: number;
 }

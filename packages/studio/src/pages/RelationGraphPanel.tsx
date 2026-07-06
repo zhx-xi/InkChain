@@ -90,6 +90,8 @@ function toReactFlowEdges(
       intensity: e.intensity,
       isForgotten: e.isForgotten,
       description: e.description,
+      validFromChapter: e.validFromChapter,
+      validUntilChapter: e.validUntilChapter,
     },
     style: { pointerEvents: "stroke" },
   }));
@@ -176,9 +178,11 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
     if (!volumeChapterRange) return storeEdges;
     const [minCh, maxCh] = volumeChapterRange;
     return storeEdges.filter((e) => {
-      // Show relations whose validFromChapter falls within the volume's range
-      // If intensity is used as a proxy (higher = more relevant), keep all for now
-      // and let the node visibility handle it
+      // Edge validFromChapter must fall within the volume's chapter range
+      // validFromChapter is required (min 1), validUntilChapter is optional
+      if (e.validFromChapter === undefined || e.validFromChapter === null) return false;
+      if (e.validFromChapter < minCh) return false;
+      if (e.validFromChapter > maxCh) return false;
       return true;
     });
   }, [storeEdges, volumeChapterRange]);
@@ -623,6 +627,27 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
         {hasForgottenEdges && (
           <div className="px-6 pt-3 shrink-0">
             <AlertBanner />
+          </div>
+        )}
+
+        {/* Volume filter empty state */}
+        {selectedVolumeId && volumeFilteredNodes.length === 0 && storeNodes.length > 0 && (
+          <div className="flex flex-col items-center justify-center py-12 gap-2">
+            <svg
+              className="w-10 h-10 text-muted-foreground/30"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={1}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
+            </svg>
+            <p className="text-sm text-muted-foreground">该卷范围内暂无角色关系</p>
+            <p className="text-xs text-muted-foreground/60">请选择其他卷或切换回"所有卷"查看</p>
           </div>
         )}
 
