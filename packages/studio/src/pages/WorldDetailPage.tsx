@@ -1232,10 +1232,11 @@ export function WorldDetailPage({ worldId, bookId, nav }: WorldDetailProps) {
         // If a bookId was provided, associate this world with the book
         if (bookId) {
           try {
-            await postApi(`/books/${encodeURIComponent(bookId)}/worlds-associate`, { worldId: wid });
+            await postApi(`/api/books/${encodeURIComponent(bookId)}/worlds-associate`, { worldId: wid });
             if (nav?.toWorlds) nav.toWorlds();
           } catch (err) {
-            setSaveError(`世界已创建成功，但关联到书籍时出现问题: ${err instanceof Error ? err.message : String(err)}。您可以稍后手动关联。`);
+            const msg = `世界已创建成功，但关联到书籍时出现问题: ${err instanceof Error ? err.message : String(err)}。您可以稍后手动关联。`;
+            setSaveError(msg);
           }
         } else {
           if (nav?.toWorlds) nav.toWorlds();
