@@ -123,6 +123,9 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
   const [refreshing, setRefreshing] = useState(false);
 
+  // Audit mode: "rule" (default, fast) or "ai" (deep, thorough)
+  const [auditMode, setAuditMode] = useState<"rule" | "ai">("rule");
+
   // Batch audit state
   const [selectedChapters, setSelectedChapters] = useState<Set<number>>(new Set());
   const [batchProgress, setBatchProgress] = useState<BatchProgress | null>(null);
@@ -163,7 +166,7 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
     setActionLoading((prev) => ({ ...prev, [key]: true }));
     try {
       await postApi<AuditResponse>(
-        `/api/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}/audit`,
+        `/api/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}/audit${auditMode === "ai" ? `?mode=ai` : ""}`,
       );
       await fetchAudit();
     } catch (err) {
@@ -193,7 +196,7 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
     setActionLoading((prev) => ({ ...prev, [key]: true }));
     try {
       await postApi<AuditResponse>(
-        `/api/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}/audit/reaudit`,
+        `/api/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}/audit/reaudit${auditMode === "ai" ? `?mode=ai` : ""}`,
       );
       await fetchAudit();
     } catch (err) {
@@ -337,7 +340,26 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
             </p>
           </div>
         </div>
-        <button
+        <div className="flex items-center gap-2">
+          {/* Audit Mode Indicator */}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/60 bg-card text-xs text-muted-foreground">
+            <span className={auditMode === "rule" ? "text-primary font-medium" : "text-muted-foreground/50"}>规则</span>
+            <button
+              onClick={() => setAuditMode((m) => m === "rule" ? "ai" : "rule")}
+              className={`relative inline-flex h-4 w-7 items-center rounded-full transition-colors ${
+                auditMode === "ai" ? "bg-primary" : "bg-secondary"
+              }`}
+              title={auditMode === "ai" ? "切换到规则快速审计" : "切换到 AI 深度审计"}
+            >
+              <span
+                className={`inline-block h-3 w-3 rounded-full bg-white transition-transform ${
+                  auditMode === "ai" ? "translate-x-[14px]" : "translate-x-[2px]"
+                }`}
+              />
+            </button>
+            <span className={auditMode === "ai" ? "text-primary font-medium" : "text-muted-foreground/50"}>AI</span>
+          </div>
+          <button
           onClick={handleRefresh}
           disabled={refreshing}
           className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border/60 bg-card hover:bg-secondary/30 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
