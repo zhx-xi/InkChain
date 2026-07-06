@@ -205,6 +205,9 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
   // Flow state
   const [agentOrder, setAgentOrder] = useState<ReadonlyArray<string>>([]);
   const [collaborationMode, setCollaborationMode] = useState<"sequential" | "parallel" | "hybrid">("sequential");
+  const [flowLoadError, setFlowLoadError] = useState<string | null>(null);
+  const [isLoadingFlow, setIsLoadingFlow] = useState(false);
+  const [flowRetryCount, setFlowRetryCount] = useState(0);
 
   // Template state
   const [templates, setTemplates] = useState<ReadonlyArray<AgentTemplate>>([]);
@@ -279,6 +282,13 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
   // ── Load agent order from backend ──
   useEffect(() => {
     let cancelled = false;
+    setIsLoadingFlow(true);
+    setFlowLoadError(null);
+
+    // 3-second timeout: fall back gracefully if agent-order API is unavailable
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
     fetchJson<{ order: ReadonlyArray<string> }>("/agent-order")
       .then((data) => {
         if (cancelled) return;
@@ -289,16 +299,26 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
           const presetFlow = getDefaultFlowConfig(selectedPreset);
           setAgentOrder(presetFlow.agentOrder);
         }
+        setIsLoadingFlow(false);
       })
-      .catch(() => {
+      .catch((err) => {
+        if (cancelled) return;
         // Fall back to default order
         const presetFlow = getDefaultFlowConfig(selectedPreset);
         setAgentOrder(presetFlow.agentOrder);
+        setIsLoadingFlow(false);
+        setFlowLoadError(err instanceof Error ? err.message : "加载超时或失败");
+      })
+      .finally(() => {
+        clearTimeout(timeoutId);
       });
 
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => {
+      cancelled = true;
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
+  }, [selectedPreset, flowRetryCount]);
 
   // ── Load templates from backend ──
   useEffect(() => {
@@ -1570,7 +1590,34 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
           </div>
 
           {/* ReactFlow Agent Flow Editor */}
-          {agentOrder.length > 0 ? (
+          {flowLoadError && (
+            <div
+              className="flex flex-col items-center justify-center rounded-xl gap-3"
+              style={{ height: 420, border: "1px solid #E8D8C8", backgroundColor: "rgba(255,251,247,0.7)" }}
+            >
+              <span className="text-xs" style={{ color: "#dc2626" }}>加载失败：{flowLoadError}</span>
+              <button
+                type="button"
+                onClick={() => setFlowRetryCount((c) => c + 1)}
+                className="rounded-lg px-4 py-2 text-sm font-medium"
+                style={{ border: "1px solid #E8D8C8", color: "#3a2a1a", backgroundColor: "#FFFBF7" }}
+              >
+                重试
+              </button>
+            </div>
+          )}
+          {!flowLoadError && isLoadingFlow && (
+            <div
+              className="flex items-center justify-center rounded-xl"
+              style={{ height: 420, border: "1px solid #E8D8C8", backgroundColor: "rgba(255,251,247,0.7)" }}
+            >
+              <div className="flex flex-col items-center gap-3">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#8B3A3A] border-t-transparent" />
+                <span className="text-sm" style={{ color: "#8a7a6a" }}>加载流程编辑器中…</span>
+              </div>
+            </div>
+          )}
+          {!flowLoadError && !isLoadingFlow && agentOrder.length > 0 && (
             <AgentFlowEditor
               builtinAgents={AGENTS}
               customAgents={customAgents.map((a) => ({
@@ -1585,14 +1632,14 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
               collaborationMode={collaborationMode}
               onOrderChange={(newOrder) => setAgentOrder(newOrder)}
             />
-          ) : (
+          )}
+          {!flowLoadError && !isLoadingFlow && agentOrder.length === 0 && (
             <div
               className="flex items-center justify-center rounded-xl"
               style={{ height: 420, border: "1px solid #E8D8C8", backgroundColor: "rgba(255,251,247,0.7)" }}
             >
-              <div className="flex flex-col items-center gap-3">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#8B3A3A] border-t-transparent" />
-                <span className="text-sm" style={{ color: "#8a7a6a" }}>加载流程编辑器中…</span>
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-sm" style={{ color: "#8a7a6a" }}>暂无流程数据</span>
               </div>
             </div>
           )}
