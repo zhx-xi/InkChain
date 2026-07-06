@@ -467,6 +467,7 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
           刷新
         </button>
       </div>
+      </div>
 
       {/* ── Summary Cards ── */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">

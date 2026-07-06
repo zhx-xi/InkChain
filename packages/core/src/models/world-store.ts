@@ -119,8 +119,8 @@ export function deleteEntityWithRefCheck(
   const refs = checkReferenceBeforeDelete(world, dimension, entityId);
   const updated = {
     ...world,
-    [dimension]: ((world as Record<string, unknown[]>)[dimension] ?? []).filter(
-      (e: Record<string, unknown>) => e.id !== entityId,
+    [dimension]: ((world as unknown as Record<string, unknown[]>)[dimension] ?? []).filter(
+      (e: unknown) => (e as Record<string, unknown>).id !== entityId,
     ),
   } as WorldConfig;
 

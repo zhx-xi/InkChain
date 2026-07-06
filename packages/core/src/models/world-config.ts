@@ -247,7 +247,7 @@ export function worldSearch(
   const dims = dimension ? [dimension] : WORLD_DIMENSION_KEYS;
 
   for (const dim of dims) {
-    const entities = (world as Record<string, unknown[]>)[dim] ?? [];
+    const entities = (world as unknown as Record<string, unknown[]>)[dim] ?? [];
     for (const entity of entities) {
       const e = entity as Record<string, unknown>;
       const text = getSearchableText(dim, e).toLowerCase();
@@ -277,7 +277,7 @@ export function resolveReferences(
   const idToDim = new Map<string, string>();
 
   for (const dim of WORLD_DIMENSION_KEYS) {
-    const entities = (world as Record<string, unknown[]>)[dim] ?? [];
+    const entities = (world as unknown as Record<string, unknown[]>)[dim] ?? [];
     for (const entity of entities) {
       const e = entity as Record<string, unknown>;
       const eid = String(e.id ?? "");

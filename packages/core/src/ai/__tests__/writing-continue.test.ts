@@ -43,20 +43,23 @@ function makeMinimalContext(overrides: Partial<FullWritingContext> = {}): FullWr
 
 function makeWorldConfig(): WorldConfig {
   return {
+    id: "test-world",
     name: "测试世界",
     description: "一个魔法与科技共存的世界",
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
     settings: [
-      { id: "s1", name: "魔法石", type: "setting", description: "蕴含强大魔力的水晶", constraints: ["不能直接触摸"], order: 0 },
+      { id: "s1", name: "魔法石", type: "魔法体系", description: "蕴含强大魔力的水晶", constraints: ["不能直接触摸"], sortIndex: 0 },
     ],
     roles: [
-      { id: "r1", name: "艾伦", role: "主角", description: "勇敢的魔法学徒", significance: 5 },
+      { id: "r1", name: "艾伦", role: "主角", description: "勇敢的魔法学徒", significance: 5, sortIndex: 0, institutionIds: [], regionIds: [] },
     ],
     relations: [],
     regions: [],
     institutions: [],
     history: [],
     rules: [
-      { id: "rule1", name: "魔法守恒", type: "rule", description: "魔法不能凭空产生", constraints: ["施法需要等价交换"], order: 0 },
+      { id: "rule1", name: "魔法守恒", type: "魔法", description: "魔法不能凭空产生", constraints: ["施法需要等价交换"], sortIndex: 0 },
     ],
     references: [],
   };
@@ -85,12 +88,15 @@ describe("buildContinueSystemPrompt", () => {
   it("should include relation context when active relations exist", () => {
     const relations: CharacterRelation[] = [
       {
+        id: "00000000-0000-0000-0000-000000000001",
         sourceRoleId: "艾伦",
         targetRoleId: "莉娜",
         relationType: "close_friend",
         customLabel: "挚友",
         intensity: 4,
         validFromChapter: 1,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
       },
     ];
     const context = makeMinimalContext({
@@ -132,9 +138,11 @@ describe("buildContinueSystemPrompt", () => {
         title: "魔法石的秘密",
         description: "魔法石中封印着远古力量",
         type: "情节伏笔",
+        bookId: "test-book",
         createdChapter: 1,
         expectedPayoffChapter: 10,
         status: "active",
+        payoffChapter: null,
         lastMentionedChapter: 3,
         relatedElements: ["魔法石"],
         notes: "",
@@ -150,7 +158,7 @@ describe("buildContinueSystemPrompt", () => {
 
   it("should include runtime facts when available", () => {
     const facts = [
-      { subject: "艾伦", predicate: "currentLocation", object: "森林", validFromChapter: 1, validUntilChapter: undefined, sourceChapter: 1 },
+      { subject: "艾伦", predicate: "currentLocation", object: "森林", validFromChapter: 1, validUntilChapter: null, sourceChapter: 1 },
     ];
     const context = makeMinimalContext({ runtimeFacts: facts });
     const prompt = buildContinueSystemPrompt(context);
@@ -305,9 +313,11 @@ describe("checkConflict", () => {
         title: "远古预言",
         description: "关于世界末日的预言",
         type: "情节伏笔",
+        bookId: "test-book",
         createdChapter: 1,
         expectedPayoffChapter: 10,
         status: "active",
+        payoffChapter: null,
         lastMentionedChapter: 3,
         relatedElements: [],
         notes: "",
@@ -329,9 +339,11 @@ describe("checkConflict", () => {
         title: "远古预言",
         description: "关于世界末日的预言",
         type: "情节伏笔",
+        bookId: "test-book",
         createdChapter: 1,
         expectedPayoffChapter: 10,
         status: "active",
+        payoffChapter: null,
         lastMentionedChapter: 3,
         relatedElements: [],
         notes: "",
@@ -347,11 +359,11 @@ describe("checkConflict", () => {
 
   it("should warn on location contradictions when runtime facts exist", () => {
     const config = makeWorldConfig();
-    config.settings.push({ id: "s2", name: "黑暗城堡", type: "setting", description: "魔王居所", constraints: [], order: 1 });
-    config.regions = [{ id: "reg1", name: "暗影沼泽", type: "region", description: "危险之地" }];
+    config.settings.push({ id: "s2", name: "黑暗城堡", type: "文化习俗", description: "魔王居所", constraints: [], sortIndex: 1 });
+    config.regions = [{ id: "reg1", name: "暗影沼泽", type: "地点", description: "危险之地", sortIndex: 0, parentId: null, x: null, y: null }];
 
     const facts = [
-      { subject: "艾伦", predicate: "currentLocation", object: "魔法石", validFromChapter: 1, validUntilChapter: undefined, sourceChapter: 1 },
+      { subject: "艾伦", predicate: "currentLocation", object: "魔法石", validFromChapter: 1, validUntilChapter: null, sourceChapter: 1 },
     ];
     const context = makeMinimalContext({
       world: { config, referenceDimensions: ["settings", "regions"] },

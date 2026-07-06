@@ -6,6 +6,7 @@ import {
   BackgroundVariant,
   useNodesState,
   type Node,
+  type Edge,
   type NodeProps,
   type NodeTypes,
   type NodeMouseHandler,
@@ -800,6 +801,59 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
     return nodes;
   }, [filteredEvents, uniqueChapters, uniqueCharacters, isLightweightMode]);
 
+  // ── Build ReactFlow edges for cross-role connections ──
+  const timelineEdges = useMemo(() => {
+    const edgeMap = new Map<string, Edge>();
+    const byChapter = new Map<number, typeof filteredEvents>();
+    for (const e of filteredEvents) {
+      const list = byChapter.get(e.chapter) ?? [];
+      list.push(e);
+      byChapter.set(e.chapter, list);
+    }
+    for (const [, chapterEvents] of byChapter) {
+      if (chapterEvents.length < 2) continue;
+      for (let i = 0; i < chapterEvents.length; i++) {
+        for (let j = i + 1; j < chapterEvents.length; j++) {
+          const a = chapterEvents[i];
+          const b = chapterEvents[j];
+          if (!a.tags?.length || !b.tags?.length) continue;
+          const sharedTags = a.tags.filter((t) => b.tags!.includes(t));
+          if (sharedTags.length === 0) continue;
+          const aChars = a.relatedCharacters;
+          const bChars = b.relatedCharacters;
+          const hasCrossRole = aChars.length === 0 || bChars.length === 0 ||
+            aChars.some((c) => !bChars.includes(c)) ||
+            bChars.some((c) => !aChars.includes(c));
+          if (!hasCrossRole) continue;
+          const edgeKey = `edge-${a.id}-${b.id}`;
+          if (edgeMap.has(edgeKey)) continue;
+          const sourceNodeId = aChars.length > 0 ? `${a.id}-${aChars[0]}` : a.id;
+          const targetNodeId = bChars.length > 0 ? `${b.id}-${bChars[0]}` : b.id;
+          const isCrossCharacter = aChars.length === 0 || bChars.length === 0 ||
+            aChars.some((c) => !bChars.includes(c)) ||
+            bChars.some((c) => !aChars.includes(c));
+          const style = isCrossCharacter ? "dashed" : "solid";
+          edgeMap.set(edgeKey, {
+            id: edgeKey,
+            source: sourceNodeId,
+            target: targetNodeId,
+            type: "smoothstep",
+            animated: false,
+            style: {
+              stroke: "#8B5CF6",
+              strokeWidth: 1.5,
+              strokeDasharray: style === "dashed" ? "5 3" : undefined,
+              opacity: 0.5,
+            },
+            label: `关联: ${sharedTags.join(", ")}`,
+            labelStyle: { fontSize: 10, fill: "#8B5CF6", opacity: 0.6 },
+          });
+        }
+      }
+    }
+    return Array.from(edgeMap.values());
+  }, [filteredEvents]);
+
   // ── ReactFlow state ──
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 
@@ -1348,7 +1402,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
         <div className="flex-1 min-h-0">
           <ReactFlow
             nodes={nodes}
-            edges={[]}
+            edges={timelineEdges}
             onNodesChange={onNodesChange}
             onNodeClick={onNodeClick}
             onNodeDoubleClick={onNodeDoubleClick}
