@@ -198,7 +198,7 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
     try {
       setError(null);
       const result = await fetchJson<AuditListResponse>(
-        `/api/books/${encodeURIComponent(bookId)}/audit`,
+        `/books/${encodeURIComponent(bookId)}/audit`,
       );
       setData(result);
     } catch (err) {
@@ -218,8 +218,8 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
     const init = async () => {
       try {
         const [volsRes, bookRes] = await Promise.all([
-          fetchJson<{ volumes: Volume[] }>(`/api/books/${encodeURIComponent(bookId)}/volumes`),
-          fetchJson<{ chapters: ChapterIndexEntry[] }>(`/api/books/${encodeURIComponent(bookId)}`),
+          fetchJson<{ volumes: Volume[] }>(`/books/${encodeURIComponent(bookId)}/volumes`),
+          fetchJson<{ chapters: ChapterIndexEntry[] }>(`/books/${encodeURIComponent(bookId)}`),
         ]);
         setVolumes(volsRes.volumes);
         const map: Record<number, string> = {};
@@ -253,7 +253,7 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
     setActionLoading((prev) => ({ ...prev, [key]: true }));
     try {
       await postApi<AuditResponse>(
-        `/api/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}/audit${auditMode === "ai" ? `?mode=ai` : ""}`,
+        `/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}/audit${auditMode === "ai" ? `?mode=ai` : ""}`,
       );
       await fetchAudit();
     } catch (err) {
@@ -268,7 +268,7 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
     setActionLoading((prev) => ({ ...prev, [key]: true }));
     try {
       await postApi<AuditResponse>(
-        `/api/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}/audit/approve`,
+        `/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}/audit/approve`,
       );
       await fetchAudit();
     } catch (err) {
@@ -283,7 +283,7 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
     setActionLoading((prev) => ({ ...prev, [key]: true }));
     try {
       await postApi<AuditResponse>(
-        `/api/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}/audit/reaudit${auditMode === "ai" ? `?mode=ai` : ""}`,
+        `/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}/audit/reaudit${auditMode === "ai" ? `?mode=ai` : ""}`,
       );
       await fetchAudit();
     } catch (err) {
@@ -345,7 +345,7 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
         }));
 
         await postApi<AuditResponse>(
-          `/api/books/${encodeURIComponent(bookId)}/chapters/${chNum}/audit`,
+          `/books/${encodeURIComponent(bookId)}/chapters/${chNum}/audit`,
         );
 
         setBatchProgress((prev) => ({
