@@ -30,6 +30,7 @@ interface ForeshadowingExtractCandidate {
   type: string;
   description: string;
   expectedPayoffChapter: number | null;
+  lastMentionedChapter?: number;
   confidence: number;
   chapter?: number;
 }
@@ -587,6 +588,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
           type: candidate.type,
           description: candidate.description,
           expectedPayoffChapter: candidate.expectedPayoffChapter,
+          lastMentionedChapter: candidate.lastMentionedChapter ?? candidate.chapter ?? extractChapterFrom,
           confidence: candidate.confidence,
           chapter: candidate.chapter ?? extractChapterFrom,
         }),
@@ -857,9 +859,13 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                     <span className="flex items-center gap-1">
                       最近提及：第 {f.lastMentionedChapter} 章
                     </span>
-                    {f.expectedPayoffChapter && (
+                    {f.expectedPayoffChapter ? (
                       <span className="flex items-center gap-1">
                         预期回收：第 {f.expectedPayoffChapter} 章
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-amber-500/70">
+                        预期回收：大纲未指定
                       </span>
                     )}
                     {f.payoffChapter && (
@@ -1099,8 +1105,13 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                                 {candidate.chapter && (
                                   <span>源自：第 {candidate.chapter} 章</span>
                                 )}
-                                {candidate.expectedPayoffChapter && (
+                                {candidate.lastMentionedChapter !== undefined && (
+                                  <span>最近提及：第 {candidate.lastMentionedChapter} 章</span>
+                                )}
+                                {candidate.expectedPayoffChapter !== null && candidate.expectedPayoffChapter !== undefined ? (
                                   <span>预期回收：第 {candidate.expectedPayoffChapter} 章</span>
+                                ) : (
+                                  <span className="text-amber-500/70">预期回收：大纲未指定</span>
                                 )}
                               </div>
                             </div>
