@@ -209,7 +209,12 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
 
   const isCreateMode = skillId === "__create__";
 
-  const isBuiltin = !isCreateMode && source === "builtin";
+  // Builtin detection — primary from source, defensive fallback by ID pattern
+  const readOnly = !isCreateMode && (
+    source === "builtin" ||
+    BUILTIN_TEMPLATES.some((t) => t.id === skillId) ||
+    /^(interactive-film-authoring|narrative-intelligence-agent)/.test(skillId ?? "")
+  );
 
   const hasChanges = useMemo(() => {
     if (!original || !draft) return false;
@@ -375,7 +380,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
         <header className="flex items-start justify-between gap-4 border-b border-border/45 px-6 py-5">
           <div className="min-w-0">
             <div className="text-[13px] font-medium uppercase tracking-[0.18em] text-muted-foreground/65">
-              {isCreateMode ? "创建 Skill" : isBuiltin ? "查看 Skill" : "Skill 编辑"}
+              {isCreateMode ? "创建 Skill" : readOnly ? "查看 Skill" : "Skill 编辑"}
             </div>
             <h2 className="mt-1 truncate text-[22px] font-semibold text-foreground">
               {draft?.id ?? skillId ?? "—"}
@@ -385,7 +390,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
                 <span className="inline-flex items-center rounded-md bg-secondary px-2 py-0.5 text-[11px] text-muted-foreground">
                   {ZH_CATEGORY_LABELS[draft.category]}
                 </span>
-                {isBuiltin && (
+                {readOnly && (
                   <span className="inline-flex items-center gap-1 rounded-md bg-blue-500/10 text-blue-500 px-2 py-0.5 text-[11px]">
                     <Puzzle size={10} />
                     内置 Skill（只读）
@@ -395,7 +400,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
             )}
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            {!isBuiltin && (
+            {!readOnly && (
               <button
                 type="button"
                 onClick={handleSave}
@@ -424,7 +429,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
           </div>
         )}
 
-        {isBuiltin && (
+        {readOnly && (
           <div className="mx-6 mt-4 flex items-start gap-3 rounded-xl border border-blue-500/20 bg-blue-500/5 px-4 py-3 text-[13px] leading-6 text-blue-600">
             <Puzzle size={16} className="shrink-0 mt-0.5" />
             <span>此 Skill 为内置 Skill，不可编辑。你可以在列表中启用或禁用它。</span>
@@ -530,7 +535,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
               {/* Description */}
               <section className="space-y-2">
                 <label className="text-[13px] font-medium text-foreground">描述</label>
-                {isBuiltin ? (
+                {readOnly ? (
                   <div className="w-full rounded-lg border border-border/40 bg-secondary/20 px-3 py-2 text-sm text-muted-foreground">
                     {draft.description || "无描述"}
                   </div>
@@ -546,7 +551,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
               </section>
 
               {/* Triggers — Visual Builder */}
-              {isBuiltin ? (
+              {readOnly ? (
                 <section className="space-y-2">
                   <label className="text-[13px] font-medium text-foreground">触发器</label>
                   <div className="rounded-lg border border-border/40 bg-secondary/20 p-3 space-y-1">
@@ -568,7 +573,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
               {/* Injection */}
               <section className="space-y-3">
                 <label className="text-[13px] font-medium text-foreground">注入配置</label>
-                {isBuiltin ? (
+                {readOnly ? (
                   <div className="rounded-lg border border-border/40 bg-secondary/20 p-3 space-y-1">
                     <div className="text-[12px] text-muted-foreground">
                       <span className="text-muted-foreground/50">模式：</span> {draft.injection.mode}
@@ -640,7 +645,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
               {/* Agent binding */}
               <section className="space-y-3">
                 <label className="text-[13px] font-medium text-foreground">绑定 Agent</label>
-                {isBuiltin ? (
+                {readOnly ? (
                   <div className="rounded-lg border border-border/40 bg-secondary/20 p-3">
                     {draft.agents.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
@@ -710,7 +715,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
               {/* Prompt */}
               <section className="space-y-2">
                 <label className="text-[13px] font-medium text-foreground">Prompt</label>
-                {isBuiltin ? (
+                {readOnly ? (
                   <pre className="w-full rounded-xl border border-border/55 bg-secondary/20 px-4 py-4 font-mono text-[14px] leading-6 text-muted-foreground overflow-x-auto whitespace-pre-wrap max-h-80 overflow-y-auto">
                     {draft.prompt || "（无 Prompt）"}
                   </pre>
@@ -724,7 +729,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
                     className="w-full resize-none rounded-xl border border-border/55 bg-secondary/20 px-4 py-4 font-mono text-[14px] leading-6 text-foreground outline-none transition focus:border-primary/50 focus:bg-background"
                   />
                 )}
-                {draft.prompt?.trim() === "" && !isBuiltin && (
+                {draft.prompt?.trim() === "" && !readOnly && (
                   <p className="text-[11px] text-amber-500/80">
                     保存时如果 Prompt 为空，将自动填入默认模板
                   </p>
@@ -734,7 +739,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
           )}
 
           {/* Version History (only for existing skills) */}
-          {!isCreateMode && skillId && skillId !== "__create__" && !isBuiltin && (
+          {!isCreateMode && skillId && skillId !== "__create__" && !readOnly && (
             <SkillVersionHistory skillId={skillId} onRestored={onSaved} />
           )}
         </div>
