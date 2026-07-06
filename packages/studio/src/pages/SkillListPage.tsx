@@ -343,7 +343,7 @@ export function SkillListPage() {
                       </div>
 
                       <div className="flex flex-col items-end gap-2" onClick={(e) => e.stopPropagation()}>
-                        {source === "project" && (
+                        {source === "project" && !/^(interactive-film-authoring|narrative-intelligence-agent)/.test(config.id) && (
                           <button
                             type="button"
                             onClick={() => handleEditSkill(config.id, source)}
@@ -465,7 +465,7 @@ export function SkillListPage() {
                       )}
 
                       {/* Edit button inside detail panel for project skills */}
-                      {source === "project" && (
+                      {source === "project" && !/^(interactive-film-authoring|narrative-intelligence-agent)/.test(config.id) && (
                         <div className="pt-2 border-t border-border/20">
                           <button
                             type="button"
