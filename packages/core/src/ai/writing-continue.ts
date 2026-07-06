@@ -214,7 +214,7 @@ function formatRuntimeFactsForPrompt(facts: CurrentStateFact[], currentChapter: 
 
   const active = facts.filter(
     (f) => f.validFromChapter <= currentChapter &&
-      (f.validUntilChapter === undefined || f.validUntilChapter >= currentChapter)
+      (f.validUntilChapter === undefined || f.validUntilChapter === null || f.validUntilChapter >= currentChapter)
   );
 
   if (!active.length) return "";
@@ -417,7 +417,7 @@ export function checkConflict(
   if (context.runtimeFacts.length > 0) {
     const activeFacts = context.runtimeFacts.filter(
       (f) => f.validFromChapter <= context.currentChapter &&
-        (f.validUntilChapter === undefined || f.validUntilChapter >= context.currentChapter)
+        (f.validUntilChapter === undefined || f.validUntilChapter === null || f.validUntilChapter >= context.currentChapter)
     );
 
     // Check if location facts contradict content

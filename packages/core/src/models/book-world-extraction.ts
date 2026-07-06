@@ -34,6 +34,7 @@ export function extractWorldFromBook(input: ExtractWorldFromBookInput): WorldCon
     type: "文化习俗",
     description: `Genre: ${book.genre}`,
     constraints: [],
+    sortIndex: 0,
   });
 
   // Platform becomes a social setting entry.
@@ -43,6 +44,7 @@ export function extractWorldFromBook(input: ExtractWorldFromBookInput): WorldCon
     type: "社会结构",
     description: `Platform: ${book.platform}`,
     constraints: [],
+    sortIndex: 0,
   });
 
   const text = (input.narrativeText ?? "").trim();
@@ -60,6 +62,7 @@ export function extractWorldFromBook(input: ExtractWorldFromBookInput): WorldCon
             type: "叙事",
             description: trimmed,
             constraints: [],
+            sortIndex: 0,
           });
         }
       }
