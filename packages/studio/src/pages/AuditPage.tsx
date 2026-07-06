@@ -16,6 +16,7 @@ import {
   Loader2,
   CheckSquare,
   Square,
+  X,
 } from "lucide-react";
 import { fetchJson, postApi } from "../hooks/use-api";
 
@@ -122,6 +123,48 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
   const [expandedChapters, setExpandedChapters] = useState<Set<number>>(new Set());
   const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
   const [refreshing, setRefreshing] = useState(false);
+
+  // Location context popup state
+  const [contextPopup, setContextPopup] = useState<{
+    chapterNumber: number;
+    location: string;
+    content: string;
+    paragraphIndex: number;
+    lineIndex: number;
+  } | null>(null);
+  const [contextLoading, setContextLoading] = useState(false);
+  const [contextError, setContextError] = useState<string | null>(null);
+
+  const handleLocationClick = useCallback(
+    async (chapterNumber: number, location: string) => {
+      setContextLoading(true);
+      setContextError(null);
+      try {
+        const data = await fetchJson<{ content: string }>(
+          `/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}`,
+        );
+        const content = data.content;
+
+        // Parse location like "第3段第5行" — extract paragraph and line indices
+        const paraMatch = location.match(/(\d+)/g);
+        const paragraphIndex = paraMatch && paraMatch.length > 0 ? parseInt(paraMatch[0], 10) - 1 : 0;
+        const lineIndex = paraMatch && paraMatch.length > 1 ? parseInt(paraMatch[1], 10) - 1 : 0;
+
+        setContextPopup({
+          chapterNumber,
+          location,
+          content,
+          paragraphIndex,
+          lineIndex,
+        });
+      } catch (err) {
+        setContextError(err instanceof Error ? err.message : "加载章节内容失败");
+      } finally {
+        setContextLoading(false);
+      }
+    },
+    [bookId],
+  );
 
   // Batch audit state
   const [selectedChapters, setSelectedChapters] = useState<Set<number>>(new Set());
@@ -584,9 +627,13 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
                                     {issueTypeLabel(issue.type)}
                                   </span>
                                   {issue.location && (
-                                    <span className="text-xs text-muted-foreground/60">
+                                    <button
+                                      onClick={() => handleLocationClick(chapter.chapterNumber, issue.location!)}
+                                      className="text-xs text-primary/70 hover:text-primary underline underline-offset-2 decoration-dotted transition-colors"
+                                      title="点击查看上下文"
+                                    >
                                       @ {issue.location}
-                                    </span>
+                                    </button>
                                   )}
                                 </div>
                                 <p className="text-sm text-foreground mt-1">{issue.description}</p>
@@ -655,6 +702,68 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
           );
         })}
       </div>
+
+      {/* ── Location Context Popup ── */}
+      {(contextPopup || contextLoading) && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setContextPopup(null);
+          }}
+        >
+          <div className="relative w-full max-w-2xl mx-4 max-h-[80vh] rounded-2xl border border-border/60 bg-card shadow-xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border/40">
+              <div>
+                <h3 className="text-base font-semibold text-foreground">
+                  第{contextPopup?.chapterNumber}章 · 上下文
+                </h3>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {contextPopup?.location ?? "加载中…"}
+                </p>
+              </div>
+              <button
+                onClick={() => setContextPopup(null)}
+                className="p-1.5 rounded-lg hover:bg-secondary/50 text-muted-foreground hover:text-foreground transition-colors"
+                title="关闭"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-4 overflow-y-auto max-h-[calc(80vh-80px)]">
+              {contextLoading && (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 size={20} className="animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">加载章节内容…</span>
+                </div>
+              )}
+
+              {contextError && (
+                <div className="flex flex-col items-center py-8 text-muted-foreground gap-2">
+                  <AlertCircle size={20} className="text-destructive" />
+                  <p className="text-sm">{contextError}</p>
+                  <button
+                    onClick={() => setContextPopup(null)}
+                    className="text-xs text-primary hover:underline mt-1"
+                  >
+                    关闭
+                  </button>
+                </div>
+              )}
+
+              {!contextLoading && !contextError && contextPopup && (
+                <ContextViewer
+                  content={contextPopup.content}
+                  paragraphIndex={contextPopup.paragraphIndex}
+                  lineIndex={contextPopup.lineIndex}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -721,4 +830,74 @@ function issueTypeLabel(type: string): string {
     other: "其他",
   };
   return labels[type] ?? type;
+}
+
+// ── Context Viewer ──
+// Displays chapter content around the issue location with highlighted line.
+
+function ContextViewer({
+  content,
+  paragraphIndex,
+  lineIndex,
+}: {
+  content: string;
+  paragraphIndex: number;
+  lineIndex: number;
+}) {
+  // Split content into paragraphs
+  const paragraphs = content.split(/\n{2,}/);
+  const para = paragraphs[paragraphIndex];
+  if (!para) {
+    return (
+      <div className="py-8 text-center text-sm text-muted-foreground">
+        无法定位到指定段落
+      </div>
+    );
+  }
+
+  // Split paragraph into lines
+  const lines = para.split("\n");
+  const totalLines = lines.length;
+  const clampedLine = Math.min(Math.max(lineIndex, 0), totalLines - 1);
+
+  // Determine context window: 3 lines before and after the issue line
+  const contextStart = Math.max(clampedLine - 3, 0);
+  const contextEnd = Math.min(clampedLine + 4, totalLines); // exclusive end
+
+  const contextLines: Array<{ index: number; text: string; isIssue: boolean }> = [];
+  for (let i = contextStart; i < contextEnd; i++) {
+    contextLines.push({
+      index: i,
+      text: lines[i],
+      isIssue: i === clampedLine,
+    });
+  }
+
+  return (
+    <div className="font-mono text-sm leading-relaxed space-y-0.5">
+      {contextLines.map((line, idx) => (
+        <div
+          key={idx}
+          className={`flex gap-3 px-3 py-1 rounded ${
+            line.isIssue
+              ? "bg-amber-100 dark:bg-amber-900/30 border-l-2 border-amber-500"
+              : ""
+          }`}
+        >
+          <span className="text-xs text-muted-foreground/50 select-none w-8 text-right shrink-0 leading-5">
+            {line.index + 1}
+          </span>
+          <span
+            className={`leading-5 whitespace-pre-wrap break-words ${
+              line.isIssue
+                ? "text-foreground font-medium"
+                : "text-muted-foreground/80"
+            }`}
+          >
+            {line.text || "\u00A0"}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
 }
