@@ -10,6 +10,7 @@ import { Hono } from "hono";
 import { readFile, readdir, writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { ApiError } from "../errors.js";
 
 // ── 审计数据类型 ──
@@ -24,12 +25,18 @@ export interface AuditIssue {
 
 export type AuditStatus = "pending" | "pass" | "warn" | "fail" | "approved";
 
+export type AuditMode = "rule" | "ai";
+
 export interface ChapterAuditResult {
   chapterNumber: number;
   status: AuditStatus;
   issues: AuditIssue[];
   lastAuditedAt?: string;
   approvedAt?: string;
+  /** SHA-256 hash of chapter content at time of audit — used for cache validation */
+  contentHash?: string;
+  /** Audit mechanism: "rule" (rule-based, fast) or "ai" (AI/deep, thorough) */
+  mode?: AuditMode;
 }
 
 // ── 持久化 ──
@@ -145,6 +152,33 @@ async function loadChaptersList(root: string, bookId: string): Promise<Array<{ n
     })
     .filter((ch): ch is { number: number; title: string } => ch !== null)
     .sort((a, b) => a.number - b.number);
+}
+
+// ── 章节内容哈希（缓存验签） ──
+
+async function getChapterContentHash(root: string, bookId: string, chapterNumber: number): Promise<string | null> {
+  const chaptersDir = join(root, "books", bookId, "chapters");
+  let files: string[];
+  try {
+    files = await readdir(chaptersDir);
+  } catch {
+    return null;
+  }
+
+  // Find the chapter file matching this chapter number
+  const chFile = files.find((f) => {
+    const match = f.match(/^(\d{4})_(.+)\.md$/);
+    return match && Number.parseInt(match[1], 10) === chapterNumber;
+  });
+
+  if (!chFile) return null;
+
+  try {
+    const content = await readFile(join(chaptersDir, chFile), "utf-8");
+    return createHash("sha256").update(content, "utf-8").digest("hex");
+  } catch {
+    return null;
+  }
 }
 
 // ── 模拟审计引擎（生产环境应接入真实审计代理） ──
@@ -269,8 +303,22 @@ export function createAuditRouter(root: string) {
       throw new ApiError(404, "CHAPTER_NOT_FOUND", `Chapter ${chapterNumber} not found`);
     }
 
+    // Parse audit mode from query: "rule" (default) or "ai" (deep audit)
+    const mode: AuditMode = c.req.query("mode") === "ai" ? "ai" : "rule";
+
+    // Cache check: if same content hash exists and mode matches, return cached result
+    const contentHash = await getChapterContentHash(root, bookId, chapterNumber);
+    if (!mode || mode === "rule") {
+      const existing = await readChapterAudit(root, bookId, chapterNumber);
+      if (existing && existing.contentHash && contentHash && existing.contentHash === contentHash && existing.mode === mode) {
+        return c.json({ audit: { ...existing, cached: true } });
+      }
+    }
+
     // Run audit (mock for now, should use real auditor agent)
     const result = runMockAudit(chapterNumber);
+    result.contentHash = contentHash ?? undefined;
+    result.mode = mode;
 
     // Persist
     await writeChapterAudit(root, bookId, result);
@@ -313,7 +361,21 @@ export function createAuditRouter(root: string) {
       throw new ApiError(400, "INVALID_CHAPTER_NUMBER", `Invalid chapter number: ${chapterNumberStr}`);
     }
 
+    // Parse audit mode from query
+    const mode: AuditMode = c.req.query("mode") === "ai" ? "ai" : "rule";
+
+    // Cache check for rule mode
+    const contentHash = await getChapterContentHash(root, bookId, chapterNumber);
+    if (mode === "rule") {
+      const existing = await readChapterAudit(root, bookId, chapterNumber);
+      if (existing && existing.contentHash && contentHash && existing.contentHash === contentHash && existing.mode === mode) {
+        return c.json({ audit: { ...existing, cached: true } });
+      }
+    }
+
     const result = runMockAudit(chapterNumber);
+    result.contentHash = contentHash ?? undefined;
+    result.mode = mode;
     await writeChapterAudit(root, bookId, result);
     return c.json({ audit: result });
   });
@@ -359,7 +421,17 @@ export function createAuditRouter(root: string) {
     // Run audit for each valid chapter
     const results: Array<{ chapterNumber: number; status: AuditStatus }> = [];
     for (const chapterNumber of validChapters) {
+      // Cache check for batch audits
+      const contentHash = await getChapterContentHash(root, bookId, chapterNumber);
+      const existingCache = await readChapterAudit(root, bookId, chapterNumber);
+      if (existingCache && existingCache.contentHash && contentHash && existingCache.contentHash === contentHash) {
+        results.push({ chapterNumber: existingCache.chapterNumber, status: existingCache.status });
+        continue;
+      }
+
       const result = runMockAudit(chapterNumber);
+      result.contentHash = contentHash ?? undefined;
+      result.mode = "rule";
       await writeChapterAudit(root, bookId, result);
       results.push({ chapterNumber: result.chapterNumber, status: result.status });
     }
