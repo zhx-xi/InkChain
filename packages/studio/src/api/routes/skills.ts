@@ -336,13 +336,16 @@ export function createSkillsRouter(root: string) {
       throw new ApiError(404, "SKILL_NOT_FOUND", `Skill not found: ${id}`);
     }
 
+    // For builtin skills, write only the minimal enabled flag override.
+    // Keep the original source so the frontend retains the builtin getDisplayDescription path.
+    const originalSource = stored.source;
     const projectFile = await loadProjectSkillFile(root, id);
     const baseConfig = projectFile ?? stored.config;
     const updated: SkillConfig = { ...baseConfig, enabled: !baseConfig.enabled };
     await writeProjectSkill(root, updated);
 
     return c.json({
-      skill: toApiSkill({ config: updated, source: "project", path: projectSkillPath(root, id) }),
+      skill: toApiSkill({ config: updated, source: originalSource, path: projectSkillPath(root, id) }),
     });
   });
 
