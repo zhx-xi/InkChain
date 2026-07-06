@@ -486,6 +486,20 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
       setCollaborationMode(config.collaborationMode as "sequential" | "parallel" | "hybrid");
     }
 
+    // Restore agentConfigs from template (model config, prompt overrides, etc.)
+    if (config?.agentsConfig && typeof config.agentsConfig === "object") {
+      const agentsConfig = config.agentsConfig as Record<string, AgentRoleConfig>;
+      const restoredConfigs = new Map<string, AgentRoleConfig>();
+      for (const [role, cfg] of Object.entries(agentsConfig)) {
+        if (cfg && typeof cfg === "object" && "role" in cfg) {
+          restoredConfigs.set(role, cfg);
+        }
+      }
+      if (restoredConfigs.size > 0) {
+        setAgentConfigs(restoredConfigs);
+      }
+    }
+
     // Busy animation
     const busyStatuses = Object.fromEntries(
       allRoles.map((r) => [r, "busy" as AgentStatus]),
