@@ -27,7 +27,7 @@ test.beforeEach(async ({ page }) => {
   await clearForeshadowing();
   await seedForeshadowing();
   await page.goto(`/#/foreshadowing/${E2E_FORES_BOOK_ID}`);
-  await expect(page.getByText("伏笔追踪")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "伏笔追踪" })).toBeVisible({ timeout: 15_000 });
 });
 
 // ── Tests ─────────────────────────────────────────────────────────
@@ -170,7 +170,7 @@ test.describe("伏笔提取 — lastMentionedChapter 与 大纲未指定", () =>
     expect(createRes.status()).toBe(200);
 
     await page.reload();
-    await expect(page.getByText("伏笔追踪")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("heading", { name: "伏笔追踪" })).toBeVisible({ timeout: 15_000 });
 
     // The created entry should show "大纲未指定"
     await expect(page.getByText("无名信件")).toBeVisible({ timeout: 3_000 });
