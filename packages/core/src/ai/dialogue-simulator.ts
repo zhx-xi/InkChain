@@ -99,11 +99,10 @@ export function buildVoiceConstraints(
   // If voice profile exists, overlay its settings
   if (voiceProfile) {
     if (voiceProfile.tone) tone.push(voiceProfile.tone);
-    if (voiceProfile.speechPattern) speechPatterns.push(voiceProfile.speechPattern);
+    if (voiceProfile.speechStyle) speechPatterns.push(voiceProfile.speechStyle);
     if (voiceProfile.catchphrases) catchphrases.push(...voiceProfile.catchphrases);
-    if (voiceProfile.formality === "formal" || voiceProfile.formality === "casual") {
-      formality = voiceProfile.formality;
-    }
+    if (voiceProfile.personality?.some(p => /正式|严谨|古板/.test(p))) formality = "formal";
+    if (voiceProfile.personality?.some(p => /随意|不羁|豪爽/.test(p))) formality = "casual";
   }
 
   return {
