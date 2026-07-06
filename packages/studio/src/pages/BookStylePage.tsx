@@ -11,6 +11,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   Info,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 // ── Types ──
@@ -20,6 +22,13 @@ interface ChapterSummary {
   readonly title: string;
   readonly status?: string;
   readonly wordCount?: number;
+  readonly volumeId?: string | null;
+}
+
+interface Volume {
+  readonly id: string;
+  readonly title: string;
+  readonly order: number;
 }
 
 interface StyleProfile {
@@ -428,6 +437,12 @@ export function BookStylePage({
   const [result, setResult] = useState<StyleAnalyzeResult | null>(null);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<"matrix" | "anomalies" | "details">("matrix");
+  const [volumeFilter, setVolumeFilter] = useState<string>("all");
+  const [detailPage, setDetailPage] = useState(1);
+  const [detailPageSize, setDetailPageSize] = useState(10);
+
+  const { data: volumesData } = useApi<{ volumes: readonly Volume[] }>(`/api/v1/books/${bookId}/volumes`);
+  const volumes = volumesData?.volumes ?? [];
 
   // Auto-select all chapters when data loads
   useEffect(() => {
@@ -617,9 +632,87 @@ export function BookStylePage({
                 <span className="inline-flex items-center justify-center w-5.5 h-5.5 rounded-full bg-amber-600 text-card text-[11px] font-mono font-bold">3</span>
                 各章节文风详情
               </h2>
-              {result.chapters.map((profile) => (
-                <ChapterDetailCard key={profile.chapterNumber} profile={profile} averageProfile={averageProfile} />
-              ))}
+
+              {/* Volume filter + pagination bar */}
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">分卷：</span>
+                  <select
+                    value={volumeFilter}
+                    onChange={(e) => { setVolumeFilter(e.target.value); setDetailPage(1); }}
+                    className="px-2 py-1 rounded border border-border/40 bg-background text-xs outline-none focus:border-primary/50"
+                  >
+                    <option value="all">全部分卷</option>
+                    {volumes.map((v) => (
+                      <option key={v.id} value={v.id}>{v.title}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>每页</span>
+                  <select
+                    value={detailPageSize}
+                    onChange={(e) => { setDetailPageSize(Number(e.target.value)); setDetailPage(1); }}
+                    className="px-2 py-1 rounded border border-border/40 bg-background text-xs outline-none focus:border-primary/50"
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                  <span>条</span>
+                </div>
+              </div>
+
+              {/* Filtered + paginated chapters */}
+              {(() => {
+                const filtered = result.chapters.filter((profile) => {
+                  if (volumeFilter === "all") return true;
+                  const chSummary = chapters.find((c) => c.number === profile.chapterNumber);
+                  return chSummary?.volumeId === volumeFilter;
+                });
+                const totalPages = Math.max(1, Math.ceil(filtered.length / detailPageSize));
+                const safePage = Math.min(detailPage, totalPages);
+                const paged = filtered.slice((safePage - 1) * detailPageSize, safePage * detailPageSize);
+
+                return (
+                  <>
+                    <div className="space-y-4">
+                      {paged.map((profile) => (
+                        <ChapterDetailCard key={profile.chapterNumber} profile={profile} averageProfile={averageProfile} />
+                      ))}
+                    </div>
+
+                    {totalPages > 1 && (
+                      <div className="flex items-center justify-between pt-3">
+                        <span className="text-xs text-muted-foreground/60">
+                          第 {(safePage - 1) * detailPageSize + 1}-{Math.min(safePage * detailPageSize, filtered.length)} 条，共 {filtered.length} 条
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            disabled={safePage <= 1}
+                            onClick={() => setDetailPage((p) => Math.max(1, p - 1))}
+                            className="rounded border border-border/40 p-1 text-muted-foreground hover:bg-secondary/50 disabled:opacity-20 transition-colors"
+                          >
+                            <ChevronLeft size={14} />
+                          </button>
+                          <span className="text-xs text-muted-foreground px-2">
+                            {safePage}/{totalPages}
+                          </span>
+                          <button
+                            type="button"
+                            disabled={safePage >= totalPages}
+                            onClick={() => setDetailPage((p) => Math.min(totalPages, p + 1))}
+                            className="rounded border border-border/40 p-1 text-muted-foreground hover:bg-secondary/50 disabled:opacity-20 transition-colors"
+                          >
+                            <ChevronRight size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
 
