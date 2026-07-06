@@ -338,9 +338,11 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
 
   const handleTemplateSelect = (tpl: typeof BUILTIN_TEMPLATES[number]) => {
     if (!draft) return;
+    // In create mode, append a timestamp to avoid ID collision with built-in skills.
+    const newId = isCreateMode ? `${tpl.id}-${Date.now()}` : tpl.id;
     setDraft({
       ...draft,
-      id: tpl.id,
+      id: newId,
       description: tpl.description,
       category: tpl.category,
       prompt: tpl.prompt,

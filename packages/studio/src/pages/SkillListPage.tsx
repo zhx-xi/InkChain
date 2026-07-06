@@ -134,10 +134,12 @@ export function SkillListPage() {
   }, []);
 
   const getDisplayDescription = (config: SkillConfig, source: "project" | "builtin"): string => {
+    const zhDesc = BUILTIN_ZH_DESCRIPTIONS[config.id];
     if (source === "builtin") {
-      return BUILTIN_ZH_DESCRIPTIONS[config.id] || config.description || "无描述";
+      return zhDesc || config.description || "无描述";
     }
-    return config.description || "无描述";
+    // Fallback: try Chinese mapping even for project-override skills (e.g., toggled builtins)
+    return zhDesc || config.description || "无描述";
   };
 
   const getDisplayCategory = (config: SkillConfig, source: "project" | "builtin"): { label: string; key: SkillCategory } => {
