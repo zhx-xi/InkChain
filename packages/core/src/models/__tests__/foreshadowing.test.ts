@@ -143,6 +143,7 @@ describe("forget detection", () => {
       title: "Test",
       description: "",
       type: "情节伏笔",
+      bookId: "test-book",
       createdChapter: 1,
       expectedPayoffChapter: null,
       status: "active",
@@ -162,6 +163,7 @@ describe("forget detection", () => {
       title: "Forgotten",
       description: "",
       type: "情节伏笔",
+      bookId: "test-book",
       createdChapter: 1,
       expectedPayoffChapter: null,
       status: "active",
@@ -181,6 +183,7 @@ describe("forget detection", () => {
       title: "Paid",
       description: "",
       type: "情节伏笔",
+      bookId: "test-book",
       createdChapter: 1,
       expectedPayoffChapter: null,
       status: "paid_off",
@@ -197,16 +200,19 @@ describe("forget detection", () => {
     const entries: Foreshadowing[] = [
       {
         id: "f1", title: "Recent", description: "", type: "情节伏笔",
+        bookId: "test-book",
         createdChapter: 1, expectedPayoffChapter: null, status: "active",
         payoffChapter: null, lastMentionedChapter: 9, relatedElements: [], notes: "",
       },
       {
         id: "f2", title: "Old", description: "", type: "设定伏笔",
+        bookId: "test-book",
         createdChapter: 1, expectedPayoffChapter: null, status: "active",
         payoffChapter: null, lastMentionedChapter: 1, relatedElements: [], notes: "",
       },
       {
         id: "f3", title: "Paid", description: "", type: "角色伏笔",
+        bookId: "test-book",
         createdChapter: 1, expectedPayoffChapter: null, status: "paid_off",
         payoffChapter: 10, lastMentionedChapter: 1, relatedElements: [], notes: "",
       },

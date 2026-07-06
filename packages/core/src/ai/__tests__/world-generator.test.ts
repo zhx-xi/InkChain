@@ -33,7 +33,7 @@ const MOCK_WORLD: WorldConfig = {
     { id: "rel1", sourceId: "r1", targetId: "r2", type: "伙伴", description: "并肩作战", sortIndex: 0 },
   ],
   regions: [
-    { id: "reg1", name: "艾尔大陆", type: "大陆", description: "主大陆，三国鼎立", sortIndex: 0, parentId: null },
+    { id: "reg1", name: "艾尔大陆", type: "大陆", description: "主大陆，三国鼎立", sortIndex: 0, parentId: null, x: null, y: null },
   ],
   institutions: [
     { id: "inst1", name: "光明教会", type: "组织", description: "信仰光明的宗教组织", leaderId: null, members: [], sortIndex: 0, regionId: null },
