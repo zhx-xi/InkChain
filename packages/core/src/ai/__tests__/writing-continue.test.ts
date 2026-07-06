@@ -150,7 +150,7 @@ describe("buildContinueSystemPrompt", () => {
 
   it("should include runtime facts when available", () => {
     const facts = [
-      { subject: "艾伦", predicate: "currentLocation", object: "森林", validFromChapter: 1, validUntilChapter: undefined, sourceChapter: 1 },
+      { subject: "艾伦", predicate: "currentLocation", object: "森林", validFromChapter: 1, validUntilChapter: null, sourceChapter: 1 },
     ];
     const context = makeMinimalContext({ runtimeFacts: facts });
     const prompt = buildContinueSystemPrompt(context);
@@ -351,7 +351,7 @@ describe("checkConflict", () => {
     config.regions = [{ id: "reg1", name: "暗影沼泽", type: "region", description: "危险之地" }];
 
     const facts = [
-      { subject: "艾伦", predicate: "currentLocation", object: "魔法石", validFromChapter: 1, validUntilChapter: undefined, sourceChapter: 1 },
+      { subject: "艾伦", predicate: "currentLocation", object: "魔法石", validFromChapter: 1, validUntilChapter: null, sourceChapter: 1 },
     ];
     const context = makeMinimalContext({
       world: { config, referenceDimensions: ["settings", "regions"] },
