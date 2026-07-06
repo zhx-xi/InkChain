@@ -214,7 +214,7 @@ function formatRuntimeFactsForPrompt(facts: CurrentStateFact[], currentChapter: 
 
   const active = facts.filter(
     (f) => f.validFromChapter <= currentChapter &&
-      (f.validUntilChapter === undefined || f.validUntilChapter >= currentChapter)
+      (f.validUntilChapter === undefined || f.validUntilChapter === null || f.validUntilChapter >= currentChapter)
   );
 
   if (!active.length) return "";
