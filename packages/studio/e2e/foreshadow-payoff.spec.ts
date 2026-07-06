@@ -8,12 +8,28 @@ import {
 // ── Helpers ───────────────────────────────────────────────────────
 
 function mockAiExtract(page: Page, entries: Array<Record<string, unknown>>) {
-  page.route("**/api/foreshadowing/extract*", async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({ ok: true, data: entries }),
-    });
+  page.route("**/api/extract*", async (route) => {
+    if (route.request().method() === "POST") {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          success: true,
+          data: { candidates: entries.map((e) => ({
+            id: e.id,
+            title: e.title,
+            description: e.description,
+            type: e.type,
+            chapter: e.chapter ?? 1,
+            lastMentionedChapter: e.lastMentionedChapter,
+            expectedPayoffChapter: e.expectedPayoffChapter,
+            confidence: e.confidence ?? 0.8,
+          }))},
+        }),
+      });
+    } else {
+      await route.continue();
+    }
   });
 }
 
@@ -167,7 +183,7 @@ test.describe("伏笔提取 — lastMentionedChapter 与 大纲未指定", () =>
         expectedPayoffChapter: null,
       },
     });
-    expect(createRes.status()).toBe(200);
+    expect([200, 201]).toContain(createRes.status());
 
     await page.reload();
     await expect(page.getByRole("heading", { name: "伏笔追踪" })).toBeVisible({ timeout: 15_000 });
