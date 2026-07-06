@@ -124,3 +124,40 @@ test("6. 分页切换", async ({ page }) => {
     await expect(page.getByText(/共 \d+ 个 Skill/)).toBeVisible();
   }
 });
+
+test("7. 从模板创建Skill→自动生成唯一ID不冲突 (#419)", async ({ page }) => {
+  await page.goto("/#/skills");
+  await expect(page.getByText("Skill 库")).toBeVisible({ timeout: 15_000 });
+
+  // Click "创建 Skill" button
+  await page.getByText("创建 Skill").click();
+  await expect(page.getByText("创建 Skill 方式")).toBeVisible({ timeout: 5_000 });
+
+  // Select "从模板创建"
+  await page.getByText("从模板创建").click();
+
+  // The template picker should be visible
+  await expect(page.getByText("从模板创建 Skill")).toBeVisible({ timeout: 5_000 });
+
+  // Pick the first template (e.g. writing-style-imitation)
+  const templateCard = page.getByText("writing-style-imitation").first();
+  await expect(templateCard).toBeVisible({ timeout: 5_000 });
+  await templateCard.click();
+
+  // The SkillEditSheet should open with an auto-generated ID containing timestamp
+  await expect(page.locator("h3").filter({ hasText: /创建 Skill|编辑 Skill/ })).toBeVisible({ timeout: 5_000 });
+
+  // The ID input should now show the auto-generated unique ID
+  const idInput = page.getByLabel("Skill ID").or(page.getByPlaceholder(/skill.*id/i));
+  if (await idInput.isVisible()) {
+    const idValue = await idInput.inputValue();
+    // The auto-generated ID should start with the template name and contain a timestamp
+    expect(idValue).toMatch(/^writing-style-imitation-\d{13,}$/);
+  }
+
+  // Save the skill
+  await page.getByText("保存", { exact: true }).click();
+
+  // The new skill should appear in the list without error
+  await expect(page.getByText(/writing-style-imitation-\d+/)).toBeVisible({ timeout: 10_000 });
+});
