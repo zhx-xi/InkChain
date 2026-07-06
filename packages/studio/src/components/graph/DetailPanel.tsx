@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
-import type { GraphNodeData, GraphEdgeData } from "../../store/relations/types";
+import { useState, useEffect } from "react";
+import type { GraphNodeData, GraphEdgeData, RelationType } from "../../store/relations/types";
 import { cn } from "../../lib/utils";
 
 interface DetailPanelProps {
@@ -8,6 +9,7 @@ interface DetailPanelProps {
   readonly nodes: ReadonlyArray<GraphNodeData>;
   readonly onClose: () => void;
   readonly className?: string;
+  readonly onSave?: (node: GraphNodeData, edges: GraphEdgeData[]) => void;
 }
 
 const TIER_LABELS: Record<string, string> = {
@@ -52,6 +54,41 @@ export function DetailPanel({
     (e) => e.source === node.id || e.target === node.id,
   );
 
+  // Edit mode state
+  const [isEditing, setIsEditing] = useState(false);
+  const [editName, setEditName] = useState(node.label);
+  const [editDescription, setEditDescription] = useState(node.description ?? "");
+  const [editEdges, setEditEdges] = useState<GraphEdgeData[]>([]);
+
+  // Reset edit state when node changes or editing starts
+  useEffect(() => {
+    if (isEditing) {
+      setEditName(node.label);
+      setEditDescription(node.description ?? "");
+      setEditEdges(relatedEdges.map(e => ({ ...e })));
+    }
+  }, [isEditing, node.id]);
+
+  const handleSave = () => {
+    const updatedNode: GraphNodeData = {
+      ...node,
+      label: editName,
+      description: editDescription,
+    };
+    onSave?.(updatedNode, editEdges);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+  };
+
+  const updateEdgeType = (edgeId: string, newType: string) => {
+    setEditEdges(prev => prev.map(e =>
+      e.id === edgeId ? { ...e, relationType: newType as RelationType } : e
+    ));
+  };
+
   return (
     <div
       className={cn(
@@ -73,14 +110,28 @@ export function DetailPanel({
             {node.label}
           </h3>
         </div>
-        <button
-          type="button"
-          onClick={onClose}
-          className="p-1 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-background/50 transition-colors"
-          aria-label="关闭详情"
-        >
-          <X size={16} />
-        </button>
+        <div className="flex items-center gap-1">
+          {onSave && !isEditing && (
+            <button
+              type="button"
+              onClick={() => setIsEditing(true)}
+              className="p-1 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-background/50 transition-colors"
+              aria-label="编辑角色"
+            >
+              <svg size={16} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>
+              </svg>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1 rounded-md text-muted-foreground/50 hover:text-foreground hover:bg-background/50 transition-colors"
+            aria-label="关闭详情"
+          >
+            <X size={16} />
+          </button>
+        </div>
       </div>
 
       {/* Tier label */}
