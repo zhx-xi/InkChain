@@ -14,7 +14,7 @@ test.beforeAll(async () => {
 test.beforeEach(async ({ page }) => {
   await seedForeshadowing();
   await page.goto(`/#/foreshadowing/${E2E_FORES_BOOK_ID}`);
-  await expect(page.getByText("伏笔追踪")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "伏笔追踪" })).toBeVisible({ timeout: 15_000 });
 });
 
 // ── Tests ────────────────────────────────────────────────────────
