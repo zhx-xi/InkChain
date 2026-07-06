@@ -444,5 +444,60 @@ export function createAuditRouter(root: string) {
     });
   });
 
+  // POST /:bookId/chapters/:chapterNumber/audit/fix — 一键修复审计问题
+  router.post("/:bookId/chapters/:chapterNumber/audit/fix", async (c) => {
+    const bookId = c.req.param("bookId");
+    const chapterNumberStr = c.req.param("chapterNumber");
+    const chapterNumber = Number.parseInt(chapterNumberStr, 10);
+
+    if (!Number.isInteger(chapterNumber) || chapterNumber <= 0) {
+      throw new ApiError(400, "INVALID_CHAPTER_NUMBER", `Invalid chapter number: ${chapterNumberStr}`);
+    }
+
+    // Check if audit result exists
+    const existing = await readChapterAudit(root, bookId, chapterNumber);
+    if (!existing || existing.issues.length === 0) {
+      throw new ApiError(404, "NO_ISSUES", `No audit issues found for chapter ${chapterNumber}. Run audit first.`);
+    }
+
+    // 读取章节内容
+    const chaptersDir = join(root, "books", bookId, "chapters");
+    const padded = String(chapterNumber).padStart(4, "0");
+    let files: string[];
+    try {
+      files = await readdir(chaptersDir);
+    } catch {
+      throw new ApiError(404, "CHAPTERS_DIR_NOT_FOUND", "章节目录不存在");
+    }
+
+    const chapterFile = files.find((f) => f.startsWith(`${padded}_`) && f.endsWith(".md"));
+    if (!chapterFile) {
+      throw new ApiError(404, "CHAPTER_NOT_FOUND", `Chapter ${chapterNumber} file not found`);
+    }
+
+    const originalContent = await readFile(join(chaptersDir, chapterFile), "utf-8");
+
+    // Mock fix: 基于问题生成修复建议
+    // 实际生产环境这里应调用 AI 生成修复建议
+    const fixSuggestions = existing.issues.map((issue) => {
+      const replacement = `[已修复] ${issue.description} —— 根据审计建议自动修正`;
+      return {
+        type: issue.type,
+        severity: issue.severity,
+        description: issue.description,
+        location: issue.location,
+        suggestion: `修复「${issue.description}」：优化相关段落文本`,
+        original: issue.location ? `（${issue.location} 处内容）` : "（全文段落）",
+        replacement,
+      };
+    });
+
+    return c.json({
+      chapterNumber,
+      suggestions: fixSuggestions,
+      originalContent: originalContent.substring(0, 500), // 预览前500字符
+    });
+  });
+
   return router;
 }

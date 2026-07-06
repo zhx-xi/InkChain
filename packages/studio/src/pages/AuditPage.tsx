@@ -17,6 +17,7 @@ import {
   CheckSquare,
   Square,
   X,
+  Wand2,
 } from "lucide-react";
 import { fetchJson, postApi } from "../hooks/use-api";
 
@@ -146,6 +147,16 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
   } | null>(null);
   const [contextLoading, setContextLoading] = useState(false);
   const [contextError, setContextError] = useState<string | null>(null);
+
+  // Fix dialog state (Issue #412)
+  const [fixDialog, setFixDialog] = useState<{
+    chapterNumber: number;
+    suggestions: Array<{ type: string; severity: string; description: string; location?: string; suggestion: string; original: string; replacement: string }>;
+    originalContent: string;
+  } | null>(null);
+  const [fixLoading, setFixLoading] = useState(false);
+  const [fixError, setFixError] = useState<string | null>(null);
+  const [applyingFix, setApplyingFix] = useState(false);
 
   const handleLocationClick = useCallback(
     async (chapterNumber: number, location: string) => {
@@ -290,6 +301,44 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
       alert(err instanceof Error ? err.message : "重新审计失败");
     } finally {
       setActionLoading((prev) => ({ ...prev, [key]: false }));
+    }
+  };
+
+  // ── Fix Handlers (Issue #412) ──
+
+  const handleFix = async (chapterNumber: number) => {
+    setFixLoading(true);
+    setFixError(null);
+    try {
+      const result = await postApi<{
+        chapterNumber: number;
+        suggestions: Array<{ type: string; severity: string; description: string; location?: string; suggestion: string; original: string; replacement: string }>;
+        originalContent: string;
+      }>(
+        `/api/books/${encodeURIComponent(bookId)}/chapters/${chapterNumber}/audit/fix`,
+      );
+      setFixDialog(result);
+    } catch (err) {
+      setFixError(err instanceof Error ? err.message : "生成修复建议失败");
+    } finally {
+      setFixLoading(false);
+    }
+  };
+
+  const handleApplyFix = async () => {
+    if (!fixDialog) return;
+    setApplyingFix(true);
+    try {
+      await postApi(
+        `/api/books/${encodeURIComponent(bookId)}/chapters/${fixDialog.chapterNumber}/audit/fix/apply`,
+        { suggestions: fixDialog.suggestions },
+      );
+      setFixDialog(null);
+      await fetchAudit();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "应用修复失败");
+    } finally {
+      setApplyingFix(false);
     }
   };
 
@@ -736,6 +785,18 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
                                 </div>
                                 <p className="text-sm text-foreground mt-1">{issue.description}</p>
                               </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleFix(chapter.chapterNumber);
+                                }}
+                                disabled={fixLoading}
+                                className="ml-auto shrink-0 px-2 py-1 rounded-md bg-primary/10 text-primary text-[10px] font-medium hover:bg-primary/20 transition-colors disabled:opacity-50"
+                                title="生成AI修复建议"
+                              >
+                                <Wand2 size={12} className="inline mr-0.5" />
+                                修复
+                              </button>
                             </div>
                           );
                         })}
@@ -898,6 +959,103 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
                   lineIndex={contextPopup.lineIndex}
                 />
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Fix Preview Dialog ── */}
+      {(fixDialog || fixLoading) && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={(e) => { if (e.target === e.currentTarget) setFixDialog(null); }}
+        >
+          <div className="relative w-full max-w-2xl mx-4 max-h-[80vh] rounded-2xl border border-border/60 bg-card shadow-xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border/40">
+              <div>
+                <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
+                  <Wand2 size={16} className="text-primary" />
+                  修复建议 · 第{fixDialog?.chapterNumber}章
+                </h3>
+              </div>
+              <button onClick={() => setFixDialog(null)} className="p-1.5 rounded-lg hover:bg-secondary/50 text-muted-foreground">
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="px-6 py-4 overflow-y-auto max-h-[calc(80vh-80px)] space-y-4">
+              {fixLoading && (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 size={20} className="animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">AI 正在分析问题生成修复建议…</span>
+                </div>
+              )}
+
+              {fixError && (
+                <div className="flex flex-col items-center py-8 text-muted-foreground gap-2">
+                  <AlertCircle size={20} className="text-destructive" />
+                  <p className="text-sm">{fixError}</p>
+                </div>
+              )}
+
+              {fixDialog && !fixLoading && (
+                <>
+                  {/* Suggestions list */}
+                  <div className="space-y-3">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      修复建议（{fixDialog.suggestions.length} 项）
+                    </p>
+                    {fixDialog.suggestions.map((s, idx) => (
+                      <div key={idx} className="rounded-lg border border-border/40 bg-secondary/10 p-4 space-y-2">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                              {s.type}
+                            </span>
+                            <span className="text-xs text-muted-foreground">{s.location}</span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-foreground">{s.description}</p>
+                        <div className="bg-card rounded-lg p-3 text-xs space-y-1 border border-border/30">
+                          <p className="text-muted-foreground">建议修复：</p>
+                          <p className="text-emerald-600 dark:text-emerald-400">{s.suggestion}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Original content preview */}
+                  {fixDialog.originalContent && (
+                    <div className="rounded-lg border border-border/40 bg-card p-4">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">原始内容预览</p>
+                      <pre className="text-xs text-muted-foreground/70 whitespace-pre-wrap font-mono line-clamp-6">
+                        {fixDialog.originalContent}
+                      </pre>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-border/40">
+              <button
+                onClick={() => setFixDialog(null)}
+                className="px-4 py-2 rounded-lg text-sm text-muted-foreground hover:bg-secondary/60 transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleApplyFix}
+                disabled={applyingFix || !fixDialog}
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
+              >
+                {applyingFix && <Loader2 size={14} className="animate-spin" />}
+                <Wand2 size={14} />
+                应用修复
+              </button>
             </div>
           </div>
         </div>
