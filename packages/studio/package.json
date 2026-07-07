@@ -28,6 +28,9 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "start:e2e:api": "INKOS_STUDIO_PORT=4581 INKOS_AGENT_LLM_STUB=1 INKOS_PROJECT_ROOT=\"${INKOS_E2E_PROJECT_ROOT:-test-project}\" tsx watch --clear-screen=false src/api/index.ts",
+    "start:e2e:vite": "vite --host --port 4580",
+    "start:e2e": "echo '==> Starting E2E servers (Vite: 4580, API: 4581)'; echo '==> Set INKOS_E2E_PROJECT_ROOT to control data directory'; INKOS_E2E_PROJECT_ROOT=\"${INKOS_E2E_PROJECT_ROOT:-test-project}\" npm run start:e2e:api & npm run start:e2e:vite ; kill %1 2>/dev/null",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.server.json --noEmit"
   },
   "dependencies": {
