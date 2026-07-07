@@ -22,6 +22,12 @@ interface BookSummary {
   readonly title: string;
 }
 
+interface Volume {
+  readonly id: string;
+  readonly title: string;
+  readonly order: number;
+}
+
 interface Nav { toDashboard: () => void }
 
 export interface StyleStatusNotice {
@@ -60,15 +66,35 @@ export function StyleManager({ nav, theme, t }: { nav: Nav; theme: Theme; t: TFu
   const [chapterFrom, setChapterFrom] = useState(1);
   const [chapterTo, setChapterTo] = useState(1);
   const [extractingChapters, setExtractingChapters] = useState(false);
-  const { data: bookDetail } = useApi<{ chapters?: Array<{ number: number }> } | undefined>(
+  const { data: bookDetail } = useApi<{ chapters?: Array<{ number: number; volumeId?: string | null }> } | undefined>(
     selectedBookId ? `/api/books/${encodeURIComponent(selectedBookId)}` : undefined,
   );
   const maxChapter = Math.max(1, bookDetail?.chapters?.length ?? 1);
   const chapterNumbers = Array.from({ length: maxChapter }, (_, i) => i + 1);
 
+  // ── Volume data ──
+  const { data: volumesData } = useApi<{ volumes: readonly Volume[] }>(
+    selectedBookId ? `/api/v1/books/${encodeURIComponent(selectedBookId)}/volumes` : undefined,
+  );
+  const volumes = volumesData?.volumes ?? [];
+
   const resetChapterRange = () => {
     setChapterFrom(1);
     setChapterTo(maxChapter);
+  };
+
+  const handleVolumeChange = (volumeId: string) => {
+    setSelectedVolumeId(volumeId);
+    if (volumeId && bookDetail?.chapters) {
+      const volumeChapters = bookDetail.chapters.filter((ch) => ch.volumeId === volumeId);
+      if (volumeChapters.length > 0) {
+        const numbers = volumeChapters.map((ch) => ch.number);
+        setChapterFrom(Math.min(...numbers));
+        setChapterTo(Math.max(...numbers));
+        return;
+      }
+    }
+    resetChapterRange();
   };
 
   const statusNotice = buildStyleStatusNotice(analyzeStatus, importStatus);
@@ -239,16 +265,13 @@ export function StyleManager({ nav, theme, t }: { nav: Nav; theme: Theme; t: TFu
                 <label className="text-xs text-muted-foreground block mb-1">分卷筛选</label>
                 <select
                   value={selectedVolumeId}
-                  onChange={(e) => {
-                    setSelectedVolumeId(e.target.value);
-                    resetChapterRange();
-                  }}
+                  onChange={(e) => handleVolumeChange(e.target.value)}
                   disabled={!selectedBookId}
                   className="w-full px-3 py-2 rounded-lg bg-secondary/30 border border-border text-sm disabled:opacity-30"
                 >
                   <option value="">全部章节</option>
-                  {bookDetail?.chapters && [...new Set(bookDetail.chapters.map(ch => ch.number))].map((n) => (
-                    <option key={n} value={String(n)}>第{n}卷</option>
+                  {volumes.map((v) => (
+                    <option key={v.id} value={v.id}>{v.title}</option>
                   ))}
                 </select>
               </div>
