@@ -148,6 +148,47 @@ export function roleFromPath(path: string): RoleRef | null {
   return { path, name: m[2], tier };
 }
 
+/**
+ * Attempt to fuzzy-match a character ID against known role paths.
+ * Returns the matched role path if found, or null if no match.
+ * Used as fallback in the relation graph when a charId from the API
+ * does not directly match any key in the roleMap (e.g. due to slight
+ * differences in path encoding or naming).
+ *
+ * Matching strategy:
+ * 1. Extract the name portion from charId (e.g. "roles/guest/张三" → "张三")
+ * 2. Try exact name match first
+ * 3. Fall back to substring match (one contains the other)
+ *
+ * @returns The matched role path, or null if no match found.
+ */
+export function fuzzyMatchRoleId(
+  charId: string,
+  roleMap: Map<string, RoleRef>,
+): string | null {
+  const m = charId.match(/^roles\/[^/]+\/(.+)$/);
+  if (!m) return null;
+
+  // Strip the .md extension so "小三.md" → "小三" for name comparison
+  const name = m[1].replace(/\.md$/, "").toLowerCase();
+
+  // Try exact name match first
+  for (const [path, ref] of roleMap) {
+    if (ref.name.toLowerCase() === name) {
+      return path;
+    }
+  }
+
+  // Fall back to substring match (one contains the other)
+  for (const [path, ref] of roleMap) {
+    if (ref.name.toLowerCase().includes(name) || name.includes(ref.name.toLowerCase())) {
+      return path;
+    }
+  }
+
+  return null;
+}
+
 // Friendly labels + display order for foundation truth files, covering both the
 // Phase 5 outline/* layout and the pre-Phase-5 flat layout. Character files
 // (roles/*, character_matrix.md) are intentionally absent — they belong to the

@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { fetchJson } from "../../hooks/use-api";
 import type { CharacterRelation } from "@actalk/inkos-core";
 import type { GraphNodeData, GraphEdgeData } from "./types";
-import { roleFromPath, type RoleRef } from "../../lib/truth-display";
+import { fuzzyMatchRoleId, roleFromPath, type RoleRef } from "../../lib/truth-display";
 
 interface GraphState {
   nodes: GraphNodeData[];

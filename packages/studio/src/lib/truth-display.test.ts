@@ -3,6 +3,7 @@ import {
   FOUNDATION_FILE_LABELS,
   firstParagraph,
   frontmatterToCards,
+  fuzzyMatchRoleId,
   hasTableRows,
   parsePendingHooks,
   presentCurrentState,
@@ -107,6 +108,47 @@ describe("roleFromPath", () => {
     expect(roleFromPath("outline/story_frame.md")).toBeNull();
     expect(roleFromPath("roles/其他/x.md")).toBeNull();
     expect(roleFromPath("story_bible.md")).toBeNull();
+  });
+});
+
+describe("fuzzyMatchRoleId", () => {
+  const roleMap = new Map([
+    ["roles/主角/陈烬.md", { path: "roles/主角/陈烬.md", name: "陈烬", tier: "protagonist" as const }],
+    ["roles/重要/林婉.md", { path: "roles/重要/林婉.md", name: "林婉", tier: "supporting" as const }],
+    ["roles/次要/朋友乙.md", { path: "roles/次要/朋友乙.md", name: "朋友乙", tier: "guest" as const }],
+    ["roles/主角/Mara.md", { path: "roles/主角/Mara.md", name: "Mara", tier: "protagonist" as const }],
+  ]);
+
+  it("returns exact name match", () => {
+    expect(fuzzyMatchRoleId("roles/主角/陈烬.md", roleMap)).toBe("roles/主角/陈烬.md");
+  });
+
+  it("matches by name regardless of tier dir", () => {
+    expect(fuzzyMatchRoleId("roles/配角/陈烬.md", roleMap)).toBe("roles/主角/陈烬.md");
+  });
+
+  it("returns null for completely unknown charId", () => {
+    expect(fuzzyMatchRoleId("roles/主角/不存在.md", roleMap)).toBeNull();
+  });
+
+  it("returns null for non-role-format charId", () => {
+    expect(fuzzyMatchRoleId("outline/something.md", roleMap)).toBeNull();
+  });
+
+  it("returns null for empty roleMap", () => {
+    expect(fuzzyMatchRoleId("roles/主角/陈烬.md", new Map())).toBeNull();
+  });
+
+  it("performs case-insensitive matching on English names", () => {
+    expect(fuzzyMatchRoleId("roles/主角/mara.md", roleMap)).toBe("roles/主角/Mara.md");
+  });
+
+  it("returns the first match on substring overlap", () => {
+    const singleName = new Map([
+      ["roles/主角/张小三.md", { path: "roles/主角/张小三.md", name: "张小三", tier: "protagonist" as const }],
+    ]);
+    // "小三" is a substring of "张小三"
+    expect(fuzzyMatchRoleId("roles/主角/小三.md", singleName)).toBe("roles/主角/张小三.md");
   });
 });
 
