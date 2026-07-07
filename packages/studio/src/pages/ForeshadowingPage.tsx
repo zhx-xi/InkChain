@@ -495,7 +495,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
 
   // Fetch book detail to obtain the real chapter count instead of hardcoded 999
   const { data: bookDetail } = useApi<{ chapters?: Array<{ number: number }> }>(
-    `/api/books/${encodeURIComponent(bookId)}`,
+    `/api/v1/books/${encodeURIComponent(bookId)}`,
   );
   const actualChapterCount = bookDetail?.chapters?.length ?? 0;
   const hasChapters = actualChapterCount > 0;
