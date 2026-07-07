@@ -20,23 +20,34 @@ export default defineConfig({
     headless: true,
     screenshot: "only-on-failure",
   },
-  // Always start a dedicated E2E server with INKOS_AGENT_LLM_STUB=1 so the
-  // agent uses the deterministic stub and never makes real LLM calls.
-  // reuseExistingServer: false ensures the stub env var is always active —
-  // if an existing dev server (started without the stub) were reused, the
-  // agent would attempt a real LLM call with the fake API key and hang.
-  // Ports 4580/4581 are dedicated to E2E to avoid conflict with the dev server.
+  // Dedicated E2E servers run on ports 4580/4581 to avoid conflict with the
+  // dev server (4567/4569).  The API server is started with INKOS_AGENT_LLM_STUB=1
+  // so the agent uses the deterministic stub and never makes real LLM calls.
+  //
+  // INKOS_PROJECT_ROOT is configurable via the INKOS_E2E_PROJECT_ROOT env var.
+  // Defaults to test-project/ (relative to packages/studio), where seed fixtures
+  // write test data.  Override for real project data:
+  //   INKOS_E2E_PROJECT_ROOT="C:/path/to/project" pnpm start:e2e
   //
   // To run E2E tests against real LLM APIs (requires configured API keys):
   //   set INKOS_E2E_REAL_LLM=1 && pnpm --filter @inkos/studio exec playwright test
   // This skips page.route() mocking for AI extraction endpoints, letting
   // requests pass through to the real backend. See e2e/fixtures/mock-llm-helper.ts.
   // CI always runs with Mock mode (default).
-  webServer: {
-    command: "echo E2E servers already running manually",
-    url: "http://localhost:4580",
-    reuseExistingServer: true,
-    timeout: 5_000,
-    cwd: ".",
-  },
+  webServer: [
+    {
+      command: "INKOS_STUDIO_PORT=4581 INKOS_AGENT_LLM_STUB=1 INKOS_PROJECT_ROOT=\"${INKOS_E2E_PROJECT_ROOT:-test-project}\" tsx watch --clear-screen=false src/api/index.ts",
+      url: "http://localhost:4581",
+      reuseExistingServer: true,
+      timeout: 15_000,
+      cwd: ".",
+    },
+    {
+      command: "vite --host --port 4580",
+      url: "http://localhost:4580",
+      reuseExistingServer: true,
+      timeout: 15_000,
+      cwd: ".",
+    },
+  ],
 });
