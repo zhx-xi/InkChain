@@ -4,6 +4,8 @@ import type { Theme } from "../hooks/use-theme";
 import type { TFunction } from "../hooks/use-i18n";
 import { useColors } from "../hooks/use-colors";
 import { Wand2, Upload, BarChart3, AlertTriangle } from "lucide-react";
+import { calculateStats, runPrescreen } from "../api/utils/style-prescreen";
+import type { PrescreenStats, ChapterPrescreenResult } from "../api/utils/style-prescreen";
 
 interface StyleProfile {
   readonly sourceName: string;
@@ -22,23 +24,6 @@ interface BookSummary {
 
 interface Nav { toDashboard: () => void }
 
-interface PrescreenStats {
-  avgSentenceLength: number;
-  sentenceLengthStdDev: number;
-  vocabularyDiversity: number;
-  punctuationFrequency: Record<string, number>;
-  avgParagraphLength: number;
-  totalSentences: number;
-  totalWords: number;
-}
-
-interface ChapterPrescreenResult {
-  chapterNumber: number | null;
-  stats: PrescreenStats;
-  isAnomalous: boolean;
-  anomalyReasons: string[];
-}
-
 export interface StyleStatusNotice {
   readonly tone: "error" | "success" | "info";
   readonly message: string;
@@ -56,117 +41,7 @@ export function buildStyleStatusNotice(analyzeStatus: string, importStatus: stri
   return { tone: "success", message };
 }
 
-function calculateStats(text: string): PrescreenStats {
-  const sentences = text.split(/[。！？.!?]+/).filter(s => s.trim().length > 0);
-  const words = text.split(/[\s,，、。；;：:]+/).filter(w => w.trim().length > 0);
-  const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0);
-
-  const sentenceLengths = sentences.map(s => [...s].length);
-  const avgSentenceLength = sentenceLengths.reduce((a, b) => a + b, 0) / (sentenceLengths.length || 1);
-
-  const variance = sentenceLengths.reduce((a, b) => a + (b - avgSentenceLength) ** 2, 0) / (sentenceLengths.length || 1);
-  const sentenceLengthStdDev = Math.sqrt(variance);
-
-  const uniqueWords = new Set(words.map(w => w.toLowerCase()));
-  const vocabularyDiversity = uniqueWords.size / (words.length || 1);
-
-  // 标点频率
-  const allChars = [...text];
-  const punctuationFrequency: Record<string, number> = {};
-  for (const ch of allChars) {
-    if (/[，。！？、；：""''（）《》【】…—·,.;:!?'"()\[\]{}]/.test(ch)) {
-      punctuationFrequency[ch] = (punctuationFrequency[ch] || 0) + 1;
-    }
-  }
-
-  const avgParagraphLength = paragraphs.reduce((a, p) => a + [...p].length, 0) / (paragraphs.length || 1);
-
-  return {
-    avgSentenceLength,
-    sentenceLengthStdDev,
-    vocabularyDiversity,
-    punctuationFrequency,
-    avgParagraphLength,
-    totalSentences: sentences.length,
-    totalWords: words.length,
-  };
-}
-
-function runPrescreen(text: string): { results: ChapterPrescreenResult[]; globalStats: PrescreenStats } {
-  // 按章节分隔符分割
-  const chapterRegex = /---\s*第(\d+)章\s*---/g;
-  const sections: Array<{ num: number | null; text: string }> = [];
-  let lastIndex = 0;
-  let match: RegExpExecArray | null;
-  let lastNum: number | null = null;
-
-  while ((match = chapterRegex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      sections.push({ num: lastNum, text: text.slice(lastIndex, match.index).trim() });
-    }
-    lastNum = Number(match[1]);
-    lastIndex = match.index + match[0].length;
-  }
-  if (lastIndex < text.length) {
-    sections.push({ num: lastNum, text: text.slice(lastIndex).trim() });
-  }
-  if (sections.length === 0 && text.trim()) {
-    sections.push({ num: null, text: text.trim() });
-  }
-
-  // 对每个章节计算统计
-  const results: ChapterPrescreenResult[] = [];
-  const allStats: PrescreenStats[] = [];
-
-  for (const section of sections) {
-    if (!section.text) continue;
-    const stats = calculateStats(section.text);
-    allStats.push(stats);
-    results.push({
-      chapterNumber: section.num,
-      stats,
-      isAnomalous: false, // 下面再判断
-      anomalyReasons: [],
-    });
-  }
-
-  // 计算全局统计（所有章节合并）
-  const globalText = sections.map(s => s.text).join("\n");
-  const globalStats = calculateStats(globalText);
-
-  // 标记异常章节（偏差 > 2σ）
-  if (results.length > 1) {
-    const avgSentenceLengths = results.map(r => r.stats.avgSentenceLength);
-    const mean = avgSentenceLengths.reduce((a, b) => a + b, 0) / avgSentenceLengths.length;
-    const variance = avgSentenceLengths.reduce((a, b) => a + (b - mean) ** 2, 0) / avgSentenceLengths.length;
-    const stdDev = Math.sqrt(variance);
-
-    for (const result of results) {
-      const zScore = Math.abs(result.stats.avgSentenceLength - mean) / (stdDev || 1);
-      if (zScore > 2) {
-        result.isAnomalous = true;
-        result.anomalyReasons.push(
-          `句子长度异常（${result.stats.avgSentenceLength.toFixed(1)} 字/句，均值 ${mean.toFixed(1)}）`
-        );
-      }
-      // 词汇丰富度异常
-      const vocabDiversityScores = results.map(r => r.stats.vocabularyDiversity);
-      const vMean = vocabDiversityScores.reduce((a, b) => a + b, 0) / vocabDiversityScores.length;
-      const vVariance = vocabDiversityScores.reduce((a, b) => a + (b - vMean) ** 2, 0) / vocabDiversityScores.length;
-      const vStdDev = Math.sqrt(vVariance);
-      const vZScore = Math.abs(result.stats.vocabularyDiversity - vMean) / (vStdDev || 1);
-      if (vZScore > 2) {
-        result.isAnomalous = true;
-        result.anomalyReasons.push(
-          `词汇丰富度异常（${(result.stats.vocabularyDiversity * 100).toFixed(0)}%，均值 ${(vMean * 100).toFixed(0)}%）`
-        );
-      }
-    }
-  }
-
-  // 对于单章节输入，不做异常标记（需要AI检测）
-  return { results, globalStats };
-}
+// calculateStats and runPrescreen moved to api/utils/style-prescreen.ts (Issue #414)
 
 export function StyleManager({ nav, theme, t }: { nav: Nav; theme: Theme; t: TFunction }) {
   const c = useColors(theme);
@@ -241,7 +116,7 @@ export function StyleManager({ nav, theme, t }: { nav: Nav; theme: Theme; t: TFu
         let chapterText = text;
         // 如果有章节号，提取对应的章节文本
         if (chapter.chapterNumber !== null) {
-          const chapterRegex = new RegExp(`---\\s*第${chapter.chapterNumber}章\\s*---([\\s\\S]*?)(?=---\\s*第\\d+章\\s*---|$)`, '');
+          const chapterRegex = new RegExp(`---\\s*第${chapter.chapterNumber}章\\s*---([^]*?)(?=---\\s*第\\d+章\\s*---|$)`, '');
           const match = text.match(chapterRegex);
           if (match) chapterText = match[1].trim();
         }
