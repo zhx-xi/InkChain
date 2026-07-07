@@ -112,4 +112,35 @@ export async function seedChapterAudit(): Promise<void> {
     }, null, 2),
     "utf-8",
   );
+
+  // ── Sidebar component Mock data ──
+  // BookDetail page renders BookSidebar + ChatPage; these components
+  // call additional APIs that need Mock data to avoid page crashes.
+
+  // story/truth/index.json — FoundationSection + CharacterSection
+  const truthDir = join(bookDir, "story", "truth");
+  await mkdir(truthDir, { recursive: true });
+  await writeFile(
+    join(truthDir, "index.json"),
+    JSON.stringify({}),
+    "utf-8",
+  );
+
+  // story/truth/outline/story_frame.md — SummarySection
+  const outlineDir = join(truthDir, "outline");
+  await mkdir(outlineDir, { recursive: true });
+  await writeFile(
+    join(outlineDir, "story_frame.md"),
+    "# Outline\n\nChapter 1: 初入修仙\nChapter 2: 灵根测试\n",
+    "utf-8",
+  );
+
+  // sessions/<bookId>/index.json — ChatPage
+  const sessionsDir = join(E2E_ROOT, "sessions", E2E_BOOK_ID);
+  await mkdir(sessionsDir, { recursive: true });
+  await writeFile(
+    join(sessionsDir, "index.json"),
+    JSON.stringify({ sessions: [] }),
+    "utf-8",
+  );
 }
