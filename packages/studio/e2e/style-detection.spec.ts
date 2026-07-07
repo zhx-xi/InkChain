@@ -14,7 +14,9 @@ async function navigateToStyle(page: import("@playwright/test").Page): Promise<v
   // Wait for the dashboard to load
   await expect(page.getByText("InkOS Studio").first()).toBeVisible({ timeout: 15_000 });
   // Click sidebar "文风" button
-  await page.getByText("文风").click();
+  // Use getByRole with exact name to avoid conflict with "文风检测" buttons
+  // and "E2E 文风检测测试" book title in seed data
+  await page.getByRole("button", { name: "文风", exact: true }).click();
   await expect(page.getByText("Style Manager").or(page.getByText("文风检测"))).toBeVisible({ timeout: 10_000 });
 }
 

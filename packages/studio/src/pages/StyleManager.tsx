@@ -22,6 +22,12 @@ interface BookSummary {
   readonly title: string;
 }
 
+interface Volume {
+  readonly id: string;
+  readonly title: string;
+  readonly order: number;
+}
+
 interface Nav { toDashboard: () => void }
 
 export interface StyleStatusNotice {
@@ -53,6 +59,44 @@ export function StyleManager({ nav, theme, t }: { nav: Nav; theme: Theme; t: TFu
   const [importBookId, setImportBookId] = useState("");
   const [importStatus, setImportStatus] = useState("");
   const { data: booksData } = useApi<{ books: ReadonlyArray<BookSummary> }>("/books");
+
+  // ── Chapter-range selection state ──
+  const [selectedBookId, setSelectedBookId] = useState("");
+  const [selectedVolumeId, setSelectedVolumeId] = useState("");
+  const [chapterFrom, setChapterFrom] = useState(1);
+  const [chapterTo, setChapterTo] = useState(1);
+  const [extractingChapters, setExtractingChapters] = useState(false);
+  const { data: bookDetail } = useApi<{ chapters?: Array<{ number: number; volumeId?: string | null }> } | undefined>(
+    selectedBookId ? `/api/books/${encodeURIComponent(selectedBookId)}` : undefined,
+  );
+  const maxChapter = Math.max(1, bookDetail?.chapters?.length ?? 1);
+  const chapterNumbers = Array.from({ length: maxChapter }, (_, i) => i + 1);
+
+  // ── Volume data ──
+  const { data: volumesData } = useApi<{ volumes: readonly Volume[] }>(
+    selectedBookId ? `/api/v1/books/${encodeURIComponent(selectedBookId)}/volumes` : undefined,
+  );
+  const volumes = volumesData?.volumes ?? [];
+
+  const resetChapterRange = () => {
+    setChapterFrom(1);
+    setChapterTo(maxChapter);
+  };
+
+  const handleVolumeChange = (volumeId: string) => {
+    setSelectedVolumeId(volumeId);
+    if (volumeId && bookDetail?.chapters) {
+      const volumeChapters = bookDetail.chapters.filter((ch) => ch.volumeId === volumeId);
+      if (volumeChapters.length > 0) {
+        const numbers = volumeChapters.map((ch) => ch.number);
+        setChapterFrom(Math.min(...numbers));
+        setChapterTo(Math.max(...numbers));
+        return;
+      }
+    }
+    resetChapterRange();
+  };
+
   const statusNotice = buildStyleStatusNotice(analyzeStatus, importStatus);
 
   const [prescreenResults, setPrescreenResults] = useState<ChapterPrescreenResult[] | null>(null);
@@ -92,6 +136,29 @@ export function StyleManager({ nav, theme, t }: { nav: Nav; theme: Theme; t: TFu
       setImportStatus("Style guide imported successfully!");
     } catch (e) {
       setImportStatus(`Error: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  };
+
+  const handleExtractChapters = async () => {
+    if (!selectedBookId) return;
+    setExtractingChapters(true);
+    setProfile(null);
+    setAnalyzeStatus("");
+    setSourceName("");
+    try {
+      let allText = "";
+      for (let ch = Math.min(chapterFrom, chapterTo); ch <= Math.max(chapterFrom, chapterTo); ch++) {
+        const data = await fetchJson<{ content: string }>(
+          `/api/books/${encodeURIComponent(selectedBookId)}/chapters/${ch}`,
+        );
+        allText += `--- 第${ch}章 ---\n${data.content}\n\n`;
+      }
+      setText(allText);
+      setAnalyzeStatus(`${Math.abs(chapterTo - chapterFrom) + 1} 章内容已加载，点击「分析」开始检测`);
+    } catch (err) {
+      setAnalyzeStatus(`Error: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setExtractingChapters(false);
     }
   };
 
@@ -170,6 +237,86 @@ export function StyleManager({ nav, theme, t }: { nav: Nav; theme: Theme; t: TFu
               className="w-full px-3 py-2 rounded-lg bg-secondary/30 border border-border text-sm focus:outline-none focus:border-primary"
             />
           </div>
+
+          {/* Chapter-based analysis */}
+          <div className="border border-border/40 rounded-lg p-4 space-y-3 bg-secondary/10">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              按章节分析
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">选择书籍</label>
+                <select
+                  value={selectedBookId}
+                  onChange={(e) => {
+                    setSelectedBookId(e.target.value);
+                    setSelectedVolumeId("");
+                    resetChapterRange();
+                  }}
+                  className="w-full px-3 py-2 rounded-lg bg-secondary/30 border border-border text-sm"
+                >
+                  <option value="">-- 选择书籍 --</option>
+                  {booksData?.books.map((b) => (
+                    <option key={b.id} value={b.id}>{b.title}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">分卷筛选</label>
+                <select
+                  value={selectedVolumeId}
+                  onChange={(e) => handleVolumeChange(e.target.value)}
+                  disabled={!selectedBookId}
+                  className="w-full px-3 py-2 rounded-lg bg-secondary/30 border border-border text-sm disabled:opacity-30"
+                >
+                  <option value="">全部章节</option>
+                  {volumes.map((v) => (
+                    <option key={v.id} value={v.id}>{v.title}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3 items-end">
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">起始章节</label>
+                <select
+                  value={chapterFrom}
+                  onChange={(e) => {
+                    const v = Number(e.target.value);
+                    setChapterFrom(v);
+                    if (v > chapterTo) setChapterTo(v);
+                  }}
+                  disabled={!selectedBookId}
+                  className="w-full px-3 py-2 rounded-lg bg-secondary/30 border border-border text-sm disabled:opacity-30"
+                >
+                  {chapterNumbers.map((n) => (
+                    <option key={n} value={n}>第{n}章</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">结束章节</label>
+                <select
+                  value={chapterTo}
+                  onChange={(e) => setChapterTo(Number(e.target.value))}
+                  disabled={!selectedBookId}
+                  className="w-full px-3 py-2 rounded-lg bg-secondary/30 border border-border text-sm disabled:opacity-30"
+                >
+                  {chapterNumbers.filter((n) => n >= chapterFrom).map((n) => (
+                    <option key={n} value={n}>第{n}章</option>
+                  ))}
+                </select>
+              </div>
+              <button
+                onClick={handleExtractChapters}
+                disabled={!selectedBookId || extractingChapters}
+                className="px-4 py-2 text-sm rounded-lg bg-secondary text-foreground hover:bg-secondary/80 disabled:opacity-30 flex items-center gap-2 h-[38px]"
+              >
+                {extractingChapters ? "提取中..." : "提取章节内容"}
+              </button>
+            </div>
+          </div>
+
           <div>
             <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block mb-2">{t("style.textSample")}</label>
             <textarea
