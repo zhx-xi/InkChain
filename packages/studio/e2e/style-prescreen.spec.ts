@@ -12,7 +12,7 @@ async function navigateToStyle(page: import("@playwright/test").Page): Promise<v
   await page.goto("/#/");
   await expect(page.getByText("InkOS Studio").first()).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "文风", exact: true }).click();
-  await expect(page.getByText("Style Manager").or(page.getByText("文风检测"))).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole("heading", { name: /Style Manager|文风检测/ })).toBeVisible({ timeout: 10_000 });
 }
 
 test("1. 代码初筛按钮可见", async ({ page }) => {
