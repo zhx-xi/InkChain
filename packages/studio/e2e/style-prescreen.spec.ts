@@ -11,7 +11,7 @@ test.beforeAll(async () => {
 async function navigateToStyle(page: import("@playwright/test").Page): Promise<void> {
   await page.goto("/#/");
   await expect(page.getByText("InkOS Studio").first()).toBeVisible({ timeout: 15_000 });
-  await page.getByText("文风").click();
+  await page.getByRole("button", { name: "文风", exact: true }).click();
   await expect(page.getByText("Style Manager").or(page.getByText("文风检测"))).toBeVisible({ timeout: 10_000 });
 }
 
