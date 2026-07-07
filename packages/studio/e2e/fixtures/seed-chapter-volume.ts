@@ -6,7 +6,7 @@ import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
-export const E2E_ROOT = resolve(__dirname, "../../../..", "test-project");
+export const E2E_ROOT = resolve(__dirname, "../..", "test-project");
 export const E2E_BOOK_ID = "e2e-chapter-volume";
 export const VOL_1_ID = "ch-vol-1";
 export const VOL_2_ID = "ch-vol-2";

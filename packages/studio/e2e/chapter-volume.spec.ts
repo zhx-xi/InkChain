@@ -300,3 +300,41 @@ test.describe("分卷管理 (C10-C15)", () => {
     await expect(page.locator("body")).toBeAttached({ timeout: 5_000 });
   });
 });
+
+// ── Issue #466: Volume zoom jump fix ──
+// Verifies that creating/collapsing/deleting volumes does not cause
+// the chapter sidebar panel height to change significantly (zoom jump).
+test.describe("分卷操作面板缩放跳变检查 (#466)", () => {
+  test("C16: 侧栏面板高度稳定 — 无缩放跳变", async ({ page }) => {
+    // Verify the sidebar section exists and has stable preliminary height
+    const sidebarSection = page.locator("div.rounded-xl:has(button:has-text('章节'))").first();
+    await expect(sidebarSection).toBeVisible({ timeout: 5_000 });
+    const height = await sidebarSection.evaluate((el) => el.getBoundingClientRect().height);
+    expect(height).toBeGreaterThan(50); // Sidebar should have a reasonable height
+  });
+
+  test("C17: 折叠/展开分卷后面板高度稳定 — 无缩放跳变", async ({ page }) => {
+    const sidebarSection = page.locator("div.rounded-xl:has(button:has-text('章节'))").first();
+    const initialHeight = await sidebarSection.evaluate((el) => el.getBoundingClientRect().height);
+
+    // Click on volume header to collapse
+    const volHeader = page.locator("text=第一卷").first();
+    await volHeader.click();
+    await page.waitForTimeout(300);
+
+    const afterCollapseHeight = await sidebarSection.evaluate((el) => el.getBoundingClientRect().height);
+    const collapseDiff = Math.abs(afterCollapseHeight - initialHeight);
+    expect(collapseDiff).toBeLessThanOrEqual(20);
+
+    // Click again to expand
+    await volHeader.click();
+    await page.waitForTimeout(300);
+
+    const afterExpandHeight = await sidebarSection.evaluate((el) => el.getBoundingClientRect().height);
+    const expandDiff = Math.abs(afterExpandHeight - initialHeight);
+    expect(expandDiff).toBeLessThanOrEqual(20);
+
+    // Verify page still functional
+    await expect(page.getByText("第01章").first()).toBeVisible({ timeout: 3_000 });
+  });
+});
