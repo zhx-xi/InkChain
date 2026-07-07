@@ -20,7 +20,7 @@ test("1. 代码初筛按钮可见", async ({ page }) => {
   await navigateToStyle(page);
 
   // The "代码初筛" button should be visible
-  const prescreenBtn = page.getByText("代码初筛");
+  const prescreenBtn = page.getByRole("button", { name: "代码初筛" });
   await expect(prescreenBtn).toBeVisible({ timeout: 10_000 });
 
   // Should be disabled when textarea is empty
@@ -44,7 +44,7 @@ test("2. 代码初筛→填入带章节标记的文本→点击初筛→显示�
   );
 
   // Click "代码初筛" button
-  await page.getByText("代码初筛").click();
+  await page.getByRole("button", { name: "代码初筛" }).click();
 
   // Should show the prescreen results header
   await expect(page.getByText("代码初筛结果")).toBeVisible({ timeout: 5_000 });
@@ -70,7 +70,7 @@ test("3. 异常章节高亮+提示", async ({ page }) => {
   );
 
   // Click prescreen
-  await page.getByText("代码初筛").click();
+  await page.getByRole("button", { name: "代码初筛" }).click();
   await page.waitForTimeout(1_500);
 
   // Should show prescreen results
@@ -100,7 +100,7 @@ test("4. 仅单章节文本(无章标记)→不显示异常标记", async ({ pag
   );
 
   // Click prescreen
-  await page.getByText("代码初筛").click();
+  await page.getByRole("button", { name: "代码初筛" }).click();
   await page.waitForTimeout(1_500);
 
   // Should show results
@@ -123,6 +123,6 @@ test("5. 导出按钮保持可用", async ({ page }) => {
   await textarea.fill("测试。文本。分析。功能。正常。");
 
   // Analyze (existing functionality) and prescreen should both be accessible
-  await expect(page.getByText("Analyze").or(page.getByText("分析"))).toBeVisible();
-  await expect(page.getByText("代码初筛")).toBeVisible();
+  await expect(page.getByRole("button", { name: /分析|Analyze/ })).toBeVisible();
+  await expect(page.getByRole("button", { name: "代码初筛" })).toBeVisible();
 });
