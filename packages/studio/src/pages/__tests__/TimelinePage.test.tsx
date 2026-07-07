@@ -183,23 +183,24 @@ describe("TimelinePage", () => {
     expect(gap5).toBe(296);
   });
 
-  it("computes dynamic column gap proportionally to max cell events", async () => {
+  it("computes dynamic column gap proportionally to max cell events, capped at 220px", async () => {
     const mod = await import("../TimelinePage");
     const { computeColumnGap } = mod;
 
-    // COLUMN_GAP_X = 220, NODE_WIDTH = 160, (NODE_HEIGHT + 4) = 56
+    // COLUMN_GAP_X = 220 — column gap is fixed at 220px regardless of event density
+    // (Per AC: 列间距适中180-220px)
 
-    // 1 event → columnGap = max(220, 160 + 56*1*1.2) = max(220, 227.2) = 227.2
+    // 1 event → columnGap = 220
     const gap1 = computeColumnGap(1);
-    expect(gap1).toBeCloseTo(227.2, 1);
+    expect(gap1).toBe(220);
 
-    // 3 events → columnGap = max(220, 160 + 56*3*1.2) = max(220, 361.6) = 361.6
+    // 3 events → columnGap = 220 (no longer dynamically widening)
     const gap3 = computeColumnGap(3);
-    expect(gap3).toBeCloseTo(361.6, 1);
+    expect(gap3).toBe(220);
 
-    // 5 events → columnGap = max(220, 160 + 56*5*1.2) = max(220, 496) = 496
+    // 5 events → columnGap = 220
     const gap5 = computeColumnGap(5);
-    expect(gap5).toBe(496);
+    expect(gap5).toBe(220);
   });
 
   it("places no-role events below all character rows", async () => {

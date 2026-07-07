@@ -89,7 +89,8 @@ export function computeDynamicRowGap(maxCellEvents: number): number {
 
 /** Compute the horizontal gap between chapter columns based on max events in any cell */
 export function computeColumnGap(maxCellEvents: number): number {
-  return Math.max(COLUMN_GAP_X, NODE_WIDTH + (NODE_HEIGHT + 4) * maxCellEvents * 1.2);
+  // Keep column gap in 180-220px range; prevent dynamic widening beyond 220
+  return COLUMN_GAP_X;
 }
 
 /** Compute the Y offset for no-role events (below all character rows) */
@@ -625,22 +626,6 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
     return !isNaN(n) && n > 0 ? [n] : [];
   }, []);
 
-  // ── Compute unique chapters and characters (from ALL events, not paginated) ──
-  const { uniqueChapters, uniqueCharacters } = useMemo(() => {
-    const chapters = new Set<number>();
-    const characters = new Set<string>();
-    for (const e of events) {
-      chapters.add(e.chapter);
-      for (const ch of e.relatedCharacters) {
-        characters.add(ch);
-      }
-    }
-    return {
-      uniqueChapters: [...chapters].sort((a, b) => a - b),
-      uniqueCharacters: [...characters].sort(),
-    };
-  }, [events]);
-
   // ── Filtered events (applied on top of paginated slice) ──
   const filteredEvents = useMemo(() => {
     let result = paginatedEvents;
@@ -658,6 +643,22 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
     }
     return result;
   }, [paginatedEvents, characterFilter, chapterFilter]);
+
+  // ── Compute unique chapters and characters (from filtered events, not all events) ──
+  const { uniqueChapters, uniqueCharacters } = useMemo(() => {
+    const chapters = new Set<number>();
+    const characters = new Set<string>();
+    for (const e of filteredEvents) {
+      chapters.add(e.chapter);
+      for (const ch of e.relatedCharacters) {
+        characters.add(ch);
+      }
+    }
+    return {
+      uniqueChapters: [...chapters].sort((a, b) => a - b),
+      uniqueCharacters: [...characters].sort(),
+    };
+  }, [filteredEvents]);
 
   // ── Build ReactFlow nodes ──
   const initialNodes = useMemo<Node[]>(() => {
