@@ -38,11 +38,16 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe("Foreshadowing 鈥?绔犺妭閫夋嫨鍣ㄥ姩鎬佺珷鑺傛暟 E2E", () => {
+  /** Helper: wait for the foreshadowing page heading (avoid strict mode conflict with sidebar) */
+  async function waitForPage(page: import("@playwright/test").Page) {
+    await expect(page.getByRole("heading", { name: "浼忕瑪杩借釜" })).toBeVisible({ timeout: 15_000 });
+  }
+
   test("1. 姝ｅ父鎬侊細5 绔犳暟鎹姞杞介〉闈笉宕╂簝", async ({ page }) => {
     mockBookDetail(page, 5);
 
     await page.goto(`/#/foreshadowing/${E2E_FORES_BOOK_ID}`);
-    await expect(page.getByText("浼忕瑪杩借釜")).toBeVisible({ timeout: 15_000 });
+    await waitForPage(page);
 
     // Verify seeded foreshadowing entries are visible
     await expect(page.getByText("绁炵鎴掓寚")).toBeVisible({ timeout: 10_000 });
@@ -52,7 +57,7 @@ test.describe("Foreshadowing 鈥?绔犺妭閫夋嫨鍣ㄥ姩鎬佺珷鑺傛暟 E
     mockBookDetail(page, 0);
 
     await page.goto(`/#/foreshadowing/${E2E_FORES_BOOK_ID}`);
-    await expect(page.getByText("浼忕瑪杩借釜")).toBeVisible({ timeout: 15_000 });
+    await waitForPage(page);
 
     // With 0 chapters, Math.max(1, 0) = 1, page should still load
     await expect(page.getByText("绁炵鎴掓寚")).toBeVisible({ timeout: 10_000 });
@@ -70,7 +75,7 @@ test.describe("Foreshadowing 鈥?绔犺妭閫夋嫨鍣ㄥ姩鎬佺珷鑺傛暟 E
     });
 
     await page.goto(`/#/foreshadowing/${E2E_FORES_BOOK_ID}`);
-    await expect(page.getByText("浼忕瑪杩借釜")).toBeVisible({ timeout: 15_000 });
+    await waitForPage(page);
 
     // When book detail API fails, actualChapterCount = 0, Math.max(1, 0) = 1
     await expect(page.getByText("绁炵鎴掓寚")).toBeVisible({ timeout: 10_000 });
@@ -102,7 +107,7 @@ test.describe("Foreshadowing 鈥?绔犺妭閫夋嫨鍣ㄥ姩鎬佺珷鑺傛暟 E
     });
 
     await page.goto(`/#/foreshadowing/${E2E_FORES_BOOK_ID}`);
-    await expect(page.getByText("浼忕瑪杩借釜")).toBeVisible({ timeout: 15_000 });
+    await waitForPage(page);
 
     // Open AI extract modal
     await page.getByRole("button", { name: /AI 鎻愬彇/ }).click();
