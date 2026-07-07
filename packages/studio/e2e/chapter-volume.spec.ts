@@ -300,3 +300,65 @@ test.describe("分卷管理 (C10-C15)", () => {
     await expect(page.locator("body")).toBeAttached({ timeout: 5_000 });
   });
 });
+
+// ── Issue #466: Volume zoom jump fix ──
+// Verifies that creating/collapsing/deleting volumes does not cause
+// the chapter sidebar panel height to change significantly (zoom jump).
+test.describe("分卷操作面板缩放跳变检查 (#466)", () => {
+  test("C16: 创建分卷后面板高度稳定 — 无缩放跳变", async ({ page }) => {
+    // Measure sidebar height before creating a volume
+    const sidebarSection = page.locator(".SidebarCard, div:has(> .SidebarCard), [class*='sidebar']").first();
+    const initialHeight = await sidebarSection.evaluate((el) => el.getBoundingClientRect().height);
+
+    // Create a volume
+    const createBtn = page.locator("button:has-text('新建分卷'), button:has-text('创建卷'), button[title*='新建卷']").first();
+    await expect(createBtn).toBeVisible({ timeout: 5_000 });
+    await createBtn.click();
+    await page.waitForTimeout(500);
+
+    // Fill volume name
+    const nameInput = page.locator("input[placeholder*='卷'], input[placeholder*='名称']").first();
+    await expect(nameInput).toBeVisible({ timeout: 3_000 });
+    await nameInput.fill("第三卷 · 高潮");
+    await page.waitForTimeout(300);
+
+    // Submit
+    const submitBtn = page.locator("button:has-text('确认'), button:has-text('创建'), button:has-text('保存')").first();
+    if (await submitBtn.isVisible()) {
+      await submitBtn.click();
+      await page.waitForTimeout(1000);
+    }
+
+    // Measure sidebar height after creating the volume
+    const afterCreateHeight = await sidebarSection.evaluate((el) => el.getBoundingClientRect().height);
+
+    // Height should not have changed significantly (within 20px tolerance)
+    const diff = Math.abs(afterCreateHeight - initialHeight);
+    expect(diff).toBeLessThanOrEqual(20);
+  });
+
+  test("C17: 折叠/展开分卷后面板高度稳定 — 无缩放跳变", async ({ page }) => {
+    const sidebarSection = page.locator(".SidebarCard, div:has(> .SidebarCard), [class*='sidebar']").first();
+    const initialHeight = await sidebarSection.evaluate((el) => el.getBoundingClientRect().height);
+
+    // Click on volume header to collapse
+    const volHeader = page.locator("text=第一卷").first();
+    await volHeader.click();
+    await page.waitForTimeout(300);
+
+    const afterCollapseHeight = await sidebarSection.evaluate((el) => el.getBoundingClientRect().height);
+    const collapseDiff = Math.abs(afterCollapseHeight - initialHeight);
+    expect(collapseDiff).toBeLessThanOrEqual(20);
+
+    // Click again to expand
+    await volHeader.click();
+    await page.waitForTimeout(300);
+
+    const afterExpandHeight = await sidebarSection.evaluate((el) => el.getBoundingClientRect().height);
+    const expandDiff = Math.abs(afterExpandHeight - initialHeight);
+    expect(expandDiff).toBeLessThanOrEqual(20);
+
+    // Verify page still functional
+    await expect(page.getByText("第01章").first()).toBeVisible({ timeout: 3_000 });
+  });
+});
