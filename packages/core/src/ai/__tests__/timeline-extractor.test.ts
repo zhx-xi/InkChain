@@ -9,7 +9,7 @@ afterEach(() => {
 });
 
 const DEFAULT_CONFIG = {
-  llm: { provider: "openai", model: "test", baseUrl: "http://test", apiKey: "test", service: "test", temperature: 0.7, apiFormat: "chat", stream: false, configSource: "studio" },
+  llm: { provider: "openai", model: "test", baseUrl: "http://test", apiKey: "test", service: "test", temperature: 0.7, apiFormat: "chat", stream: false, configSource: "studio", thinkingBudget: 0 },
 } as const;
 
 function mockLLMResponse(data: unknown) {
