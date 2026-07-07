@@ -527,6 +527,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
+  const currentChapter = data?.currentChapter ?? 0;
   const maxChapter = Math.max(1, actualChapterCount);
   const chapterOptions = Array.from({ length: maxChapter }, (_, i) => i + 1);
 
