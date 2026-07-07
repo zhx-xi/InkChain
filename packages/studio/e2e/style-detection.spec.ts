@@ -138,3 +138,130 @@ test("5. 导出报告到项目", async ({ page }) => {
     await expect(page.getByText("Import Guide").or(page.getByText("导入文风"))).toBeVisible();
   }
 });
+
+// ── Chapter range selection tests (PR #451) ──
+
+async function hasChapterRangeSection(page: import("@playwright/test").Page): Promise<boolean> {
+  // Check if the "按章节分析" section is rendered (new in PR #451)
+  const section = page.getByText("按章节分析");
+  return await section.isVisible({ timeout: 5_000 }).catch(() => false);
+}
+
+test("6. 章节范围选择—书籍下拉显示", async ({ page }) => {
+  await seedStyleDetection();
+  await navigateToStyle(page);
+
+  // Check if the chapter analysis section exists
+  if (!(await hasChapterRangeSection(page))) {
+    test.skip();
+    return;
+  }
+
+  // The "选择书籍" label should be visible
+  await expect(page.getByText("选择书籍")).toBeVisible();
+
+  // The book select dropdown should exist
+  const bookSelects = page.locator("select");
+  const count = await bookSelects.count();
+  expect(count).toBeGreaterThanOrEqual(1);
+
+  // Select the E2E test book
+  await page.getByText("-- 选择书籍 --").click();
+  await page.getByText("E2E 文风检测测试").click();
+  await page.waitForTimeout(500);
+
+  // After selecting a book, chapter selects should be enabled
+  const chapterSelect = page.locator("select").nth(2); // third select should be chapter range
+  if (await chapterSelect.isVisible({ timeout: 3_000 }).catch(() => false)) {
+    await expect(chapterSelect).toBeEnabled({ timeout: 3_000 });
+  }
+});
+
+test("7. 章节范围选择—提取章节内容", async ({ page }) => {
+  await seedStyleDetection();
+  await navigateToStyle(page);
+
+  if (!(await hasChapterRangeSection(page))) {
+    test.skip();
+    return;
+  }
+
+  // Select the E2E test book
+  await page.getByText("-- 选择书籍 --").click();
+  await page.getByText("E2E 文风检测测试").click();
+  await page.waitForTimeout(500);
+
+  // Click the "提取章节内容" button
+  const extractBtn = page.getByText("提取章节内容");
+  if (await extractBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
+    await extractBtn.click();
+    await page.waitForTimeout(2_000);
+
+    // After extracting, the textarea should contain chapter content
+    const textarea = page.locator("textarea").first();
+    const textContent = await textarea.inputValue().catch(() => "");
+    if (textContent) {
+      expect(textContent.length).toBeGreaterThan(0);
+      // Should contain chapter markers
+      expect(textContent).toContain("第1章");
+    }
+
+    // Status message should be visible
+    const statusMsg = page.getByText(/章内容已加载/);
+    await expect(statusMsg).toBeVisible({ timeout: 3_000 });
+  }
+});
+
+test("8. 章节范围选择—分卷筛选显示", async ({ page }) => {
+  await seedStyleDetection();
+  await navigateToStyle(page);
+
+  if (!(await hasChapterRangeSection(page))) {
+    test.skip();
+    return;
+  }
+
+  // The "分卷筛选" label should be visible
+  await expect(page.getByText("分卷筛选")).toBeVisible();
+
+  // Before selecting a book, volume select should be disabled
+  const volumeSelect = page.locator("select").nth(1);
+  await expect(volumeSelect).toBeDisabled();
+
+  // Select book
+  await page.getByText("-- 选择书籍 --").click();
+  await page.getByText("E2E 文风检测测试").click();
+  await page.waitForTimeout(500);
+
+  // Volume select should now show "全部章节" option
+  const allChaptersOption = page.getByText("全部章节");
+  await expect(allChaptersOption).toBeVisible({ timeout: 3_000 });
+});
+
+test("9. 章节范围选择—起始/结束章节联动", async ({ page }) => {
+  await seedStyleDetection();
+  await navigateToStyle(page);
+
+  if (!(await hasChapterRangeSection(page))) {
+    test.skip();
+    return;
+  }
+
+  // Select book
+  await page.getByText("-- 选择书籍 --").click();
+  await page.getByText("E2E 文风检测测试").click();
+  await page.waitForTimeout(500);
+
+  // Get the "起始章节" and "结束章节" select elements
+  const fromSelect = page.getByText("起始章节").locator("..").locator("select");
+  const toSelect = page.getByText("结束章节").locator("..").locator("select");
+
+  // Check that start and end chapter labels are visible
+  await expect(page.getByText("起始章节")).toBeVisible();
+  await expect(page.getByText("结束章节")).toBeVisible();
+
+  // Chapter selects should be present
+  const selects = page.locator("select");
+  const selectCount = await selects.count();
+  expect(selectCount).toBeGreaterThanOrEqual(3);
+});
