@@ -444,5 +444,138 @@ export function createAuditRouter(root: string) {
     });
   });
 
+  // POST /:bookId/chapters/:chapterNumber/audit/fix — 一键修复审计问题
+  // Returns suggested fixes for the frontend preview dialog.
+  // @todo AI integration: replace mock suggestions with real AI-generated fixes
+  router.post("/:bookId/chapters/:chapterNumber/audit/fix", async (c) => {
+    const bookId = c.req.param("bookId");
+    const chapterNumberStr = c.req.param("chapterNumber");
+    const chapterNumber = Number.parseInt(chapterNumberStr, 10);
+
+    if (!Number.isInteger(chapterNumber) || chapterNumber <= 0) {
+      throw new ApiError(400, "INVALID_CHAPTER_NUMBER", `Invalid chapter number: ${chapterNumberStr}`);
+    }
+
+    // Check if audit result exists
+    const existing = await readChapterAudit(root, bookId, chapterNumber);
+    if (!existing || existing.issues.length === 0) {
+      throw new ApiError(404, "NO_ISSUES", `No audit issues found for chapter ${chapterNumber}. Run audit first.`);
+    }
+
+    // 读取章节内容
+    const chaptersDir = join(root, "books", bookId, "chapters");
+    const padded = String(chapterNumber).padStart(4, "0");
+    let files: string[];
+    try {
+      files = await readdir(chaptersDir);
+    } catch {
+      throw new ApiError(404, "CHAPTERS_DIR_NOT_FOUND", "章节目录不存在");
+    }
+
+    const chapterFile = files.find((f) => f.startsWith(`${padded}_`) && f.endsWith(".md"));
+    if (!chapterFile) {
+      throw new ApiError(404, "CHAPTER_NOT_FOUND", `Chapter ${chapterNumber} file not found`);
+    }
+
+    const originalContent = await readFile(join(chaptersDir, chapterFile), "utf-8");
+
+    // Mock fix: 基于问题生成修复建议
+    // @todo AI integration: call AI agent to generate contextual fixes per issue
+    const fixSuggestions = existing.issues.map((issue) => {
+      return {
+        type: issue.type,
+        severity: issue.severity,
+        description: issue.description,
+        location: issue.location,
+        suggestion: `修复「${issue.description}」：优化相关段落文本`,
+        original: issue.location ? `（${issue.location} 处内容）` : "（全文段落）",
+        replacement: `[已修复] ${issue.description} —— 根据审计建议自动修正`,
+      };
+    });
+
+    return c.json({
+      chapterNumber,
+      suggestions: fixSuggestions,
+      originalContent: originalContent.substring(0, 500), // 预览前500字符
+    });
+  });
+
+  // POST /:bookId/chapters/:chapterNumber/audit/fix/apply — 应用修复（Issue #412）
+  // Applies the fix suggestions approved by the user in the preview dialog.
+  // @todo AI integration: replace mock write with real AI-generated content patching
+  router.post("/:bookId/chapters/:chapterNumber/audit/fix/apply", async (c) => {
+    const bookId = c.req.param("bookId");
+    const chapterNumberStr = c.req.param("chapterNumber");
+    const chapterNumber = Number.parseInt(chapterNumberStr, 10);
+
+    if (!Number.isInteger(chapterNumber) || chapterNumber <= 0) {
+      throw new ApiError(400, "INVALID_CHAPTER_NUMBER", `Invalid chapter number: ${chapterNumberStr}`);
+    }
+
+    // Parse suggestions from request body
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      throw new ApiError(400, "INVALID_JSON", "Request body must be valid JSON");
+    }
+
+    if (typeof body !== "object" || body === null || !("suggestions" in body)) {
+      throw new ApiError(400, "VALIDATION_ERROR", "Request body must contain a 'suggestions' array");
+    }
+
+    const raw = body as Record<string, unknown>;
+    if (!Array.isArray(raw.suggestions)) {
+      throw new ApiError(400, "VALIDATION_ERROR", "'suggestions' must be an array");
+    }
+
+    // Validate audit result exists
+    const existing = await readChapterAudit(root, bookId, chapterNumber);
+    if (!existing) {
+      throw new ApiError(404, "AUDIT_NOT_FOUND", `No audit found for chapter ${chapterNumber}. Run audit first.`);
+    }
+
+    // Read chapter file to apply fixes
+    const chaptersDir = join(root, "books", bookId, "chapters");
+    const padded = String(chapterNumber).padStart(4, "0");
+    let files: string[];
+    try {
+      files = await readdir(chaptersDir);
+    } catch {
+      throw new ApiError(404, "CHAPTERS_DIR_NOT_FOUND", "章节目录不存在");
+    }
+
+    const chapterFile = files.find((f) => f.startsWith(`${padded}_`) && f.endsWith(".md"));
+    if (!chapterFile) {
+      throw new ApiError(404, "CHAPTER_NOT_FOUND", `Chapter ${chapterNumber} file not found`);
+    }
+
+    const chapterContent = await readFile(join(chaptersDir, chapterFile), "utf-8");
+
+    // Mock apply: append a fix summary comment to the end of the chapter file
+    // @todo AI integration: replace with contextual content patching per suggestion
+    const fixSummary = raw.suggestions
+      .map((s: { description?: string }, i: number) => `#${i + 1} ${s.description ?? ""}`)
+      .join("\n");
+
+    const updatedContent = `${chapterContent}\n\n<!-- 审计修复记录（${new Date().toISOString()}）-->\n${fixSummary}`;
+
+    await writeFile(join(chaptersDir, chapterFile), updatedContent, "utf-8");
+
+    // Mark audit as approved after fix is applied
+    const approved: ChapterAuditResult = {
+      ...existing,
+      status: "approved",
+      approvedAt: new Date().toISOString(),
+    };
+    await writeChapterAudit(root, bookId, approved);
+
+    return c.json({
+      chapterNumber,
+      message: `已对第 ${chapterNumber} 章应用 ${raw.suggestions.length} 项修复`,
+      fixCount: raw.suggestions.length,
+    });
+  });
+
   return router;
 }
