@@ -492,8 +492,16 @@ function EditForeshadowingModal({
 
 export function ForeshadowingPage({ bookId }: { bookId: string }) {
   const { setRoute } = useHashRoute();
+
+  // Fetch book detail to obtain the real chapter count instead of hardcoded 999
+  const { data: bookDetail } = useApi<{ chapters?: Array<{ number: number }> }>(
+    `/api/books/${encodeURIComponent(bookId)}`,
+  );
+  const actualChapterCount = bookDetail?.chapters?.length ?? 0;
+  const hasChapters = actualChapterCount > 0;
+
   const { data, loading, error, refetch } = useApi<ForeshadowingListResponse>(
-    `/api/foreshadowing?bookId=${encodeURIComponent(bookId)}&currentChapter=999`,
+    `/api/foreshadowing?bookId=${encodeURIComponent(bookId)}&currentChapter=${Math.max(1, actualChapterCount)}`,
   );
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | ForeshadowingStatus>("all");
@@ -519,8 +527,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
-  const currentChapter = data?.currentChapter ?? 0;
-  const maxChapter = Math.max(1, currentChapter);
+  const maxChapter = Math.max(1, actualChapterCount);
   const chapterOptions = Array.from({ length: maxChapter }, (_, i) => i + 1);
 
   const handleAiExtract = useCallback(async () => {

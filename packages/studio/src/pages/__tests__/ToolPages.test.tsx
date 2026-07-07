@@ -211,7 +211,7 @@ describe("ForeshadowingPage", () => {
     );
 
     expect(vi.mocked(useApi)).toHaveBeenCalledWith(
-      `/api/foreshadowing?bookId=${encodeURIComponent("special/book?id")}&currentChapter=999`,
+      `/api/foreshadowing?bookId=${encodeURIComponent("special/book?id")}&currentChapter=1`,
     );
     cleanup();
   });
