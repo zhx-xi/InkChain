@@ -204,14 +204,25 @@ describe("ForeshadowingPage", () => {
   });
 
   it("5. bookId passed through encodeURIComponent in API call", async () => {
-    vi.mocked(useApi).mockReturnValue(buildApiMock());
+    // Mock book data first (for chapter count), then foreshadowing data (main call)
+    vi.mocked(useApi)
+      .mockReturnValueOnce(buildApiMock({ data: { nextChapter: 31 } })) // first call: book data with 30 chapters
+      .mockReturnValue(buildApiMock()); // subsequent calls: foreshadowing data
+
     const { ForeshadowingPage } = await import("../ForeshadowingPage");
     const { cleanup } = renderIntoContainer(
       <ForeshadowingPage bookId="special/book?id" />,
     );
 
-    expect(vi.mocked(useApi)).toHaveBeenCalledWith(
-      `/api/foreshadowing?bookId=${encodeURIComponent("special/book?id")}&currentChapter=999`,
+    // Book API call (first useApi call)
+    expect(vi.mocked(useApi)).toHaveBeenNthCalledWith(
+      1,
+      `/api/v1/books/${encodeURIComponent("special/book?id")}`,
+    );
+    // Foreshadowing API call uses dynamic chapter count (nextChapter - 1 = 30)
+    expect(vi.mocked(useApi)).toHaveBeenNthCalledWith(
+      2,
+      `/api/foreshadowing?bookId=${encodeURIComponent("special/book?id")}&currentChapter=30`,
     );
     cleanup();
   });
