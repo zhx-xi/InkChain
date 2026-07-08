@@ -109,6 +109,9 @@ export type AgentLLMOverride = z.infer<typeof AgentLLMOverrideSchema>;
 export const InputGovernanceModeSchema = z.enum(["legacy", "v2"]);
 export type InputGovernanceMode = z.infer<typeof InputGovernanceModeSchema>;
 
+export const ChapterVersioningModeSchema = z.enum(["git", "snapshot", "off"]);
+export type ChapterVersioningMode = z.infer<typeof ChapterVersioningModeSchema>;
+
 const ModelOverrideValueSchema = z.union([z.string(), AgentLLMOverrideSchema]);
 
 export const ProjectConfigSchema = z.object({
@@ -126,6 +129,7 @@ export const ProjectConfigSchema = z.object({
   }),
   modelOverrides: z.record(z.string(), ModelOverrideValueSchema).optional(),
   inputGovernanceMode: InputGovernanceModeSchema.default("v2"),
+  chapterVersioning: ChapterVersioningModeSchema.default("snapshot"),
   daemon: z.object({
     schedule: z.object({
       radarCron: z.string().default("0 */6 * * *"),
