@@ -107,7 +107,9 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
   const { data: modeData, refetch: refetchMode } = useApi<{ mode: "legacy" | "v2" }>("/project/input-governance-mode");
   const { data: detectionData, refetch: refetchDetection } = useApi<{ detection: unknown | null }>("/project/detection");
   const { data: skillsData, refetch: refetchSkills } = useApi<SkillsResponse>("/skills");
+  const { data: chapterVersioningData, refetch: refetchChapterVersioning } = useApi<{ mode: "git" | "snapshot" | "off" }>("/project/chapter-versioning");
   const [mode, setMode] = useState<"legacy" | "v2">("v2");
+  const [chapterVersioningMode, setChapterVersioningMode] = useState<"git" | "snapshot" | "off">("snapshot");
   const [defaultService, setDefaultService] = useState("");
   const [defaultModel, setDefaultModel] = useState("");
   const [overrideRows, setOverrideRows] = useState<OverrideRow[]>([]);
@@ -128,6 +130,10 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
   useEffect(() => {
     if (modeData?.mode) setMode(modeData.mode);
   }, [modeData]);
+
+  useEffect(() => {
+    if (chapterVersioningData?.mode) setChapterVersioningMode(chapterVersioningData.mode);
+  }, [chapterVersioningData]);
 
   useEffect(() => {
     if (!overridesData) return;
@@ -652,11 +658,80 @@ export function ProjectSettings({ nav, theme, t }: { nav: Nav; theme: Theme; t: 
           )}
 
           {activeSection === "chapters" && (
-            <div className="flex flex-col items-center justify-center py-20 text-[#A09888]">
-              <BookOpen size={48} className="mb-4 opacity-40" />
-              <p className="text-base font-medium">{isZh ? "章节管理" : "Chapters"}</p>
-              <p className="text-sm mt-1">{isZh ? "功能开发中，敬请期待。" : "Coming soon."}</p>
-            </div>
+            <>
+              <div className="space-y-1 mb-6">
+                <h2 className="font-serif text-xl italic text-[#2C1810] font-semibold">
+                  {isZh ? "章节管理" : "Chapters"}
+                </h2>
+                <p className="text-sm text-[#7A6A5A]">
+                  {isZh ? "管理章节的版本控制与历史记录模式。" : "Manage chapter version control and history mode."}
+                </p>
+              </div>
+
+              <SettingsCard
+                title={isZh ? "版本控制模式" : "Version Control Mode"}
+                description={isZh ? "选择章节内容的版本管理方式。模式切换不会丢失已有数据。" : "Choose how chapter content versions are managed. Switching modes preserves existing data."}
+                icon={<BookOpen size={18} />}
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={chapterVersioningMode}
+                      onChange={(e) => setChapterVersioningMode(e.target.value as "git" | "snapshot" | "off")}
+                      className="rounded-lg border border-border bg-secondary/30 px-3 py-2 text-sm outline-none"
+                    >
+                      <option value="snapshot">{isZh ? "快照模式（默认）" : "Snapshot (Default)"}</option>
+                      <option value="git">{isZh ? "Git 模式" : "Git Mode"}</option>
+                      <option value="off">{isZh ? "关闭模式" : "Off"}</option>
+                    </select>
+                    <button
+                      onClick={() => runSave("chapter-versioning", async () => {
+                        await putApi("/project/chapter-versioning", { mode: chapterVersioningMode });
+                        await refetchChapterVersioning();
+                      }, t("settings.saved"))}
+                      disabled={saving === "chapter-versioning"}
+                      className={`rounded-lg px-4 py-2 text-sm font-bold ${c.btnPrimary} disabled:opacity-40`}
+                    >
+                      {saving === "chapter-versioning" ? t("config.saving") : t("config.save")}
+                    </button>
+                  </div>
+
+                  <div className="rounded-xl border border-border/40 bg-secondary/20 p-4 space-y-3 text-sm">
+                    {chapterVersioningMode === "snapshot" && (
+                      <div className="space-y-2">
+                        <p className="font-semibold text-[#2C1810]">{isZh ? "🔄 快照模式" : "🔄 Snapshot Mode"}</p>
+                        <ul className="list-disc list-inside text-[#7A6A5A] space-y-1">
+                          <li>{isZh ? "章节保存前自动创建快照" : "Auto-snapshot before chapter save"}</li>
+                          <li>{isZh ? "可查看完整版本历史 (#235 #330)" : "View full version history (#235 #330)"}</li>
+                          <li>{isZh ? "支持版本对比和恢复" : "Diff comparison and restore support"}</li>
+                          <li>{isZh ? "兼容已有快照数据" : "Compatible with existing snapshot data"}</li>
+                        </ul>
+                      </div>
+                    )}
+                    {chapterVersioningMode === "git" && (
+                      <div className="space-y-2">
+                        <p className="font-semibold text-[#2C1810]">{isZh ? "📦 Git 模式" : "📦 Git Mode"}</p>
+                        <ul className="list-disc list-inside text-[#7A6A5A] space-y-1">
+                          <li>{isZh ? "变更自动提交到 Git" : "Auto-commit changes to Git"}</li>
+                          <li>{isZh ? "使用 Git diff 查看历史变更" : "View history via Git diff"}</li>
+                          <li>{isZh ? "支持分支和标签管理" : "Branch and tag management"}</li>
+                        </ul>
+                      </div>
+                    )}
+                    {chapterVersioningMode === "off" && (
+                      <div className="space-y-2">
+                        <p className="font-semibold text-[#2C1810]">{isZh ? "⛔ 关闭模式" : "⛔ Off"}</p>
+                        <ul className="list-disc list-inside text-[#7A6A5A] space-y-1">
+                          <li>{isZh ? "隐藏版本历史、diff 和回滚按钮" : "Hide version history, diff and rollback UI"}</li>
+                          <li>{isZh ? "不自动创建快照或 Git 提交" : "No auto snapshots or Git commits"}</li>
+                          <li>{isZh ? "已有数据不受影响" : "Existing data is preserved"}</li>
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </SettingsCard>
+            </>
           )}
 
           {activeSection === "characters" && (

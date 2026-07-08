@@ -41,6 +41,7 @@ import {
   ConsolidatorAgent,
   DetectionConfigSchema,
   InputGovernanceModeSchema,
+  ChapterVersioningModeSchema,
   GLOBAL_ENV_PATH,
   COVER_PROVIDER_PRESETS,
   createPlayDB,
@@ -3425,6 +3426,26 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     const configPath = join(root, "inkos.json");
     const raw = JSON.parse(await readFile(configPath, "utf-8"));
     raw.inputGovernanceMode = parsed.data;
+    const { writeFile: writeFileFs } = await import("node:fs/promises");
+    await writeFileFs(configPath, JSON.stringify(raw, null, 2), "utf-8");
+    return c.json({ ok: true, mode: parsed.data });
+  });
+
+  app.get("/api/v1/project/chapter-versioning", async (c) => {
+    const raw = JSON.parse(await readFile(join(root, "inkos.json"), "utf-8"));
+    const mode = raw.chapterVersioning === "git" || raw.chapterVersioning === "off" ? raw.chapterVersioning : "snapshot";
+    return c.json({ mode });
+  });
+
+  app.put("/api/v1/project/chapter-versioning", async (c) => {
+    const { mode } = await c.req.json<{ mode?: unknown }>();
+    const parsed = ChapterVersioningModeSchema.safeParse(mode);
+    if (!parsed.success) {
+      return c.json({ error: "mode must be git, snapshot, or off" }, 400);
+    }
+    const configPath = join(root, "inkos.json");
+    const raw = JSON.parse(await readFile(configPath, "utf-8"));
+    raw.chapterVersioning = parsed.data;
     const { writeFile: writeFileFs } = await import("node:fs/promises");
     await writeFileFs(configPath, JSON.stringify(raw, null, 2), "utf-8");
     return c.json({ ok: true, mode: parsed.data });

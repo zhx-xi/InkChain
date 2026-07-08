@@ -94,6 +94,17 @@ describe("ProjectSettings — Agent Team config", () => {
     vi.mocked(putApi).mockResolvedValue(undefined);
   });
 
+  // ── Helpers ──
+  function findSettingsCard(container: HTMLElement, titleText: string): Element | null {
+    const sections = container.querySelectorAll("section");
+    for (const section of sections) {
+      if (section.textContent?.includes(titleText)) {
+        return section;
+      }
+    }
+    return null;
+  }
+
   // ──────────────────────────────────────
   //  Rendering (4 test cases)
   // ──────────────────────────────────────
@@ -283,5 +294,128 @@ describe("ProjectSettings — Agent Team config", () => {
 
     act(() => { root.unmount(); });
     document.body.removeChild(container);
+  });
+});
+
+describe("ProjectSettings — Chapter Versioning", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    vi.mocked(useColors).mockReturnValue({
+      link: "text-blue-500",
+      btnPrimary: "bg-blue-600 text-white",
+      btnSecondary: "bg-secondary/50 text-foreground",
+    });
+
+    // Default: useApi returns null for all
+    vi.mocked(useApi).mockReturnValue({ data: null, refetch: vi.fn() });
+
+    vi.mocked(fetchJson).mockResolvedValue({
+      config: { agents: [], defaultModel: "", collaborationMode: "sequential" },
+    });
+
+    vi.mocked(putApi).mockResolvedValue(undefined);
+  });
+
+  /** Navigate to the chapters section by clicking the sidebar button */
+  function navigateToChapters(container: HTMLElement) {
+    const buttons = container.querySelectorAll("button");
+    for (const btn of buttons) {
+      if (btn.textContent?.includes("Chapters")) {
+        act(() => { btn.click(); });
+        return;
+      }
+    }
+  }
+
+  it("renders version control mode heading and selector", async () => {
+    const { ProjectSettings } = await import("../ProjectSettings");
+    const { container, queryByText, querySelector, cleanup } = renderIntoContainer(
+      <ProjectSettings nav={nav} theme={theme} t={t} />,
+    );
+    navigateToChapters(container);
+
+    // Heading text
+    expect(queryByText("Version Control Mode")).toBe(true);
+    expect(querySelector<HTMLSelectElement>("option[value='snapshot']")).toBeTruthy();
+    expect(querySelector<HTMLSelectElement>("option[value='git']")).toBeTruthy();
+    expect(querySelector<HTMLSelectElement>("option[value='off']")).toBeTruthy();
+    cleanup();
+  });
+
+  it("renders Snapshot mode description as default", async () => {
+    const { ProjectSettings } = await import("../ProjectSettings");
+    const { container, queryByText, cleanup } = renderIntoContainer(
+      <ProjectSettings nav={nav} theme={theme} t={t} />,
+    );
+    navigateToChapters(container);
+
+    // Snapshot mode description should be visible by default
+    expect(queryByText("Auto-snapshot before chapter save")).toBe(true);
+    cleanup();
+  });
+
+  it("triggers PUT /project/chapter-versioning on save", async () => {
+    const { ProjectSettings } = await import("../ProjectSettings");
+    const { container, cleanup } = renderIntoContainer(
+      <ProjectSettings nav={nav} theme={theme} t={t} />,
+    );
+    navigateToChapters(container);
+
+    // Click Save — find the save button in the chapters section
+    const saveBtn = [...container.querySelectorAll("button")].find(
+      (b) => b.textContent?.includes("config.save"),
+    );
+    expect(saveBtn).toBeTruthy();
+
+    act(() => {
+      saveBtn!.click();
+    });
+
+    expect(vi.mocked(putApi)).toHaveBeenCalledWith(
+      "/project/chapter-versioning",
+      expect.objectContaining({ mode: expect.any(String) }),
+    );
+    cleanup();
+  });
+
+  it("loads existing chapter-versioning config on mount", async () => {
+    // Override useApi mock to return chapter versioning data
+    vi.mocked(useApi).mockImplementation((path: string) => {
+      if (path === "/project/chapter-versioning") {
+        return { data: { mode: "git" }, refetch: vi.fn() };
+      }
+      return { data: null, refetch: vi.fn() };
+    });
+
+    const { ProjectSettings } = await import("../ProjectSettings");
+    const { container, queryByText, cleanup } = renderIntoContainer(
+      <ProjectSettings nav={nav} theme={theme} t={t} />,
+    );
+    navigateToChapters(container);
+
+    // When loaded with git mode, the "Git Mode" description should show
+    expect(queryByText("Auto-commit changes to Git")).toBe(true);
+    cleanup();
+  });
+
+  it("shows success notice after saving chapter versioning", async () => {
+    const { ProjectSettings } = await import("../ProjectSettings");
+    const { container, cleanup } = renderIntoContainer(
+      <ProjectSettings nav={nav} theme={theme} t={t} />,
+    );
+    navigateToChapters(container);
+
+    const saveBtn = [...container.querySelectorAll("button")].find(
+      (b) => b.textContent?.includes("config.save"),
+    );
+    expect(saveBtn).toBeTruthy();
+
+    await act(async () => {
+      saveBtn!.click();
+    });
+
+    expect(container.textContent).toContain("settings.saved");
+    cleanup();
   });
 });
