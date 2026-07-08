@@ -1,8 +1,10 @@
 // ── WorldExtractor Tests (Wrld-7) ──
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import * as llmProvider from "../../llm/provider.js";
 import {
   extractWorldFromText,
+  extractWorldWithLLM,
   splitSections,
   extractEntities,
   summarizeExtraction,
@@ -231,5 +233,97 @@ describe("summarizeExtraction", () => {
     const summary = summarizeExtraction(result);
 
     expect(summary).toContain("提取报告");
+  });
+});
+
+// ── LLM-based World Extraction Tests (Issue #471) ──
+
+const DEFAULT_CONFIG = {
+  llm: { provider: "openai", model: "test", baseUrl: "http://test", apiKey: "test", service: "test", temperature: 0.7, apiFormat: "chat", stream: false, configSource: "studio", thinkingBudget: 0 },
+} as const;
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+function mockLLMResponse(data: unknown) {
+  vi.spyOn(llmProvider, "chatCompletion").mockResolvedValue({
+    content: JSON.stringify(data),
+    usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 },
+  } as any);
+}
+
+function mockLLMException() {
+  vi.spyOn(llmProvider, "chatCompletion").mockRejectedValue(new Error("LLM service unavailable"));
+}
+
+describe("extractWorldWithLLM", () => {
+  it("extracts 7-dimension entities from text", async () => {
+    mockLLMResponse({
+      entities: [
+        { dimension: "settings", name: "剑与魔法世界", description: "一个剑与魔法的奇幻世界，大陆上有三个主要种族", confidence: 1.0 },
+        { dimension: "roles", name: "艾伦", description: "人类少年，勇敢善良", confidence: 1.0 },
+        { dimension: "roles", name: "莉莉", description: "精灵公主，擅用弓箭", confidence: 1.0 },
+        { dimension: "regions", name: "艾尔大陆", description: "主大陆，三国鼎立", confidence: 1.0 },
+        { dimension: "institutions", name: "光明教会", description: "信仰光明的宗教组织", confidence: 1.0 },
+        { dimension: "history", name: "暗影战争", description: "光明历1200年爆发的重大战争", confidence: 0.9 },
+        { dimension: "rules", name: "魔法守恒定律", description: "释放魔法的能量来源于自然界", confidence: 1.0 },
+      ],
+    });
+
+    const result = await extractWorldWithLLM("test text", DEFAULT_CONFIG as any);
+
+    expect(result.world.settings).toContain("剑与魔法世界");
+    expect(result.world.roles).toContain("艾伦");
+    expect(result.world.regions).toContain("艾尔大陆");
+    expect(result.world.institutions).toContain("光明教会");
+    expect(result.world.history).toContain("暗影战争");
+    expect(result.world.rules).toContain("魔法守恒定律");
+    expect(result.entities.length).toBe(7);
+  });
+
+  it("handles LLM returning no entities", async () => {
+    mockLLMResponse({ entities: [] });
+
+    const result = await extractWorldWithLLM("test text", DEFAULT_CONFIG as any);
+    expect(result.entities.length).toBe(0);
+    expect(result.world.settings).toBe("");
+    expect(result.world.roles).toBe("");
+  });
+
+  it("handles LLM exception gracefully", async () => {
+    mockLLMException();
+
+    await expect(extractWorldWithLLM("test text", DEFAULT_CONFIG as any)).rejects.toThrow("LLM service unavailable");
+  });
+
+  it("preserves valid dimension values", async () => {
+    mockLLMResponse({
+      entities: [
+        { dimension: "invalid_dim", name: "Test", description: "test" },
+        { dimension: "relations", name: "伙伴关系", description: "艾伦和莉莉是伙伴" },
+      ],
+    });
+
+    const result = await extractWorldWithLLM("test", DEFAULT_CONFIG as any);
+    // Invalid dimension defaults to "settings"
+    expect(result.entities.length).toBe(2);
+    const invalidEntity = result.entities.find((e) => e.name === "Test");
+    expect(invalidEntity?.dimension).toBe("settings");
+    const validEntity = result.entities.find((e) => e.name === "伙伴关系");
+    expect(validEntity?.dimension).toBe("relations");
+  });
+
+  it("drops entities with empty names", async () => {
+    mockLLMResponse({
+      entities: [
+        { dimension: "settings", name: "", description: "empty name" },
+        { dimension: "roles", name: "小明", description: "主角" },
+      ],
+    });
+
+    const result = await extractWorldWithLLM("test", DEFAULT_CONFIG as any);
+    expect(result.entities.length).toBe(1);
+    expect(result.entities[0].name).toBe("小明");
   });
 });

@@ -1,7 +1,7 @@
 import { useMemo, useState, useCallback } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useHashRoute } from "../hooks/use-hash-route";
-import { Search, X, Globe, Plus, Bot, Loader2, FileText, BookOpen } from "lucide-react";
+import { Search, X, Globe, Plus, Bot, Loader2, FileText, BookOpen, Sparkles } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useApi, postApi } from "../hooks/use-api";
 import type { WorldConfig } from "@actalk/inkos-core";
@@ -61,12 +61,32 @@ export function WorldListPage({ nav, bookId }: {
   const [aiExtractLoading, setAiExtractLoading] = useState(false);
   const [aiExtractError, setAiExtractError] = useState<string | null>(null);
   const [aiExtractResult, setAiExtractResult] = useState<AiExtractData | null>(null);
+  const [extractStage, setExtractStage] = useState<string>("");
 
   const handleAiExtract = useCallback(async () => {
     if (!bookId) return;
     setAiExtractLoading(true);
     setAiExtractError(null);
     setAiExtractResult(null);
+    setExtractStage("正在读取设定文件…");
+
+    // Simulate progress stages while API call runs
+    const startTime = Date.now();
+    const minLoadMs = 2000;
+
+    const stageTimer = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      if (elapsed < 600) {
+        setExtractStage("正在读取设定文件…");
+      } else if (elapsed < 1200) {
+        setExtractStage("正在读取章节文件…");
+      } else if (elapsed < 2000) {
+        setExtractStage("AI 正在分析章节文本…");
+      } else {
+        setExtractStage("AI 正在整理提取结果…");
+      }
+    }, 300);
+
     try {
       const result = await postApi<{ success: boolean; data: AiExtractData }>(
         `/api/extract`,
@@ -76,6 +96,12 @@ export function WorldListPage({ nav, bookId }: {
     } catch (err) {
       setAiExtractError(err instanceof Error ? err.message : String(err));
     } finally {
+      clearInterval(stageTimer);
+      // Ensure minimum 2s loading for UX
+      const elapsed = Date.now() - startTime;
+      if (elapsed < minLoadMs) {
+        await new Promise((r) => setTimeout(r, minLoadMs - elapsed));
+      }
       setAiExtractLoading(false);
     }
   }, [bookId]);
@@ -324,18 +350,39 @@ export function WorldListPage({ nav, bookId }: {
                   <button
                     type="button"
                     onClick={handleAiExtract}
-                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition hover:bg-primary/90"
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-violet-600 to-purple-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:opacity-90"
                   >
-                    <Bot size={16} />
+                    <Sparkles size={16} />
                     开始提取
                   </button>
                 </div>
               )}
 
               {aiExtractLoading && (
-                <div className="flex flex-col items-center gap-3 py-8">
+                <div className="flex flex-col items-center gap-4 py-8">
                   <Loader2 size={28} className="animate-spin text-primary" />
-                  <p className="text-sm text-muted-foreground">AI 正在分析章节文本，请稍候…</p>
+                  {/* Progress stage indicator */}
+                  <div className="w-full max-w-xs space-y-2">
+                    {["正在读取设定文件…", "正在读取章节文件…", "AI 正在分析章节文本…", "AI 正在整理提取结果…"].map((stage, i) => {
+                      const currentIdx = ["正在读取设定文件…", "正在读取章节文件…", "AI 正在分析章节文本…", "AI 正在整理提取结果…"].indexOf(extractStage);
+                      const isActive = i === currentIdx;
+                      const isDone = i < currentIdx;
+                      return (
+                        <div key={stage} className="flex items-center gap-2 text-xs">
+                          <div className={cn(
+                            "h-1.5 w-1.5 rounded-full shrink-0",
+                            isDone ? "bg-primary" : isActive ? "bg-primary animate-pulse" : "bg-muted-foreground/20",
+                          )} />
+                          <span className={cn(
+                            isDone ? "text-muted-foreground/60" : isActive ? "text-foreground font-medium" : "text-muted-foreground/30",
+                          )}>
+                            {stage}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-1">AI 模型正在分析文本，耗时取决于模型响应速度</p>
                 </div>
               )}
 
@@ -347,6 +394,14 @@ export function WorldListPage({ nav, bookId }: {
 
               {aiExtractResult && !aiExtractLoading && (
                 <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {/* AI badge */}
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-500/15 to-purple-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-violet-600 dark:text-violet-400 border border-violet-200/30 dark:border-violet-500/20">
+                      <Sparkles size={12} />
+                      AI 分析
+                    </span>
+                    <span className="text-[11px] text-muted-foreground/60">基于 LLM 模型提取</span>
+                  </div>
                   {/* Summary */}
                   <div className="rounded-lg border border-border/40 bg-background p-4">
                     <h3 className="text-sm font-semibold text-foreground mb-2">提取摘要</h3>
@@ -368,7 +423,7 @@ export function WorldListPage({ nav, bookId }: {
                             <FileText size={14} className="mt-0.5 shrink-0 text-primary" />
                             <div>
                               <span className="font-medium text-foreground">{entity.name}</span>
-                              <span className="text-muted-foreground ml-2">({entity.dimension})</span>
+                              <span className="text-muted-foreground ml-2">({DIMENSION_LABELS[entity.dimension] || entity.dimension})</span>
                               {entity.description && (
                                 <p className="text-xs text-muted-foreground mt-0.5">{entity.description}</p>
                               )}
@@ -379,19 +434,27 @@ export function WorldListPage({ nav, bookId }: {
                     </div>
                   )}
 
-                  {/* Sections/Dimensions */}
-                  {aiExtractResult.sections.length > 0 && (
+                  {/* Dimensions summary */}
+                  {aiExtractResult.entities.length > 0 && (
                     <div className="rounded-lg border border-border/40 bg-background p-4">
-                      <h3 className="text-sm font-semibold text-foreground mb-2">提取维度</h3>
+                      <h3 className="text-sm font-semibold text-foreground mb-2">7 维度分布</h3>
                       <div className="flex flex-wrap gap-2">
-                        {aiExtractResult.sections.map((section, idx) => (
-                          <span
-                            key={idx}
-                            className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
-                          >
-                            {DIMENSION_LABELS[section.dimension] || section.heading}
-                          </span>
-                        ))}
+                        {Object.entries(DIMENSION_LABELS).map(([key, label]) => {
+                          const count = aiExtractResult.entities.filter((e) => e.dimension === key).length;
+                          if (count === 0) return null;
+                          return (
+                            <span
+                              key={key}
+                              className="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary"
+                              style={{
+                                backgroundColor: `${DIMENSION_COLORS[key]}15`,
+                                color: DIMENSION_COLORS[key],
+                              }}
+                            >
+                              {label} ({count})
+                            </span>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
