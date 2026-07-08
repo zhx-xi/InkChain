@@ -575,6 +575,7 @@ export function ChapterVolumeSection({ bookId }: ChapterVolumeSectionProps) {
 
   return (
     <SidebarCard title="章节" actions={sidebarActions}>
+      <div className="min-h-[200px]">
       {creating && (
         <div className="mb-2">
           <CreateVolumeForm
@@ -758,6 +759,7 @@ export function ChapterVolumeSection({ bookId }: ChapterVolumeSectionProps) {
             onPageSizeChange={handlePageSizeChange}
           />
         )}
+      </div>
       </div>
     </SidebarCard>
   );
