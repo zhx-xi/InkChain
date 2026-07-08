@@ -52,18 +52,20 @@ test.describe("Timeline — 列间距与筛选一致性", () => {
     await expect(page.getByText("获得传承").first()).toBeVisible({ timeout: 3_000 });
 
     // Verify event count
-    await expect(page.getByText("4 个事件")).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("4 个事件").first()).toBeVisible({ timeout: 3_000 });
 
     // Verify the ReactFlow container is rendered (fixed column gap)
     const timelineCanvas = page.locator(".react-flow__renderer");
     await expect(timelineCanvas).toBeVisible({ timeout: 3_000 });
 
     // Verify chapter column headers exist (chapters 1, 2, 3, 5)
-    // Chapter headers appear as label nodes in ReactFlow
-    await expect(page.getByText("第 1 章")).toBeVisible({ timeout: 3_000 });
-    await expect(page.getByText("第 2 章")).toBeVisible({ timeout: 3_000 });
-    await expect(page.getByText("第 3 章")).toBeVisible({ timeout: 3_000 });
-    await expect(page.getByText("第 5 章")).toBeVisible({ timeout: 3_000 });
+    // Chapter headers appear as label nodes in ReactFlow; scope to
+    // .react-flow__node to avoid matching <select><option> elements
+    const rfNode = page.locator(".react-flow__node");
+    await expect(rfNode.filter({ hasText: "第 1 章" })).toBeVisible({ timeout: 3_000 });
+    await expect(rfNode.filter({ hasText: "第 2 章" })).toBeVisible({ timeout: 3_000 });
+    await expect(rfNode.filter({ hasText: "第 3 章" })).toBeVisible({ timeout: 3_000 });
+    await expect(rfNode.filter({ hasText: "第 5 章" })).toBeVisible({ timeout: 3_000 });
   });
 
   test("2. 章节筛选: 筛选后仅显示对应章节列", async ({ page }) => {
