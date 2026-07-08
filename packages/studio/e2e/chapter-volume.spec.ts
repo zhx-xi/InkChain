@@ -307,7 +307,7 @@ test.describe("分卷管理 (C10-C15)", () => {
 test.describe("分卷操作面板缩放跳变检查 (#466)", () => {
   test("C16: 创建分卷后面板高度稳定 — 无缩放跳变", async ({ page }) => {
     // Measure sidebar height before creating a volume
-    const sidebarSection = page.locator(".SidebarCard, div:has(> .SidebarCard), [class*='sidebar']").first();
+    const sidebarSection = page.locator('div.rounded-xl:has(button:has-text("章节"))').first();
     const initialHeight = await sidebarSection.evaluate((el) => el.getBoundingClientRect().height);
 
     // Create a volume
@@ -338,7 +338,7 @@ test.describe("分卷操作面板缩放跳变检查 (#466)", () => {
   });
 
   test("C17: 折叠/展开分卷后面板高度稳定 — 无缩放跳变", async ({ page }) => {
-    const sidebarSection = page.locator(".SidebarCard, div:has(> .SidebarCard), [class*='sidebar']").first();
+    const sidebarSection = page.locator('div.rounded-xl:has(button:has-text("章节"))').first();
     const initialHeight = await sidebarSection.evaluate((el) => el.getBoundingClientRect().height);
 
     // Click on volume header to collapse
