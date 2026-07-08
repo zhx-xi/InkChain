@@ -7,6 +7,9 @@
 // No LLM call — uses section header detection, keyword matching, and entity
 // extraction heuristics.
 
+import { createLLMClient, chatCompletion } from "../llm/provider.js";
+import type { LLMConfig } from "../models/project.js";
+
 // ── Types ──
 
 /** The extracted world data — one free-form text field per dimension. */
@@ -530,4 +533,135 @@ export function summarizeExtraction(result: ExtractResult): string {
   }
 
   return lines.join("\n");
+}
+
+// ── LLM-based World Extraction (Issue #471) ──
+
+const WORLD_LLM_SYSTEM_PROMPT = `你是一个专业的小说世界设定提取助手。你的任务是从给定的章节文本中提取结构化的世界设定信息。
+
+请从以下 7 个维度提取世界设定内容：
+
+1. **settings（世界观设定）** — 魔法体系、科技水平、社会结构、文化习俗、种族等
+2. **roles（世界角色）** — 重要角色及其身份、能力、背景
+3. **relations（世界关系）** — 势力关系、角色关系、国家关系
+4. **regions（地理区域）** — 大陆、国家、城市、地点、地形特征
+5. **institutions（组织势力）** — 政治体系、势力组织、权力结构
+6. **history（历史事件）** — 历史事件、重大变故、纪元划分
+7. **rules（世界规则）** — 世界运行规则、物理/魔法/社会定律
+
+对于每个维度，请提取出相关的实体信息。每个实体包含：
+- dimension: 所属维度（上述 7 个之一）
+- name: 实体名称
+- description: 详细描述（提取自原文或合理推断）
+- confidence: 置信度（0.0-1.0，从原文直接引用的为 1.0）
+
+只返回 JSON 对象，不要包含其他说明文字。JSON 格式：
+{
+  "entities": [{ "dimension": "settings", "name": "...", "description": "...", "confidence": 1.0 }]
+}
+
+如果没有提取到实体，返回 {"entities": []}。`;
+
+/**
+ * Extract world data from text using LLM.
+ * Covers the 7 world dimensions with structured entity extraction.
+ */
+export async function extractWorldWithLLM(
+  text: string,
+  config: { llm: LLMConfig },
+): Promise<ExtractResult> {
+  const maxChars = 60000;
+  const truncated = text.length > maxChars ? text.substring(0, maxChars) + "\n\n[文本过长，已截断]" : text;
+
+  const userPrompt = `请从以下小说章节文本中提取结构化的世界设定信息：\n\n${truncated}`;
+
+  const client = createLLMClient(config.llm);
+  const response = await chatCompletion(client, config.llm.model, [
+    { role: "system", content: WORLD_LLM_SYSTEM_PROMPT },
+    { role: "user", content: userPrompt },
+  ], { temperature: 0.3, maxTokens: 8192 });
+
+  const raw = response.content.trim();
+  const parsed = parseWorldLLMResponse(raw);
+
+  // Build ExtractResult from parsed entities
+  const dimensionContent: Record<string, string[]> = {
+    settings: [], roles: [], relations: [], regions: [],
+    institutions: [], history: [], rules: [],
+  };
+
+  const entities: ExtractedEntity[] = [];
+
+  for (const entity of parsed.entities) {
+    const dim = entity.dimension;
+    if (dimensionContent[dim] !== undefined) {
+      dimensionContent[dim].push(`${entity.name}: ${entity.description}`);
+      entities.push({
+        dimension: dim,
+        name: entity.name,
+        description: entity.description,
+        sourceLine: 0,
+      });
+    }
+  }
+
+  const world: ExtractedWorld = {
+    settings: dimensionContent.settings.join("\n\n").trim(),
+    roles: dimensionContent.roles.join("\n\n").trim(),
+    relations: dimensionContent.relations.join("\n\n").trim(),
+    regions: dimensionContent.regions.join("\n\n").trim(),
+    institutions: dimensionContent.institutions.join("\n\n").trim(),
+    history: dimensionContent.history.join("\n\n").trim(),
+    rules: dimensionContent.rules.join("\n\n").trim(),
+  };
+
+  return { world, entities, sections: [] };
+}
+
+interface LLMWorldEntity {
+  dimension: string;
+  name: string;
+  description: string;
+  confidence: number;
+}
+
+interface LLMWorldResponse {
+  entities: LLMWorldEntity[];
+}
+
+function parseWorldLLMResponse(raw: string): LLMWorldResponse {
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) return { entities: [] };
+
+  try {
+    const parsed = JSON.parse(jsonMatch[0]);
+    if (!parsed || typeof parsed !== "object") return { entities: [] };
+    const entities = Array.isArray(parsed.entities) ? parsed.entities : [];
+    return {
+      entities: entities
+        .filter((e: unknown): e is Record<string, unknown> =>
+          e !== null && typeof e === "object"
+        )
+        .map((e: Record<string, unknown>): LLMWorldEntity => ({
+          dimension: validateDimension(String(e.dimension ?? "settings")),
+          name: String(e.name ?? ""),
+          description: String(e.description ?? ""),
+          confidence: typeof e.confidence === "number"
+            ? Math.max(0, Math.min(1, e.confidence))
+            : 0.5,
+        }))
+        .filter((e) => e.name.trim().length > 0),
+    };
+  } catch {
+    return { entities: [] };
+  }
+}
+
+const VALID_DIMENSIONS = [
+  "settings", "roles", "relations", "regions",
+  "institutions", "history", "rules",
+];
+
+function validateDimension(dim: string): string {
+  return VALID_DIMENSIONS.includes(dim) ? dim : "settings";
 }

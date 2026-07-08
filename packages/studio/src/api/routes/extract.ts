@@ -13,6 +13,7 @@ import {
   extractForeshadowings,
   extractTimelineEvents,
   extractWorldFromText,
+  extractWorldWithLLM,
   extractRelationsFromProse,
   learnStyle,
   loadProjectConfig,
@@ -61,7 +62,7 @@ export function createExtractRouter(
       let llmConfig: LLMConfig | undefined;
 
       // For LLM-based extractions, load project config
-      if (["extract-foreshadowing", "extract-timeline", "extract-relation"].includes(skillId)) {
+      if (["extract-foreshadowing", "extract-timeline", "extract-relation", "extract-world"].includes(skillId)) {
         try {
           const config = await loadProjectConfig(root, {
             consumer: "studio",
@@ -156,7 +157,10 @@ export function createExtractRouter(
 
         // ── World Extraction ──
         case "extract-world": {
-          // world extraction works without LLM — it extracts from text content
+          if (!llmConfig || !llmConfig.model) {
+            throw new ApiError(400, "LLM_CONFIG_MISSING", "LLM 配置不完整，请在设置中配置模型后再试");
+          }
+
           let worldText: string;
           let textLength = 0;
           let chaptersRead = 0;
@@ -221,7 +225,8 @@ export function createExtractRouter(
             throw new ApiError(400, "MISSING_TEXT", "world 提取需要 text 或 bookId 参数");
           }
 
-          const result = extractWorldFromText(worldText);
+          // Use LLM-based extraction instead of rule-based
+          const result = await extractWorldWithLLM(worldText, { llm: llmConfig });
           const summary = summarizeExtraction(result);
 
           return c.json({

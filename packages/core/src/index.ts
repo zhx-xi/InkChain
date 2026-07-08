@@ -264,6 +264,7 @@ export {
 } from "./ai/generation-constraints.js";
 export {
   extractWorldFromText,
+  extractWorldWithLLM,
   splitSections,
   extractEntities,
   summarizeExtraction,
