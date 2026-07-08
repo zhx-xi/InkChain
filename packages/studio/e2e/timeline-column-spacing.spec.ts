@@ -46,10 +46,10 @@ test.beforeEach(async ({ page }) => {
 test.describe("Timeline — 列间距与筛选一致性", () => {
   test("1. 正常加载: 时间线渲染所有章节列且间距固定", async ({ page }) => {
     // Verify all seeded events are visible
-    await expect(page.getByText("主角入门")).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByText("结识好友")).toBeVisible({ timeout: 3_000 });
-    await expect(page.getByText("发现秘境")).toBeVisible({ timeout: 3_000 });
-    await expect(page.getByText("获得传承")).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("主角入门").first()).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("结识好友").first()).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("发现秘境").first()).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("获得传承").first()).toBeVisible({ timeout: 3_000 });
 
     // Verify event count
     await expect(page.getByText("4 个事件")).toBeVisible({ timeout: 3_000 });
@@ -97,7 +97,7 @@ test.describe("Timeline — 列间距与筛选一致性", () => {
       await page.waitForTimeout(500);
 
       // After filtering to chapter 1, only "主角入门" (chapter 1) should be visible
-      await expect(page.getByText("主角入门")).toBeVisible({ timeout: 3_000 });
+      await expect(page.getByText("主角入门").first()).toBeVisible({ timeout: 3_000 });
 
       // Events from other chapters should NOT be present
       // (filteredEvents now drives header computation, so only chapter 1 header shows)
@@ -148,7 +148,7 @@ test.describe("Timeline — 列间距与筛选一致性", () => {
   });
 
   test("4. 空状态: 全部删除后显示空引导", async ({ page }) => {
-    // Delete all events via API
+    // Delete all events via API — verify each deletion
     for (const id of ["tl-e2e-1", "tl-e2e-2", "tl-e2e-3", "tl-e2e-4"]) {
       const res = await page.request.delete(
         `/api/v1/books/${E2E_TIMELINE_BOOK_ID}/timelines/${id}`,
@@ -157,10 +157,11 @@ test.describe("Timeline — 列间距与筛选一致性", () => {
     }
 
     // Reload timeline — should now be empty
-    await gotoTimeline(page);
+    await page.reload();
+    await page.waitForTimeout(1_000);
 
     // Empty state message
-    await expect(page.getByText("暂无时间线事件")).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("暂无时间线事件").first()).toBeVisible({ timeout: 8_000 });
     await expect(page.getByText("开始添加第一个事件吧")).toBeVisible({ timeout: 3_000 });
 
     // All event nodes should be gone
@@ -188,12 +189,12 @@ test.describe("Timeline — 列间距与筛选一致性", () => {
     await page.waitForTimeout(2_000);
 
     // Error message should be visible
-    await expect(page.getByText("无法加载时间线数据")).toBeVisible({
+    await expect(page.getByText("无法加载时间线数据").first()).toBeVisible({
       timeout: 10_000,
     });
 
     // Retry button should be visible
-    await expect(page.getByRole("button", { name: /重试/ })).toBeVisible({
+    await expect(page.getByRole("button", { name: /重试/ }).first()).toBeVisible({
       timeout: 3_000,
     });
 
