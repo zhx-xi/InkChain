@@ -650,7 +650,7 @@ function parseWorldLLMResponse(raw: string): LLMWorldResponse {
             ? Math.max(0, Math.min(1, e.confidence))
             : 0.5,
         }))
-        .filter((e) => e.name.trim().length > 0),
+        .filter((e: LLMWorldEntity) => e.name.trim().length > 0),
     };
   } catch {
     return { entities: [] };
