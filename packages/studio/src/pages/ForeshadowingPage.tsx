@@ -492,8 +492,17 @@ function EditForeshadowingModal({
 
 export function ForeshadowingPage({ bookId }: { bookId: string }) {
   const { setRoute } = useHashRoute();
+  // Fetch actual chapter count from book data (dynamic, not hardcoded 999)
+  const { data: bookChapterData } = useApi<{ nextChapter: number }>(
+    `/api/v1/books/${encodeURIComponent(bookId)}`,
+  );
+  const actualChapterCount = bookChapterData
+    ? Math.max(0, bookChapterData.nextChapter - 1)
+    : 0;
+  const effectiveChapter = Math.max(1, actualChapterCount);
+
   const { data, loading, error, refetch } = useApi<ForeshadowingListResponse>(
-    `/api/foreshadowing?bookId=${encodeURIComponent(bookId)}&currentChapter=999`,
+    `/api/foreshadowing?bookId=${encodeURIComponent(bookId)}&currentChapter=${effectiveChapter}`,
   );
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | ForeshadowingStatus>("all");
@@ -519,9 +528,11 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
-  const currentChapter = data?.currentChapter ?? 0;
-  const maxChapter = Math.max(1, currentChapter);
+  // Use dynamically fetched chapter count instead of hardcoded 999
+  const maxChapter = Math.max(1, actualChapterCount || data?.currentChapter || 1);
   const chapterOptions = Array.from({ length: maxChapter }, (_, i) => i + 1);
+  const currentChapter = maxChapter;
+  const hasNoChapters = bookChapterData && actualChapterCount === 0;
 
   const handleAiExtract = useCallback(async () => {
     setAiExtractLoading(true);
@@ -1194,8 +1205,9 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                 <button
                   type="button"
                   onClick={handleAiExtract}
-                  disabled={aiExtractLoading}
+                  disabled={aiExtractLoading || hasNoChapters}
                   className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
+                  title={hasNoChapters ? "暂无章节，无法提取伏笔" : undefined}
                 >
                   {aiExtractLoading ? (
                     <Loader2 size={14} className="animate-spin" />
@@ -1204,6 +1216,9 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                   )}
                   开始提取
                 </button>
+                {hasNoChapters && (
+                  <span className="text-xs text-muted-foreground">暂无章节，请先创作章节</span>
+                )}
               </div>
 
               {aiExtractError && (
