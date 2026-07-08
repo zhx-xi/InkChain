@@ -4,7 +4,11 @@ import { fileURLToPath } from "node:url";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
-export const E2E_ROOT = resolve(__dirname, "../../../..", "test-project");
+export const E2E_ROOT = (() => {
+  if (process.env.INKOS_E2E_PROJECT_ROOT) return resolve(process.env.INKOS_E2E_PROJECT_ROOT);
+  // fixtures/ → e2e/ → studio/ → packages/studio/test-project
+  return resolve(__dirname, "../..", "test-project");
+})();
 export const E2E_TIMELINE_BOOK_ID = "e2e-timeline";
 
 export async function seedTimeline(): Promise<void> {
