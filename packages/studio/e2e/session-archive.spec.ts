@@ -9,7 +9,7 @@ test("1. 会话归档→归档列表出现", async ({ page }) => {
   await page.goto("/#/archive");
 
   // Page title should render
-  await expect(page.getByText("会话归档")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "会话归档" })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText("管理已归档的会话记录，支持搜索、筛选和解档")).toBeVisible();
 
   // Should show the archived session count
@@ -26,18 +26,18 @@ test("1. 会话归档→归档列表出现", async ({ page }) => {
 
 test("2. 解档→会话回到项目", async ({ page }) => {
   await page.goto("/#/archive");
-  await expect(page.getByText("会话归档")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "会话归档" })).toBeVisible({ timeout: 15_000 });
 
   // Wait for sessions to load
   await expect(page.getByText("修仙世界设定讨论")).toBeVisible({ timeout: 10_000 });
 
-  // Hover over a session card to reveal the "解档" button (opacity-0 group-hover:opacity-100)
-  const sessionCard = page.getByText("角色关系梳理").locator("..");
-  await sessionCard.hover();
+  // Hover over the session card to reveal the "解档" button (opacity-0 group-hover:opacity-100)
+  const sessionTitle = page.getByText("角色关系梳理");
+  await sessionTitle.hover();
 
-  // Click the "解档" button for this session
-  // The button is inside the card
-  const unarchiveBtn = sessionCard.locator("..").getByText("解档");
+  // Find the "解档" button inside the same card as the session title
+  const card = page.locator(".group:has(h3:text('角色关系梳理'))");
+  const unarchiveBtn = card.getByText("解档");
   await unarchiveBtn.click();
 
   // Confirm dialog should appear
@@ -52,21 +52,21 @@ test("2. 解档→会话回到项目", async ({ page }) => {
 
 test("3. 完全删除→确认→消失", async ({ page }) => {
   await page.goto("/#/archive");
-  await expect(page.getByText("会话归档")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "会话归档" })).toBeVisible({ timeout: 15_000 });
 
   // Wait for sessions to load
   await expect(page.getByText("已弃用的旧设定")).toBeVisible({ timeout: 10_000 });
 
-  // Hover the card
-  const sessionCard = page.getByText("已弃用的旧设定").locator("..");
-  await sessionCard.hover();
+  // Hover over the session card to reveal the "删除" button (opacity-0 group-hover:opacity-100)
+  await page.getByText("已弃用的旧设定").hover();
 
-  // Click the "删除" button
-  const deleteBtn = sessionCard.locator("..").getByText("删除");
+  // Find the "删除" button inside the same card
+  const deleteCard = page.locator(".group:has(h3:text('已弃用的旧设定'))");
+  const deleteBtn = deleteCard.getByText("删除");
   await deleteBtn.click();
 
   // Confirm dialog should appear with danger variant
-  await expect(page.getByText("永久删除会话")).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByRole("heading", { name: "永久删除会话" })).toBeVisible({ timeout: 5_000 });
 
   // Confirm deletion
   await page.getByText("确认删除").click();
@@ -77,7 +77,7 @@ test("3. 完全删除→确认→消失", async ({ page }) => {
 
 test("4. 批量归档", async ({ page }) => {
   await page.goto("/#/archive");
-  await expect(page.getByText("会话归档")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "会话归档" })).toBeVisible({ timeout: 15_000 });
 
   // Wait for sessions to load
   await expect(page.getByText("修仙世界设定讨论")).toBeVisible({ timeout: 10_000 });
@@ -97,16 +97,21 @@ test("4. 批量归档", async ({ page }) => {
       await page.getByText("批量解档").click();
       await expect(page.getByText("批量解档").first()).toBeVisible({ timeout: 3_000 });
 
-      // Confirm
-      await page.getByText("确认解档").click();
+      // Confirm (use role to avoid strict mode from matching message text)
+      await page.getByRole("button", { name: "确认解档" }).click();
       await page.waitForTimeout(2_000);
     }
   }
 });
 
 test("5. 搜索已归档会话", async ({ page }) => {
+  // Re-seed data to undo unarchive from test 2
+  await seedSessionArchive();
   await page.goto("/#/archive");
-  await expect(page.getByText("会话归档")).toBeVisible({ timeout: 15_000 });
+  // Full reload to force API refetch
+  await page.reload();
+  await page.waitForTimeout(2000);
+  await expect(page.getByRole("heading", { name: "会话归档" })).toBeVisible({ timeout: 15_000 });
 
   // Wait for sessions to load
   await expect(page.getByText("修仙世界设定讨论")).toBeVisible({ timeout: 10_000 });
