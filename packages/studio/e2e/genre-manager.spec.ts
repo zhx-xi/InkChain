@@ -5,7 +5,7 @@ import { test, expect, Page } from "@playwright/test";
 /** Navigate to genre manager page via sidebar */
 async function navigateToGenres(page: Page) {
   await page.goto("/#/");
-  await page.waitForLoadState("networkidle");
+  await page.waitForLoadState("load");
 
   // Try clicking System section to expand
   const systemSection = page.getByText("系统", { exact: false }).first();
