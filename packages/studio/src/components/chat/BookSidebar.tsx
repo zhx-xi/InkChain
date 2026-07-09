@@ -14,6 +14,7 @@ import { ChapterVolumeSection } from "../sidebar/ChapterVolumeSection";
 import { CharacterSection } from "../sidebar/CharacterSection";
 import { FrontmatterCards } from "../sidebar/FrontmatterCards";
 import { PendingHooksView } from "../sidebar/PendingHooksView";
+import { ResizeHandle } from "../sidebar/ResizeHandle";
 import {
   FOUNDATION_FILE_LABELS,
   frontmatterToCards,
@@ -32,7 +33,90 @@ export interface BookSidebarProps {
   readonly sse: { messages: ReadonlyArray<SSEMessage>; connected: boolean };
 }
 
-const streamdownPlugins = { cjk };
+const SECTION_STORAGE_PREFIX = "inkos-sidebar-heights-";
+const MIN_SECTION_HEIGHT = 60;
+const RESIZABLE_IDS = ["chapter", "character", "foundation"] as const;
+type SectionId = (typeof RESIZABLE_IDS)[number];
+
+/**
+ * Manages explicit px heights for the three resizable sidebar sections.
+ *
+ * - Reads cached heights from localStorage (per book) on mount.
+ * - On first render (when container ref is available), computes default
+ *   heights as equal thirds of the container if no cache exists.
+ * - `onResize(sectionA, sectionB, deltaY)` distributes the delta between
+ *   two adjacent sections, clamping each to MIN_SECTION_HEIGHT.
+ * - Persists to localStorage on every change (debounced via a simple idempotent write).
+ */
+function useResizableSections(bookId: string) {
+  const storageKey = `${SECTION_STORAGE_PREFIX}${bookId}`;
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [heights, setHeights] = useState<Record<SectionId, number> | null>(null);
+
+  // Initialize from localStorage or compute defaults
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(storageKey);
+      if (cached) {
+        const parsed = JSON.parse(cached) as Record<SectionId, number>;
+        if (RESIZABLE_IDS.every((id) => typeof parsed[id] === "number" && parsed[id] >= MIN_SECTION_HEIGHT)) {
+          setHeights(parsed);
+          return;
+        }
+      }
+    } catch {
+      // ignore corrupted cache
+    }
+    // No valid cache — heights stay null (auto-height) until first drag
+  }, [storageKey]);
+
+  // Persist whenever heights change
+  const prevHeights = useRef<Record<SectionId, number> | null>(null);
+  useEffect(() => {
+    if (!heights) return;
+    // Avoid writing the same data twice
+    if (prevHeights.current && Object.entries(prevHeights.current).every(([k, v]) => heights[k as SectionId] === v)) return;
+    prevHeights.current = heights;
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(heights));
+    } catch {
+      // quota exceeded — silently ignore
+    }
+  }, [heights, storageKey]);
+
+  const getContainerHeight = useCallback(() => {
+    if (!containerRef.current) return 600;
+    return containerRef.current.getBoundingClientRect().height;
+  }, []);
+
+  const initHeights = useCallback(() => {
+    if (heights) return heights;
+    const totalH = getContainerHeight();
+    // Reserve roughly 80px for ProgressSection + 120px for SummarySection + padding/gaps
+    const available = Math.max(200, totalH - 200);
+    const third = Math.round(available / 3);
+    const init: Record<SectionId, number> = {
+      chapter: Math.max(MIN_SECTION_HEIGHT, third),
+      character: Math.max(MIN_SECTION_HEIGHT, third),
+      foundation: Math.max(MIN_SECTION_HEIGHT, available - third * 2),
+    };
+    setHeights(init);
+    return init;
+  }, [heights, getContainerHeight]);
+
+  const onResize = useCallback(
+    (topId: SectionId, bottomId: SectionId, deltaY: number) => {
+      const h = initHeights();
+      const topNew = h[topId] + deltaY;
+      const bottomNew = h[bottomId] - deltaY;
+      if (topNew < MIN_SECTION_HEIGHT || bottomNew < MIN_SECTION_HEIGHT) return;
+      setHeights({ ...h, [topId]: Math.round(topNew), [bottomId]: Math.round(bottomNew) });
+    },
+    [initHeights],
+  );
+
+  return { heights, containerRef, onResize };
+}
 
 // Friendly header label for an opened truth file: character files show the
 // character's name, foundation files their friendly label, everything else its
@@ -213,6 +297,7 @@ function ArtifactView({ bookId }: { readonly bookId: string }) {
 
 function PanelView({ bookId, theme: _theme, t, sse }: BookSidebarProps) {
   const isZh = t("nav.connected") === "\u5DF2\u8FDE\u63A5";
+  const { heights, containerRef, onResize } = useResizableSections(bookId);
 
   // Show writing indicator only during pipeline operations (write/audit/revise)
   const [activeOp, setActiveOp] = useState<string | null>(null);
@@ -240,10 +325,13 @@ function PanelView({ bookId, theme: _theme, t, sse }: BookSidebarProps) {
     revise: isZh ? "正在修订中..." : "Revising...",
   };
 
+  const sectionStyle = (id: SectionId): React.CSSProperties | undefined =>
+    heights ? { height: heights[id], flex: "none", overflowY: "auto" } : undefined;
+
   return (
-    <div className="flex flex-col gap-2 p-3">
+    <div ref={containerRef} className="flex flex-col gap-2 p-3 overflow-hidden h-full">
       {activeOp && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/5 border border-primary/10 shrink-0">
           <Loader2 size={12} className="text-primary animate-spin shrink-0" />
           <span className="text-[14px] leading-5 text-primary font-medium">
             {OP_LABELS[activeOp] ?? activeOp}
@@ -251,9 +339,17 @@ function PanelView({ bookId, theme: _theme, t, sse }: BookSidebarProps) {
         </div>
       )}
       <ProgressSection sse={sse} />
-      <ChapterVolumeSection bookId={bookId} />
-      <CharacterSection bookId={bookId} />
-      <FoundationSection bookId={bookId} />
+      <div key="chapter-section" style={sectionStyle("chapter")} className={heights ? "shrink-0" : ""}>
+        <ChapterVolumeSection bookId={bookId} />
+      </div>
+      <ResizeHandle onResize={(dy) => onResize("chapter", "character", dy)} />
+      <div key="character-section" style={sectionStyle("character")} className={heights ? "shrink-0" : ""}>
+        <CharacterSection bookId={bookId} />
+      </div>
+      <ResizeHandle onResize={(dy) => onResize("character", "foundation", dy)} />
+      <div key="foundation-section" style={sectionStyle("foundation")} className={heights ? "shrink-0" : ""}>
+        <FoundationSection bookId={bookId} />
+      </div>
       <SummarySection bookId={bookId} />
     </div>
   );
