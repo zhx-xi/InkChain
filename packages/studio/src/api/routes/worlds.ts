@@ -29,7 +29,7 @@ import {
   removeWorldReference,
   WorldReferenceCreateSchema,
   type WorldConfig,
-} from "@actalk/inkos-core";
+} from "@actalk/inkchain-core";
 import { join } from "node:path";
 import { readFile } from "node:fs/promises";
 import { ApiError } from "../errors.js";

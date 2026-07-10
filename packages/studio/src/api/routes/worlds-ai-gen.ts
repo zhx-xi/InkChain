@@ -24,7 +24,7 @@ import {
   parseEventResponse,
   generateEntityId,
   applyWorldUpdate,
-} from "@actalk/inkos-core";
+} from "@actalk/inkchain-core";
 
 // ── Request body types ──
 

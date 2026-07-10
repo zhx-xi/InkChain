@@ -3,7 +3,7 @@ import { useApi, fetchJson, buildApiUrl } from "../hooks/use-api";
 import { useColors } from "../hooks/use-colors";
 import type { Theme } from "../hooks/use-theme";
 import type { TFunction } from "../hooks/use-i18n";
-import type { StoryGraph, StoryNode } from "@actalk/inkos-core/interactive-film/graph-schema";
+import type { StoryGraph, StoryNode } from "@actalk/inkchain-core/interactive-film/graph-schema";
 import { AnalysisPanel } from "../components/film/AnalysisPanel";
 
 interface Nav {

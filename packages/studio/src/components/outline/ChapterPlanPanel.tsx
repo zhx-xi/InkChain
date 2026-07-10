@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { postApi } from "../../hooks/use-api";
-import type { ChapterPlan } from "@actalk/inkos-core";
-import type { ChapterOutline } from "@actalk/inkos-core";
+import type { ChapterPlan } from "@actalk/inkchain-core";
+import type { ChapterOutline } from "@actalk/inkchain-core";
 
 // ── Props ──
 

@@ -167,7 +167,7 @@ export function App() {
             <p className="mt-2 text-sm text-muted-foreground break-all">{projectError}</p>
           </div>
           <p className="text-sm text-muted-foreground">
-            请检查项目根目录下的 inkos.json 是否存在且为合法 JSON，然后重试。
+            请检查项目根目录下的 inkchain.json 是否存在且为合法 JSON，然后重试。
           </p>
           <button
             type="button"

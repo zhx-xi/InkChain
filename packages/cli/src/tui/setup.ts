@@ -157,7 +157,7 @@ export function buildAutoInitMessages(projectName: string, locale: TuiLocale): {
 }
 
 export async function ensureProject(cwd: string): Promise<SetupResult> {
-  const configPath = join(cwd, "inkos.json");
+  const configPath = join(cwd, "inkchain.json");
   const hasConfig = await fileExists(configPath);
 
   if (!hasConfig) {
@@ -284,7 +284,7 @@ async function autoInit(cwd: string): Promise<void> {
   };
 
   await writeFile(
-    join(cwd, "inkos.json"),
+    join(cwd, "inkchain.json"),
     JSON.stringify(config, null, 2),
     "utf-8",
   );
@@ -360,7 +360,7 @@ export async function detectModelInfo(projectRoot: string): Promise<ModelInfo | 
 
 export async function detectProjectLanguage(projectRoot: string): Promise<string | undefined> {
   try {
-    const raw = await readFile(join(projectRoot, "inkos.json"), "utf-8");
+    const raw = await readFile(join(projectRoot, "inkchain.json"), "utf-8");
     const parsed = JSON.parse(raw) as { language?: string };
     return parsed.language;
   } catch {

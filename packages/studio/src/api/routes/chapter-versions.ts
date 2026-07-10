@@ -13,7 +13,7 @@ import {
   listChapterVersions,
   loadChapterVersion,
   getChapterVersionSummary,
-} from "@actalk/inkos-core";
+} from "@actalk/inkchain-core";
 import { ApiError } from "../errors.js";
 import { isSafeBookId } from "../safety.js";
 

@@ -607,7 +607,7 @@ export async function resolveCoverGenerationRequest(input: {
 
 async function readProjectCoverConfig(root: string): Promise<{ readonly service: string; readonly model?: string } | undefined> {
   try {
-    const raw = await readFile(join(root, "inkos.json"), "utf-8");
+    const raw = await readFile(join(root, "inkchain.json"), "utf-8");
     const parsed = JSON.parse(raw) as { llm?: { cover?: { service?: unknown; model?: unknown } } };
     const service = typeof parsed.llm?.cover?.service === "string" ? parsed.llm.cover.service : "";
     if (!service) return undefined;

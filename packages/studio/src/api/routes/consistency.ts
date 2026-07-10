@@ -4,8 +4,8 @@
 //   POST /check — Run consistency check on a chapter
 
 import { Hono } from "hono";
-import { checkConsistency } from "@actalk/inkos-core";
-import { loadWorld } from "@actalk/inkos-core";
+import { checkConsistency } from "@actalk/inkchain-core";
+import { loadWorld } from "@actalk/inkchain-core";
 import { ApiError } from "../errors.js";
 
 export function createConsistencyRouter(root: string) {
@@ -39,7 +39,7 @@ export function createConsistencyRouter(root: string) {
         throw new ApiError(404, "WORLD_NOT_FOUND", `World not found: ${worldId}`);
       }
     } else {
-      const { WorldConfigSchema } = await import("@actalk/inkos-core");
+      const { WorldConfigSchema } = await import("@actalk/inkchain-core");
       world = WorldConfigSchema.parse({
         id: "empty",
         name: "Empty World",

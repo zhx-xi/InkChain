@@ -4,7 +4,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { StateManager } from "@actalk/inkos-core";
+import { StateManager } from "@actalk/inkchain-core";
 
 const testDir = dirname(fileURLToPath(import.meta.url));
 const cliDir = resolve(testDir, "..", "..");
@@ -95,8 +95,8 @@ describe("CLI integration", () => {
       expect(output).toContain("Project initialized");
     });
 
-    it("creates inkos.json with correct structure", async () => {
-      const raw = await readFile(join(projectDir, "inkos.json"), "utf-8");
+    it("creates inkchain.json with correct structure", async () => {
+      const raw = await readFile(join(projectDir, "inkchain.json"), "utf-8");
       const config = JSON.parse(raw);
       expect(config.llm).toBeDefined();
       expect(config.llm.provider).toBeDefined();
@@ -134,8 +134,8 @@ describe("CLI integration", () => {
       expect(output).toContain("Project initialized");
     });
 
-    it("creates inkos.json in subdirectory", async () => {
-      const raw = await readFile(join(projectDir, "subproject", "inkos.json"), "utf-8");
+    it("creates inkchain.json in subdirectory", async () => {
+      const raw = await readFile(join(projectDir, "subproject", "inkchain.json"), "utf-8");
       const config = JSON.parse(raw);
       expect(config.name).toBe("subproject");
     });
@@ -147,7 +147,7 @@ describe("CLI integration", () => {
         const output = run(["init", absoluteDir]);
         expect(output).toContain(`Project initialized at ${absoluteDir}`);
 
-        const raw = await readFile(join(absoluteDir, "inkos.json"), "utf-8");
+        const raw = await readFile(join(absoluteDir, "inkchain.json"), "utf-8");
         const config = JSON.parse(raw);
         expect(config.name).toBe(basename(absoluteDir));
       } finally {
@@ -177,7 +177,7 @@ describe("CLI integration", () => {
 
     it("sets a nested config value", async () => {
       run(["config", "set", "llm.model", "gpt-5"]);
-      const raw = await readFile(join(projectDir, "inkos.json"), "utf-8");
+      const raw = await readFile(join(projectDir, "inkchain.json"), "utf-8");
       const config = JSON.parse(raw);
       expect(config.llm.model).toBe("gpt-5");
     });
@@ -192,7 +192,7 @@ describe("CLI integration", () => {
       const output = run(["config", "set", "inputGovernanceMode", "v2"]);
       expect(output).toContain("Set inputGovernanceMode = v2");
 
-      const raw = await readFile(join(projectDir, "inkos.json"), "utf-8");
+      const raw = await readFile(join(projectDir, "inkchain.json"), "utf-8");
       const config = JSON.parse(raw);
       expect(config.inputGovernanceMode).toBe("v2");
     });
@@ -201,7 +201,7 @@ describe("CLI integration", () => {
       const output = run(["config", "set", "writing.reviewRetries", "3"]);
       expect(output).toContain("Set writing.reviewRetries = 3");
 
-      const raw = await readFile(join(projectDir, "inkos.json"), "utf-8");
+      const raw = await readFile(join(projectDir, "inkchain.json"), "utf-8");
       const config = JSON.parse(raw);
       expect(config.writing.reviewRetries).toBe(3);
     });
@@ -217,7 +217,7 @@ describe("CLI integration", () => {
 
   describe("inkos interact", () => {
     it("returns the agent-session JSON contract for natural-language interactions", async () => {
-      const initialized = await stat(join(projectDir, "inkos.json")).then(() => true).catch(() => false);
+      const initialized = await stat(join(projectDir, "inkchain.json")).then(() => true).catch(() => false);
       if (!initialized) run(["init"]);
       const envPath = join(projectDir, ".env");
       const originalEnv = await readFile(envPath, "utf-8");
@@ -241,7 +241,7 @@ describe("CLI integration", () => {
     }, CLI_PROCESS_TIMEOUT_MS);
 
     it("binds the requested book when interact is called with --book", async () => {
-      const initialized = await stat(join(projectDir, "inkos.json")).then(() => true).catch(() => false);
+      const initialized = await stat(join(projectDir, "inkchain.json")).then(() => true).catch(() => false);
       if (!initialized) run(["init"]);
       const envPath = join(projectDir, ".env");
       const originalEnv = await readFile(envPath, "utf-8");
@@ -294,7 +294,7 @@ describe("CLI integration", () => {
       expect(exitCode).not.toBe(0);
       expect(stderr).toContain("--api-key-env expects an environment variable name");
 
-      const raw = await readFile(join(projectDir, "inkos.json"), "utf-8");
+      const raw = await readFile(join(projectDir, "inkchain.json"), "utf-8");
       const config = JSON.parse(raw);
       expect(config.modelOverrides).toBeUndefined();
     });
@@ -316,7 +316,7 @@ describe("CLI integration", () => {
   describe("inkos book create", () => {
     it("removes stale incomplete book directories before retrying create", async () => {
       try {
-        await stat(join(projectDir, "inkos.json"));
+        await stat(join(projectDir, "inkchain.json"));
       } catch {
         run(["init"]);
       }
@@ -554,11 +554,11 @@ describe("CLI integration", () => {
       expect(stdout).toContain("InkOS Doctor");
       expect(stdout).toContain("Node.js >= 20");
       expect(stdout).toContain("SQLite memory index");
-      expect(stdout).toContain("inkos.json");
+      expect(stdout).toContain("inkchain.json");
     });
 
     it("repairs missing node runtime pin files for old projects", async () => {
-      await stat(join(projectDir, "inkos.json")).catch(() => {
+      await stat(join(projectDir, "inkchain.json")).catch(() => {
         run(["init"]);
       });
 
@@ -580,10 +580,10 @@ describe("CLI integration", () => {
     }, CLI_PROCESS_TIMEOUT_MS);
 
     it("treats localhost OpenAI-compatible endpoints as API-key optional", async () => {
-      await stat(join(projectDir, "inkos.json")).catch(() => {
+      await stat(join(projectDir, "inkchain.json")).catch(() => {
         run(["init"]);
       });
-      const configPath = join(projectDir, "inkos.json");
+      const configPath = join(projectDir, "inkchain.json");
       const envPath = join(projectDir, ".env");
       const originalConfig = await readFile(configPath, "utf-8");
       const originalEnv = await readFile(envPath, "utf-8");
@@ -792,7 +792,7 @@ describe("CLI integration", () => {
 
   describe("inkos review", () => {
     it("preserves the original chapter snapshot when approving review", async () => {
-      const configPath = join(projectDir, "inkos.json");
+      const configPath = join(projectDir, "inkchain.json");
       const initialized = await stat(configPath).then(() => true).catch(() => false);
       if (!initialized) run(["init"]);
 
@@ -861,7 +861,7 @@ describe("CLI integration", () => {
 
   describe("inkos plan/compose", () => {
     beforeAll(async () => {
-      const configPath = join(projectDir, "inkos.json");
+      const configPath = join(projectDir, "inkchain.json");
       const initialized = await stat(configPath).then(() => true).catch(() => false);
       if (!initialized) run(["init"]);
 
@@ -976,7 +976,7 @@ describe("CLI integration", () => {
 
   describe("inkos export", () => {
     beforeAll(async () => {
-      const configPath = join(projectDir, "inkos.json");
+      const configPath = join(projectDir, "inkchain.json");
       const initialized = await stat(configPath).then(() => true).catch(() => false);
       if (!initialized) run(["init"]);
 

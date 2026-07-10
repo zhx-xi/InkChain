@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 export const E2E_ROOT = (() => {
-  if (process.env.INKOS_E2E_PROJECT_ROOT) return resolve(process.env.INKOS_E2E_PROJECT_ROOT);
+  if (process.env.INKCHAIN_E2E_PROJECT_ROOT) return resolve(process.env.INKCHAIN_E2E_PROJECT_ROOT);
   // fixtures/ → e2e/ → studio/ → packages/studio/test-project
   return resolve(__dirname, "../..", "test-project");
 })();

@@ -11,7 +11,7 @@ import { Hono } from "hono";
 import {
   searchSessions,
   type SearchResult,
-} from "@actalk/inkos-core";
+} from "@actalk/inkchain-core";
 
 /**
  * Create a Hono router for search endpoints.

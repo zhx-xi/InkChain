@@ -11,7 +11,7 @@ import { SkillBindTab } from "./SkillBindTab";
 import { usePersona } from "../hooks/use-persona-api";
 import { AGENTS } from "./AgentCard";
 import { TestDialog } from "./TestDialog";
-import type { PersonaConfig, AgentRole } from "@actalk/inkos-core/models/persona-config.js";
+import type { PersonaConfig, AgentRole } from "@actalk/inkchain-core/models/persona-config.js";
 
 // ── Tab definitions ──
 

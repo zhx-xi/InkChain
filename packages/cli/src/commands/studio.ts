@@ -136,7 +136,7 @@ export async function launchStudioWorkbench(root: string, port: string): Promise
   const child = spawn(launch.command, launch.args, {
     cwd: root,
     stdio: "inherit",
-    env: { ...process.env, INKOS_STUDIO_PORT: port },
+    env: { ...process.env, INKCHAIN_STUDIO_PORT: port },
   });
 
   child.on("error", (e) => {
@@ -169,7 +169,7 @@ export async function launchStudioEntry(
 ): Promise<void> {
   const prepared = await prepareStudioRoot(root);
   if (prepared.initialized) {
-    log(`No inkos.json found in ${root}. Initialized a minimal InkOS project for Studio.`);
+    log(`No inkchain.json found in ${root}. Initialized a minimal InkOS project for Studio.`);
   }
 
   if (hooks.launchStudio) {

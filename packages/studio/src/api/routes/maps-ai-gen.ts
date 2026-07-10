@@ -20,9 +20,9 @@ import {
   parseMapGenerateResponse,
   generateRegionId,
   applyWorldUpdate,
-} from "@actalk/inkos-core";
-import type { MapRegionCandidate } from "@actalk/inkos-core";
-import type { WorldRegion } from "@actalk/inkos-core/models/world-config.js";
+} from "@actalk/inkchain-core";
+import type { MapRegionCandidate } from "@actalk/inkchain-core";
+import type { WorldRegion } from "@actalk/inkchain-core/models/world-config.js";
 
 // ── Request Body Types ──
 

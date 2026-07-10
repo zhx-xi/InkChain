@@ -43,7 +43,7 @@ describe("loadProjectConfig local provider auth", () => {
       process.env[key] = "";
     }
 
-    await writeFile(join(root, "inkos.json"), JSON.stringify({
+    await writeFile(join(root, "inkchain.json"), JSON.stringify({
       name: "local-project",
       version: "0.1.0",
       llm: {
@@ -68,7 +68,7 @@ describe("loadProjectConfig local provider auth", () => {
       process.env[key] = "";
     }
 
-    await writeFile(join(root, "inkos.json"), JSON.stringify({
+    await writeFile(join(root, "inkchain.json"), JSON.stringify({
       name: "remote-project",
       version: "0.1.0",
       llm: {
@@ -88,7 +88,7 @@ describe("loadProjectConfig local provider auth", () => {
       process.env[key] = "";
     }
 
-    await writeFile(join(root, "inkos.json"), JSON.stringify({
+    await writeFile(join(root, "inkchain.json"), JSON.stringify({
       name: "service-project",
       version: "0.1.0",
       language: "zh",
@@ -124,7 +124,7 @@ describe("loadProjectConfig local provider auth", () => {
       process.env[key] = "";
     }
 
-    await writeFile(join(root, "inkos.json"), JSON.stringify({
+    await writeFile(join(root, "inkchain.json"), JSON.stringify({
       name: "minimax-project",
       version: "0.1.0",
       language: "zh",
@@ -159,7 +159,7 @@ describe("loadProjectConfig local provider auth", () => {
       process.env[key] = "";
     }
 
-    await writeFile(join(root, "inkos.json"), JSON.stringify({
+    await writeFile(join(root, "inkchain.json"), JSON.stringify({
       name: "custom-project",
       version: "0.1.0",
       language: "zh",
@@ -197,7 +197,7 @@ describe("loadProjectConfig local provider auth", () => {
       process.env[key] = "";
     }
 
-    await writeFile(join(root, "inkos.json"), JSON.stringify({
+    await writeFile(join(root, "inkchain.json"), JSON.stringify({
       name: "studio-source-project",
       version: "0.1.0",
       language: "zh",
@@ -239,7 +239,7 @@ describe("loadProjectConfig local provider auth", () => {
       process.env[key] = "";
     }
 
-    await writeFile(join(root, "inkos.json"), JSON.stringify({
+    await writeFile(join(root, "inkchain.json"), JSON.stringify({
       name: "studio-stale-project",
       version: "0.1.0",
       language: "zh",
@@ -297,7 +297,7 @@ describe("loadProjectConfig local provider auth", () => {
     process.env.INKOS_LLM_MODEL = "gpt-5.4";
     process.env.INKOS_LLM_API_KEY = "sk-env";
 
-    await writeFile(join(root, "inkos.json"), JSON.stringify({
+    await writeFile(join(root, "inkchain.json"), JSON.stringify({
       name: "studio-bootstrap-project",
       version: "0.1.0",
       language: "zh",

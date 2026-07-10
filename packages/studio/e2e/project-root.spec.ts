@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 /**
  * E2E infrastructure validation test for PR #463.
  *
- * Verifies that the E2E servers start with the correct INKOS_PROJECT_ROOT
+ * Verifies that the E2E servers start with the correct INKCHAIN_PROJECT_ROOT
  * configuration, the API responds, and the dashboard loads without crashing.
  * The test-project is intentionally empty (no books/chapters) — this tests
  * graceful handling of the empty state, not regression from the pre-existing

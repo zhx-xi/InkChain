@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { computeWritingStats } from "@actalk/inkos-core";
-import type { StateManager } from "@actalk/inkos-core";
+import { computeWritingStats } from "@actalk/inkchain-core";
+import type { StateManager } from "@actalk/inkchain-core";
 
 /**
  * Writing stats API route.

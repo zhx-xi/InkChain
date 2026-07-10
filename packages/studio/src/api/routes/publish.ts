@@ -20,7 +20,7 @@ import {
   type PublishPlatform,
   type PublishChapter,
   type ValidationWarning,
-} from "@actalk/inkos-core";
+} from "@actalk/inkchain-core";
 
 interface BookMeta {
   id: string;

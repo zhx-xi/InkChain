@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useApi } from "../hooks/use-api";
-import type { WorldConfig, WorldRegion } from "@actalk/inkos-core";
+import type { WorldConfig, WorldRegion } from "@actalk/inkchain-core";
 import { ArrowLeft, ZoomIn, ZoomOut, RotateCcw, X, MapPin, Users, Calendar } from "lucide-react";
 import { cn } from "../lib/utils";
 

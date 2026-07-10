@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 
 import { createPersonasRouter } from "../routes/personas.js";
-import { AgentRoleEnum } from "@actalk/inkos-core";
+import { AgentRoleEnum } from "@actalk/inkchain-core";
 
 // ── Helpers ──
 

@@ -16,7 +16,7 @@ import "@xyflow/react/dist/base.css";
 import { useApi } from "../hooks/use-api";
 import { ArrowLeft, Globe, Maxmize, Minus, Plus } from "lucide-react";
 import { MemoWorldRegionNode, type WorldRegionNodeData } from "../components/graph/WorldRegionNode";
-import type { WorldConfig, WorldRegion, WorldRegionType } from "@actalk/inkos-core";
+import type { WorldConfig, WorldRegion, WorldRegionType } from "@actalk/inkchain-core";
 
 interface WorldGeoVizProps {
   readonly worldId: string;

@@ -6,8 +6,8 @@
 
 import { useState, useEffect } from "react";
 import { Sparkles, Check, X, Loader2 } from "lucide-react";
-import type { RelationSuggestion } from "@actalk/inkos-core";
-import { SUGGESTED_RELATION_LABELS } from "@actalk/inkos-core";
+import type { RelationSuggestion } from "@actalk/inkchain-core";
+import { SUGGESTED_RELATION_LABELS } from "@actalk/inkchain-core";
 
 interface AILabelOverlayProps {
   readonly bookId: string;

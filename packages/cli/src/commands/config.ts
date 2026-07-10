@@ -2,7 +2,7 @@ import { Command } from "commander";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { findProjectRoot, log, logError, GLOBAL_CONFIG_DIR, GLOBAL_ENV_PATH } from "../utils.js";
-import { listModelsForService } from "@actalk/inkos-core";
+import { listModelsForService } from "@actalk/inkchain-core";
 
 export const configCommand = new Command("config")
   .description("Manage project configuration");
@@ -14,7 +14,7 @@ configCommand
   .argument("<value>", "Config value")
   .action(async (key: string, value: string) => {
     const root = findProjectRoot();
-    const configPath = join(root, "inkos.json");
+    const configPath = join(root, "inkchain.json");
 
     try {
       const raw = await readFile(configPath, "utf-8");
@@ -145,7 +145,7 @@ configCommand
   .description("Show current project configuration")
   .action(async () => {
     const root = findProjectRoot();
-    const configPath = join(root, "inkos.json");
+    const configPath = join(root, "inkchain.json");
 
     try {
       const raw = await readFile(configPath, "utf-8");
@@ -198,7 +198,7 @@ configCommand
     }
 
     const root = findProjectRoot();
-    const configPath = join(root, "inkos.json");
+    const configPath = join(root, "inkchain.json");
 
     try {
       const raw = await readFile(configPath, "utf-8");
@@ -231,7 +231,7 @@ configCommand
   .argument("<agent>", "Agent name")
   .action(async (agent: string) => {
     const root = findProjectRoot();
-    const configPath = join(root, "inkos.json");
+    const configPath = join(root, "inkchain.json");
 
     try {
       const raw = await readFile(configPath, "utf-8");
@@ -257,7 +257,7 @@ configCommand
   .option("--json", "Output JSON")
   .action(async (opts) => {
     const root = findProjectRoot();
-    const configPath = join(root, "inkos.json");
+    const configPath = join(root, "inkchain.json");
 
     try {
       const raw = await readFile(configPath, "utf-8");

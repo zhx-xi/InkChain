@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Handle, Position, type NodeProps } from "@xyflow/react";
-import type { WorldRegionType } from "@actalk/inkos-core";
+import type { WorldRegionType } from "@actalk/inkchain-core";
 
 export interface WorldRegionNodeData {
   id: string;
