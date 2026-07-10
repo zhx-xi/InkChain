@@ -9,12 +9,12 @@ export default defineConfig({
       // matches `<key>/...`, so the bare entry would otherwise swallow these.
       // The app/build resolves these subpaths via core's package.json "exports"
       // (browser-safe, zod-only); tests resolve them to source like the bare pkg.
-      "@actalk/inkos-core/interactive-film/evaluator": resolve(__dirname, "../core/src/interactive-film/evaluator.ts"),
-      "@actalk/inkos-core/interactive-film/graph-schema": resolve(__dirname, "../core/src/interactive-film/graph-schema.ts"),
-      "@actalk/inkos-core/models/persona-config.js": resolve(__dirname, "../core/src/models/persona-config.ts"),
-      "@actalk/inkos-core/models/foreshadowing.js": resolve(__dirname, "../core/src/models/foreshadowing.ts"),
-      "@actalk/inkos-core/models/skill-config.js": resolve(__dirname, "../core/src/models/skill-config.ts"),
-      "@actalk/inkos-core": resolve(__dirname, "../core/src/index.ts"),
+      "@actalk/inkchain-core/interactive-film/evaluator": resolve(__dirname, "../core/src/interactive-film/evaluator.ts"),
+      "@actalk/inkchain-core/interactive-film/graph-schema": resolve(__dirname, "../core/src/interactive-film/graph-schema.ts"),
+      "@actalk/inkchain-core/models/persona-config.js": resolve(__dirname, "../core/src/models/persona-config.ts"),
+      "@actalk/inkchain-core/models/foreshadowing.js": resolve(__dirname, "../core/src/models/foreshadowing.ts"),
+      "@actalk/inkchain-core/models/skill-config.js": resolve(__dirname, "../core/src/models/skill-config.ts"),
+      "@actalk/inkchain-core": resolve(__dirname, "../core/src/index.ts"),
     },
   },
   test: {

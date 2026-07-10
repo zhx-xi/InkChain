@@ -1,5 +1,5 @@
 // ── Timeline API Route ──
-// Uses @actalk/inkos-core Zod schemas for validation.
+// Uses @actalk/inkchain-core Zod schemas for validation.
 //
 // Routes (mounted at /api/v1/books):
 //   GET    /:id/timelines           — List all events (optional ?character=&chapter= filters)
@@ -16,7 +16,7 @@ import {
   TimelineEventSchema,
   CharacterTimelineFileSchema,
   type TimelineEvent,
-} from "@actalk/inkos-core";
+} from "@actalk/inkchain-core";
 
 const TIMELINES_FILE = "story/state/character_timelines.json";
 

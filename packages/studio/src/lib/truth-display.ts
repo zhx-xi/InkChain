@@ -96,7 +96,7 @@ export function firstParagraph(text: string): string {
 }
 
 // ── 5-tier character hierarchy ──
-// Defined locally (not imported from @actalk/inkos-core) to avoid cross-package
+// Defined locally (not imported from @actalk/inkchain-core) to avoid cross-package
 // dependency issues in the frontend bundle. Must be kept in sync with
 // packages/core/src/models/character.ts.
 

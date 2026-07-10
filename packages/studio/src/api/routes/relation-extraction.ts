@@ -15,7 +15,7 @@ import {
   extractRelationsFromProse,
   type RelationProposal,
   type ExtractionResult,
-} from "@actalk/inkos-core";
+} from "@actalk/inkchain-core";
 import {
   CharacterRelationSchema,
   RelationsFileSchema,
@@ -23,7 +23,7 @@ import {
   type CharacterRelation,
   type RelationsFile,
   type RelationType as RelationTypeEnum,
-} from "@actalk/inkos-core";
+} from "@actalk/inkchain-core";
 
 // ── Constants ──
 
@@ -105,7 +105,7 @@ export function createRelationExtractionRouter(
     const relationsFile = await loadRelations(dir);
 
     // Determine LLM config from the project
-    const { loadProjectConfig } = await import("@actalk/inkos-core");
+    const { loadProjectConfig } = await import("@actalk/inkchain-core");
     let llmConfig;
     try {
       const config = await loadProjectConfig(getProjectRoot(), {

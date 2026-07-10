@@ -23,7 +23,7 @@ describe("project bootstrap", () => {
     const initialized = await ensureProjectDirectoryInitialized(tempDir, { language: "zh" });
 
     expect(initialized).toBe(true);
-    const config = JSON.parse(await readFile(join(tempDir, "inkos.json"), "utf-8"));
+    const config = JSON.parse(await readFile(join(tempDir, "inkchain.json"), "utf-8"));
     expect(config.name).toMatch(/^inkos-bootstrap-/);
     expect(config.version).toBe("0.1.0");
     expect(config.llm.configSource).toBe("studio");
@@ -62,8 +62,8 @@ describe("project bootstrap", () => {
     expect(gitignore).toContain(".DS_Store\n");
   });
 
-  it("returns false when the directory is already an InkOS project", async () => {
-    await writeFile(join(tempDir, "inkos.json"), "{}\n", "utf-8");
+  it("returns false when the directory is already an InkChain project", async () => {
+    await writeFile(join(tempDir, "inkchain.json"), "{}\n", "utf-8");
     const { ensureProjectDirectoryInitialized } = await import("../project-bootstrap.js");
 
     await expect(ensureProjectDirectoryInitialized(tempDir, { language: "zh" })).resolves.toBe(false);

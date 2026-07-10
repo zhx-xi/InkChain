@@ -12,7 +12,7 @@ test.beforeAll(async () => {
 async function navigateToStyle(page: import("@playwright/test").Page): Promise<void> {
   await page.goto("/#/");
   // Wait for the dashboard to load
-  await expect(page.getByText("InkOS Studio").first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText("InkChain Studio").first()).toBeVisible({ timeout: 15_000 });
   // Click sidebar "文风" button
   // Use getByRole with exact name to avoid conflict with "文风检测" buttons
   // and "E2E 文风检测测试" book title in seed data

@@ -15,7 +15,7 @@ import {
   Upload,
 } from "lucide-react";
 import { FormatPreview } from "./FormatPreview";
-import type { PublishPlatform } from "@actalk/inkos-core";
+import type { PublishPlatform } from "@actalk/inkchain-core";
 
 // ── Types ──
 

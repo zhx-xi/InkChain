@@ -12,7 +12,7 @@ test.beforeAll(async () => {
 async function navigateToStyle(page: import("@playwright/test").Page): Promise<void> {
   await page.goto("/#/");
   // Wait for the dashboard to load
-  await expect(page.getByText("InkOS Studio").first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText("InkChain Studio").first()).toBeVisible({ timeout: 15_000 });
   // Click sidebar "文风" button using exact role to avoid seed data conflict
   await page.getByRole("button", { name: "文风", exact: true }).click();
   await expect(page.getByText("文风检测").first()).toBeVisible({ timeout: 10_000 });

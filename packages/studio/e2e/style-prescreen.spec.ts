@@ -10,7 +10,7 @@ test.beforeAll(async () => {
  */
 async function navigateToStyle(page: import("@playwright/test").Page): Promise<void> {
   await page.goto("/#/");
-  await expect(page.getByText("InkOS Studio").first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText("InkChain Studio").first()).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "文风", exact: true }).click();
   await expect(page.locator("textarea").first()).toBeVisible({ timeout: 10_000 });
 }

@@ -425,7 +425,7 @@ export function ConsistencyPanel({ nav, theme, t }: { nav: Nav; theme: Theme; t:
 
           {/* ═══ Footer ═══ */}
           <footer className="flex items-center justify-between flex-wrap gap-4 pt-4 border-t border-border/60 text-xs text-muted-foreground">
-            <span>InkOS v3.0 · 文风统一检测模块 · R-20</span>
+            <span>InkChain v3.0 · 文风统一检测模块 · R-20</span>
             <div className="flex gap-3">
               <button
                 onClick={handleResetAll}

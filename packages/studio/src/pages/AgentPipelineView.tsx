@@ -394,7 +394,7 @@ export default function AgentPipelineView({ nav }: { nav: Nav }) {
           </div>
           <div>
             <div style={{ fontFamily: "Georgia,serif", fontSize: 17, fontStyle: "italic", color: THEME.textPrimary, letterSpacing: 0.5, fontWeight: 500 }}>
-              InkOS Agent Pipeline
+              InkChain Agent Pipeline
             </div>
             <div style={{ fontSize: 10, color: THEME.textMuted, letterSpacing: 2, textTransform: "uppercase", fontFamily: "'SF Mono','Fira Code','Consolas',monospace" }}>
               小说创作 · 多智能体协作可视化

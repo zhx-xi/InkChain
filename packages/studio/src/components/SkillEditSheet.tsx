@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { X, Save, Loader2, Plus, Trash2, Search, Bot, History, RotateCcw, ChevronDown, ChevronRight, Copy, Sparkles, FileText, Puzzle, AlertTriangle } from "lucide-react";
 import { cn } from "../lib/utils";
 import { fetchJson } from "../hooks/use-api";
-import type { SkillConfig, SkillCategory, TriggerConfig, InjectionConfig } from "@actalk/inkos-core/models/skill-config.js";
-import type { AgentRole } from "@actalk/inkos-core/models/persona-config.js";
-import { SKILL_CATEGORY_LABELS } from "@actalk/inkos-core/models/skill-config.js";
-import { AGENT_ROLE_LABELS, AgentRoleEnum } from "@actalk/inkos-core/models/persona-config.js";
+import type { SkillConfig, SkillCategory, TriggerConfig, InjectionConfig } from "@actalk/inkchain-core/models/skill-config.js";
+import type { AgentRole } from "@actalk/inkchain-core/models/persona-config.js";
+import { SKILL_CATEGORY_LABELS } from "@actalk/inkchain-core/models/skill-config.js";
+import { AGENT_ROLE_LABELS, AgentRoleEnum } from "@actalk/inkchain-core/models/persona-config.js";
 import { AGENTS } from "./AgentCard";
 import { TriggerBuilder } from "./TriggerBuilder";
 

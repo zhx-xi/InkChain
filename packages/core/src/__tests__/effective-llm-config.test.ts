@@ -14,7 +14,7 @@ describe("resolveEffectiveLLMConfig", () => {
 
   async function writeProject(llm: Record<string, unknown>) {
     root = await mkdtemp(join(tmpdir(), "inkos-effective-llm-"));
-    await writeFile(join(root, "inkos.json"), JSON.stringify({
+    await writeFile(join(root, "inkchain.json"), JSON.stringify({
       name: "effective-project",
       version: "0.1.0",
       language: "zh",

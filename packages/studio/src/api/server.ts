@@ -101,7 +101,7 @@ import {
   type LogEntry,
   type RequestedIntent,
   type SessionKind,
-} from "@actalk/inkos-core";
+} from "@actalk/inkchain-core";
 import { access, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { isSafeBookId } from "./safety.js";
@@ -944,7 +944,7 @@ function formatAgentFailure(message: string): { readonly code: string; readonly 
     return { code: "AGENT_LLM_ERROR", message, status: 502 };
   }
   if (kind === "internal") {
-    return { code: "AGENT_INTERNAL_ERROR", message: `InkOS 内部流程错误：${message}`, status: 500 };
+    return { code: "AGENT_INTERNAL_ERROR", message: `InkChain 内部流程错误：${message}`, status: 500 };
   }
   return { code: "AGENT_ERROR", message, status: 500 };
 }
@@ -1530,13 +1530,13 @@ function syncTopLevelLlmMirror(llm: Record<string, unknown>): void {
 }
 
 async function loadRawConfig(root: string): Promise<Record<string, unknown>> {
-  const configPath = join(root, "inkos.json");
+  const configPath = join(root, "inkchain.json");
   const raw = await readFile(configPath, "utf-8");
   return JSON.parse(raw) as Record<string, unknown>;
 }
 
 async function saveRawConfig(root: string, config: Record<string, unknown>): Promise<void> {
-  await writeFile(join(root, "inkos.json"), JSON.stringify(config, null, 2), "utf-8");
+  await writeFile(join(root, "inkchain.json"), JSON.stringify(config, null, 2), "utf-8");
 }
 
 type ChapterReviewMode = "auto" | "manual";
@@ -2248,7 +2248,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // --- Genres ---
 
   app.get("/api/v1/genres", async (c) => {
-    const { listAvailableGenres, readGenreProfile } = await import("@actalk/inkos-core");
+    const { listAvailableGenres, readGenreProfile } = await import("@actalk/inkchain-core");
     const rawGenres = await listAvailableGenres(root);
     const genres = await Promise.all(
       rawGenres.map(async (g) => {
@@ -2348,7 +2348,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     // run (or a server restart) can also drop it — so a bare 404 is ambiguous
     // ("done" vs "never existed"). Check disk: if the foundation is fully
     // written, the book really is ready; report that truthfully.
-    const { isBookFoundationComplete } = await import("@actalk/inkos-core");
+    const { isBookFoundationComplete } = await import("@actalk/inkchain-core");
     if (await isBookFoundationComplete(state.bookDir(id))) {
       return c.json({ status: "ready" });
     }
@@ -2498,7 +2498,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     // can warn users their edits won't reach the runtime.
     // Hotfix: only tag as legacy when the book actually HAS the new layout.
     // Pre-Phase-5 books use story_bible/book_rules as the authoritative source.
-    const { isNewLayoutBook, tryParseBookRulesFrontmatter } = await import("@actalk/inkos-core");
+    const { isNewLayoutBook, tryParseBookRulesFrontmatter } = await import("@actalk/inkchain-core");
     const legacy = LEGACY_SHIM_FILES.has(file) && await isNewLayoutBook(bookDir);
 
     try {
@@ -2619,7 +2619,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       let worldSummary: any = null;
       if (worldId) {
         try {
-          const { loadWorld } = await import("@actalk/inkos-core");
+          const { loadWorld } = await import("@actalk/inkchain-core");
           const world: any = await loadWorld(root, worldId as string);
           if (world) {
             worldSummary = {
@@ -2864,7 +2864,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       connected: Boolean(secrets.services[ep.id]?.apiKey),
     })).sort(compareServiceListItems);
 
-    // Add custom services from inkos.json
+    // Add custom services from inkchain.json
     try {
       const config = await loadRawConfig(root);
       for (const svc of normalizeServiceConfig((config.llm as Record<string, unknown> | undefined)?.services)) {
@@ -3274,13 +3274,13 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     let raw: Record<string, unknown>;
     try {
       currentConfig = await loadCurrentProjectConfig({ requireApiKey: false });
-      // Check if language was explicitly set in inkos.json (not just the schema default)
-      raw = JSON.parse(await readFile(join(root, "inkos.json"), "utf-8")) as Record<string, unknown>;
+      // Check if language was explicitly set in inkchain.json (not just the schema default)
+      raw = JSON.parse(await readFile(join(root, "inkchain.json"), "utf-8")) as Record<string, unknown>;
     } catch (error) {
       throw new ApiError(
         500,
         "PROJECT_CONFIG_INVALID",
-        `Failed to load inkos.json: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to load inkchain.json: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
     const languageExplicit = "language" in raw && raw.language !== "";
@@ -3390,7 +3390,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
 
   app.put("/api/v1/project", async (c) => {
     const updates = await c.req.json<Record<string, unknown>>();
-    const configPath = join(root, "inkos.json");
+    const configPath = join(root, "inkchain.json");
     try {
       const raw = await readFile(configPath, "utf-8");
       const existing = JSON.parse(raw);
@@ -3413,7 +3413,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   });
 
   app.get("/api/v1/project/input-governance-mode", async (c) => {
-    const raw = JSON.parse(await readFile(join(root, "inkos.json"), "utf-8"));
+    const raw = JSON.parse(await readFile(join(root, "inkchain.json"), "utf-8"));
     return c.json({ mode: raw.inputGovernanceMode === "legacy" ? "legacy" : "v2" });
   });
 
@@ -3423,7 +3423,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     if (!parsed.success) {
       return c.json({ error: "mode must be legacy or v2" }, 400);
     }
-    const configPath = join(root, "inkos.json");
+    const configPath = join(root, "inkchain.json");
     const raw = JSON.parse(await readFile(configPath, "utf-8"));
     raw.inputGovernanceMode = parsed.data;
     const { writeFile: writeFileFs } = await import("node:fs/promises");
@@ -3432,7 +3432,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   });
 
   app.get("/api/v1/project/chapter-versioning", async (c) => {
-    const raw = JSON.parse(await readFile(join(root, "inkos.json"), "utf-8"));
+    const raw = JSON.parse(await readFile(join(root, "inkchain.json"), "utf-8"));
     const mode = raw.chapterVersioning === "git" || raw.chapterVersioning === "off" ? raw.chapterVersioning : "snapshot";
     return c.json({ mode });
   });
@@ -3443,7 +3443,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     if (!parsed.success) {
       return c.json({ error: "mode must be git, snapshot, or off" }, 400);
     }
-    const configPath = join(root, "inkos.json");
+    const configPath = join(root, "inkchain.json");
     const raw = JSON.parse(await readFile(configPath, "utf-8"));
     raw.chapterVersioning = parsed.data;
     const { writeFile: writeFileFs } = await import("node:fs/promises");
@@ -3452,13 +3452,13 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   });
 
   app.get("/api/v1/project/detection", async (c) => {
-    const raw = JSON.parse(await readFile(join(root, "inkos.json"), "utf-8"));
+    const raw = JSON.parse(await readFile(join(root, "inkchain.json"), "utf-8"));
     return c.json({ detection: raw.detection ?? null });
   });
 
   app.put("/api/v1/project/detection", async (c) => {
     const { detection } = await c.req.json<{ detection?: unknown }>();
-    const configPath = join(root, "inkos.json");
+    const configPath = join(root, "inkchain.json");
     const raw = JSON.parse(await readFile(configPath, "utf-8"));
     if (detection === null) {
       delete raw.detection;
@@ -3491,7 +3491,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     }
 
     // Hotfix: only tag shim files as legacy when the book has the new layout.
-    const { isNewLayoutBook } = await import("@actalk/inkos-core");
+    const { isNewLayoutBook } = await import("@actalk/inkchain-core");
     const newLayout = await isNewLayoutBook(bookDir);
 
     async function describe(relPath: string): Promise<{ readonly name: string; readonly size: number; readonly preview: string; readonly legacy?: true; readonly readonly?: true; readonly readonlyReason?: string } | null> {
@@ -4621,7 +4621,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
 
   app.post("/api/v1/project/language", async (c) => {
     const { language } = await c.req.json<{ language: "zh" | "en" }>();
-    const configPath = join(root, "inkos.json");
+    const configPath = join(root, "inkchain.json");
     try {
       const raw = await readFile(configPath, "utf-8");
       const existing = JSON.parse(raw);
@@ -4652,7 +4652,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
 
       const content = await readFile(join(chaptersDir, match), "utf-8");
       const currentConfig = await loadCurrentProjectConfig();
-      const { ContinuityAuditor } = await import("@actalk/inkos-core");
+      const { ContinuityAuditor } = await import("@actalk/inkchain-core");
       const auditor = new ContinuityAuditor({
         client: createLLMClient(currentConfig.llm),
         model: currentConfig.llm.model,
@@ -4770,7 +4770,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   app.get("/api/v1/genres/:id", async (c) => {
     const genreId = c.req.param("id");
     try {
-      const { readGenreProfile } = await import("@actalk/inkos-core");
+      const { readGenreProfile } = await import("@actalk/inkchain-core");
       const { profile, body } = await readGenreProfile(root, genreId);
       return c.json({ profile, body });
     } catch (e) {
@@ -4784,7 +4784,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       throw new ApiError(400, "INVALID_GENRE_ID", `Invalid genre ID: "${genreId}"`);
     }
     try {
-      const { getBuiltinGenresDir } = await import("@actalk/inkos-core");
+      const { getBuiltinGenresDir } = await import("@actalk/inkchain-core");
       const { mkdir: mkdirFs, copyFile } = await import("node:fs/promises");
       const builtinDir = getBuiltinGenresDir();
       const projectGenresDir = join(root, "genres");
@@ -4799,13 +4799,13 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // --- Model overrides ---
 
   app.get("/api/v1/project/model-overrides", async (c) => {
-    const raw = JSON.parse(await readFile(join(root, "inkos.json"), "utf-8"));
+    const raw = JSON.parse(await readFile(join(root, "inkchain.json"), "utf-8"));
     return c.json({ overrides: raw.modelOverrides ?? {} });
   });
 
   app.put("/api/v1/project/model-overrides", async (c) => {
     const { overrides } = await c.req.json<{ overrides: Record<string, unknown> }>();
-    const configPath = join(root, "inkos.json");
+    const configPath = join(root, "inkchain.json");
     const raw = JSON.parse(await readFile(configPath, "utf-8"));
     raw.modelOverrides = overrides;
     const { writeFile: writeFileFs } = await import("node:fs/promises");
@@ -4925,13 +4925,13 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // --- Notify channels ---
 
   app.get("/api/v1/project/notify", async (c) => {
-    const raw = JSON.parse(await readFile(join(root, "inkos.json"), "utf-8"));
+    const raw = JSON.parse(await readFile(join(root, "inkchain.json"), "utf-8"));
     return c.json({ channels: raw.notify ?? [] });
   });
 
   app.put("/api/v1/project/notify", async (c) => {
     const { channels } = await c.req.json<{ channels: unknown[] }>();
-    const configPath = join(root, "inkos.json");
+    const configPath = join(root, "inkchain.json");
     const raw = JSON.parse(await readFile(configPath, "utf-8"));
     raw.notify = channels;
     const { writeFile: writeFileFs } = await import("node:fs/promises");
@@ -4954,7 +4954,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       if (!match) return c.json({ error: "Chapter not found" }, 404);
 
       const content = await readFile(join(chaptersDir, match), "utf-8");
-      const { analyzeAITells } = await import("@actalk/inkos-core");
+      const { analyzeAITells } = await import("@actalk/inkchain-core");
       const result = analyzeAITells(content);
       return c.json({ chapterNumber: chapterNum, ...result });
     } catch (e) {
@@ -4976,7 +4976,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     // story_bible.md or book_rules.md does nothing at runtime (the pipeline
     // reads outline/ instead). For pre-Phase-5 books these ARE authoritative.
     if (LEGACY_SHIM_FILES.has(file)) {
-      const { isNewLayoutBook } = await import("@actalk/inkos-core");
+      const { isNewLayoutBook } = await import("@actalk/inkchain-core");
       if (await isNewLayoutBook(bookDir)) {
         return c.json(
           { error: "Legacy compat shim; edit outline/story_frame.md instead" },
@@ -5096,7 +5096,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       const chaptersDir = join(bookDir, "chapters");
       const files = await readdir(chaptersDir);
       const mdFiles = files.filter((f) => f.endsWith(".md") && /^\d{4}/.test(f)).sort();
-      const { analyzeAITells } = await import("@actalk/inkos-core");
+      const { analyzeAITells } = await import("@actalk/inkchain-core");
 
       const results = await Promise.all(
         mdFiles.map(async (f) => {
@@ -5117,7 +5117,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   app.get("/api/v1/books/:id/detect/stats", async (c) => {
     const id = c.req.param("id");
     try {
-      const { loadDetectionHistory, analyzeDetectionInsights } = await import("@actalk/inkos-core");
+      const { loadDetectionHistory, analyzeDetectionInsights } = await import("@actalk/inkchain-core");
       const bookDir = state.bookDir(id);
       const history = await loadDetectionHistory(bookDir);
       const insights = analyzeDetectionInsights(history);
@@ -5232,7 +5232,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     if (!text?.trim()) return c.json({ error: "text is required" }, 400);
 
     try {
-      const { analyzeStyle } = await import("@actalk/inkos-core");
+      const { analyzeStyle } = await import("@actalk/inkchain-core");
       const profile = analyzeStyle(text, sourceName ?? "unknown");
       return c.json(profile);
     } catch (e) {
@@ -5268,7 +5268,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
 
     broadcast("import:start", { bookId: id, type: "chapters" });
     try {
-      const { splitChapters } = await import("@actalk/inkos-core");
+      const { splitChapters } = await import("@actalk/inkchain-core");
       const chapters = [...splitChapters(text, splitRegex)];
 
       const pipeline = new PipelineRunner(await buildPipelineConfig());
@@ -5504,10 +5504,10 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
 
   app.get("/api/v1/doctor", async (c) => {
     const { existsSync } = await import("node:fs");
-    const { GLOBAL_ENV_PATH } = await import("@actalk/inkos-core");
+    const { GLOBAL_ENV_PATH } = await import("@actalk/inkchain-core");
 
     const checks = {
-      inkosJson: existsSync(join(root, "inkos.json")),
+      inkosJson: existsSync(join(root, "inkchain.json")),
       projectEnv: existsSync(join(root, ".env")),
       globalEnv: existsSync(GLOBAL_ENV_PATH),
       booksDir: existsSync(join(root, "books")),
@@ -5995,6 +5995,6 @@ export async function startStudioServer(
     }
   }
 
-  console.log(`InkOS Studio running on http://localhost:${port}`);
+  console.log(`InkChain Studio running on http://localhost:${port}`);
   serve({ fetch: app.fetch, port });
 }

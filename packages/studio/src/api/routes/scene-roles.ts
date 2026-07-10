@@ -14,7 +14,7 @@ import {
   type SceneRole,
   type CreateSceneRole,
   type UpdateSceneRole,
-} from "@actalk/inkos-core";
+} from "@actalk/inkchain-core";
 
 // ── Helpers ──
 

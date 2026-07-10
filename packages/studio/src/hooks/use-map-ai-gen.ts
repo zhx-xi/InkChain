@@ -3,7 +3,7 @@
 
 import { useState, useCallback } from "react";
 import { postApi } from "./use-api";
-import type { MapRegionCandidate } from "@actalk/inkos-core";
+import type { MapRegionCandidate } from "@actalk/inkchain-core";
 
 // ── Types ──
 

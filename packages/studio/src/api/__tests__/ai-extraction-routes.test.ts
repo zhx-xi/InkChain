@@ -6,7 +6,7 @@ import { createStudioServer } from "../server.js";
 
 /** Creates minimal project config so loadProjectConfig doesn't fail. */
 async function setupProject(root: string): Promise<void> {
-  await writeFile(join(root, "inkos.json"), JSON.stringify({ name: "test-project", version: "0.1.0" }), "utf-8");
+  await writeFile(join(root, "inkchain.json"), JSON.stringify({ name: "test-project", version: "0.1.0" }), "utf-8");
 }
 
 /**

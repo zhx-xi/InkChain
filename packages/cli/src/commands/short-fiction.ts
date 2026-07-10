@@ -14,10 +14,10 @@ import {
   type Logger,
   type OnStreamProgress,
   type ShortFictionReference,
-} from "@actalk/inkos-core";
+} from "@actalk/inkchain-core";
 import { buildPipelineConfig, findProjectRoot, loadConfig, log, logError } from "../utils.js";
 
-export { extractResponsesImageBase64, resolveCoverApiKey } from "@actalk/inkos-core";
+export { extractResponsesImageBase64, resolveCoverApiKey } from "@actalk/inkchain-core";
 
 export const shortCommand = new Command("short")
   .description("Short fiction production workflow");
@@ -211,7 +211,7 @@ async function createShortRuntime(
       onStreamProgress: pipelineConfig.onStreamProgress,
     };
   } catch (e) {
-    if (!String(e).includes("inkos.json not found")) throw e;
+    if (!String(e).includes("inkchain.json not found")) throw e;
     const llmConfig = buildEnvLLMConfig(options);
     return {
       client: createLLMClient(llmConfig),

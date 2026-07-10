@@ -8,13 +8,13 @@
 //   POST /api/v1/project/ai-gen/persona/apply — Apply a specific agent recommendation
 
 import { Hono } from "hono";
-import { createLLMClient, chatCompletion, loadProjectConfig } from "@actalk/inkos-core";
+import { createLLMClient, chatCompletion, loadProjectConfig } from "@actalk/inkchain-core";
 import {
   PersonaConfigSchema,
   AgentRoleEnum,
   type AgentRole,
   type PersonaConfig,
-} from "@actalk/inkos-core/models/persona-config.js";
+} from "@actalk/inkchain-core/models/persona-config.js";
 
 // ── Route factory ──
 

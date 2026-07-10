@@ -3,7 +3,7 @@
 
 import { useCallback } from "react";
 import { cn } from "../lib/utils";
-import type { BehaviorConstraint, BehaviorStyle } from "@actalk/inkos-core/models/persona-config.js";
+import type { BehaviorConstraint, BehaviorStyle } from "@actalk/inkchain-core/models/persona-config.js";
 
 // ── Style options with colors ──
 

@@ -8,7 +8,7 @@ import {
   type ChapterPlan,
   type ChapterOutline,
   type OutlineFile,
-} from "@actalk/inkos-core";
+} from "@actalk/inkchain-core";
 
 const OUTLINE_FILE = "story/state/outline.json";
 

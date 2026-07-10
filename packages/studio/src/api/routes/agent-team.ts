@@ -12,7 +12,7 @@ import { join } from "node:path";
 import {
   AgentTeamConfigSchema,
   type AgentTeamConfig,
-} from "@actalk/inkos-core";
+} from "@actalk/inkchain-core";
 import { ApiError } from "../errors.js";
 
 const DEFAULT_AGENT_ROLES = [

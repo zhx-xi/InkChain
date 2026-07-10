@@ -1,7 +1,7 @@
 /**
  * Mock LLM Helper — E2E 真实 LLM 模式开关
  *
- * 设置环境变量 INKOS_E2E_REAL_LLM=1 可跳过所有 AI 提取端点 Mock,
+ * 设置环境变量 INKCHAIN_E2E_REAL_LLM=1 可跳过所有 AI 提取端点 Mock,
  * 让 E2E 测试真实调用 LLM API（需要配置对应 API Key）。
  *
  * 默认不设置该变量，所有 AI 提取使用 page.route() Mock 数据。
@@ -9,7 +9,7 @@
 
 /** 当前 E2E 运行模式 */
 export function isRealLLMMode(): boolean {
-  return process.env.INKOS_E2E_REAL_LLM === "1";
+  return process.env.INKCHAIN_E2E_REAL_LLM === "1";
 }
 
 /**

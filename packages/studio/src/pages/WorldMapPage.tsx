@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useApi } from "../hooks/use-api";
-import type { WorldConfig, WorldRegion } from "@actalk/inkos-core";
+import type { WorldConfig, WorldRegion } from "@actalk/inkchain-core";
 import { ArrowLeft, ZoomIn, ZoomOut, RotateCcw, X, MapPin, Users, Calendar } from "lucide-react";
 import { cn } from "../lib/utils";
 
@@ -16,7 +16,7 @@ interface WorldMapProps {
   readonly nav?: Nav;
 }
 
-// Color palette for region types — InkOS warm-tone palette
+// Color palette for region types — InkChain warm-tone palette
 const REGION_COLORS: Record<string, string> = {
   "大陆": "#D4A855",
   "国家": "#8B3A3A",

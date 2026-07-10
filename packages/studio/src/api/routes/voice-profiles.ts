@@ -19,7 +19,7 @@ import {
   listVoicePresets,
   getVoicePreset,
   CharacterVoiceProfileSchema,
-} from "@actalk/inkos-core";
+} from "@actalk/inkchain-core";
 
 export function createVoiceProfilesRouter(getProjectRoot: () => string): Hono {
   const app = new Hono();

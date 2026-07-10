@@ -49,7 +49,7 @@ test("3. 流程编辑Tab: ReactFlow图渲染", async ({ page }) => {
   await page.getByText("流程编辑").click();
 
   // Pipeline view should render — look for the brand mark "墨" or pipeline label
-  await expect(page.getByText("InkOS Agent Pipeline")).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText("InkChain Agent Pipeline")).toBeVisible({ timeout: 10_000 });
 
   // The pipeline SVG viewport should be rendered
   const svg = page.locator("svg");
@@ -72,7 +72,7 @@ test("4. Tab切换: 数据保持", async ({ page }) => {
 
   // Switch to pipeline tab
   await page.getByText("流程编辑").click();
-  await expect(page.getByText("InkOS Agent Pipeline")).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText("InkChain Agent Pipeline")).toBeVisible({ timeout: 10_000 });
 
   // Switch back to team tab
   await page.getByText("团队配置").click();

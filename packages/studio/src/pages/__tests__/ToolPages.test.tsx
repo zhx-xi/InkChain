@@ -55,7 +55,7 @@ vi.mock("@xyflow/react", () => ({
 }));
 
 // ── Mock inkos-core models (used by ForeshadowingPage) ──
-vi.mock("@actalk/inkos-core/models/foreshadowing.js", () => ({
+vi.mock("@actalk/inkchain-core/models/foreshadowing.js", () => ({
   FORESHADOWING_TYPE_LABELS: {
     "情节伏笔": "情节伏笔",
     "角色伏笔": "角色伏笔",
