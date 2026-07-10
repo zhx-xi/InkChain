@@ -119,13 +119,21 @@ export async function resolveEffectiveLLMConfig(
 }
 
 async function readProjectConfig(root: string): Promise<Record<string, unknown>> {
-  const configPath = join(root, "inkchain.json");
+  // Try inkchain.json first, fall back to inkos.json for backward compatibility
+  let configPath = join(root, "inkchain.json");
+  let legacyPath = join(root, "inkos.json");
   try {
     await access(configPath);
   } catch {
-    throw new Error(
-      `inkchain.json not found in ${root}.\nMake sure you are inside an InkOS project directory (cd into the project created by 'inkos init').`,
-    );
+    // Fallback: existing projects may still have inkos.json
+    try {
+      await access(legacyPath);
+      configPath = legacyPath;
+    } catch {
+      throw new Error(
+        `inkchain.json not found in ${root}.\nMake sure you are inside an InkChain project directory (cd into the project created by 'inkchain init').`,
+      );
+    }
   }
 
   const raw = await readFile(configPath, "utf-8");
