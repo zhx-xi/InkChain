@@ -72,7 +72,7 @@ describe.sequential("publish packaging", () => {
 
       await writeFile(
         join(tempRoot, "package.json"),
-        `${JSON.stringify({ name: "inkos", version: "0.4.6" }, null, 2)}\n`,
+        `${JSON.stringify({ name: "inkchain", version: "0.4.6" }, null, 2)}\n`,
       );
       await writeFile(
         join(tempCoreDir, "package.json"),
@@ -150,7 +150,7 @@ describe.sequential("publish packaging", () => {
 
       await writeFile(
         join(tempRoot, "package.json"),
-        `${JSON.stringify({ name: "inkos", version: "0.5.1" }, null, 2)}\n`,
+        `${JSON.stringify({ name: "inkchain", version: "0.5.1" }, null, 2)}\n`,
       );
       await writeFile(
         join(tempCoreDir, "package.json"),
@@ -200,7 +200,7 @@ describe.sequential("publish packaging", () => {
 
       await writeFile(
         join(tempRoot, "package.json"),
-        `${JSON.stringify({ name: "inkos", version: "0.5.1" }, null, 2)}\n`,
+        `${JSON.stringify({ name: "inkchain", version: "0.5.1" }, null, 2)}\n`,
       );
       await writeFile(
         join(tempCoreDir, "package.json"),

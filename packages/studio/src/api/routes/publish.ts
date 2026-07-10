@@ -173,7 +173,7 @@ export function createPublishRouter(root: string) {
     // Build qidian-compatible TXT content
     const lines: string[] = [];
     lines.push(meta.title);
-    lines.push(`作者: ${meta.platform === "qidian" ? "（请填写作者名）" : "InkOS"}`);
+    lines.push(`作者: ${meta.platform === "qidian" ? "（请填写作者名）" : "InkChain"}`);
     lines.push(`题材: ${meta.genre}`);
     lines.push(`总字数: ${chapters.reduce((sum, ch) => sum + ch.content.length, 0)}`);
     lines.push("");

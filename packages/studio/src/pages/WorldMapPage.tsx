@@ -16,7 +16,7 @@ interface WorldMapProps {
   readonly nav?: Nav;
 }
 
-// Color palette for region types — InkOS warm-tone palette
+// Color palette for region types — InkChain warm-tone palette
 const REGION_COLORS: Record<string, string> = {
   "大陆": "#D4A855",
   "国家": "#8B3A3A",

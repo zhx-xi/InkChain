@@ -82,7 +82,7 @@ describe("CLI integration", () => {
   describe("inkos --help", () => {
     it("prints help with command list", () => {
       const output = run(["--help"]);
-      expect(output).toContain("inkos");
+      expect(output).toContain("inkchain");
       expect(output).toContain("init");
       expect(output).toContain("book");
       expect(output).toContain("write");
@@ -551,7 +551,7 @@ describe("CLI integration", () => {
   describe("inkos doctor", () => {
     it("checks environment health", () => {
       const { stdout } = runStderr(["doctor"]);
-      expect(stdout).toContain("InkOS Doctor");
+      expect(stdout).toContain("InkChain Doctor");
       expect(stdout).toContain("Node.js >= 20");
       expect(stdout).toContain("SQLite memory index");
       expect(stdout).toContain("inkchain.json");

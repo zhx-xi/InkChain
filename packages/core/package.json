@@ -1,7 +1,7 @@
 {
   "name": "@actalk/inkchain-core",
   "version": "3.0.0",
-  "description": "InkOS core engine for story creation agents: governed context, writing, audit, revision, covers, and interactive worlds",
+  "description": "InkChain core engine for story creation agents: governed context, writing, audit, revision, covers, and interactive worlds",
   "keywords": [
     "story-creation-ai-agent",
     "story-agent",
@@ -58,7 +58,7 @@
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Narcooo/inkos.git",
+    "url": "https://github.com/zhx-xi/InkChain.git",
     "directory": "packages/core"
   },
   "scripts": {

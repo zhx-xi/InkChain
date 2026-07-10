@@ -1,7 +1,7 @@
 {
   "name": "@actalk/inkchain-studio",
   "version": "3.0.0",
-  "description": "InkOS Studio — web workbench for story creation, InkOS Short, covers, and open-world interactive play",
+  "description": "InkChain Studio — web workbench for story creation, InkChain Short, covers, and open-world interactive play",
   "type": "module",
   "main": "dist/api/index.js",
   "types": "dist/api/index.d.ts",
@@ -12,7 +12,7 @@
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Narcooo/inkos.git",
+    "url": "https://github.com/zhx-xi/InkChain.git",
     "directory": "packages/studio"
   },
   "scripts": {

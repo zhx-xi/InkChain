@@ -3044,7 +3044,7 @@ describe("createStudioServer daemon lifecycle", () => {
     }));
   });
 
-  it("handles explicit chat chapter edits outside the InkOS writing agent", async () => {
+  it("handles explicit chat chapter edits outside the InkChain writing agent", async () => {
     loadChapterIndexMock.mockResolvedValueOnce([{
       number: 3,
       title: "Demo",
@@ -3675,7 +3675,7 @@ describe("createStudioServer daemon lifecycle", () => {
     expect(chatCompletionMock).not.toHaveBeenCalled();
   });
 
-  it("classifies InkOS parser/tool errors as internal instead of blaming the selected provider", async () => {
+  it("classifies InkChain parser/tool errors as internal instead of blaming the selected provider", async () => {
     const internalError = "sub_agent writer failed: missing YAML frontmatter delimiters";
     runAgentSessionMock.mockResolvedValueOnce({
       responseText: "",
@@ -3699,7 +3699,7 @@ describe("createStudioServer daemon lifecycle", () => {
     expect(response.status).toBe(500);
     const json = await response.json() as { error: { code: string; message: string }; response: string };
     expect(json.error.code).toBe("AGENT_INTERNAL_ERROR");
-    expect(json.error.message).toContain("InkOS 内部流程错误");
+    expect(json.error.message).toContain("InkChain 内部流程错误");
     expect(json.error.message).toContain("missing YAML frontmatter delimiters");
     expect(json.error.message).not.toMatch(/kkaiapi/i);
     expect(json.response).toBe(json.error.message);

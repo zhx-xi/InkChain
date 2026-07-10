@@ -1,5 +1,5 @@
 {
-  "name": "inkos",
+  "name": "inkchain",
   "version": "3.0.0",
   "private": true,
   "description": "Story Creation AI Agent for long-form and short fiction, scripts, interactive games, and IP content",
@@ -21,7 +21,7 @@
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Narcooo/inkos"
+    "url": "https://github.com/zhx-xi/InkChain"
   },
   "scripts": {
     "build": "pnpm -r build",

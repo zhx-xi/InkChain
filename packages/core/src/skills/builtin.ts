@@ -102,7 +102,7 @@ const RAW_BUILTIN_CAPABILITY_SKILLS: CapabilitySkillManifest[] = [
     id: "open-world-play",
     name: "Open World Play",
     description: "Open-world and branching interactive fiction: world contracts, character agents, time semantics, inventory/evidence/relation state, and scene rendering.",
-    whenToUse: "Use for InkOS Play, open worlds, branching interaction, free actions, player persona, world state, character autonomy, and play illustrations.",
+    whenToUse: "Use for InkChain Play, open worlds, branching interaction, free actions, player persona, world state, character autonomy, and play illustrations.",
     triggers: [
       "开放世界",
       "分支互动",
@@ -255,7 +255,7 @@ const RAW_BUILTIN_CAPABILITY_SKILLS: CapabilitySkillManifest[] = [
   {
     id: "humanizer-zh",
     name: "Humanizer (\u53BBAI\u5473)",
-    description: "Detect and remove 24 AI writing trace patterns across content, language-grammar, style, and communication modes. Supplement to InkOS built-in anti-AI logic.",
+    description: "Detect and remove 24 AI writing trace patterns across content, language-grammar, style, and communication modes. Supplement to InkChain built-in anti-AI logic.",
     whenToUse: "Use as an editing aid: humanize AI-generated prose, remove analytical-report language, AI vocabulary, formulaic structures, overused dashes, and collaborative chatbot traces. Compatible with all session types.",
     triggers: [
       "\u53BBAI\u5473",

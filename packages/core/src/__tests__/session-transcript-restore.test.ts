@@ -901,7 +901,7 @@ describe("session transcript restore", () => {
         role: "assistant",
         content: [{ type: "text", text: "I have processed the tool results." }],
         api: "openai-completions",
-        provider: "inkos",
+        provider: "inkchain",
         model: "synthetic-tool-result-bridge",
         usage,
         stopReason: "stop",

@@ -248,8 +248,8 @@ vi.mock("../../store/chat", () => ({
   useChatStore: (selector: (state: Record<string, unknown>) => unknown) => selector(mockStoreState),
 }));
 
-vi.mock("../InkosLogo", () => ({
-  InkosLogo: () => <svg data-testid="inkos-logo" />,
+vi.mock("../InkChainLogo", () => ({
+  InkChainLogo: () => <svg data-testid="inkchain-logo" />,
 }));
 
 // ── Tests ──

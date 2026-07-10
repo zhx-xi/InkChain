@@ -122,7 +122,7 @@ export const qidianAdapter: IPlatformAdapter = {
   formatFullBook(bookConfig: BookConfig, chapters: PublishChapter[], options?: FormatOptions): string {
     const lines: string[] = [];
     lines.push(bookConfig.title);
-    lines.push(`作者: ${bookConfig.platform === "qidian" ? "" : "InkOS"}`);
+    lines.push(`作者: ${bookConfig.platform === "qidian" ? "" : "InkChain"}`);
     lines.push(`题材: ${bookConfig.genre}`);
     lines.push(`总字数: ${chapters.reduce((sum, ch) => sum + ch.text.length, 0)}`);
     lines.push("");

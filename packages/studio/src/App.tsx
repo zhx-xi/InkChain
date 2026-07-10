@@ -218,7 +218,7 @@ export function App() {
                <House size={18} />
                <span>首页</span>
                <span className="text-muted-foreground/70">/</span>
-               <span className="font-serif">InkOS Studio</span>
+               <span className="font-serif">InkChain Studio</span>
              </button>
           </div>
 

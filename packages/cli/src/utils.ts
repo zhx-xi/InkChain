@@ -130,7 +130,7 @@ export function buildPipelineConfig(
   }
 
   const hasLogging = sinks.length > 0;
-  const logger = hasLogging ? createLogger({ tag: "inkos", sinks }) : undefined;
+  const logger = hasLogging ? createLogger({ tag: "inkchain", sinks }) : undefined;
 
   const onStreamProgress = hasLogging
     ? (progress: { readonly elapsedMs: number; readonly totalChars: number; readonly chineseChars: number; readonly status: string }) => {
