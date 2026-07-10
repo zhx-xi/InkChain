@@ -20,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: read
+      contents: read
     outputs:
       agent: ${{ steps.filter.outputs.agent }}
       dashboard: ${{ steps.filter.outputs.dashboard }}
@@ -37,6 +38,8 @@ jobs:
       misc: ${{ steps.filter.outputs.misc }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed by dorny/paths-filter for PR diff
       - uses: dorny/paths-filter@v3
         id: filter
         with:
