@@ -14,6 +14,7 @@ export default defineConfig({
       "@actalk/inkchain-core/models/persona-config.js": resolve(__dirname, "../core/src/models/persona-config.ts"),
       "@actalk/inkchain-core/models/foreshadowing.js": resolve(__dirname, "../core/src/models/foreshadowing.ts"),
       "@actalk/inkchain-core/models/skill-config.js": resolve(__dirname, "../core/src/models/skill-config.ts"),
+      "@actalk/inkchain-core/models/world-config.js": resolve(__dirname, "../core/src/models/world-config.ts"),
       "@actalk/inkchain-core": resolve(__dirname, "../core/src/index.ts"),
     },
   },
