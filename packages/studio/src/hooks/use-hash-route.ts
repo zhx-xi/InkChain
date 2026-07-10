@@ -163,7 +163,6 @@ function routeToHash(route: HashRoute): string {
     case "world-geoviz": return `#/worlds/${encodeURIComponent(route.worldId)}/geoviz`;
     case "world-map": return `#/worlds/${encodeURIComponent(route.worldId)}/map`;
     case "world-inheritance": return `#/worlds/${encodeURIComponent(route.worldId)}/inherit`;
-    case "world-map": return `#/worlds/${encodeURIComponent(route.worldId)}/map`;
     case "publish": return `#/publish/${encodeURIComponent(route.bookId)}`;
     case "edit-dashboard": return `#/edit-dashboard/${encodeURIComponent(route.bookId)}`;
     case "style-consistency": return "#/style-consistency";

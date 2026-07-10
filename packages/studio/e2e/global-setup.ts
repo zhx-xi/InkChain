@@ -1,6 +1,7 @@
 import { execSync } from "child_process";
 import { fileURLToPath } from "url";
 import path from "path";
+import { mkdirSync, writeFileSync } from "fs";
 
 /**
  * Rebuild @actalk/inkchain-core before E2E tests start.
@@ -21,6 +22,23 @@ export default function globalSetup(): void {
   // point at the .worktrees parent, where the --filter matches nothing and the
   // build silently no-ops, leaving core dist stale (agent stub absent at runtime).
   const workspaceRoot = path.resolve(path.dirname(thisFile), "../../../");
+
+  // Ensure test-project/ exists with inkchain.json so API's /api/v1/project
+  // doesn't return 500 (which would block the entire App behind the
+  // "project config loading" gate).
+  const testProjectDir = path.resolve(path.dirname(thisFile), "../test-project");
+  mkdirSync(testProjectDir, { recursive: true });
+  writeFileSync(
+    path.join(testProjectDir, "inkchain.json"),
+    JSON.stringify({
+      version: "1.0",
+      llm: { provider: "openai", model: "gpt-4o-mini", stub: true, service: "custom" },
+      agent: { defaultModel: "gpt-4o-mini", collaborationMode: "sequential" },
+      project: { name: "E2E Test Project", language: "zh" },
+    }, null, 2),
+    "utf-8",
+  );
+
   try {
     execSync("pnpm --filter @actalk/inkchain-core build", {
       cwd: workspaceRoot,
