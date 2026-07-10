@@ -1,0 +1,29 @@
+name: E2E Required
+
+# Gatekeeper: must pass for merge.  Only runs the rename smoke
+# and language selector — tests that are stable and verify the
+# app boots correctly.  Other E2E groups run in e2e-optional.yml
+# and do not block PRs.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: e2e-req-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  rename:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "rename-smoke"
+      group-name: "Rename Smoke"
+
+  language:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "language-selector"
+      group-name: "Language Selector"
