@@ -131,7 +131,7 @@ export const doctorCommand = new Command("doctor")
       await readFile(join(root, "inkchain.json"), "utf-8");
       checks.push({ name: "inkchain.json", ok: true, detail: "Found" });
     } catch {
-      checks.push({ name: "inkchain.json", ok: false, detail: "Not found. Run 'inkos init'" });
+      checks.push({ name: "inkchain.json", ok: false, detail: "Not found. Run 'inkchain init'" });
     }
 
     // 3. Check .env exists
@@ -152,7 +152,7 @@ export const doctorCommand = new Command("doctor")
       checks.push({
         name: "Global Config",
         ok: hasGlobal,
-        detail: hasGlobal ? `Found (${GLOBAL_ENV_PATH})` : "Not set. Run 'inkos config set-global'",
+        detail: hasGlobal ? `Found (${GLOBAL_ENV_PATH})` : "Not set. Run 'inkchain config set-global'",
       });
     }
 
@@ -222,7 +222,7 @@ export const doctorCommand = new Command("doctor")
           checks.push({
             name: "Version Migration",
             ok: false,
-            detail: `${legacyCount} book(s) using legacy format (pre-v0.6). Run 'inkos write next' on each to auto-migrate, or re-init with 'inkos init'.`,
+            detail: `${legacyCount} book(s) using legacy format (pre-v0.6). Run 'inkchain write next' on each to auto-migrate, or re-init with 'inkchain init'.`,
           });
         } else if (bookIds.length > 0) {
           checks.push({
@@ -271,7 +271,7 @@ export const doctorCommand = new Command("doctor")
         checks.push({
           name: "  Hint",
           ok: false,
-          detail: "Run `inkos setup`, `inkos config set-global`, or add LLM settings to the project .env file.",
+          detail: "Run `inkchain setup`, `inkchain config set-global`, or add LLM settings to the project .env file.",
         });
       } else {
         checks.push({

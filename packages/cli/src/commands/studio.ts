@@ -97,12 +97,12 @@ export async function resolveStudioLaunch(root: string): Promise<StudioLaunchSpe
   }
 
   const builtEntry = await firstAccessiblePath([
-    join(root, "node_modules", "@actalk", "inkos-studio", "dist", "api", "index.js"),
-    join(root, "node_modules", "@actalk", "inkos-studio", "server.cjs"),
-    join(cliPackageRoot, "node_modules", "@actalk", "inkos-studio", "dist", "api", "index.js"),
-    join(cliPackageRoot, "node_modules", "@actalk", "inkos-studio", "server.cjs"),
-    join(cliPackageRoot, "..", "inkos-studio", "dist", "api", "index.js"),
-    join(cliPackageRoot, "..", "inkos-studio", "server.cjs"),
+    join(root, "node_modules", "@actalk", "inkchain-studio", "dist", "api", "index.js"),
+    join(root, "node_modules", "@actalk", "inkchain-studio", "server.cjs"),
+    join(cliPackageRoot, "node_modules", "@actalk", "inkchain-studio", "dist", "api", "index.js"),
+    join(cliPackageRoot, "node_modules", "@actalk", "inkchain-studio", "server.cjs"),
+    join(cliPackageRoot, "..", "inkchain-studio", "dist", "api", "index.js"),
+    join(cliPackageRoot, "..", "inkchain-studio", "server.cjs"),
   ]);
   if (builtEntry) {
     return {
@@ -126,7 +126,7 @@ export async function launchStudioWorkbench(root: string, port: string): Promise
     logError(
       "InkChain Studio not found. If you cloned the repo, run:\n" +
       "  cd packages/studio && pnpm install && pnpm build\n" +
-      "Then run 'inkos studio' from the project root.",
+      "Then run 'inkchain studio' from the project root.",
     );
     process.exit(1);
   }

@@ -89,7 +89,7 @@ function buildProjectEnvTemplate(globalConfigured: boolean): string {
   if (globalConfigured) {
     return [
       "# Project-level LLM overrides (optional)",
-      "# Global config at ~/.inkos/.env will be used by default.",
+      "# Global config at ~/.inkchain/.env will be used by default.",
       "# Switch Studio to '使用 Studio 配置' if you want per-project service settings.",
       "# Uncomment below to override for this project only:",
       "# INKOS_LLM_PROVIDER=openai",

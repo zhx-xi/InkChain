@@ -89,7 +89,7 @@ configCommand
 
 configCommand
   .command("set-global")
-  .description("Set global LLM config (~/.inkos/.env), shared by all projects")
+  .description("Set global LLM config (~/.inkchain/.env), shared by all projects")
   .requiredOption("--provider <provider>", "LLM provider (openai / anthropic)")
   .requiredOption("--base-url <url>", "API base URL")
   .requiredOption("--api-key <key>", "API key")
@@ -126,7 +126,7 @@ configCommand
 
 configCommand
   .command("show-global")
-  .description("Show global LLM config (~/.inkos/.env)")
+  .description("Show global LLM config (~/.inkchain/.env)")
   .action(async () => {
     try {
       const content = await readFile(GLOBAL_ENV_PATH, "utf-8");
@@ -136,7 +136,7 @@ configCommand
       );
       log(masked);
     } catch {
-      log("No global config found. Run 'inkos config set-global' to create one.");
+      log("No global config found. Run 'inkchain config set-global' to create one.");
     }
   });
 
