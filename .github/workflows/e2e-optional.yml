@@ -1,9 +1,8 @@
 name: E2E Optional
 
 # Informational only — does NOT block PRs.
-# These groups have known pre-existing failures tracked in #582–#591.
-# Run in parallel for visibility; each group uses continue-on-error
-# so a single failure does not poison the whole workflow.
+# Jobs are triggered by path filters: only run when relevant files change.
+# On push to main, all groups run for full validation.
 
 on:
   push:
@@ -16,85 +15,253 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # ── Detect what changed ──────────────────────────────────────────
+  changes:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+    outputs:
+      agent: ${{ steps.filter.outputs.agent }}
+      dashboard: ${{ steps.filter.outputs.dashboard }}
+      book: ${{ steps.filter.outputs.book }}
+      chapter: ${{ steps.filter.outputs.chapter }}
+      audit: ${{ steps.filter.outputs.audit }}
+      authoring: ${{ steps.filter.outputs.authoring }}
+      timeline: ${{ steps.filter.outputs.timeline }}
+      foreshadowing: ${{ steps.filter.outputs.foreshadowing }}
+      world: ${{ steps.filter.outputs.world }}
+      style: ${{ steps.filter.outputs.style }}
+      film: ${{ steps.filter.outputs.film }}
+      skill: ${{ steps.filter.outputs.skill }}
+      flow: ${{ steps.filter.outputs.flow }}
+      misc: ${{ steps.filter.outputs.misc }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            # Core is shared by everything — any core change triggers all
+            core:
+              - 'packages/core/**'
+              - 'packages/studio/vitest.config.ts'
+              - 'packages/studio/playwright.config.ts'
+              - 'packages/studio/playwright.ci.config.ts'
+              - 'packages/studio/e2e/global-setup.ts'
+              - 'packages/studio/e2e/fixtures/**'
+            agent:
+              - 'packages/core/**'
+              - 'packages/studio/src/components/Agent*/**'
+              - 'packages/studio/src/api/routes/agent*'
+              - 'packages/studio/e2e/agent*'
+            dashboard:
+              - 'packages/core/**'
+              - 'packages/studio/src/components/Sidebar.*'
+              - 'packages/studio/src/pages/Dashboard*'
+              - 'packages/studio/src/App.tsx'
+              - 'packages/studio/e2e/dashboard*'
+              - 'packages/studio/e2e/sidebar*'
+              - 'packages/studio/e2e/project-root*'
+              - 'packages/studio/e2e/edit-dashboard*'
+            book:
+              - 'packages/core/**'
+              - 'packages/studio/src/pages/Book*'
+              - 'packages/studio/src/api/book-create*'
+              - 'packages/studio/e2e/book*'
+            chapter:
+              - 'packages/core/**'
+              - 'packages/studio/src/pages/Chapter*'
+              - 'packages/studio/src/components/chapter/**'
+              - 'packages/studio/e2e/chapter*'
+              - 'packages/studio/e2e/edge-chapter*'
+            audit:
+              - 'packages/core/**'
+              - 'packages/studio/src/pages/Audit*'
+              - 'packages/studio/src/components/audit/**'
+              - 'packages/studio/src/api/routes/audit*'
+              - 'packages/studio/e2e/audit*'
+            authoring:
+              - 'packages/core/**'
+              - 'packages/studio/src/pages/ChatPage*'
+              - 'packages/studio/src/api/routes/writing-continue*'
+              - 'packages/studio/e2e/authoring*'
+            timeline:
+              - 'packages/core/**'
+              - 'packages/studio/src/pages/Timeline*'
+              - 'packages/studio/src/api/routes/timeline*'
+              - 'packages/studio/e2e/timeline*'
+            foreshadowing:
+              - 'packages/core/**'
+              - 'packages/studio/src/pages/Foreshadowing*'
+              - 'packages/studio/src/api/routes/foreshadowing*'
+              - 'packages/studio/e2e/foreshadow*'
+              - 'packages/studio/e2e/foresight*'
+            world:
+              - 'packages/core/**'
+              - 'packages/studio/src/pages/World*'
+              - 'packages/studio/src/api/routes/worlds*'
+              - 'packages/studio/src/api/routes/maps*'
+              - 'packages/studio/src/components/world-editor/**'
+              - 'packages/studio/e2e/world*'
+            style:
+              - 'packages/core/**'
+              - 'packages/studio/src/api/routes/style*'
+              - 'packages/studio/src/api/routes/consistency*'
+              - 'packages/studio/src/pages/Consistency*'
+              - 'packages/studio/e2e/style*'
+            film:
+              - 'packages/core/**'
+              - 'packages/studio/src/pages/Film*'
+              - 'packages/studio/src/pages/StoryPlayer*'
+              - 'packages/studio/src/pages/StoryGraph*'
+              - 'packages/studio/e2e/film*'
+            skill:
+              - 'packages/core/**'
+              - 'packages/studio/src/components/Skill*'
+              - 'packages/studio/src/api/routes/skills*'
+              - 'packages/studio/src/pages/Skill*'
+              - 'packages/studio/e2e/skill*'
+              - 'packages/studio/e2e/builtin*'
+            flow:
+              - 'packages/core/**'
+              - 'packages/studio/src/pages/Flow*'
+              - 'packages/studio/src/store/relations/**'
+              - 'packages/studio/src/lib/story*'
+              - 'packages/studio/e2e/flow*'
+              - 'packages/studio/e2e/relation*'
+            misc:
+              - 'packages/core/**'
+              - 'packages/studio/src/api/routes/**'
+              - 'packages/studio/e2e/analysis*'
+              - 'packages/studio/e2e/export*'
+              - 'packages/studio/e2e/import*'
+              - 'packages/studio/e2e/log-viewer*'
+              - 'packages/studio/e2e/player*'
+              - 'packages/studio/e2e/service*'
+              - 'packages/studio/e2e/session*'
+              - 'packages/studio/e2e/genre*'
+              - 'packages/studio/e2e/character*'
+              - 'packages/studio/e2e/validation*'
+              - 'packages/studio/e2e/cross-feature*'
+              - 'packages/studio/e2e/radar*'
+              - 'packages/studio/e2e/truth*'
+              - 'packages/studio/e2e/volume*'
+              - 'packages/studio/e2e/daemon*'
+              - 'packages/studio/e2e/doctor*'
+              - 'packages/studio/e2e/build*'
+              - 'packages/studio/e2e/project-settings*'
+              - 'packages/studio/e2e/issue*'
+
+  # ── E2E groups (conditionally triggered) ────────────────────────
+  # On push to main: always runs. On PR: only when relevant files changed.
+
   agent:
+    needs: changes
+    if: needs.changes.outputs.agent == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
       spec: "agent-team agent-team-core agent-hub-page agent-pipeline-view"
       group-name: "Agent Team"
 
   dashboard:
+    needs: changes
+    if: needs.changes.outputs.dashboard == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
       spec: "dashboard project-root sidebar-navigation edit-dashboard"
       group-name: "Dashboard"
 
   book:
+    needs: changes
+    if: needs.changes.outputs.book == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
       spec: "book-create book-detail book-style-page book-world-extract"
       group-name: "Book"
 
   chapter:
+    needs: changes
+    if: needs.changes.outputs.chapter == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
       spec: "chapter-audit chapter-history-core chapter-reader chapter-versioning chapter-volume chapter-wizard edge-chapter-range"
       group-name: "Chapter"
 
   audit:
+    needs: changes
+    if: needs.changes.outputs.audit == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
       spec: "audit-context-popup audit-fix-button audit-page-core audit-volumes"
       group-name: "Audit"
 
   authoring:
+    needs: changes
+    if: needs.changes.outputs.authoring == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
       spec: "authoring authoring-confirm"
       group-name: "Authoring"
 
   timeline:
+    needs: changes
+    if: needs.changes.outputs.timeline == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
       spec: "timeline-column-spacing timeline-cross-role timeline-filter timeline-flow timeline-page-core"
       group-name: "Timeline"
 
   foreshadowing:
+    needs: changes
+    if: needs.changes.outputs.foreshadowing == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
       spec: "foreshadow-payoff foreshadowing-dynamic-chapters foreshadowing-flow foreshadowing-page-core foresight-pagination foresight-table"
       group-name: "Foreshadowing"
 
   world:
+    needs: changes
+    if: needs.changes.outputs.world == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
       spec: "world-association world-extract-llm world-inheritance-page world-list-core world-map-core world-map"
       group-name: "World"
 
   style:
+    needs: changes
+    if: needs.changes.outputs.style == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
       spec: "style-chapter-range style-detection-core style-detection style-prescreen"
       group-name: "Style Detection"
 
   film:
+    needs: changes
+    if: needs.changes.outputs.film == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
       spec: "film-image film-list film-wizard"
       group-name: "Interactive Film"
 
   skill:
+    needs: changes
+    if: needs.changes.outputs.skill == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
       spec: "skill-library skill-library-core builtin-skill-edit"
       group-name: "Skills"
 
   flow:
+    needs: changes
+    if: needs.changes.outputs.flow == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
       spec: "flow flow-editor flow-screenshot relation-graph relation-graph-core"
       group-name: "Flow & Relations"
 
   misc:
+    needs: changes
+    if: needs.changes.outputs.misc == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
       spec: "analysis consistency-check-panel export import-manager log-viewer log-viewer-508 player service-list-page session-archive genre-manager character-tiering validation cross-feature radar-view radar-view-510 truth-files volume-dnd daemon-control doctor-view build-verification project-settings issue-394-world-association issue-406-timeline-filter issue-410-audit-cache issue-413-audit-context issue-421-builtin-skill-edit"
