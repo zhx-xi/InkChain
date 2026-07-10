@@ -1,5 +1,5 @@
 {
-  "name": "@actalk/inkos",
+  "name": "@actalk/inkchain-cli",
   "version": "3.0.0",
   "description": "Story Creation AI Agent CLI for long-form fiction, InkOS Short, fan works, continuations, covers, and interactive worlds.",
   "keywords": [
@@ -36,7 +36,7 @@
     "directory": "packages/cli"
   },
   "scripts": {
-    "prepare:workspace-core": "pnpm --filter @actalk/inkos-core build",
+    "prepare:workspace-core": "pnpm --filter @actalk/inkchain-core build",
     "prepack": "node ../../scripts/prepare-package-for-publish.mjs",
     "postpack": "node ../../scripts/restore-package-json.mjs",
     "prepublishOnly": "node ../../scripts/verify-no-workspace-protocol.mjs .",
@@ -49,8 +49,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@actalk/inkos-core": "workspace:*",
-    "@actalk/inkos-studio": "workspace:*",
+    "@actalk/inkchain-core": "workspace:*",
+    "@actalk/inkchain-studio": "workspace:*",
     "commander": "^13.0.0",
     "dotenv": "^16.4.0",
     "epub-gen-memory": "^1.0.10",

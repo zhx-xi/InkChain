@@ -1,5 +1,5 @@
 {
-  "name": "@actalk/inkos-studio",
+  "name": "@actalk/inkchain-studio",
   "version": "3.0.0",
   "description": "InkOS Studio — web workbench for story creation, InkOS Short, covers, and open-world interactive play",
   "type": "module",
@@ -34,7 +34,7 @@
     "typecheck": "tsc --noEmit && tsc -p tsconfig.server.json --noEmit"
   },
   "dependencies": {
-    "@actalk/inkos-core": "workspace:*",
+    "@actalk/inkchain-core": "workspace:*",
     "@base-ui/react": "^1.3.0",
     "@fontsource-variable/geist": "^5.2.8",
     "@hono/node-server": "^1.13.0",
