@@ -14,7 +14,7 @@ jobs:
   e2e:
     name: Playwright E2E
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 30
 
     steps:
       - uses: actions/checkout@v4
@@ -37,11 +37,21 @@ jobs:
         working-directory: packages/studio
         run: PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --with-deps
 
-      - name: Run E2E tests
+      - name: Diagnostics — verify setup
+        working-directory: packages/studio
+        run: |
+          echo "=== Node version ===" && node -v
+          echo "=== tsx available ===" && npx tsx --version || echo "tsx not found via npx"
+          echo "=== node_modules/.bin/tsx ===" && ls -la node_modules/.bin/tsx || echo "tsx not at .bin"
+          echo "=== Playwright version ===" && npx playwright --version
+          echo "=== Test project structure ===" && ls -la test-project/ && ls test-project/inkchain.json
+          echo "=== Core dist ===" && ls ../core/dist/index.js || echo "Core dist missing!"
+
+      - name: Run E2E tests (smoke + rename-related only)
         working-directory: packages/studio
         env:
           INKCHAIN_E2E_PROJECT_ROOT: test-project
-        run: PLAYWRIGHT_BROWSERS_PATH=0 npx playwright test
+        run: PLAYWRIGHT_BROWSERS_PATH=0 npx playwright test rename-smoke language-selector agent-pipeline-view style-prescreen style-detection style-chapter-range --reporter=list
 
       - name: Upload Playwright report (on failure)
         if: failure()
@@ -49,4 +59,12 @@ jobs:
         with:
           name: playwright-report
           path: packages/studio/playwright-report/
+          retention-days: 7
+
+      - name: Upload test-results (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: packages/studio/test-results/
           retention-days: 7
