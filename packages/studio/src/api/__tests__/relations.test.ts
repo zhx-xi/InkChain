@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 
 import { createRelationsRouter } from "../routes/relations.js";
-import { type RelationsFile } from "@actalk/inkos-core";
+import { type RelationsFile } from "@actalk/inkchain-core";
 
 // ── Helpers ──
 

@@ -1,4 +1,4 @@
-import type { SessionTag } from "@actalk/inkos-core";
+import type { SessionTag } from "@actalk/inkchain-core";
 import { cn } from "@/lib/utils";
 
 export interface SessionTagBadgeProps {
@@ -18,7 +18,7 @@ export interface SessionTagBadgeProps {
  *
  * When `onRemove` is provided, a small × button appears on hover.
  *
- * Uses Tailwind CSS for styling, consistent with InkOS design tokens.
+ * Uses Tailwind CSS for styling, consistent with InkChain design tokens.
  */
 export function SessionTagBadge({
   tag,

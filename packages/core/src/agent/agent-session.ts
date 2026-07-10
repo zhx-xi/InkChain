@@ -496,7 +496,7 @@ function convertAgentMessagesForModel(messages: AgentMessage[], model: Model<Api
   });
 
   const candidate = model as { api?: unknown; baseUrl?: unknown };
-  // InkOS's internal `toolResult` role is not part of the OpenAI Chat Completions spec.
+  // InkChain's internal `toolResult` role is not part of the OpenAI Chat Completions spec.
   // Many openai-completions upstreams (Google, and kkaiapi/DeepSeek-Pro-style gateways) reject
   // it outright — which surfaces as an opaque "503 provider temporarily unavailable" — so fold
   // tool results into a plain user message for EVERY openai-completions endpoint, not just Google.

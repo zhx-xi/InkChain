@@ -35,7 +35,7 @@ import {
   summarizePersonaDiff,
   type AgentRole,
   type PersonaConfig,
-} from "@actalk/inkos-core";
+} from "@actalk/inkchain-core";
 
 // ── Presets ──
 

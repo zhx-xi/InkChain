@@ -126,10 +126,10 @@ export async function initializeProjectDirectory(
 ): Promise<void> {
   const language = options.language ?? "zh";
   const overwriteSupportFiles = options.overwriteSupportFiles ?? true;
-  const configPath = join(projectDir, "inkos.json");
+  const configPath = join(projectDir, "inkchain.json");
 
   if (await exists(configPath)) {
-    throw new Error(`inkos.json already exists in ${projectDir}. Use a different directory or delete the existing project.`);
+    throw new Error(`inkchain.json already exists in ${projectDir}. Use a different directory or delete the existing project.`);
   }
 
   await mkdir(projectDir, { recursive: true });
@@ -156,7 +156,7 @@ export async function ensureProjectDirectoryInitialized(
   projectDir: string,
   options: Omit<ProjectBootstrapOptions, "overwriteSupportFiles"> = {},
 ): Promise<boolean> {
-  const configPath = join(projectDir, "inkos.json");
+  const configPath = join(projectDir, "inkchain.json");
   if (await exists(configPath)) {
     return false;
   }

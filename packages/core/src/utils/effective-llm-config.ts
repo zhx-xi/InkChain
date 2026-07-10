@@ -119,12 +119,12 @@ export async function resolveEffectiveLLMConfig(
 }
 
 async function readProjectConfig(root: string): Promise<Record<string, unknown>> {
-  const configPath = join(root, "inkos.json");
+  const configPath = join(root, "inkchain.json");
   try {
     await access(configPath);
   } catch {
     throw new Error(
-      `inkos.json not found in ${root}.\nMake sure you are inside an InkOS project directory (cd into the project created by 'inkos init').`,
+      `inkchain.json not found in ${root}.\nMake sure you are inside an InkChain project directory (cd into the project created by 'inkchain init').`,
     );
   }
 
@@ -132,7 +132,7 @@ async function readProjectConfig(root: string): Promise<Record<string, unknown>>
   try {
     return JSON.parse(raw) as Record<string, unknown>;
   } catch {
-    throw new Error(`inkos.json in ${root} is not valid JSON. Check the file for syntax errors.`);
+    throw new Error(`inkchain.json in ${root} is not valid JSON. Check the file for syntax errors.`);
   }
 }
 

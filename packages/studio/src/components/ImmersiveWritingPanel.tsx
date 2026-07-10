@@ -252,7 +252,7 @@ export function ImmersiveWritingPanel({
         <div className="flex items-center gap-3">
           <BookOpen size={16} className="text-primary/60" />
           <span className="text-[13px] font-medium text-muted-foreground/70 tracking-wide font-serif">
-            InkOS · {t("reader.immersiveWriting") || "沉浸写作"}
+            InkChain · {t("reader.immersiveWriting") || "沉浸写作"}
           </span>
         </div>
         <div className="flex items-center gap-2">

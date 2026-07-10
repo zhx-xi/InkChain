@@ -21,7 +21,7 @@ import {
   summarizeExtraction,
   type CharacterRelation,
   type LLMConfig,
-} from "@actalk/inkos-core";
+} from "@actalk/inkchain-core";
 import { ApiError } from "../errors.js";
 
 // ── Types ──
@@ -374,7 +374,7 @@ export function createExtractRouter(
               : "zh";
 
           const profile = learnStyle(texts, language);
-          const { serializeStyleProfile, summarizeStyleProfile } = await import("@actalk/inkos-core");
+          const { serializeStyleProfile, summarizeStyleProfile } = await import("@actalk/inkchain-core");
 
           return c.json({
             success: true,

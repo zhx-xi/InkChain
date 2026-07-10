@@ -21,7 +21,7 @@ test.describe("LanguageSelector", () => {
     await page.waitForLoadState("networkidle");
 
     // Check if LanguageSelector overlay is showing
-    const hasSelector = await page.getByText("InkOS Studio").isVisible({ timeout: 3_000 }).catch(() => false);
+    const hasSelector = await page.getByText("InkChain Studio").isVisible({ timeout: 3_000 }).catch(() => false);
     const hasChinese = await page.getByText("中文创作").isVisible({ timeout: 2_000 }).catch(() => false);
 
     // Either language selector shows OR normal dashboard loads — both are valid

@@ -3,7 +3,7 @@ import { fileURLToPath } from "url";
 import path from "path";
 
 /**
- * Rebuild @actalk/inkos-core before E2E tests start.
+ * Rebuild @actalk/inkchain-core before E2E tests start.
  *
  * The E2E API server (tsx watch src/api/index.ts) imports core via the pnpm
  * workspace symlink, which resolves to packages/core/dist/index.js — the
@@ -22,7 +22,7 @@ export default function globalSetup(): void {
   // build silently no-ops, leaving core dist stale (agent stub absent at runtime).
   const workspaceRoot = path.resolve(path.dirname(thisFile), "../../../");
   try {
-    execSync("pnpm --filter @actalk/inkos-core build", {
+    execSync("pnpm --filter @actalk/inkchain-core build", {
       cwd: workspaceRoot,
       stdio: "inherit",
     });

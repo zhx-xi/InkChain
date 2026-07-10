@@ -3,8 +3,8 @@ import { ArrowLeft, Search, X, Sparkles, Plus, ChevronLeft, ChevronRight, Chevro
 import { useHashRoute } from "../hooks/use-hash-route";
 import { cn } from "../lib/utils";
 import { useApi, fetchJson } from "../hooks/use-api";
-import type { SkillConfig, SkillCategory } from "@actalk/inkos-core/models/skill-config.js";
-import { SKILL_CATEGORY_LABELS } from "@actalk/inkos-core/models/skill-config.js";
+import type { SkillConfig, SkillCategory } from "@actalk/inkchain-core/models/skill-config.js";
+import { SKILL_CATEGORY_LABELS } from "@actalk/inkchain-core/models/skill-config.js";
 import { SkillEditSheet } from "../components/SkillEditSheet";
 import { SkillCreateDialog } from "../components/SkillCreateDialog";
 

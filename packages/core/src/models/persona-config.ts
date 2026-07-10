@@ -14,7 +14,7 @@ import yaml from "js-yaml";
 // ── Agent Role Enum ──
 
 /**
- * The 7 InkOS Agent roles in the collaborative writing team.
+ * The 7 InkChain Agent roles in the collaborative writing team.
  *
  * Each role has a distinct responsibility in the novel creation pipeline:
  * - writer:     Generates chapter prose from outline and context

@@ -11,7 +11,7 @@ import { Hono } from "hono";
 import { readFile, writeFile, mkdir, rm, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
-import { learnStyle, summarizeStyleProfile, serializeStyleProfile, type EnhancedStyleProfile } from "@actalk/inkos-core";
+import { learnStyle, summarizeStyleProfile, serializeStyleProfile, type EnhancedStyleProfile } from "@actalk/inkchain-core";
 import { ApiError } from "../errors.js";
 
 const PROFILES_DIR = ".inkos/style-profiles";
@@ -156,9 +156,9 @@ export function createStyleProfilesRouter(root: string) {
 
 // Re-export for convenience
 function profileToConstraints(profile: EnhancedStyleProfile) {
-  const { formatStyleConstraintsSection } = require("@actalk/inkos-core");
+  const { formatStyleConstraintsSection } = require("@actalk/inkchain-core");
   return formatStyleConstraintsSection(
-    (require("@actalk/inkos-core") as any).profileToConstraints?.(profile) ?? [],
+    (require("@actalk/inkchain-core") as any).profileToConstraints?.(profile) ?? [],
     profile.language ?? "zh",
   );
 }

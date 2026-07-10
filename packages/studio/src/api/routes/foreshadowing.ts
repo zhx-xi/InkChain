@@ -20,7 +20,7 @@ import {
   ForeshadowingStatusEnum,
   findForgottenForeshadowing,
   type Foreshadowing,
-} from "@actalk/inkos-core";
+} from "@actalk/inkchain-core";
 import { ApiError } from "../errors.js";
 
 const FS_DIR = ".inkos/foreshadowing";
