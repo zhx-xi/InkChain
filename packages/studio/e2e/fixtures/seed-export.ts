@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 import { mkdir, writeFile } from "node:fs/promises";
 
 const dir = fileURLToPath(new URL(".", import.meta.url));
-export const E2E_ROOT = resolve(dir, "../../../..", "test-project");
+export const E2E_ROOT = resolve(dir, "../../", "test-project");
 export const E2E_EXPORT_ID = "e2e-export-demo";
 
 // Minimal valid 1×1 transparent PNG (67 bytes).

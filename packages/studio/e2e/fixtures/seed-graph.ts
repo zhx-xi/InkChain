@@ -7,7 +7,7 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 // INKCHAIN_PROJECT_ROOT in dev/e2e is ../../test-project (relative to packages/studio).
 // From this file (packages/studio/e2e/fixtures/seed-graph.ts) that is 4 levels up,
 // then down into test-project.
-export const E2E_PROJECT_ROOT = resolve(__dirname, "../../../..", "test-project");
+export const E2E_PROJECT_ROOT = resolve(__dirname, "../../", "test-project");
 export const E2E_PROJECT_ID = "e2e-player-demo";
 
 const graph = StoryGraphSchema.parse({

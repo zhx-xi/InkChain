@@ -6,7 +6,7 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 // From packages/studio/e2e/fixtures, going up 4 levels reaches the worktree root,
 // then down into test-project.
-export const E2E_ROOT = resolve(__dirname, "../../../..", "test-project");
+export const E2E_ROOT = resolve(__dirname, "../../", "test-project");
 export const E2E_BOOK_ID = "e2e-volume-dnd";
 
 // Fixed volume IDs for reproducible test assertions

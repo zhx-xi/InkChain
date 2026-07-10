@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const dir = fileURLToPath(new URL(".", import.meta.url));
-export const E2E_ROOT = resolve(dir, "../../../..", "test-project");
+export const E2E_ROOT = resolve(dir, "../../", "test-project");
 export const E2E_WIZ_ID = "e2e-film-wizard-demo";
 
 export async function seedFilmWizard(): Promise<void> {

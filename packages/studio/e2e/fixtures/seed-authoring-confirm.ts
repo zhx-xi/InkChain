@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { readdir, rm } from "node:fs/promises";
 
 const dir = fileURLToPath(new URL(".", import.meta.url));
-const E2E_ROOT = resolve(dir, "../../../..", "test-project");
+const E2E_ROOT = resolve(dir, "../../", "test-project");
 
 export const E2E_AUTHOR_ID = "e2e-authoring-confirm";
 

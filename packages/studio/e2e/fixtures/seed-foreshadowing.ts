@@ -6,7 +6,7 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
 // Reuse the existing E2E book so the page doesn't 404 on book lookup
 export const E2E_FORES_BOOK_ID = "e2e-volume-dnd";
-export const E2E_ROOT = resolve(__dirname, "../../../..", "test-project");
+export const E2E_ROOT = resolve(__dirname, "../../", "test-project");
 
 export async function seedForeshadowing(): Promise<void> {
   const foreshadowingDir = join(E2E_ROOT, ".inkos", "foreshadowing");
