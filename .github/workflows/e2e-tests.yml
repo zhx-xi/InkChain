@@ -73,9 +73,13 @@ jobs:
             sleep 1
           done
 
-      - name: Run E2E tests
+      - name: Run E2E — rename-smoke
         working-directory: packages/studio
-        run: PLAYWRIGHT_BROWSERS_PATH=0 npx playwright test rename-smoke agent-pipeline-view --config=playwright.ci.config.ts
+        run: PLAYWRIGHT_BROWSERS_PATH=0 npx playwright test rename-smoke --config=playwright.ci.config.ts --reporter=list
+
+      - name: Run E2E — agent-pipeline-view
+        working-directory: packages/studio
+        run: PLAYWRIGHT_BROWSERS_PATH=0 npx playwright test agent-pipeline-view --config=playwright.ci.config.ts --reporter=list
 
       - name: Upload Playwright report
         if: always()
