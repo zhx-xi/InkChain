@@ -11,86 +11,106 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  e2e:
-    name: Playwright E2E
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+  # ── Rename & i18n ──
+  rename:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "rename-smoke language-selector"
+      group-name: "Rename & Language"
 
-    steps:
-      - uses: actions/checkout@v4
+  # ── Agent ──
+  agent:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "agent-team agent-team-core agent-hub-page agent-pipeline-view"
+      group-name: "Agent Team"
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
+  # ── Dashboard & Navigation ──
+  dashboard:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "dashboard project-root sidebar-navigation edit-dashboard"
+      group-name: "Dashboard"
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: pnpm
+  # ── Book & Chapter ──
+  book:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "book-create book-detail book-style-page book-world-extract"
+      group-name: "Book"
 
-      - run: pnpm install --no-frozen-lockfile
+  chapter:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "chapter-audit chapter-history-core chapter-reader chapter-versioning chapter-volume chapter-wizard edge-chapter-range"
+      group-name: "Chapter"
 
-      - name: Build Core (needed for E2E API server)
-        run: pnpm --filter @actalk/inkchain-core build
+  # ── Audit ──
+  audit:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "audit-context-popup audit-fix-button audit-page-core audit-volumes"
+      group-name: "Audit"
 
-      - name: Install Playwright browsers
-        working-directory: packages/studio
-        run: PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --with-deps
+  # ── Authoring ──
+  authoring:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "authoring authoring-confirm"
+      group-name: "Authoring"
 
-      - name: Start API server (background)
-        working-directory: packages/studio
-        env:
-          INKCHAIN_STUDIO_PORT: "4581"
-          INKCHAIN_AGENT_LLM_STUB: "1"
-          INKCHAIN_PROJECT_ROOT: test-project
-        run: |
-          node_modules/.bin/tsx src/api/index.ts > /tmp/api-server.log 2>&1 &
-          echo $! > /tmp/api-server.pid
-          # Wait for API server to start listening
-          for i in $(seq 1 60); do
-            if curl -s -o /dev/null -w "%{http_code}" http://localhost:4581 | grep -q "2\|3\|4"; then
-              echo "API server responding after ${i}s"
-              break
-            fi
-            sleep 1
-          done
-          echo "=== API server log (last 10 lines) ==="
-          tail -10 /tmp/api-server.log
+  # ── Timeline ──
+  timeline:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "timeline-column-spacing timeline-cross-role timeline-filter timeline-flow timeline-page-core"
+      group-name: "Timeline"
 
-      - name: Start Vite dev server (background)
-        working-directory: packages/studio
-        env:
-          INKCHAIN_STUDIO_PORT: "4581"
-        run: |
-          node_modules/.bin/vite --host --port 4580 &
-          echo $! > /tmp/vite-server.pid
-          # Wait for Vite to be ready
-          for i in $(seq 1 30); do
-            if curl -s http://localhost:4580 > /dev/null 2>&1; then
-              echo "Vite ready after ${i}s"
-              break
-            fi
-            sleep 1
-          done
+  # ── Foreshadowing ──
+  foreshadowing:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "foreshadow-payoff foreshadowing-dynamic-chapters foreshadowing-flow foreshadowing-page-core foresight-pagination foresight-table"
+      group-name: "Foreshadowing"
 
-      - name: Run E2E — rename-smoke
-        working-directory: packages/studio
-        run: PLAYWRIGHT_BROWSERS_PATH=0 npx playwright test rename-smoke --config=playwright.ci.config.ts --reporter=list
+  # ── World ──
+  world:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "world-association world-extract-llm world-inheritance-page world-list-core world-map-core world-map"
+      group-name: "World"
 
-      - name: Run E2E — agent-pipeline-view
-        working-directory: packages/studio
-        run: PLAYWRIGHT_BROWSERS_PATH=0 npx playwright test agent-pipeline-view --config=playwright.ci.config.ts --reporter=list
+  # ── Style ──
+  style:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "style-chapter-range style-detection-core style-detection style-prescreen"
+      group-name: "Style Detection"
 
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: packages/studio/playwright-report/
-          retention-days: 3
+  # ── Film ──
+  film:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "film-image film-list film-wizard"
+      group-name: "Interactive Film"
 
-      - name: Stop servers
-        if: always()
-        run: |
-          kill $(cat /tmp/api-server.pid) 2>/dev/null || true
-          kill $(cat /tmp/vite-server.pid) 2>/dev/null || true
+  # ── Skill Library ──
+  skill:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "skill-library skill-library-core builtin-skill-edit"
+      group-name: "Skills"
+
+  # ── Flow & Relation ──
+  flow:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "flow flow-editor flow-screenshot relation-graph relation-graph-core"
+      group-name: "Flow & Relations"
+
+  # ── Remaining misc specs ──
+  misc:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "analysis consistency-check-panel export import-manager log-viewer log-viewer-508 player service-list-page session-archive genre-manager character-tiering validation cross-feature radar-view radar-view-510 truth-files volume-dnd daemon-control doctor-view build-verification project-settings issue-394-world-association issue-406-timeline-filter issue-410-audit-cache issue-413-audit-context issue-421-builtin-skill-edit"
+      group-name: "Misc (gen/import/export/radar/etc)"

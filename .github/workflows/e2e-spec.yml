@@ -1,0 +1,86 @@
+name: E2E Spec Runner
+
+# Reusable workflow: start API+Vite servers, run one spec group.
+# Called by e2e-tests.yml in parallel for each page/feature group.
+# Each call runs on a separate VM → ports never conflict.
+
+on:
+  workflow_call:
+    inputs:
+      spec:
+        required: true
+        type: string
+        description: "Playwright spec pattern, e.g. 'rename-smoke' or 'agent-*'"
+      group-name:
+        required: true
+        type: string
+        description: "Human-readable name for this group"
+
+jobs:
+  run:
+    name: ${{ inputs.group-name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --no-frozen-lockfile
+
+      - name: Build Core
+        run: pnpm --filter @actalk/inkchain-core build
+
+      - name: Install Playwright browsers
+        working-directory: packages/studio
+        run: PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --with-deps
+
+      - name: Start API server
+        working-directory: packages/studio
+        env:
+          INKCHAIN_STUDIO_PORT: "4581"
+          INKCHAIN_AGENT_LLM_STUB: "1"
+          INKCHAIN_PROJECT_ROOT: test-project
+        run: |
+          node_modules/.bin/tsx src/api/index.ts > /tmp/api-server.log 2>&1 &
+          echo $! > /tmp/api-server.pid
+          for i in $(seq 1 60); do
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:4581 | grep -q "2\|3\|4"; then
+              echo "API ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Start Vite dev server
+        working-directory: packages/studio
+        env:
+          INKCHAIN_STUDIO_PORT: "4581"
+        run: |
+          node_modules/.bin/vite --host --port 4580 &
+          echo $! > /tmp/vite-server.pid
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:4580 > /dev/null 2>&1; then
+              echo "Vite ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Run ${{ inputs.group-name }} tests
+        working-directory: packages/studio
+        run: PLAYWRIGHT_BROWSERS_PATH=0 npx playwright test ${{ inputs.spec }} --config=playwright.ci.config.ts --reporter=list
+
+      - name: Stop servers
+        if: always()
+        run: |
+          kill $(cat /tmp/api-server.pid) 2>/dev/null || true
+          kill $(cat /tmp/vite-server.pid) 2>/dev/null || true
