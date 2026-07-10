@@ -6,7 +6,8 @@ import { test, expect } from "@playwright/test";
  * Verifies the app loads and navigates correctly after the rename.
  * On CI the test-project is minimal — root "/" may 500 if
  * /api/v1/project init fails.  These tests focus on navigable routes
- * that work regardless of project data, plus API server liveness.
+ * that work regardless of project data.
+ * API liveness is implicitly verified through Vite proxy in UI tests.
  */
 
 test.describe("rename-smoke — app health after InkOS→InkChain", () => {
@@ -32,14 +33,6 @@ test.describe("rename-smoke — app health after InkOS→InkChain", () => {
 
     const bodyText = await page.locator("body").innerText();
     expect(bodyText.length).toBeGreaterThan(0);
-  });
-
-  test("api: API server responds (IPv4)", async ({ page }) => {
-    // GitHub Actions Ubuntu resolves localhost to ::1 (IPv6),
-    // but the API server only binds 127.0.0.1 (IPv4).
-    const response = await page.request.get("http://127.0.0.1:4581/");
-    // 200 = OK, 404 = Not Found — both mean the server is alive.
-    expect([200, 404]).toContain(response.status());
   });
 
   test("edge: rapid sequential navigation does not crash", async ({ page }) => {
