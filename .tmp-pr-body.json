@@ -1,0 +1,3 @@
+{
+  "body": "## 改动范围\n\n### 包 & 命令\n- `@actalk/inkos-core` → `@actalk/inkchain-core`\n- `@actalk/inkos-studio` → `@actalk/inkchain-studio`\n- `@actalk/inkos` → `@actalk/inkchain-cli`\n- CLI bin: `inkos` → `inkchain`\n\n### 环境变量\n- `INKOS_*` → `INKCHAIN_*`（5 个变量）\n\n### 配置文件\n- `inkos.json` → `inkchain.json`（只读单一文件，无回退）\n\n### UI 品牌文字（71 文件）\n- Sidebar logo: InkOS → InkChain\n- 组件重命名: InkosLogo.tsx → InkChainLogo.tsx\n- 页面标题、面包屑、页脚、Agent Pipeline、ChatPage、BookCreate、沉浸写作面板等\n- CLI 全部命令描述、日志、TUI 文案\n- E2E 测试选择器同步更新\n\n### 内部标识符\n- logger tag: `inkos` → `inkchain`\n- session-transcript provider: `inkos` → `inkchain`\n\n## 验证\n- grep 全量扫描：零残留 InkOS/inkos 品牌文字（仅 rename-smoke 注释例外）\n- git status: 71 文件变更，InkosLogo 删除，InkChainLogo 新增\n\nCloses #579"
+}

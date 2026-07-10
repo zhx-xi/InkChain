@@ -49,8 +49,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@actalk/inkchain-core": "3.0.0",
-    "@actalk/inkchain-studio": "3.0.0",
+    "@actalk/inkchain-core": "workspace:*",
+    "@actalk/inkchain-studio": "workspace:*",
     "commander": "^13.0.0",
     "dotenv": "^16.4.0",
     "epub-gen-memory": "^1.0.10",

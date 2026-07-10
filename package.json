@@ -43,5 +43,8 @@
       "@mariozechner/pi-ai": "0.67.1",
       "@mariozechner/pi-agent-core": "0.67.1"
     }
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0"
   }
 }

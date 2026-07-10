@@ -36,17 +36,25 @@ export default defineConfig({
   // CI always runs with Mock mode (default).
   webServer: [
     {
-      command: "INKCHAIN_STUDIO_PORT=4581 INKCHAIN_AGENT_LLM_STUB=1 INKCHAIN_PROJECT_ROOT=\"${INKCHAIN_E2E_PROJECT_ROOT:-test-project}\" tsx watch --clear-screen=false src/api/index.ts",
+      command: "node_modules/.bin/tsx watch --clear-screen=false src/api/index.ts",
+      env: {
+        INKCHAIN_STUDIO_PORT: "4581",
+        INKCHAIN_AGENT_LLM_STUB: "1",
+        INKCHAIN_PROJECT_ROOT: "test-project",
+      },
       url: "http://localhost:4581",
       reuseExistingServer: true,
-      timeout: 15_000,
+      timeout: 60_000,
       cwd: ".",
     },
     {
-      command: "vite --host --port 4580",
+      command: "node_modules/.bin/vite --host --port 4580",
+      env: {
+        INKCHAIN_STUDIO_PORT: "4581",
+      },
       url: "http://localhost:4580",
       reuseExistingServer: true,
-      timeout: 15_000,
+      timeout: 30_000,
       cwd: ".",
     },
   ],
