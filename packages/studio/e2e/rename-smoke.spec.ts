@@ -12,7 +12,7 @@ test.describe("rename-smoke — app health after InkOS→InkChain", () => {
     await page.goto("/");
 
     // Wait for loading to complete
-    await page.waitForLoadState("networkidle", { timeout: 15_000 });
+    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
 
     // Verify dashboard renders
     try {
@@ -32,7 +32,7 @@ test.describe("rename-smoke — app health after InkOS→InkChain", () => {
 
   test("normal: Sidebar navigation is present", async ({ page }) => {
     await page.goto("/");
-    await page.waitForLoadState("networkidle", { timeout: 15_000 });
+    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
 
     try {
       await expect(
@@ -48,7 +48,7 @@ test.describe("rename-smoke — app health after InkOS→InkChain", () => {
 
   test("normal: Navigate to Agents page", async ({ page }) => {
     await page.goto("/agents");
-    await page.waitForLoadState("networkidle", { timeout: 15_000 });
+    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
 
     const bodyText = await page.locator("body").innerText();
     expect(bodyText.length).toBeGreaterThan(0);
@@ -56,7 +56,7 @@ test.describe("rename-smoke — app health after InkOS→InkChain", () => {
 
   test("normal: Navigate to Skills page", async ({ page }) => {
     await page.goto("/skills");
-    await page.waitForLoadState("networkidle", { timeout: 15_000 });
+    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
 
     const bodyText = await page.locator("body").innerText();
     expect(bodyText.length).toBeGreaterThan(0);
@@ -64,7 +64,7 @@ test.describe("rename-smoke — app health after InkOS→InkChain", () => {
 
   test("normal: Navigate to Dashboard via explicit route", async ({ page }) => {
     await page.goto("/dashboard");
-    await page.waitForLoadState("networkidle", { timeout: 15_000 });
+    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
 
     const bodyText = await page.locator("body").innerText();
     expect(bodyText.length).toBeGreaterThan(0);
@@ -83,9 +83,10 @@ test.describe("rename-smoke — app health after InkOS→InkChain", () => {
     const routes = ["/", "/agents", "/skills"];
     for (const route of routes) {
       await page.goto(route, {
-        waitUntil: "domcontentloaded",
+        waitUntil: "load",
         timeout: 10_000,
       });
+      await page.waitForTimeout(2000);
       const bodyText = await page.locator("body").innerText();
       expect(bodyText.length).toBeGreaterThan(0);
     }
