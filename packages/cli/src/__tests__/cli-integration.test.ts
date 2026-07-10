@@ -65,21 +65,21 @@ const failingLlmEnv = {
 
 describe("CLI integration", () => {
   beforeAll(async () => {
-    projectDir = await mkdtemp(join(tmpdir(), "inkos-cli-test-"));
+    projectDir = await mkdtemp(join(tmpdir(), "inkchain-cli-test-"));
   });
 
   afterAll(async () => {
     await rm(projectDir, { recursive: true, force: true });
   });
 
-  describe("inkos --version", () => {
+  describe("inkchain --version", () => {
     it("prints version number", () => {
       const output = run(["--version"]);
       expect(output.trim()).toMatch(/^\d+\.\d+\.\d+$/);
     }, CLI_PROCESS_TIMEOUT_MS);
   });
 
-  describe("inkos --help", () => {
+  describe("inkchain --help", () => {
     it("prints help with command list", () => {
       const output = run(["--help"]);
       expect(output).toContain("inkchain");
@@ -89,7 +89,7 @@ describe("CLI integration", () => {
     });
   });
 
-  describe("inkos init", () => {
+  describe("inkchain init", () => {
     it("initializes project in current directory", () => {
       const output = run(["init"]);
       expect(output).toContain("Project initialized");
@@ -128,7 +128,7 @@ describe("CLI integration", () => {
     });
   });
 
-  describe("inkos init <name>", () => {
+  describe("inkchain init <name>", () => {
     it("creates project in subdirectory", () => {
       const output = run(["init", "subproject"]);
       expect(output).toContain("Project initialized");
@@ -141,7 +141,7 @@ describe("CLI integration", () => {
     });
 
     it("supports absolute project paths instead of nesting them under cwd", async () => {
-      const absoluteDir = await mkdtemp(join(tmpdir(), "inkos-cli-abs-init-"));
+      const absoluteDir = await mkdtemp(join(tmpdir(), "inkchain-cli-abs-init-"));
 
       try {
         const output = run(["init", absoluteDir]);
@@ -156,12 +156,12 @@ describe("CLI integration", () => {
     });
 
     it("prints English next steps when initialized with --lang en", async () => {
-      const englishDir = await mkdtemp(join(tmpdir(), "inkos-cli-en-init-"));
+      const englishDir = await mkdtemp(join(tmpdir(), "inkchain-cli-en-init-"));
 
       try {
         const output = run(["init", englishDir, "--lang", "en"]);
         expect(output).toContain("Project initialized");
-        expect(output).toContain("inkos book create --title 'My Novel'");
+        expect(output).toContain("inkchain book create --title 'My Novel'");
         expect(output).not.toContain("我的小说");
       } finally {
         await rm(englishDir, { recursive: true, force: true });
@@ -169,7 +169,7 @@ describe("CLI integration", () => {
     });
   });
 
-  describe("inkos config set", () => {
+  describe("inkchain config set", () => {
     it("sets a known config value", () => {
       const output = run(["config", "set", "llm.provider", "anthropic"]);
       expect(output).toContain("Set llm.provider = anthropic");
@@ -207,7 +207,7 @@ describe("CLI integration", () => {
     });
   });
 
-  describe("inkos config show", () => {
+  describe("inkchain config show", () => {
     it("shows current config as JSON", () => {
       const output = run(["config", "show"]);
       const config = JSON.parse(output);
@@ -215,7 +215,7 @@ describe("CLI integration", () => {
     });
   });
 
-  describe("inkos interact", () => {
+  describe("inkchain interact", () => {
     it("returns the agent-session JSON contract for natural-language interactions", async () => {
       const initialized = await stat(join(projectDir, "inkchain.json")).then(() => true).catch(() => false);
       if (!initialized) run(["init"]);
@@ -271,12 +271,12 @@ describe("CLI integration", () => {
       } finally {
         await writeFile(envPath, originalEnv, "utf-8");
         await rm(join(projectDir, "books", "harbor"), { recursive: true, force: true });
-        await rm(join(projectDir, ".inkos-session.json"), { force: true }).catch(() => {});
+        await rm(join(projectDir, ".inkchain-session.json"), { force: true }).catch(() => {});
       }
     }, CLI_PROCESS_TIMEOUT_MS);
   });
 
-  describe("inkos config set-model", () => {
+  describe("inkchain config set-model", () => {
     it("rejects raw API keys passed to --api-key-env", async () => {
       const { exitCode, stderr } = runStderr([
         "config",
@@ -300,7 +300,7 @@ describe("CLI integration", () => {
     });
   });
 
-  describe("inkos book list", () => {
+  describe("inkchain book list", () => {
     it("shows no books in empty project", () => {
       const output = run(["book", "list"]);
       expect(output).toContain("No books found");
@@ -313,7 +313,7 @@ describe("CLI integration", () => {
     });
   });
 
-  describe("inkos book create", () => {
+  describe("inkchain book create", () => {
     it("removes stale incomplete book directories before retrying create", async () => {
       try {
         await stat(join(projectDir, "inkchain.json"));
@@ -344,7 +344,7 @@ describe("CLI integration", () => {
     }, CLI_PROCESS_TIMEOUT_MS);
   });
 
-  describe("inkos status", () => {
+  describe("inkchain status", () => {
     it("shows project status with zero books", () => {
       const output = run(["status"]);
       expect(output).toContain("Books: 0");
@@ -548,7 +548,7 @@ describe("CLI integration", () => {
     }, DOUBLE_CLI_INVOCATION_TEST_TIMEOUT_MS);
   });
 
-  describe("inkos doctor", () => {
+  describe("inkchain doctor", () => {
     it("checks environment health", () => {
       const { stdout } = runStderr(["doctor"]);
       expect(stdout).toContain("InkChain Doctor");
@@ -644,7 +644,7 @@ describe("CLI integration", () => {
     });
   });
 
-  describe("inkos write", () => {
+  describe("inkchain write", () => {
     it("warns before writing when the target book still uses legacy format", async () => {
       const bookDir = join(projectDir, "books", "legacy-write-hint");
       const storyDir = join(bookDir, "story");
@@ -783,14 +783,14 @@ describe("CLI integration", () => {
     });
   });
 
-  describe("inkos analytics", () => {
+  describe("inkchain analytics", () => {
     it("errors when no book exists", () => {
       const { exitCode } = runStderr(["analytics"]);
       expect(exitCode).not.toBe(0);
     });
   });
 
-  describe("inkos review", () => {
+  describe("inkchain review", () => {
     it("preserves the original chapter snapshot when approving review", async () => {
       const configPath = join(projectDir, "inkchain.json");
       const initialized = await stat(configPath).then(() => true).catch(() => false);
@@ -859,7 +859,7 @@ describe("CLI integration", () => {
     });
   });
 
-  describe("inkos plan/compose", () => {
+  describe("inkchain plan/compose", () => {
     beforeAll(async () => {
       const configPath = join(projectDir, "inkchain.json");
       const initialized = await stat(configPath).then(() => true).catch(() => false);
@@ -974,7 +974,7 @@ describe("CLI integration", () => {
     });
   });
 
-  describe("inkos export", () => {
+  describe("inkchain export", () => {
     beforeAll(async () => {
       const configPath = join(projectDir, "inkchain.json");
       const initialized = await stat(configPath).then(() => true).catch(() => false);
