@@ -28,7 +28,7 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --no-frozen-lockfile
 
       - name: Build Core (needed for E2E API server)
         run: pnpm --filter @actalk/inkchain-core build
