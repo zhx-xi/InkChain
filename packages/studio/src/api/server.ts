@@ -1530,16 +1530,7 @@ function syncTopLevelLlmMirror(llm: Record<string, unknown>): void {
 }
 
 async function loadRawConfig(root: string): Promise<Record<string, unknown>> {
-  // Try inkchain.json first, fall back to inkos.json for backward compat
-  const newPath = join(root, "inkchain.json");
-  const legacyPath = join(root, "inkos.json");
-  let configPath: string;
-  try {
-    await access(newPath);
-    configPath = newPath;
-  } catch {
-    configPath = legacyPath;
-  }
+  const configPath = join(root, "inkchain.json");
   const raw = await readFile(configPath, "utf-8");
   return JSON.parse(raw) as Record<string, unknown>;
 }
