@@ -37,23 +37,45 @@ jobs:
         working-directory: packages/studio
         run: PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --with-deps
 
-      - name: Diagnostics — verify setup
-        working-directory: packages/studio
-        run: |
-          echo "=== Node version ===" && node -v
-          echo "=== tsx available ===" && npx tsx --version || echo "tsx not found via npx"
-          echo "=== node_modules/.bin/tsx ===" && ls -la node_modules/.bin/tsx || echo "tsx not at .bin"
-          echo "=== Playwright version ===" && npx playwright --version
-          echo "=== Test project structure ===" && ls -la test-project/ && ls test-project/inkchain.json
-          echo "=== Core dist ===" && ls ../core/dist/index.js || echo "Core dist missing!"
-
-      - name: Run E2E tests (rename-critical only)
+      - name: Start API server (background)
         working-directory: packages/studio
         env:
-          INKCHAIN_E2E_PROJECT_ROOT: test-project
-        # Skip language-selector (flaky 60s timeouts on CI) and style-*
-        # (pre-existing LLM dependency failures)
-        run: PLAYWRIGHT_BROWSERS_PATH=0 npx playwright test rename-smoke agent-pipeline-view
+          INKCHAIN_STUDIO_PORT: "4581"
+          INKCHAIN_AGENT_LLM_STUB: "1"
+          INKCHAIN_PROJECT_ROOT: test-project
+        run: |
+          node_modules/.bin/tsx src/api/index.ts > /tmp/api-server.log 2>&1 &
+          echo $! > /tmp/api-server.pid
+          # Wait for API server to start listening
+          for i in $(seq 1 60); do
+            if curl -s -o /dev/null -w "%{http_code}" http://localhost:4581 | grep -q "2\|3\|4"; then
+              echo "API server responding after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+          echo "=== API server log (last 10 lines) ==="
+          tail -10 /tmp/api-server.log
+
+      - name: Start Vite dev server (background)
+        working-directory: packages/studio
+        env:
+          INKCHAIN_STUDIO_PORT: "4581"
+        run: |
+          node_modules/.bin/vite --host --port 4580 &
+          echo $! > /tmp/vite-server.pid
+          # Wait for Vite to be ready
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:4580 > /dev/null 2>&1; then
+              echo "Vite ready after ${i}s"
+              break
+            fi
+            sleep 1
+          done
+
+      - name: Run E2E tests
+        working-directory: packages/studio
+        run: PLAYWRIGHT_BROWSERS_PATH=0 npx playwright test rename-smoke agent-pipeline-view --config=playwright.ci.config.ts
 
       - name: Upload Playwright report
         if: always()
@@ -63,10 +85,8 @@ jobs:
           path: packages/studio/playwright-report/
           retention-days: 3
 
-      - name: Upload test-results
+      - name: Stop servers
         if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: packages/studio/test-results/
-          retention-days: 3
+        run: |
+          kill $(cat /tmp/api-server.pid) 2>/dev/null || true
+          kill $(cat /tmp/vite-server.pid) 2>/dev/null || true
