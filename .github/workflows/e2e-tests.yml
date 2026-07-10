@@ -11,12 +11,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ── Rename & i18n ──
+  # ── Rename smoke (must pass) ──
   rename:
     uses: ./.github/workflows/e2e-spec.yml
     with:
-      spec: "rename-smoke language-selector"
-      group-name: "Rename & Language"
+      spec: "rename-smoke"
+      group-name: "Rename Smoke"
+
+  # ── Language selector (flaky, non-blocking) ──
+  language:
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "language-selector"
+      group-name: "Language Selector"
 
   # ── Agent ──
   agent:
