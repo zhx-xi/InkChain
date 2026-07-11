@@ -140,7 +140,7 @@ export function SkillCreateDialog({ isOpen, onClose, onSelectBlank, onSelectTemp
                 <FileText size={20} className="text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
               <div>
-                <h3 className="text-sm font-medium mb-1">空白创建</h3>
+                <h3 className="text-sm font-medium mb-1">从空白创建</h3>
                 <p className="text-[11px] text-muted-foreground/70 leading-relaxed">
                   从零开始填写所有字段，适合高级用户
                 </p>

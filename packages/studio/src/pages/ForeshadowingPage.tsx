@@ -402,6 +402,7 @@ function EditForeshadowingModal({
             <textarea
               value={draft.description}
               onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+              placeholder="伏笔描述"
               rows={3}
               className="mt-1 w-full rounded-lg border border-border/40 bg-background px-3 py-2 text-sm outline-none focus:border-primary/50 resize-none"
             />
@@ -548,12 +549,18 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       const to = Math.max(extractChapterFrom, extractChapterTo);
       const totalChapters = to - from + 1;
       setExtractProgress({ current: 0, total: totalChapters });
+      // Yield to let React render the progress bar before starting extraction
+      await new Promise((resolve) => setTimeout(resolve, 50));
       for (let ch = from; ch <= to; ch++) {
         const result = await postApi<{ success: boolean; data: { candidates: ForeshadowingExtractCandidate[] } }>(
-          `/api/extract`,
+          `/api/foreshadowing/extract`,
           { skillId: "extract-foreshadowing", bookId, chapterNumber: ch },
         );
-        for (const c of result.data.candidates) {
+        // Support both mock format (result.data = array) and real API format (result.data.candidates)
+        const candidates = Array.isArray(result.data)
+          ? result.data
+          : (result.data as { candidates?: ForeshadowingExtractCandidate[] }).candidates ?? [];
+        for (const c of candidates) {
           allCandidates.push({ ...c, chapter: ch });
         }
         setExtractProgress({ current: ch - from + 1, total: totalChapters });

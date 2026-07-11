@@ -82,7 +82,7 @@ export function SkillListPage() {
   const [aiDraft, setAiDraft] = useState<Partial<SkillConfig> | null>(null);
   const [expandedSkillId, setExpandedSkillId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
 
   const filteredSkills = useMemo(() => {
     const list = data?.skills ?? [];
@@ -327,9 +327,6 @@ export function SkillListPage() {
                             {displayInfo.label}
                           </span>
                         </div>
-                        <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                          {getDisplayDescription(config, source)}
-                        </p>
                         <div className="flex items-center gap-2 text-[11px] text-muted-foreground/60">
                           <span
                             className="h-1.5 w-1.5 rounded-full"
