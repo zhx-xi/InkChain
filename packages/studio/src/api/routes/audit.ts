@@ -492,22 +492,28 @@ export function createAuditRouter(root: string) {
       throw new ApiError(404, "NO_ISSUES", `No audit issues found for chapter ${chapterNumber}. Run audit first.`);
     }
 
-    // 读取章节内容
+    // 读取章节内容（如文件不存在则自动创建占位文件）
     const chaptersDir = join(root, "books", bookId, "chapters");
     const padded = String(chapterNumber).padStart(4, "0");
-    let files: string[];
+
+    let chapterFile: string | undefined;
     try {
-      files = await readdir(chaptersDir);
+      const files = await readdir(chaptersDir);
+      chapterFile = files.find((f) => f.startsWith(`${padded}_`) && f.endsWith(".md"));
     } catch {
-      throw new ApiError(404, "CHAPTERS_DIR_NOT_FOUND", "章节目录不存在");
+      // Directory may not exist yet; we'll create the file below
     }
 
-    const chapterFile = files.find((f) => f.startsWith(`${padded}_`) && f.endsWith(".md"));
+    let originalContent = "";
     if (!chapterFile) {
-      throw new ApiError(404, "CHAPTER_NOT_FOUND", `Chapter ${chapterNumber} file not found`);
+      const title = `第${chapterNumber}章`;
+      chapterFile = `${padded}_${title}.md`;
+      originalContent = `# ${title}\n\n章节内容待写入。\n`;
+      await mkdir(chaptersDir, { recursive: true });
+      await writeFile(join(chaptersDir, chapterFile), originalContent, "utf-8");
+    } else {
+      originalContent = await readFile(join(chaptersDir, chapterFile), "utf-8");
     }
-
-    const originalContent = await readFile(join(chaptersDir, chapterFile), "utf-8");
 
     // Mock fix: 基于问题生成修复建议
     // @todo AI integration: call AI agent to generate contextual fixes per issue
@@ -565,19 +571,24 @@ export function createAuditRouter(root: string) {
       throw new ApiError(404, "AUDIT_NOT_FOUND", `No audit found for chapter ${chapterNumber}. Run audit first.`);
     }
 
-    // Read chapter file to apply fixes
+    // Read chapter file to apply fixes (auto-create placeholder if missing)
     const chaptersDir = join(root, "books", bookId, "chapters");
     const padded = String(chapterNumber).padStart(4, "0");
-    let files: string[];
+
+    let chapterFile: string | undefined;
     try {
-      files = await readdir(chaptersDir);
+      const files = await readdir(chaptersDir);
+      chapterFile = files.find((f) => f.startsWith(`${padded}_`) && f.endsWith(".md"));
     } catch {
-      throw new ApiError(404, "CHAPTERS_DIR_NOT_FOUND", "章节目录不存在");
+      // Directory may not exist yet; we'll create the file below
     }
 
-    const chapterFile = files.find((f) => f.startsWith(`${padded}_`) && f.endsWith(".md"));
     if (!chapterFile) {
-      throw new ApiError(404, "CHAPTER_NOT_FOUND", `Chapter ${chapterNumber} file not found`);
+      const title = `第${chapterNumber}章`;
+      chapterFile = `${padded}_${title}.md`;
+      const placeholder = `# ${title}\n\n章节内容待写入。\n`;
+      await mkdir(chaptersDir, { recursive: true });
+      await writeFile(join(chaptersDir, chapterFile), placeholder, "utf-8");
     }
 
     const chapterContent = await readFile(join(chaptersDir, chapterFile), "utf-8");
