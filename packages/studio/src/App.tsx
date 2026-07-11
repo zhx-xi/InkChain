@@ -74,12 +74,15 @@ export function deriveStartupGate(input: {
 
 export function App() {
   const { route, setRoute } = useHashRoute();
-  const sse = useSSE();
   const { theme, setTheme } = useTheme();
   const { t, lang: currentLang } = useI18n();
   const { data: project, error: projectError, refetch: refetchProject } = useApi<{ language: string; languageExplicit: boolean }>("/project");
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
   const [ready, setReady] = useState(false);
+  // Defer SSE connection until the startup gate passes (ready && !showLanguageSelector).
+  // Prevents Playwright's waitForLoadState("networkidle") from hanging on the
+  // persistent EventSource connection during the initial render in CI.
+  const sse = useSSE("/api/v1/events", !ready || showLanguageSelector);
 
   const isDark = theme === "dark";
 

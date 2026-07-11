@@ -83,13 +83,17 @@ export function useNewSSEMessages(
   }, [handler, messages]);
 }
 
-export function useSSE(url = "/api/v1/events") {
+export function useSSE(url = "/api/v1/events", disabled = false) {
   const [messages, setMessages] = useState<ReadonlyArray<SSEMessage>>([]);
   const [connected, setConnected] = useState(false);
   const esRef = useRef<EventSource | null>(null);
   const seqRef = useRef(0);
 
+  // Open SSE connection only when not disabled.
+  // When disabled, always return an empty/not-connected state.
   useEffect(() => {
+    if (disabled) return;
+
     const es = new EventSource(url);
     esRef.current = es;
 
@@ -117,7 +121,7 @@ export function useSSE(url = "/api/v1/events") {
       es.close();
       esRef.current = null;
     };
-  }, [url]);
+  }, [url, disabled]);
 
   const clear = useCallback(() => setMessages([]), []);
 

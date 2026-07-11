@@ -124,15 +124,45 @@ async function writeAuditIndex(
 }
 
 async function loadChaptersList(root: string, bookId: string): Promise<Array<{ number: number; title: string }>> {
-  const indexRaw = await readFile(join(root, "books", bookId, "chapter_index.json"), "utf-8").catch(() => null);
+  // Support two formats:
+  //   1. chapter_index.json with { chapters: [...] } (wrapped format)
+  //   2. chapters/index.json as a plain array (matching StateManager.loadChapterIndex)
+  const chapterIndexPath = join(root, "books", bookId, "chapter_index.json");
+  const chaptersIndexPath = join(root, "books", bookId, "chapters", "index.json");
+
+  // Try chapter_index.json first (wrapped format)
+  const indexRaw = await readFile(chapterIndexPath, "utf-8").catch(() => null);
   if (indexRaw) {
-    const index = JSON.parse(indexRaw) as { chapters?: Array<{ number: number; title?: string }> };
-    if (index.chapters) {
-      return index.chapters.map((ch) => ({ number: ch.number, title: ch.title ?? `第${ch.number}章` }));
+    const index = JSON.parse(indexRaw) as Record<string, unknown>;
+    if (index.chapters && Array.isArray(index.chapters)) {
+      return (index.chapters as Array<{ number: number; title?: string }>).map((ch) => ({
+        number: ch.number,
+        title: ch.title ?? `第${ch.number}章`,
+      }));
     }
   }
 
-  // Fallback: read chapter files from the directory
+  // Try chapters/index.json (supports both plain array and { chapters: [...] })
+  const chIndexRaw = await readFile(chaptersIndexPath, "utf-8").catch(() => null);
+  if (chIndexRaw) {
+    const parsed = JSON.parse(chIndexRaw) as unknown;
+    if (Array.isArray(parsed)) {
+      return parsed
+        .filter((ch: unknown) => typeof ch === "object" && ch !== null && typeof (ch as Record<string, unknown>).number === "number")
+        .map((ch) => ({
+          number: (ch as { number: number; title?: string }).number,
+          title: (ch as { number: number; title?: string }).title ?? `第${(ch as { number: number }).number}章`,
+        }));
+    }
+    if (parsed && typeof parsed === "object" && "chapters" in (parsed as Record<string, unknown>) && Array.isArray((parsed as Record<string, unknown>).chapters)) {
+      return ((parsed as { chapters: Array<{ number: number; title?: string }> }).chapters).map((ch) => ({
+        number: ch.number,
+        title: ch.title ?? `第${ch.number}章`,
+      }));
+    }
+  }
+
+  // Fallback: read chapter markdown files from the directory
   const chaptersDir = join(root, "books", bookId, "chapters");
   let files: string[];
   try {
