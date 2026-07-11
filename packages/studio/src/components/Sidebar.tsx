@@ -474,7 +474,7 @@ export function Sidebar({ nav, activePage, sse, t }: {
                         className="w-full flex items-center gap-2 pl-9 pr-2 py-1.5 text-[13px] text-muted-foreground/50 hover:text-foreground hover:text-primary transition-colors"
                       >
                         <AlertTriangle size={12} />
-                        <span>伏笔追踪</span>
+                        <span>伏笔线索</span>
                       </button>
                       <button
                         type="button"
@@ -722,7 +722,7 @@ export function Sidebar({ nav, activePage, sse, t }: {
               onClick={nav.toArchive}
             />
             <SidebarItem
-              label="Skill 库"
+              label="技能"
               icon={<Sparkles size={16} />}
               active={activePage === "skills"}
               onClick={nav.toSkills}

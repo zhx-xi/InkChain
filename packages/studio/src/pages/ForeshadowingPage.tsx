@@ -867,7 +867,8 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       {/* Error */}
       {error && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" data-testid="fs-state-error">
-          加载失败：{error}
+          <p>无法加载伏笔数据</p>
+          <p className="text-xs text-destructive/70 mt-1">({error})</p>
         </div>
       )}
 
@@ -1249,7 +1250,13 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                       {Math.round((extractProgress.current / extractProgress.total) * 100)}%
                     </span>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-2 w-full rounded-full bg-muted overflow-hidden"
+                    role="progressbar"
+                    aria-valuenow={extractProgress.current}
+                    aria-valuemin={0}
+                    aria-valuemax={extractProgress.total}
+                  >
                     <div
                       className="h-full rounded-full bg-primary transition-all duration-300"
                       style={{ width: `${(extractProgress.current / extractProgress.total) * 100}%` }}

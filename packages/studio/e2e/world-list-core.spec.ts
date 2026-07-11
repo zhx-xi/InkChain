@@ -49,7 +49,7 @@ test.describe("WorldListPage — 核心创作功能基线", () => {
   test("5. 空状态: 无世界观时显示空状态", async ({ page }) => {
     await page.waitForTimeout(2000);
     const emptyState = page.locator(
-      '[data-testid="wl-empty-state"], [data-testid="wl-state-empty"], text=创建第一个, text=暂无'
+      '[data-testid="wl-empty-state"], [data-testid="wl-state-empty"], :has-text("创建第一个"), :has-text("暂无")'
     );
     const hasEmpty = (await emptyState.count()) > 0;
     console.log(`Empty state: ${hasEmpty}`);
@@ -62,7 +62,7 @@ test.describe("WorldListPage — 核心创作功能基线", () => {
     await page.reload();
     await page.waitForTimeout(2000);
     const error = page.locator(
-      '[data-testid="wl-error-state"], [data-testid="wl-state-error"], text=错误, text=失败, text=重试'
+      '[data-testid="wl-error-state"], [data-testid="wl-state-error"], :has-text("错误"), :has-text("失败"), :has-text("重试")'
     );
     const hasError = (await error.count()) > 0;
     console.log(`Error state: ${hasError}`);

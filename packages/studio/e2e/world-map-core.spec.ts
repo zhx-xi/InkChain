@@ -67,7 +67,7 @@ test.describe("WorldMapPage — 核心创作功能基线", () => {
   test("7. 空状态: 无数据时显示空状态", async ({ page }) => {
     await page.waitForTimeout(2000);
     const emptyState = page.locator(
-      '[data-testid*="empty"], [data-testid*="Empty"], text=暂无, text=无数据'
+      '[data-testid*="empty"], [data-testid*="Empty"], :has-text("暂无"), :has-text("无数据")'
     );
     const hasEmpty = (await emptyState.count()) > 0;
     console.log(`Empty state: ${hasEmpty}`);
@@ -80,7 +80,7 @@ test.describe("WorldMapPage — 核心创作功能基线", () => {
     await page.reload();
     await page.waitForTimeout(2000);
     const error = page.locator(
-      '[data-testid*="error"], [data-testid*="Error"], text=错误, text=失败'
+      '[data-testid*="error"], [data-testid*="Error"], :has-text("错误"), :has-text("失败")'
     );
     const hasError = (await error.count()) > 0;
     console.log(`Error state: ${hasError}`);

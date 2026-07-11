@@ -90,7 +90,7 @@ test.describe("ForeshadowingPage — 核心创作功能基线", () => {
 
   test("8. 空状态: 页面在无数据时显示空状态提示", async ({ page }) => {
     await page.waitForTimeout(2000);
-    const emptyState = page.locator('[data-testid="fs-empty-state"], [data-testid="fs-state-empty"], text=创建第一个, text=暂无');
+    const emptyState = page.locator('[data-testid="fs-empty-state"], [data-testid="fs-state-empty"], :has-text("创建第一个"), :has-text("暂无")');
     const hasEmpty = (await emptyState.count()) > 0;
     console.log(`Empty state visible: ${hasEmpty}`);
   });
@@ -103,7 +103,7 @@ test.describe("ForeshadowingPage — 核心创作功能基线", () => {
     await page.reload();
     await page.waitForTimeout(2000);
 
-    const errorState = page.locator('[data-testid="fs-error-state"], [data-testid="fs-state-error"], text=错误, text=失败, text=重试');
+    const errorState = page.locator('[data-testid="fs-error-state"], [data-testid="fs-state-error"], :has-text("错误"), :has-text("失败"), :has-text("重试")');
     const hasError = (await errorState.count()) > 0;
     console.log(`Error state visible: ${hasError}`);
   });
