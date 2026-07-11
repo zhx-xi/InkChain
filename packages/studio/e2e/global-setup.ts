@@ -60,11 +60,12 @@ export default function globalSetup(): void {
   const skillsDir = path.join(testProjectDir, ".inkos", "skills");
   mkdirSync(skillsDir, { recursive: true });
 
+  // ⚠️ TriggerTypeEnum only accepts "manual" or "condition" — match the Zod schema exactly!
   const skills = [
-    { id: "custom-style-check", category: "writing", enabled: true, description: "自定义文风检测：检查章节是否符合已设定的风格指南", triggers: [{ type: "post_write", condition: "true" }], injection: { mode: "append", target: "system_prompt", priority: 50 }, params: {}, prompt: "请检查以下文本是否符合用户定义的目标文风。" },
-    { id: "world-rules-auditor", category: "world", enabled: false, description: "世界规则审计：验证新章节是否与世界设定中的规则一致", triggers: [{ type: "post_write", condition: "true" }], injection: { mode: "append", target: "system_prompt", priority: 60 }, params: {}, prompt: "请审核以下内容是否违反已建立的世界规则。" },
-    { id: "character-consistency-check", category: "character", enabled: true, description: "角色一致性检查：确保角色行为与性格设定一致", triggers: [{ type: "post_write", condition: "true" }], injection: { mode: "append", target: "system_prompt", priority: 55 }, params: {}, prompt: "请检查角色行为是否符合其性格设定。" },
-    { id: "plot-hole-detector", category: "analysis", enabled: true, description: "情节漏洞检测：识别时间线矛盾、逻辑断裂等情节问题", triggers: [{ type: "post_write", condition: "true" }], injection: { mode: "prepend", target: "user_prompt", priority: 70 }, params: {}, prompt: "请分析以下文本，找出可能的情节漏洞。" },
+    { id: "custom-style-check", category: "writing", enabled: true, description: "自定义文风检测：检查章节是否符合已设定的风格指南", triggers: [{ type: "condition", condition: "true" }], injection: { mode: "append", target: "system_prompt", priority: 50 }, params: {}, prompt: "请检查以下文本是否符合用户定义的目标文风。" },
+    { id: "world-rules-auditor", category: "world", enabled: false, description: "世界规则审计：验证新章节是否与世界设定中的规则一致", triggers: [{ type: "condition", condition: "true" }], injection: { mode: "append", target: "system_prompt", priority: 60 }, params: {}, prompt: "请审核以下内容是否违反已建立的世界规则。" },
+    { id: "character-consistency-check", category: "character", enabled: true, description: "角色一致性检查：确保角色行为与性格设定一致", triggers: [{ type: "condition", condition: "true" }], injection: { mode: "append", target: "system_prompt", priority: 55 }, params: {}, prompt: "请检查角色行为是否符合其性格设定。" },
+    { id: "plot-hole-detector", category: "analysis", enabled: true, description: "情节漏洞检测：识别时间线矛盾、逻辑断裂等情节问题", triggers: [{ type: "condition", condition: "true" }], injection: { mode: "prepend", target: "user_prompt", priority: 70 }, params: {}, prompt: "请分析以下文本，找出可能的情节漏洞。" },
     { id: "batch-summarizer", category: "utility", enabled: false, description: "批量摘要工具：将多章节内容压缩为摘要", triggers: [{ type: "manual" }], injection: { mode: "append", target: "system_prompt", priority: 40 }, params: {}, prompt: "请将以下内容压缩为简洁的摘要。" },
   ];
   for (const skill of skills) {

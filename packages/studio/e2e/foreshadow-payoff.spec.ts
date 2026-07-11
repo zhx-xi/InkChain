@@ -101,6 +101,7 @@ test.describe("伏笔提取 — lastMentionedChapter 与 大纲未指定", () =>
 
     // The created entry should show "大纲未指定"
     await expect(page.getByText("无名信件")).toBeVisible({ timeout: 3_000 });
-    await expect(page.getByText("预期回收：大纲未指定").first()).toBeVisible({ timeout: 3_000 });
+    // Default view is "table" — the cell shows just "大纲未指定" without "预期回收：" prefix
+    await expect(page.getByText("大纲未指定").first()).toBeVisible({ timeout: 3_000 });
   });
 });
