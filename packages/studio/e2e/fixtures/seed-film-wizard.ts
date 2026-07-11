@@ -8,9 +8,21 @@ export const E2E_ROOT = resolve(dir, "../../", "test-project");
 export const E2E_WIZ_ID = "e2e-film-wizard-demo";
 
 const INKCHAIN_JSON = JSON.stringify({
-  version: "1.0", llm: { provider: "openai", model: "gpt-4o-mini", stub: true, service: "custom" },
-  agent: { defaultModel: "gpt-4o-mini", collaborationMode: "sequential" },
-  project: { name: "E2E Test Project", language: "zh" },
+  name: "E2E Test Project",
+  version: "0.1.0",
+  language: "zh",
+  llm: {
+    provider: "openai",
+    service: "custom",
+    configSource: "env",
+    baseUrl: "http://localhost:11434/v1",
+    apiKey: "",
+    model: "gpt-4o-mini",
+    temperature: 0.7,
+    thinkingBudget: 0,
+    apiFormat: "chat",
+    stream: true,
+  },
 });
 
 export async function seedFilmWizard(): Promise<void> {
