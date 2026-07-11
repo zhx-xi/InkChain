@@ -828,7 +828,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="搜索伏笔名称或描述…"
+            placeholder="搜索伏笔或描述…"
             className="w-full pl-9 pr-8 py-2 rounded-lg border border-border/40 bg-background text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-colors"
             data-testid="fs-input-search"
           />
