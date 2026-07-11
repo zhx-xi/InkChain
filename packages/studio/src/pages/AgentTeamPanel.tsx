@@ -792,7 +792,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                 <span style={{ fontFamily: "Georgia,serif", fontStyle: "italic" }}>Agent Team</span>
               </h1>
               <p className="text-sm mt-1" style={{ color: "#8a7a6a" }}>
-                {BUILTIN_ROLES.length + customAgents.length} 个协作 Agent · 一键切换预设 · 支持自定义角色
+                {BUILTIN_ROLES.length + customAgents.length} 个协作 Agent 的 Persona 配置面板
               </p>
             </div>
 
@@ -1058,7 +1058,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
             )}
 
             <div className="space-y-2">
-              {unifiedTemplates.map((item) => {
+              {unifiedTemplates.map((item, idx) => {
                 if (item.kind === "preset") {
                   const isActive = selectedPreset === item.id;
                   return (
@@ -1137,6 +1137,13 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                     </div>
                   );
                 }
+
+                // User template section heading (only before first user template)
+                {idx > 0 && unifiedTemplates[idx - 1]?.kind === "preset" && (
+                  <div className="text-[11px] font-semibold uppercase tracking-wider pt-2 pb-1" style={{ color: "#8a7a6a" }}>
+                    用户模板
+                  </div>
+                )}
 
                 // User template
                 return (
@@ -1549,10 +1556,26 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                 <span style={{ fontFamily: "Georgia,serif", fontStyle: "italic" }}>流程编辑</span>
               </h2>
               <p className="text-sm mt-1" style={{ color: "#8a7a6a" }}>
+                InkChain Agent Pipeline
+              </p>
+              <p className="text-sm mt-0.5" style={{ color: "#8a7a6a" }}>
                 当前预设：{getPresetLabel(selectedPreset)} · 协作模式：{collaborationMode === "sequential" ? "顺序" : collaborationMode === "parallel" ? "并行" : "混合"}
               </p>
             </div>
             <div className="flex items-center gap-2">
+              {/* Preset label */}
+              <span className="text-xs px-2 py-1 rounded" style={{ backgroundColor: "rgba(139,58,58,0.08)", color: "#8B3A3A" }}>
+                {selectedPreset === "xianxia" ? "热血玄幻 · 预设" : getPresetLabel(selectedPreset) + " · 预设"}
+              </span>
+              {/* Play button */}
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-all"
+                style={{ backgroundColor: "#8B3A3A", color: "#fff" }}
+                onClick={() => {/* Play pipeline - placeholder */}}
+              >
+                播放流水线
+              </button>
               <select
                 value={collaborationMode}
                 onChange={(e) => setCollaborationMode(e.target.value as "sequential" | "parallel" | "hybrid")}
@@ -1618,20 +1641,28 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
             </div>
           )}
           {!flowLoadError && !isLoadingFlow && agentOrder.length > 0 && (
-            <AgentFlowEditor
-              builtinAgents={AGENTS}
-              customAgents={customAgents.map((a) => ({
-                id: a.id,
-                name: a.name,
-                role: a.role,
-                description: a.description,
-                color: a.color,
-                icon: a.icon,
-              }))}
-              agentOrder={agentOrder}
-              collaborationMode={collaborationMode}
-              onOrderChange={(newOrder) => setAgentOrder(newOrder)}
-            />
+            <>
+              <AgentFlowEditor
+                builtinAgents={AGENTS}
+                customAgents={customAgents.map((a) => ({
+                  id: a.id,
+                  name: a.name,
+                  role: a.role,
+                  description: a.description,
+                  color: a.color,
+                  icon: a.icon,
+                }))}
+                agentOrder={agentOrder}
+                collaborationMode={collaborationMode}
+                onOrderChange={(newOrder) => setAgentOrder(newOrder)}
+              />
+              {/* Pipeline stats */}
+              <div className="flex items-center gap-4 text-xs" style={{ color: "#8a7a6a" }}>
+                <span>{agentOrder.length} node</span>
+                <span>{agentOrder.length > 1 ? agentOrder.length - 1 : 0} edge</span>
+                <span>{agentOrder.length * 2} token</span>
+              </div>
+            </>
           )}
           {!flowLoadError && !isLoadingFlow && agentOrder.length === 0 && (
             <div
