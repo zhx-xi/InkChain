@@ -8,7 +8,9 @@ test.describe("LanguageSelector", () => {
   test("1. Page loads without crash", async ({ page }) => {
     // When navigating to home
     await page.goto("/#/");
-    await page.waitForLoadState("networkidle");
+    // networkidle may never settle due to Vite HMR WebSocket in CI;
+    // bail after 15s — the assertions below still validate correctness.
+    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
 
     // Then the page should not crash
     const bodyText = await page.evaluate(() => document.body.innerText);
@@ -18,7 +20,7 @@ test.describe("LanguageSelector", () => {
   test("2. Language selector rendering", async ({ page }) => {
     // When navigating to home
     await page.goto("/#/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
 
     // Check if LanguageSelector overlay is showing
     const hasSelector = await page.getByText("InkChain Studio").isVisible({ timeout: 3_000 }).catch(() => false);
@@ -32,7 +34,7 @@ test.describe("LanguageSelector", () => {
   test("3. Language selection interaction", async ({ page }) => {
     // Given the home page
     await page.goto("/#/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
 
     // Check if language selector shows
     const zhCard = page.getByText("中文创作");
@@ -56,7 +58,7 @@ test.describe("LanguageSelector", () => {
   test("4. English language selection", async ({ page }) => {
     // Given the home page
     await page.goto("/#/");
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
 
     // Check if language selector shows
     const enCard = page.getByText("English Writing");
