@@ -414,14 +414,14 @@ describe("AgentTeamPanel", () => {
     );
 
     await vi.waitFor(() => {
-      expect(queryByText("Writer")).toBe(true);
+      expect(queryByText("执笔者")).toBe(true);
     });
-    expect(queryByText("Auditor")).toBe(true);
+    expect(queryByText("审核者")).toBe(true);
     expect(queryByText("Editor")).toBe(true);
-    expect(queryByText("Architect")).toBe(true);
-    expect(queryByText("Planner")).toBe(true);
+    expect(queryByText("架构师")).toBe(true);
+    expect(queryByText("规划师")).toBe(true);
     expect(queryByText("Observer")).toBe(true);
-    expect(queryByText("Reviser")).toBe(true);
+    expect(queryByText("修订者")).toBe(true);
 
     const grid = container.querySelector(".grid");
     expect(grid?.children.length).toBe(7);

@@ -19,13 +19,13 @@ export interface AgentMetadata {
 }
 
 export const AGENTS: ReadonlyArray<AgentMetadata> = [
-  { role: "writer",     label: "Writer",     description: "章节正文写手", color: "#E88D3A", icon: "✍️" },
-  { role: "auditor",    label: "Auditor",    description: "连贯性审计",   color: "#4A90D9", icon: "🔍" },
+  { role: "writer",     label: "执笔者",     description: "章节正文写手", color: "#E88D3A", icon: "✍️" },
+  { role: "auditor",    label: "审核者",     description: "连贯性审计",   color: "#4A90D9", icon: "🔍" },
   { role: "editor",     label: "Editor",     description: "文字润色编辑", color: "#5CB85C", icon: "✏️" },
-  { role: "architect",  label: "Architect",  description: "故事架构设计", color: "#8B5CF6", icon: "🏗️" },
-  { role: "planner",    label: "Planner",    description: "章节节奏规划", color: "#9CA3AF", icon: "📋" },
+  { role: "architect",  label: "架构师",     description: "故事架构设计", color: "#8B5CF6", icon: "🏗️" },
+  { role: "planner",    label: "规划师",     description: "章节节奏规划", color: "#9CA3AF", icon: "📋" },
   { role: "observer",   label: "Observer",   description: "叙事状态追踪", color: "#0EA5E9", icon: "👁️" },
-  { role: "reviser",    label: "Reviser",    description: "内容修订优化", color: "#EF4444", icon: "🔄" },
+  { role: "reviser",    label: "修订者",     description: "内容修订优化", color: "#EF4444", icon: "🔄" },
 ];
 
 // ── Status Config ──
