@@ -43,6 +43,30 @@ jobs:
         working-directory: packages/studio
         run: PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --with-deps
 
+      - name: Prepare test project (inkchain.json)
+        working-directory: packages/studio
+        run: |
+          mkdir -p test-project
+          cat > test-project/inkchain.json << 'EOF'
+          {
+            "name": "E2E Test Project",
+            "version": "0.1.0",
+            "language": "zh",
+            "llm": {
+              "provider": "openai",
+              "service": "custom",
+              "configSource": "env",
+              "baseUrl": "http://localhost:11434/v1",
+              "apiKey": "",
+              "model": "gpt-4o-mini",
+              "temperature": 0.7,
+              "thinkingBudget": 0,
+              "apiFormat": "chat",
+              "stream": true
+            }
+          }
+          EOF
+
       - name: Start API server
         working-directory: packages/studio
         env:
@@ -52,6 +76,8 @@ jobs:
         run: |
           node_modules/.bin/tsx src/api/index.ts > /tmp/api-server.log 2>&1 &
           echo $! > /tmp/api-server.pid
+          # Give tsx time to compile the 6000-line server.ts before curl loop starts
+          sleep 15
           for i in $(seq 1 60); do
             if curl -s -o /dev/null -w "%{http_code}" http://localhost:4581 | grep -q "2\|3\|4"; then
               echo "API ready after ${i}s"

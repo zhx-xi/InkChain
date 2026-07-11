@@ -1,7 +1,6 @@
 import { startStudioServer } from "./server.js";
 import { resolve, join, dirname } from "node:path";
 import { existsSync } from "node:fs";
-import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -13,18 +12,11 @@ const port = parseInt(process.env.INKCHAIN_STUDIO_PORT ?? "4567", 10);
 const studioRoot = resolve(__dirname, "../..");
 const distDir = join(studioRoot, "dist");
 
-// Auto-build frontend if dist/ doesn't exist
-if (!existsSync(join(distDir, "index.html"))) {
-  console.log("Building frontend...");
-  try {
-    execSync("npx vite build", { cwd: studioRoot, stdio: "inherit" });
-  } catch {
-    console.error("Failed to build frontend. Run 'cd packages/studio && pnpm build' manually.");
-    process.exit(1);
-  }
-}
+// Auto-build frontend if dist/ doesn't exist. In CI, Vite handles frontend separately
+// so we skip blocking — start the API immediately (static routes 404 until dist is built).
+const staticDir = existsSync(join(distDir, "index.html")) ? distDir : undefined;
 
-startStudioServer(root, port, { staticDir: distDir }).catch((e) => {
+startStudioServer(root, port, { staticDir }).catch((e) => {
   console.error("Failed to start studio:", e);
   process.exit(1);
 });

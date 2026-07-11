@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 // ── Fixtures ──────────────────────────────────────────────────────
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
-const E2E_ROOT = resolve(__dirname, "../../../..", "test-project");
+const E2E_ROOT = resolve(__dirname, "..", "test-project");
 const BOOK_ID = "e2e-audit-volumes";
 const NOW = new Date("2026-07-07T00:00:00.000Z").toISOString();
 

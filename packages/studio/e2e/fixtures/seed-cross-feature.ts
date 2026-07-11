@@ -3,7 +3,7 @@ import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
-export const E2E_ROOT = resolve(__dirname, "../../../..", "test-project");
+export const E2E_ROOT = resolve(__dirname, "../../", "test-project");
 export const E2E_BOOK_ID = "e2e-volume-dnd";
 
 /** Book-B ID for multi-book isolation tests */

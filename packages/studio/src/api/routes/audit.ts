@@ -124,15 +124,45 @@ async function writeAuditIndex(
 }
 
 async function loadChaptersList(root: string, bookId: string): Promise<Array<{ number: number; title: string }>> {
-  const indexRaw = await readFile(join(root, "books", bookId, "chapter_index.json"), "utf-8").catch(() => null);
+  // Support two formats:
+  //   1. chapter_index.json with { chapters: [...] } (wrapped format)
+  //   2. chapters/index.json as a plain array (matching StateManager.loadChapterIndex)
+  const chapterIndexPath = join(root, "books", bookId, "chapter_index.json");
+  const chaptersIndexPath = join(root, "books", bookId, "chapters", "index.json");
+
+  // Try chapter_index.json first (wrapped format)
+  const indexRaw = await readFile(chapterIndexPath, "utf-8").catch(() => null);
   if (indexRaw) {
-    const index = JSON.parse(indexRaw) as { chapters?: Array<{ number: number; title?: string }> };
-    if (index.chapters) {
-      return index.chapters.map((ch) => ({ number: ch.number, title: ch.title ?? `第${ch.number}章` }));
+    const index = JSON.parse(indexRaw) as Record<string, unknown>;
+    if (index.chapters && Array.isArray(index.chapters)) {
+      return (index.chapters as Array<{ number: number; title?: string }>).map((ch) => ({
+        number: ch.number,
+        title: ch.title ?? `第${ch.number}章`,
+      }));
     }
   }
 
-  // Fallback: read chapter files from the directory
+  // Try chapters/index.json (supports both plain array and { chapters: [...] })
+  const chIndexRaw = await readFile(chaptersIndexPath, "utf-8").catch(() => null);
+  if (chIndexRaw) {
+    const parsed = JSON.parse(chIndexRaw) as unknown;
+    if (Array.isArray(parsed)) {
+      return parsed
+        .filter((ch: unknown) => typeof ch === "object" && ch !== null && typeof (ch as Record<string, unknown>).number === "number")
+        .map((ch) => ({
+          number: (ch as { number: number; title?: string }).number,
+          title: (ch as { number: number; title?: string }).title ?? `第${(ch as { number: number }).number}章`,
+        }));
+    }
+    if (parsed && typeof parsed === "object" && "chapters" in (parsed as Record<string, unknown>) && Array.isArray((parsed as Record<string, unknown>).chapters)) {
+      return ((parsed as { chapters: Array<{ number: number; title?: string }> }).chapters).map((ch) => ({
+        number: ch.number,
+        title: ch.title ?? `第${ch.number}章`,
+      }));
+    }
+  }
+
+  // Fallback: read chapter markdown files from the directory
   const chaptersDir = join(root, "books", bookId, "chapters");
   let files: string[];
   try {
@@ -462,22 +492,28 @@ export function createAuditRouter(root: string) {
       throw new ApiError(404, "NO_ISSUES", `No audit issues found for chapter ${chapterNumber}. Run audit first.`);
     }
 
-    // 读取章节内容
+    // 读取章节内容（如文件不存在则自动创建占位文件）
     const chaptersDir = join(root, "books", bookId, "chapters");
     const padded = String(chapterNumber).padStart(4, "0");
-    let files: string[];
+
+    let chapterFile: string | undefined;
     try {
-      files = await readdir(chaptersDir);
+      const files = await readdir(chaptersDir);
+      chapterFile = files.find((f) => f.startsWith(`${padded}_`) && f.endsWith(".md"));
     } catch {
-      throw new ApiError(404, "CHAPTERS_DIR_NOT_FOUND", "章节目录不存在");
+      // Directory may not exist yet; we'll create the file below
     }
 
-    const chapterFile = files.find((f) => f.startsWith(`${padded}_`) && f.endsWith(".md"));
+    let originalContent = "";
     if (!chapterFile) {
-      throw new ApiError(404, "CHAPTER_NOT_FOUND", `Chapter ${chapterNumber} file not found`);
+      const title = `第${chapterNumber}章`;
+      chapterFile = `${padded}_${title}.md`;
+      originalContent = `# ${title}\n\n章节内容待写入。\n`;
+      await mkdir(chaptersDir, { recursive: true });
+      await writeFile(join(chaptersDir, chapterFile), originalContent, "utf-8");
+    } else {
+      originalContent = await readFile(join(chaptersDir, chapterFile), "utf-8");
     }
-
-    const originalContent = await readFile(join(chaptersDir, chapterFile), "utf-8");
 
     // Mock fix: 基于问题生成修复建议
     // @todo AI integration: call AI agent to generate contextual fixes per issue
@@ -535,19 +571,24 @@ export function createAuditRouter(root: string) {
       throw new ApiError(404, "AUDIT_NOT_FOUND", `No audit found for chapter ${chapterNumber}. Run audit first.`);
     }
 
-    // Read chapter file to apply fixes
+    // Read chapter file to apply fixes (auto-create placeholder if missing)
     const chaptersDir = join(root, "books", bookId, "chapters");
     const padded = String(chapterNumber).padStart(4, "0");
-    let files: string[];
+
+    let chapterFile: string | undefined;
     try {
-      files = await readdir(chaptersDir);
+      const files = await readdir(chaptersDir);
+      chapterFile = files.find((f) => f.startsWith(`${padded}_`) && f.endsWith(".md"));
     } catch {
-      throw new ApiError(404, "CHAPTERS_DIR_NOT_FOUND", "章节目录不存在");
+      // Directory may not exist yet; we'll create the file below
     }
 
-    const chapterFile = files.find((f) => f.startsWith(`${padded}_`) && f.endsWith(".md"));
     if (!chapterFile) {
-      throw new ApiError(404, "CHAPTER_NOT_FOUND", `Chapter ${chapterNumber} file not found`);
+      const title = `第${chapterNumber}章`;
+      chapterFile = `${padded}_${title}.md`;
+      const placeholder = `# ${title}\n\n章节内容待写入。\n`;
+      await mkdir(chaptersDir, { recursive: true });
+      await writeFile(join(chaptersDir, chapterFile), placeholder, "utf-8");
     }
 
     const chapterContent = await readFile(join(chaptersDir, chapterFile), "utf-8");

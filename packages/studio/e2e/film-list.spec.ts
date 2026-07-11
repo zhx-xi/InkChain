@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const dir = fileURLToPath(new URL(".", import.meta.url));
-const E2E_ROOT = resolve(dir, "../../..", "test-project");
+const E2E_ROOT = resolve(dir, "..", "test-project");
 
 const FILM_A_ID = "e2e-film-list-alpha";
 const FILM_B_ID = "e2e-film-list-beta";

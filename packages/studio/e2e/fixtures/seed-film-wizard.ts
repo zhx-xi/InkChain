@@ -1,12 +1,33 @@
 import { saveStoryGraph, StoryGraphSchema } from "@actalk/inkchain-core";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { mkdir, writeFile } from "node:fs/promises";
 
 const dir = fileURLToPath(new URL(".", import.meta.url));
-export const E2E_ROOT = resolve(dir, "../../../..", "test-project");
+export const E2E_ROOT = resolve(dir, "../../", "test-project");
 export const E2E_WIZ_ID = "e2e-film-wizard-demo";
 
+const INKCHAIN_JSON = JSON.stringify({
+  name: "E2E Test Project",
+  version: "0.1.0",
+  language: "zh",
+  llm: {
+    provider: "openai",
+    service: "custom",
+    configSource: "env",
+    baseUrl: "http://localhost:11434/v1",
+    apiKey: "",
+    model: "gpt-4o-mini",
+    temperature: 0.7,
+    thinkingBudget: 0,
+    apiFormat: "chat",
+    stream: true,
+  },
+});
+
 export async function seedFilmWizard(): Promise<void> {
+  await mkdir(E2E_ROOT, { recursive: true });
+  await writeFile(resolve(E2E_ROOT, "inkchain.json"), INKCHAIN_JSON, "utf-8").catch(() => {});
   await saveStoryGraph(
     E2E_ROOT,
     E2E_WIZ_ID,
