@@ -167,7 +167,7 @@ export function WorldMapPage({ worldId, nav }: WorldMapProps) {
   // Error state
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full text-destructive p-6">
+      <div className="flex items-center justify-center h-full text-destructive p-6" data-testid="wm-state-error">
         <div className="text-center space-y-2">
           <p className="text-sm font-medium">加载世界数据失败</p>
           <p className="text-xs text-muted-foreground">{error}</p>
@@ -179,7 +179,7 @@ export function WorldMapPage({ worldId, nav }: WorldMapProps) {
   // Loading state
   if (loading || !world) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center h-full" data-testid="wm-state-loading">
         <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
       </div>
     );
@@ -196,6 +196,7 @@ export function WorldMapPage({ worldId, nav }: WorldMapProps) {
             type="button"
             onClick={() => nav?.toWorldDetail(worldId)}
             className="flex items-center gap-1.5 text-sm text-[#7A6A5A] hover:text-[#2C1810] transition-colors"
+            data-testid="back-btn"
           >
             <ArrowLeft size={16} />
             <span>{world.name}</span>
@@ -207,7 +208,7 @@ export function WorldMapPage({ worldId, nav }: WorldMapProps) {
       </header>
 
       {/* ── Breadcrumb ── */}
-      <nav className="flex items-center h-10 px-6 bg-white border-b border-[#E8E0D8] gap-1.5 shrink-0">
+      <nav className="flex items-center h-10 px-6 bg-white border-b border-[#E8E0D8] gap-1.5 shrink-0" data-testid="wm-breadcrumb">
         {breadcrumbTrail.map((item, i) => (
           <span key={i} className="flex items-center gap-1.5">
             {i > 0 && <span className="text-[#A09888] text-xs">›</span>}
@@ -228,7 +229,7 @@ export function WorldMapPage({ worldId, nav }: WorldMapProps) {
       </nav>
 
       {/* ── Toolbar ── */}
-      <div className="flex items-center justify-between h-11 px-6 bg-white border-b border-[#E8E0D8] shrink-0 z-15">
+      <div className="flex items-center justify-between h-11 px-6 bg-white border-b border-[#E8E0D8] shrink-0 z-15" data-testid="wm-toolbar">
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -380,7 +381,7 @@ export function WorldMapPage({ worldId, nav }: WorldMapProps) {
 
           {/* Empty state */}
           {positionedNodes.length === 0 && (
-            <div className="absolute inset-0 flex items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center" data-testid="wm-state-empty">
               <div className="text-center space-y-2">
                 <MapPin size={32} className="mx-auto text-[#A09888]" />
                 <p className="text-sm text-[#7A6A5A]">该世界暂无地理区域数据</p>
@@ -408,6 +409,7 @@ export function WorldMapPage({ worldId, nav }: WorldMapProps) {
             "w-[340px] bg-white border-l border-[#E8E0D8] shadow-[-4px_0_24px_rgba(44,24,16,0.1)] flex flex-col overflow-hidden transition-transform duration-300",
             selectedNode ? "translate-x-0" : "translate-x-full absolute right-0 top-0 bottom-0"
           )}
+          data-testid="wm-detail-panel"
         >
           {selectedNode ? (
             <>

@@ -202,14 +202,14 @@ export function WorldListPage({ nav, bookId }: {
 
       {/* Error */}
       {error && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" data-testid="wl-state-error">
           加载失败：{error}
         </div>
       )}
 
       {/* Loading */}
       {loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" data-testid="wl-state-loading">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="rounded-xl border border-border/40 bg-card p-4 space-y-3 animate-pulse">
               <div className="h-5 w-32 bg-muted rounded" />
@@ -226,7 +226,7 @@ export function WorldListPage({ nav, bookId }: {
 
       {/* Empty */}
       {!loading && !error && filteredWorlds.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="flex flex-col items-center justify-center py-16 text-center" data-testid="wl-state-empty">
           <div className="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
             <Globe size={28} className="text-muted-foreground/40" />
           </div>

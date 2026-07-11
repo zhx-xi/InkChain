@@ -1,5 +1,5 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RotateCw } from "lucide-react";
 import { useHashRoute } from "../hooks/use-hash-route";
 import {
   Search, X, Sparkles, Plus, AlertTriangle, CheckCircle2, Clock,
@@ -794,14 +794,25 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
             type="button"
             onClick={() => { setAiExtractResult(null); setAiExtractError(null); setShowAiExtract(true); }}
             className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary shadow-sm transition hover:bg-primary/10"
+            data-testid="fs-btn-ai-extract"
           >
             <Bot size={15} />
             AI 提取
           </button>
           <button
             type="button"
+            onClick={refetch}
+            className="inline-flex items-center gap-2 rounded-lg border border-border/40 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            data-testid="fs-btn-refresh"
+          >
+            <RotateCw size={14} />
+            刷新
+          </button>
+          <button
+            type="button"
             onClick={() => setShowCreate(true)}
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+            data-testid="fs-btn-create-foreshadowing"
           >
             <Plus size={15} />
             新建伏笔
@@ -819,6 +830,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="搜索伏笔名称或描述…"
             className="w-full pl-9 pr-8 py-2 rounded-lg border border-border/40 bg-background text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-colors"
+            data-testid="fs-input-search"
           />
           {query && (
             <button
@@ -854,14 +866,14 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
 
       {/* Error */}
       {error && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" data-testid="fs-state-error">
           加载失败：{error}
         </div>
       )}
 
       {/* Loading */}
       {loading && (
-        <div className="space-y-3">
+        <div className="space-y-3" data-testid="fs-state-loading">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="rounded-xl border border-border/40 bg-card p-4 space-y-3 animate-pulse">
               <div className="h-4 w-48 bg-muted rounded" />
@@ -874,7 +886,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
 
       {/* Empty */}
       {!loading && !error && filtered.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="flex flex-col items-center justify-center py-16 text-center" data-testid="fs-state-empty">
           <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
             <Sparkles size={20} className="text-muted-foreground/40" />
           </div>

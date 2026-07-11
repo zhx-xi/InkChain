@@ -506,7 +506,7 @@ export function Sidebar({ nav, activePage, sse, t }: {
                         className="w-full flex items-center gap-2 pl-9 pr-2 py-1.5 text-[13px] text-muted-foreground/50 hover:text-foreground hover:text-primary transition-colors"
                       >
                         <PenLine size={12} />
-                        <span>文风检测</span>
+                        <span>书籍文风</span>
                       </button>
                       <button
                         type="button"
