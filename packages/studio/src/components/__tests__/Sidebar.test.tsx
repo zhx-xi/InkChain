@@ -602,10 +602,10 @@ describe("Sidebar — Book Expand Area", () => {
       (expandBtn as HTMLButtonElement).click();
     });
 
-    expect(container.textContent).toContain("伏笔追踪");
+    expect(container.textContent).toContain("伏笔线索");
 
     const foreshadowBtn = Array.from(container.querySelectorAll("button")).find(
-      (btn) => btn.textContent?.includes("伏笔追踪"),
+      (btn) => btn.textContent?.includes("伏笔线索"),
     );
     expect(foreshadowBtn).toBeTruthy();
     act(() => {
@@ -637,7 +637,7 @@ describe("Sidebar — Book Expand Area", () => {
     });
 
     const foreshadowBtn = Array.from(container.querySelectorAll("button")).find(
-      (btn) => btn.textContent?.includes("伏笔追踪"),
+      (btn) => btn.textContent?.includes("伏笔线索"),
     );
     expect(foreshadowBtn).toBeTruthy();
     act(() => {
@@ -678,7 +678,7 @@ describe("Sidebar — Tools Area", () => {
     expect(text).toContain("Agent Team");
     expect(text).toContain("世界设定");
     expect(text).toContain("会话归档");
-    expect(text).toContain("Skill 库");
+    expect(text).toContain("技能");
 
     cleanup();
   });
