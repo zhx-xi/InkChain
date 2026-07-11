@@ -377,13 +377,6 @@ export function SkillListPage() {
                       </div>
                     </div>
 
-                    {config.triggers && config.triggers.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-border/30">
-                        <p className="text-[10px] text-muted-foreground/60">
-                          触发器：{config.triggers.length} 个
-                        </p>
-                      </div>
-                    )}
                   </div>
 
                   {/* Expanded Detail Panel */}

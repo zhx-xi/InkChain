@@ -1326,7 +1326,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                             className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
                           >
                             {applyingIndices.size > 0 && <Loader2 size={12} className="animate-spin" />}
-                            应用全部
+                            应用所有
                           </button>
                           <button
                             type="button"
@@ -1334,7 +1334,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                             disabled={selectedCount === 0 || applyingIndices.size > 0}
                             className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary shadow-sm transition hover:bg-primary/10 disabled:opacity-60"
                           >
-                            应用
+                            应用选中
                           </button>
                         </div>
                       </div>
