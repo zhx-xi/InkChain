@@ -148,7 +148,7 @@ function CreateForeshadowingModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px]">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px]" role="dialog" aria-modal="true">
       <button
         type="button"
         aria-label="关闭"
@@ -351,7 +351,7 @@ function EditForeshadowingModal({
   if (!isOpen || !draft) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px]">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px]" role="dialog" aria-modal="true">
       <button
         type="button"
         aria-label="关闭"
@@ -392,6 +392,7 @@ function EditForeshadowingModal({
               type="text"
               value={draft.title}
               onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+              placeholder="伏笔名称"
               className="mt-1 w-full rounded-lg border border-border/40 bg-background px-3 py-2 text-sm outline-none focus:border-primary/50"
             />
           </div>
@@ -812,7 +813,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
             type="button"
             onClick={() => setShowCreate(true)}
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
-            data-testid="fs-btn-create-foreshadowing"
+            data-testid="fs-create-btn"
           >
             <Plus size={15} />
             新建伏笔
@@ -828,7 +829,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="搜索伏笔或描述…"
+            placeholder="搜索伏笔名称或描述…"
             className="w-full pl-9 pr-8 py-2 rounded-lg border border-border/40 bg-background text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-colors"
             data-testid="fs-input-search"
           />
@@ -869,6 +870,13 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" data-testid="fs-state-error">
           <p>无法加载伏笔数据</p>
           <p className="text-xs text-destructive/70 mt-1">({error})</p>
+          <button
+            type="button"
+            onClick={refetch}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-destructive/30 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            重试
+          </button>
         </div>
       )}
 
@@ -1038,7 +1046,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                   <td className="px-4 py-3 text-muted-foreground">第 {f.createdChapter} 章</td>
                   <td className="px-4 py-3 text-muted-foreground">第 {f.lastMentionedChapter} 章</td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {f.expectedPayoffChapter ? `第 ${f.expectedPayoffChapter} 章` : <span className="text-muted-foreground/40">—</span>}
+                    {f.expectedPayoffChapter ? `第 ${f.expectedPayoffChapter} 章` : <span className="text-muted-foreground italic">大纲未指定</span>}
                   </td>
                   <td className="px-4 py-3">
                     <span className={cn(
@@ -1170,7 +1178,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
 
       {/* AI Extract Modal */}
       {showAiExtract && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px] pt-16">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px] pt-16" role="dialog" aria-modal="true">
           <button
             type="button"
             aria-label="关闭"
