@@ -59,10 +59,9 @@ test.describe("AuditPage — 核心创作功能基线", () => {
 
   test("6. 空状态: 无可审计章节", async ({ page }) => {
     await page.waitForTimeout(2000);
-    const emptyState = page.locator(
-      '[data-testid="au-empty-state"], [data-testid="au-state-empty"], text=暂无, text=无可审计'
-    );
-    const hasEmpty = (await emptyState.count()) > 0;
+    const emptyState = page.locator('[data-testid="au-empty-state"], [data-testid="au-state-empty"]');
+    const emptyText = page.locator(':has-text("暂无"), :has-text("无可审计")');
+    const hasEmpty = (await emptyState.count()) > 0 || (await emptyText.count()) > 0;
     console.log(`Empty state visible: ${hasEmpty}`);
   });
 
@@ -72,10 +71,9 @@ test.describe("AuditPage — 核心创作功能基线", () => {
     );
     await page.reload();
     await page.waitForTimeout(2000);
-    const error = page.locator(
-      '[data-testid="au-error-state"], [data-testid="au-state-error"], text=错误, text=失败, text=重试'
-    );
-    const hasError = (await error.count()) > 0;
+    const error = page.locator('[data-testid="au-error-state"], [data-testid="au-state-error"]');
+    const errorText = page.locator(':has-text("错误"), :has-text("失败"), :has-text("重试")');
+    const hasError = (await error.count()) > 0 || (await errorText.count()) > 0;
     console.log(`Error state visible: ${hasError}`);
   });
 
