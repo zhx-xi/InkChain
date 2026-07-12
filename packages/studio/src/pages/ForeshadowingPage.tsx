@@ -553,7 +553,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       await new Promise((resolve) => setTimeout(resolve, 50));
       for (let ch = from; ch <= to; ch++) {
         const result = await postApi<{ success: boolean; data: { candidates: ForeshadowingExtractCandidate[] } }>(
-          `/api/foreshadowing/extract`,
+          `/api/extract`,
           { skillId: "extract-foreshadowing", bookId, chapterNumber: ch },
         );
         // Support both mock format (result.data = array) and real API format (result.data.candidates)

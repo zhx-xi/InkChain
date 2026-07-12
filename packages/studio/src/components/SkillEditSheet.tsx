@@ -534,6 +534,20 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
             </div>
           ) : (
             <>
+              {/* Skill ID — editable only in create mode */}
+              {isCreateMode && (
+                <section className="space-y-2">
+                  <label className="text-[13px] font-medium text-foreground">Skill ID</label>
+                  <input
+                    type="text"
+                    value={draft.id}
+                    onChange={(e) => setDraft({ ...draft, id: e.target.value })}
+                    placeholder="skill-id (kebab-case)"
+                    className="w-full rounded-lg border border-border/40 bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary/50 transition-colors font-mono"
+                  />
+                </section>
+              )}
+
               {/* Description */}
               <section className="space-y-2">
                 <label className="text-[13px] font-medium text-foreground">描述</label>
