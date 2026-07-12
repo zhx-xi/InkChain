@@ -929,8 +929,8 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         </div>
       )}
 
-      {/* Loading */}
-      {loading && (
+      {/* Loading — only on initial load, not during re-fetch */}
+      {loading && data === null && (
         <div className="space-y-3" data-testid="fs-state-loading">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="rounded-xl border border-border/40 bg-card p-4 space-y-3 animate-pulse">
@@ -942,8 +942,8 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         </div>
       )}
 
-      {/* Empty */}
-      {!loading && !error && filtered.length === 0 && (
+      {/* Empty — show when data is available (even during refetch) */}
+      {data !== null && !error && filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center" data-testid="fs-state-empty">
           <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
             <Sparkles size={20} className="text-muted-foreground/40" />
