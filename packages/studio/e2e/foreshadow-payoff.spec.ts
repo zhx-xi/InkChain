@@ -8,7 +8,7 @@ import {
 // ── Helpers ───────────────────────────────────────────────────────
 
 function mockAiExtract(page: Page, entries: Array<Record<string, unknown>>) {
-  page.route("**/api/extract", async (route) => {
+  page.route("**/api/foreshadowing/extract*", async (route) => {
     if (route.request().method() === "POST") {
       await route.fulfill({
         status: 200,

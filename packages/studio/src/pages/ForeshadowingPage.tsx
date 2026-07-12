@@ -566,6 +566,8 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         setExtractProgress({ current: ch - from + 1, total: totalChapters });
       }
       setAiExtractResult(allCandidates);
+      // Auto-select all candidates so "应用选中" is immediately clickable
+      setSelectedExtractIndices(new Set(allCandidates.map((_, i) => i)));
 
       // After all chapters extracted, find cross-chapter relations
       if (allCandidates.length > 0) {
