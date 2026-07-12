@@ -503,9 +503,14 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
     : 0;
   const effectiveChapter = Math.max(1, actualChapterCount);
 
-  const { data, loading, error, refetch } = useApi<ForeshadowingListResponse>(
-    `/api/foreshadowing?bookId=${encodeURIComponent(bookId)}&currentChapter=${effectiveChapter}`,
+  // Stable API URL — no dynamic chapter dependency. The currentChapter param was only
+  // used for the _forgotten annotation, not for data filtering, and including it caused
+  // useApi to refetch whenever effectiveChapter changed (after bookChapterData loaded).
+  const apiPath = useMemo(
+    () => `/api/foreshadowing?bookId=${encodeURIComponent(bookId)}`,
+    [bookId],
   );
+  const { data, loading, error, refetch } = useApi<ForeshadowingListResponse>(apiPath);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | ForeshadowingStatus>("all");
   const [typeFilter, setTypeFilter] = useState<"all" | ForeshadowingType>("all");
