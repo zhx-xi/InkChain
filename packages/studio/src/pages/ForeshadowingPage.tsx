@@ -1409,12 +1409,12 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                             </button>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 relative">
                                   <input
                                     type="checkbox"
                                     checked={selectedExtractIndices.has(idx)}
                                     onChange={() => toggleSelectExtract(idx)}
-                                    className="sr-only"
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
                                   />
                                   <span className="font-medium text-sm text-foreground pointer-events-none">{candidate.title}</span>
                                   <span className={cn(
