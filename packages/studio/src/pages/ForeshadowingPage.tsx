@@ -529,12 +529,21 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
   const [graphViewRelations, setGraphViewRelations] = useState<{source: string; target: string; label: string}[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  // Track whether the foreshadowing list has ever loaded successfully.
+  // This decouples the empty-state display from refetch transitions that
+  // occur when effectiveChapter changes after bookChapterData resolves.
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  useEffect(() => {
+    if (data !== null && !hasLoadedOnce) {
+      setHasLoadedOnce(true);
+    }
+  }, [data, hasLoadedOnce]);
 
   // Use dynamically fetched chapter count instead of hardcoded 999
   const maxChapter = Math.max(1, actualChapterCount || data?.currentChapter || 1);
   const chapterOptions = Array.from({ length: maxChapter }, (_, i) => i + 1);
   const currentChapter = maxChapter;
-  const hasNoChapters = bookChapterData && actualChapterCount === 0;
+  const hasNoChapters = bookChapterData !== null && actualChapterCount === 0;
 
   /** Parse SSE event stream and extract result data */
   const parseSseResult = useCallback((body: string): ForeshadowingExtractCandidate[] | null => {
@@ -942,8 +951,8 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         </div>
       )}
 
-      {/* Empty — show when data is available or after initial load (covers refetch transitions) */}
-      {(data !== null || !loading) && !error && filtered.length === 0 && (
+      {/* Empty — show once data has loaded at least once (covers refetch transitions) */}
+      {hasLoadedOnce && !error && filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center" data-testid="fs-state-empty">
           <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
             <Sparkles size={20} className="text-muted-foreground/40" />
