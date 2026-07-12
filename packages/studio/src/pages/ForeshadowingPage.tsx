@@ -942,8 +942,8 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         </div>
       )}
 
-      {/* Empty — show when data is available (even during refetch) */}
-      {data !== null && !error && filtered.length === 0 && (
+      {/* Empty — show when data is available or after initial load (covers refetch transitions) */}
+      {(data !== null || !loading) && !error && filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center" data-testid="fs-state-empty">
           <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
             <Sparkles size={20} className="text-muted-foreground/40" />
