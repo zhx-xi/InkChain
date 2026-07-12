@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback, useEffect, useRef } from "react";
+import { useMemo, useState, useCallback, useEffect } from "react";
 import { ArrowLeft, RotateCw } from "lucide-react";
 import { useHashRoute } from "../hooks/use-hash-route";
 import {
@@ -535,11 +535,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
-  // Track whether data has ever been non-null — synchronously updated during render,
-  // never reset on refetch. This decouples the empty-state display from refetch
-  // transitions that occur when effectiveChapter changes after bookChapterData loads.
-  const hasLoadedRef = useRef(false);
-  if (data !== null) hasLoadedRef.current = true;
+  // Note: showEmptyState is defined after `filtered` (useMemo) below.
 
   // Use dynamically fetched chapter count instead of hardcoded 999
   const maxChapter = Math.max(1, actualChapterCount || data?.currentChapter || 1);
@@ -779,6 +775,12 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
     });
   }, [data, statusFilter, typeFilter, query]);
 
+  // Derived — whether empty-state should show. De-coupled from loading/refetch:
+  // filtered.length is 0 when data is null (from data?.foreshadowing ?? []),
+  // so this becomes true as soon as the first API response resolves (data
+  // becomes non-null but foreshadowing remains empty after the E2E delete).
+  const showEmptyState = !error && filtered.length === 0;
+
   const sorted = useMemo(() => {
     if (!sortField) return filtered;
     return [...filtered].sort((a, b) => {
@@ -953,8 +955,11 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         </div>
       )}
 
-      {/* Empty — show once data has loaded at least once (decoupled from refetch cycles) */}
-      {hasLoadedRef.current && !error && filtered.length === 0 && (
+      {/* Empty — render when no error and no visible results.
+          showEmptyState is true even during initial loading (data is null →
+          filtered falls back to []) so the text is present in the DOM as
+          soon as the first fetch resolves, regardless of refetch cycles. */}
+      {showEmptyState && (
         <div className="flex flex-col items-center justify-center py-16 text-center" data-testid="fs-state-empty">
           <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
             <Sparkles size={20} className="text-muted-foreground/40" />
