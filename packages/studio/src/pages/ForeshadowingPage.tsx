@@ -956,8 +956,8 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         </div>
       )}
 
-      {/* Card List */}
-      {!loading && filtered.length > 0 && viewMode === "card" && (
+      {/* Card List — always show when data exists (even during refetch) */}
+      {filtered.length > 0 && viewMode === "card" && (
         <div className="space-y-2">
           {paginated.map((f) => (
             <button
@@ -1036,8 +1036,8 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         </div>
       )}
 
-      {/* Table View */}
-      {!loading && filtered.length > 0 && viewMode === "table" && (
+      {/* Table View — always show when data exists (even during refetch) */}
+      {filtered.length > 0 && viewMode === "table" && (
         <div className="overflow-x-auto rounded-xl border border-border/40 bg-card">
           <table className="w-full text-sm">
             <thead>
@@ -1113,8 +1113,8 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         </div>
       )}
 
-      {/* Relation Graph View */}
-      {!loading && filtered.length > 0 && viewMode === "graph" && (
+      {/* Relation Graph View — always show when data exists (even during refetch) */}
+      {filtered.length > 0 && viewMode === "graph" && (
         <div className="rounded-xl border border-border/40 bg-card p-8">
           <p className="text-sm text-muted-foreground text-center">
             关系图视图：通过 predecessor/successor 连线展示伏笔之间的关系。
@@ -1151,8 +1151,8 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         </div>
       )}
 
-      {/* Pagination */}
-      {!loading && filtered.length > 0 && (
+      {/* Pagination — always show when data exists (even during refetch) */}
+      {filtered.length > 0 && (
         <div className="flex items-center justify-between border-t border-border/30 pt-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>共 {filtered.length} 条</span>
