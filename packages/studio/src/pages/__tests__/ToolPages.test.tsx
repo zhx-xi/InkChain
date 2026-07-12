@@ -198,7 +198,7 @@ describe("ForeshadowingPage", () => {
       <ForeshadowingPage bookId="test-book" />,
     );
 
-    expect(queryByText("加载失败：Network error")).toBe(true);
+    expect(queryByText("无法加载伏笔数据")).toBe(true);
     expect(querySelector(".text-destructive")).toBeTruthy();
     cleanup();
   });

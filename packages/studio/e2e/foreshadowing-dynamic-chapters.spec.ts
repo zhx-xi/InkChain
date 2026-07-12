@@ -71,15 +71,15 @@ test("2. 零章节时 AI 提取按钮禁用并显示提示", async ({ page }) =>
 test("3. Foreshadowing API 使用动态章节数而非 999", async ({ page }) => {
   // Intercept the foreshadowing GET (list) request and capture the URL.
   let capturedUrl: string | null = null;
-  await page.route("**/api/foreshadowing", async (route) => {
-    if (route.request().method() === "GET") {
-      capturedUrl = route.request().url();
-    }
-    await route.continue();
-  });
+  const responsePromise = page.waitForResponse(
+    (resp) => resp.url().includes("/api/foreshadowing") && resp.request().method() === "GET",
+  );
 
   // Reload to trigger the foreshadowing list fetch
   await page.reload();
+  const response = await responsePromise;
+  capturedUrl = response.url();
+
   await expect(page.getByRole("heading", { name: "伏笔追踪" })).toBeVisible({ timeout: 15_000 });
 
   // Verify the captured URL uses a dynamic chapter count (nextChapter-1 = 5)

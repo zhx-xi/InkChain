@@ -9,7 +9,7 @@ test("1. 加载Skill库→分页显示", async ({ page }) => {
   await page.goto("/#/skills");
 
   // Wait for the skill list to render
-  await expect(page.getByText("Skill 库")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: 'Skill 库' })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText("管理项目级与内置 Skill，控制启用状态与分类")).toBeVisible();
 
   // Should show skill count
@@ -25,7 +25,7 @@ test("1. 加载Skill库→分页显示", async ({ page }) => {
 
 test("2. 点击Skill→详情面板展开", async ({ page }) => {
   await page.goto("/#/skills");
-  await expect(page.getByText("Skill 库")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: 'Skill 库' })).toBeVisible({ timeout: 15_000 });
 
   // Click on a skill card to expand details
   await page.getByText("custom-style-check").click();
@@ -45,7 +45,7 @@ test("2. 点击Skill→详情面板展开", async ({ page }) => {
 
 test("3. 内置Skill只读标记", async ({ page }) => {
   await page.goto("/#/skills");
-  await expect(page.getByText("Skill 库")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: 'Skill 库' })).toBeVisible({ timeout: 15_000 });
 
   // Built-in skills should show "内置" badge and should not have edit button
   // Look for a builtin skill like "writing-style-imitation" or "plot-advancement"
@@ -61,7 +61,7 @@ test("3. 内置Skill只读标记", async ({ page }) => {
 
 test("4. 搜索Skill", async ({ page }) => {
   await page.goto("/#/skills");
-  await expect(page.getByText("Skill 库")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: 'Skill 库' })).toBeVisible({ timeout: 15_000 });
 
   // Type search query
   const searchInput = page.getByPlaceholder("搜索 Skill 名称或描述…");
@@ -79,7 +79,7 @@ test("4. 搜索Skill", async ({ page }) => {
 
 test("5. 创建新Skill→保存→列表中出现", async ({ page }) => {
   await page.goto("/#/skills");
-  await expect(page.getByText("Skill 库")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: 'Skill 库' })).toBeVisible({ timeout: 15_000 });
 
   // Click "创建 Skill" button
   await page.getByText("创建 Skill").click();
@@ -106,7 +106,7 @@ test("5. 创建新Skill→保存→列表中出现", async ({ page }) => {
 
 test("6. 分页切换", async ({ page }) => {
   await page.goto("/#/skills");
-  await expect(page.getByText("Skill 库")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole('heading', { name: 'Skill 库' })).toBeVisible({ timeout: 15_000 });
 
   // Check that pagination exists (we set pageSize=10, and there should be enough skills)
   // The pagination controls should be visible when enough skills exist

@@ -8,7 +8,7 @@ import {
 // ── Helpers ───────────────────────────────────────────────────────
 
 function mockAiExtract(page: Page, entries: Array<Record<string, unknown>>) {
-  page.route("**/api/extract", async (route) => {
+  page.route("**/api/foreshadowing/extract*", async (route) => {
     if (route.request().method() === "POST") {
       await route.fulfill({
         status: 200,
@@ -101,6 +101,7 @@ test.describe("伏笔提取 — lastMentionedChapter 与 大纲未指定", () =>
 
     // The created entry should show "大纲未指定"
     await expect(page.getByText("无名信件")).toBeVisible({ timeout: 3_000 });
-    await expect(page.getByText("预期回收：大纲未指定").first()).toBeVisible({ timeout: 3_000 });
+    // Default view is "table" — the cell shows just "大纲未指定" without "预期回收：" prefix
+    await expect(page.getByText("大纲未指定").first()).toBeVisible({ timeout: 3_000 });
   });
 });

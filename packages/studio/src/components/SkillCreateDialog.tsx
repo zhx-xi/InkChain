@@ -121,7 +121,7 @@ export function SkillCreateDialog({ isOpen, onClose, onSelectBlank, onSelectTemp
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 pt-[72px]" onClick={onClose}>
       <div className="bg-card rounded-xl border border-border/60 shadow-xl p-6 w-full max-w-xl mx-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-semibold">创建 Skill</h2>
+          <h2 className="text-lg font-semibold">创建 Skill 方式</h2>
           <button type="button" onClick={onClose} className="text-muted-foreground/40 hover:text-foreground transition-colors">
             <X size={18} />
           </button>
@@ -140,7 +140,7 @@ export function SkillCreateDialog({ isOpen, onClose, onSelectBlank, onSelectTemp
                 <FileText size={20} className="text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
               <div>
-                <h3 className="text-sm font-medium mb-1">空白创建</h3>
+                <h3 className="text-sm font-medium mb-1">从空白创建</h3>
                 <p className="text-[11px] text-muted-foreground/70 leading-relaxed">
                   从零开始填写所有字段，适合高级用户
                 </p>

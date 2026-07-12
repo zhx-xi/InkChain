@@ -222,6 +222,7 @@ export function StyleManager({ nav, theme, t }: { nav: Nav; theme: Theme; t: TFu
       <h1 className="font-serif text-3xl flex items-center gap-3">
         <Wand2 size={28} className="text-primary" />
         {t("style.title")}
+        <span className="text-xs font-mono text-muted-foreground/50 ml-auto">Style Manager</span>
       </h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -15,7 +15,7 @@ async function createForeshadowingViaUI(
 ) {
   await page.getByRole("button", { name: "新建伏笔" }).click();
   await expect(page.getByText("创建伏笔")).toBeVisible({ timeout: 3_000 });
-  await page.getByPlaceholder("伏笔名称").fill(title);
+  await page.getByRole('dialog').getByPlaceholder("伏笔名称").fill(title);
   await page.getByPlaceholder("伏笔描述").fill(description);
   await page.getByRole("button", { name: "创建", exact: true }).click();
   await expect(page.getByText("创建伏笔")).not.toBeVisible({ timeout: 5_000 });
@@ -239,7 +239,7 @@ test.describe("Foreshadowing — 核心创作流E2E", () => {
     await expect(page.getByText("编辑伏笔")).toBeVisible({ timeout: 3_000 });
 
     // Modify the title and description
-    const titleInput = page.getByPlaceholder("伏笔名称");
+    const titleInput = page.getByRole('dialog').getByPlaceholder("伏笔名称");
     await titleInput.clear();
     await titleInput.fill("上古神戒");
 

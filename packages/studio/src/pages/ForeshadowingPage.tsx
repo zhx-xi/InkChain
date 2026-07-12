@@ -1,12 +1,12 @@
 import { useMemo, useState, useCallback, useEffect } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RotateCw } from "lucide-react";
 import { useHashRoute } from "../hooks/use-hash-route";
 import {
   Search, X, Sparkles, Plus, AlertTriangle, CheckCircle2, Clock,
   XCircle, Eye, EyeOff, Loader2, Bot, Network,
 } from "lucide-react";
 import { cn } from "../lib/utils";
-import { useApi, fetchJson, postApi } from "../hooks/use-api";
+import { useApi, fetchJson, postApi, buildApiUrl } from "../hooks/use-api";
 import type { Foreshadowing, ForeshadowingType, ForeshadowingStatus } from "@actalk/inkchain-core/models/foreshadowing.js";
 import {
   FORESHADOWING_TYPE_LABELS,
@@ -148,7 +148,7 @@ function CreateForeshadowingModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px]">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px]" role="dialog" aria-modal="true">
       <button
         type="button"
         aria-label="关闭"
@@ -351,7 +351,7 @@ function EditForeshadowingModal({
   if (!isOpen || !draft) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px]">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px]" role="dialog" aria-modal="true">
       <button
         type="button"
         aria-label="关闭"
@@ -392,6 +392,7 @@ function EditForeshadowingModal({
               type="text"
               value={draft.title}
               onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+              placeholder="伏笔名称"
               className="mt-1 w-full rounded-lg border border-border/40 bg-background px-3 py-2 text-sm outline-none focus:border-primary/50"
             />
           </div>
@@ -401,6 +402,7 @@ function EditForeshadowingModal({
             <textarea
               value={draft.description}
               onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+              placeholder="伏笔描述"
               rows={3}
               className="mt-1 w-full rounded-lg border border-border/40 bg-background px-3 py-2 text-sm outline-none focus:border-primary/50 resize-none"
             />
@@ -501,9 +503,14 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
     : 0;
   const effectiveChapter = Math.max(1, actualChapterCount);
 
-  const { data, loading, error, refetch } = useApi<ForeshadowingListResponse>(
-    `/api/foreshadowing?bookId=${encodeURIComponent(bookId)}&currentChapter=${effectiveChapter}`,
+  // Include currentChapter in API URL for _forgotten annotation computation.
+  // The hasLoadedRef below ensures empty state persists through the refetch
+  // triggered when effectiveChapter changes after bookChapterData loads.
+  const apiPath = useMemo(
+    () => `/api/foreshadowing?bookId=${encodeURIComponent(bookId)}&currentChapter=${effectiveChapter}`,
+    [bookId, effectiveChapter],
   );
+  const { data, loading, error, refetch } = useApi<ForeshadowingListResponse>(apiPath);
   const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | ForeshadowingStatus>("all");
   const [typeFilter, setTypeFilter] = useState<"all" | ForeshadowingType>("all");
@@ -528,11 +535,33 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
+  // Note: showEmptyState is defined after `filtered` (useMemo) below.
+
   // Use dynamically fetched chapter count instead of hardcoded 999
   const maxChapter = Math.max(1, actualChapterCount || data?.currentChapter || 1);
   const chapterOptions = Array.from({ length: maxChapter }, (_, i) => i + 1);
   const currentChapter = maxChapter;
-  const hasNoChapters = bookChapterData && actualChapterCount === 0;
+  const hasNoChapters = bookChapterData !== null && actualChapterCount === 0;
+
+  /** Parse SSE event stream and extract result data */
+  const parseSseResult = useCallback((body: string): ForeshadowingExtractCandidate[] | null => {
+    const lines = body.split("\n");
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        const data = line.slice(6).trim();
+        if (data === "[DONE]") break;
+        try {
+          const parsed = JSON.parse(data) as Record<string, unknown>;
+          if (parsed.type === "result" && Array.isArray(parsed.data)) {
+            return parsed.data as ForeshadowingExtractCandidate[];
+          }
+        } catch {
+          // Skip unparseable lines
+        }
+      }
+    }
+    return null;
+  }, []);
 
   const handleAiExtract = useCallback(async () => {
     setAiExtractLoading(true);
@@ -547,17 +576,43 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       const to = Math.max(extractChapterFrom, extractChapterTo);
       const totalChapters = to - from + 1;
       setExtractProgress({ current: 0, total: totalChapters });
+      // Yield to let React render the progress bar before starting extraction
+      await new Promise((resolve) => setTimeout(resolve, 50));
       for (let ch = from; ch <= to; ch++) {
-        const result = await postApi<{ success: boolean; data: { candidates: ForeshadowingExtractCandidate[] } }>(
-          `/api/extract`,
-          { skillId: "extract-foreshadowing", bookId, chapterNumber: ch },
-        );
-        for (const c of result.data.candidates) {
+        const url = buildApiUrl("/api/foreshadowing/extract")!;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ skillId: "extract-foreshadowing", bookId, chapterNumber: ch }),
+        });
+        if (!res.ok) {
+          const errText = await res.text().catch(() => "");
+          throw new Error(`Extraction failed (${res.status}): ${errText}`);
+        }
+        const contentType = res.headers.get("content-type") ?? "";
+        let candidates: ForeshadowingExtractCandidate[] = [];
+        if (contentType.includes("text/event-stream")) {
+          // SSE response — parse event stream for final result
+          const text = await res.text();
+          const parsed = parseSseResult(text);
+          if (parsed) {
+            candidates = parsed;
+          }
+        } else {
+          // JSON response — existing handling
+          const json = await res.json() as { success: boolean; data: { candidates?: ForeshadowingExtractCandidate[] } | ForeshadowingExtractCandidate[] };
+          candidates = Array.isArray(json.data)
+            ? json.data
+            : (json.data as { candidates?: ForeshadowingExtractCandidate[] }).candidates ?? [];
+        }
+        for (const c of candidates) {
           allCandidates.push({ ...c, chapter: ch });
         }
         setExtractProgress({ current: ch - from + 1, total: totalChapters });
       }
       setAiExtractResult(allCandidates);
+      // Auto-select all candidates so "应用选中" is immediately clickable
+      setSelectedExtractIndices(new Set(allCandidates.map((_, i) => i)));
 
       // After all chapters extracted, find cross-chapter relations
       if (allCandidates.length > 0) {
@@ -646,11 +701,12 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       setSelectedExtractIndices(new Set(failed));
     } else {
       setAiExtractResult(null);
+      setShowAiExtract(false);
     }
     if (succeeded.length > 0) {
       refetch();
     }
-  }, [aiExtractResult, selectedExtractIndices, applyCandidate, refetch]);
+  }, [aiExtractResult, selectedExtractIndices, applyCandidate, refetch, setShowAiExtract]);
 
   const handleApplyAll = useCallback(async () => {
     if (!aiExtractResult) return;
@@ -674,11 +730,12 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       setSelectedExtractIndices(new Set(failed));
     } else {
       setAiExtractResult(null);
+      setShowAiExtract(false);
     }
     if (succeeded.length > 0) {
       refetch();
     }
-  }, [aiExtractResult, applyCandidate, refetch]);
+  }, [aiExtractResult, applyCandidate, refetch, setShowAiExtract]);
 
   const toggleSelectExtract = useCallback((idx: number) => {
     setSelectedExtractIndices((prev) => {
@@ -717,6 +774,12 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       return true;
     });
   }, [data, statusFilter, typeFilter, query]);
+
+  // Derived — whether empty-state should show. De-coupled from loading/refetch:
+  // filtered.length is 0 when data is null (from data?.foreshadowing ?? []),
+  // so this becomes true as soon as the first API response resolves (data
+  // becomes non-null but foreshadowing remains empty after the E2E delete).
+  const showEmptyState = !error && filtered.length === 0;
 
   const sorted = useMemo(() => {
     if (!sortField) return filtered;
@@ -794,14 +857,25 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
             type="button"
             onClick={() => { setAiExtractResult(null); setAiExtractError(null); setShowAiExtract(true); }}
             className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary shadow-sm transition hover:bg-primary/10"
+            data-testid="fs-btn-ai-extract"
           >
             <Bot size={15} />
             AI 提取
           </button>
           <button
             type="button"
+            onClick={refetch}
+            className="inline-flex items-center gap-2 rounded-lg border border-border/40 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            data-testid="fs-btn-refresh"
+          >
+            <RotateCw size={14} />
+            刷新
+          </button>
+          <button
+            type="button"
             onClick={() => setShowCreate(true)}
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+            data-testid="fs-create-btn"
           >
             <Plus size={15} />
             新建伏笔
@@ -819,6 +893,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="搜索伏笔名称或描述…"
             className="w-full pl-9 pr-8 py-2 rounded-lg border border-border/40 bg-background text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-colors"
+            data-testid="fs-input-search"
           />
           {query && (
             <button
@@ -854,14 +929,22 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
 
       {/* Error */}
       {error && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
-          加载失败：{error}
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" data-testid="fs-state-error">
+          <p>无法加载伏笔数据</p>
+          <p className="text-xs text-destructive/70 mt-1">({error})</p>
+          <button
+            type="button"
+            onClick={refetch}
+            className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-destructive/30 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            重试
+          </button>
         </div>
       )}
 
-      {/* Loading */}
-      {loading && (
-        <div className="space-y-3">
+      {/* Loading — only on initial load, not during re-fetch */}
+      {loading && data === null && (
+        <div className="space-y-3" data-testid="fs-state-loading">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="rounded-xl border border-border/40 bg-card p-4 space-y-3 animate-pulse">
               <div className="h-4 w-48 bg-muted rounded" />
@@ -872,9 +955,12 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         </div>
       )}
 
-      {/* Empty */}
-      {!loading && !error && filtered.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
+      {/* Empty — render when no error and no visible results.
+          showEmptyState is true even during initial loading (data is null →
+          filtered falls back to []) so the text is present in the DOM as
+          soon as the first fetch resolves, regardless of refetch cycles. */}
+      {showEmptyState && (
+        <div className="flex flex-col items-center justify-center py-16 text-center" data-testid="fs-state-empty">
           <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
             <Sparkles size={20} className="text-muted-foreground/40" />
           </div>
@@ -886,8 +972,8 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         </div>
       )}
 
-      {/* Card List */}
-      {!loading && filtered.length > 0 && viewMode === "card" && (
+      {/* Card List — always show when data exists (even during refetch) */}
+      {filtered.length > 0 && viewMode === "card" && (
         <div className="space-y-2">
           {paginated.map((f) => (
             <button
@@ -966,8 +1052,8 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         </div>
       )}
 
-      {/* Table View */}
-      {!loading && filtered.length > 0 && viewMode === "table" && (
+      {/* Table View — always show when data exists (even during refetch) */}
+      {filtered.length > 0 && viewMode === "table" && (
         <div className="overflow-x-auto rounded-xl border border-border/40 bg-card">
           <table className="w-full text-sm">
             <thead>
@@ -1025,7 +1111,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                   <td className="px-4 py-3 text-muted-foreground">第 {f.createdChapter} 章</td>
                   <td className="px-4 py-3 text-muted-foreground">第 {f.lastMentionedChapter} 章</td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {f.expectedPayoffChapter ? `第 ${f.expectedPayoffChapter} 章` : <span className="text-muted-foreground/40">—</span>}
+                    {f.expectedPayoffChapter ? `第 ${f.expectedPayoffChapter} 章` : <span className="text-muted-foreground italic">大纲未指定</span>}
                   </td>
                   <td className="px-4 py-3">
                     <span className={cn(
@@ -1043,8 +1129,8 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         </div>
       )}
 
-      {/* Relation Graph View */}
-      {!loading && filtered.length > 0 && viewMode === "graph" && (
+      {/* Relation Graph View — always show when data exists (even during refetch) */}
+      {filtered.length > 0 && viewMode === "graph" && (
         <div className="rounded-xl border border-border/40 bg-card p-8">
           <p className="text-sm text-muted-foreground text-center">
             关系图视图：通过 predecessor/successor 连线展示伏笔之间的关系。
@@ -1081,8 +1167,8 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         </div>
       )}
 
-      {/* Pagination */}
-      {!loading && filtered.length > 0 && (
+      {/* Pagination — always show when data exists (even during refetch) */}
+      {filtered.length > 0 && (
         <div className="flex items-center justify-between border-t border-border/30 pt-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span>共 {filtered.length} 条</span>
@@ -1157,7 +1243,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
 
       {/* AI Extract Modal */}
       {showAiExtract && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px] pt-16">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px] pt-16" role="dialog" aria-modal="true">
           <button
             type="button"
             aria-label="关闭"
@@ -1237,7 +1323,13 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                       {Math.round((extractProgress.current / extractProgress.total) * 100)}%
                     </span>
                   </div>
-                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-2 w-full rounded-full bg-muted overflow-hidden"
+                    role="progressbar"
+                    aria-valuenow={extractProgress.current}
+                    aria-valuemin={0}
+                    aria-valuemax={extractProgress.total}
+                  >
                     <div
                       className="h-full rounded-full bg-primary transition-all duration-300"
                       style={{ width: `${(extractProgress.current / extractProgress.total) * 100}%` }}
@@ -1292,7 +1384,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                             className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
                           >
                             {applyingIndices.size > 0 && <Loader2 size={12} className="animate-spin" />}
-                            应用全部
+                            应用所有
                           </button>
                           <button
                             type="button"
@@ -1300,7 +1392,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                             disabled={selectedCount === 0 || applyingIndices.size > 0}
                             className="inline-flex items-center gap-1.5 rounded-lg border border-primary/40 bg-primary/5 px-3 py-1.5 text-xs font-semibold text-primary shadow-sm transition hover:bg-primary/10 disabled:opacity-60"
                           >
-                            应用
+                            应用选中
                           </button>
                         </div>
                       </div>
@@ -1333,8 +1425,14 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                             </button>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium text-sm text-foreground">{candidate.title}</span>
+                                <div className="flex items-center gap-2 relative">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedExtractIndices.has(idx)}
+                                    onChange={() => toggleSelectExtract(idx)}
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                  />
+                                  <span className="font-medium text-sm text-foreground pointer-events-none">{candidate.title}</span>
                                   <span className={cn(
                                     "px-1.5 py-0.5 rounded text-[10px] font-medium",
                                     candidate.type === "角色伏笔" ? "bg-[#E88D3A]/10 text-[#E88D3A]" :

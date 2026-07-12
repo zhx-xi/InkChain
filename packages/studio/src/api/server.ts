@@ -5819,6 +5819,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     () => root,
   );
   app.route("/api/extract", extractRouter);
+  app.route("/api/foreshadowing/extract", extractRouter);
 
   // ── Writer's Block Breakthrough (E4 simplified) ──
   // GET  /api/v1/books/:id/writers-block — analyze context and return 3-5 advancement suggestions

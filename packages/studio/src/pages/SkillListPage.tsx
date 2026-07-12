@@ -82,7 +82,7 @@ export function SkillListPage() {
   const [aiDraft, setAiDraft] = useState<Partial<SkillConfig> | null>(null);
   const [expandedSkillId, setExpandedSkillId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
 
   const filteredSkills = useMemo(() => {
     const list = data?.skills ?? [];
@@ -250,14 +250,14 @@ export function SkillListPage() {
 
       {/* Error */}
       {error && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" data-testid="sl-state-error">
           加载失败：{error}
         </div>
       )}
 
       {/* Loading */}
       {loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" data-testid="sl-state-loading">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="rounded-xl border border-border/40 bg-card p-4 space-y-3 animate-pulse">
               <div className="h-4 w-24 bg-muted rounded" />
@@ -271,7 +271,7 @@ export function SkillListPage() {
 
       {/* Empty */}
       {!loading && !error && filteredSkills.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div className="flex flex-col items-center justify-center py-16 text-center" data-testid="sl-state-empty">
           <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
             <Sparkles size={20} className="text-muted-foreground/40" />
           </div>
@@ -327,9 +327,6 @@ export function SkillListPage() {
                             {displayInfo.label}
                           </span>
                         </div>
-                        <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                          {getDisplayDescription(config, source)}
-                        </p>
                         <div className="flex items-center gap-2 text-[11px] text-muted-foreground/60">
                           <span
                             className="h-1.5 w-1.5 rounded-full"
@@ -380,13 +377,6 @@ export function SkillListPage() {
                       </div>
                     </div>
 
-                    {config.triggers && config.triggers.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-border/30">
-                        <p className="text-[10px] text-muted-foreground/60">
-                          触发器：{config.triggers.length} 个
-                        </p>
-                      </div>
-                    )}
                   </div>
 
                   {/* Expanded Detail Panel */}
@@ -570,7 +560,7 @@ export function SkillListPage() {
       {/* Create dialog */}
       <SkillCreateDialog
         isOpen={showCreateDialog}
-        onClose={() => { setShowCreateDialog(false); setCreateMode(null); setAiDraft(null); }}
+        onClose={() => { setShowCreateDialog(false); }}
         onSelectBlank={() => { setCreateMode("blank"); }}
         onSelectTemplate={(template) => { setCreateMode("template"); setAiDraft(template); }}
         onAiGenerate={(config) => { setCreateMode("ai"); setAiDraft(config); }}

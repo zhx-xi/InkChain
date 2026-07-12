@@ -58,7 +58,7 @@ test.describe("SkillListPage — 核心创作功能基线", () => {
   test("6. 空状态: 无Skill时显示", async ({ page }) => {
     await page.waitForTimeout(2000);
     const emptyState = page.locator(
-      '[data-testid*="empty"], [data-testid*="Empty"], text=创建第一个, text=暂无'
+      '[data-testid*="empty"], [data-testid*="Empty"], :has-text("创建第一个"), :has-text("暂无")'
     );
     const hasEmpty = (await emptyState.count()) > 0;
     console.log(`Empty state: ${hasEmpty}`);
@@ -71,7 +71,7 @@ test.describe("SkillListPage — 核心创作功能基线", () => {
     await page.reload();
     await page.waitForTimeout(2000);
     const error = page.locator(
-      '[data-testid*="error"], [data-testid*="Error"], text=错误, text=失败'
+      '[data-testid*="error"], [data-testid*="Error"], :has-text("错误"), :has-text("失败")'
     );
     const hasError = (await error.count()) > 0;
     console.log(`Error state: ${hasError}`);

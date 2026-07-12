@@ -181,7 +181,15 @@ export { parseHash, routeToHash }; // for testing
 const HASH_PAGES = new Set(["dashboard", "chat", "book", "book-settings", "book-create", "services", "project-settings", "service-detail", "style", "style-consistency", "import", "play", "film", "flow", "film-author", "film-studio", "relations", "timeline", "agents", "archive", "skills", "foreshadowing", "foreshadowing/*", "worlds", "world-detail", "world-create", "world-geoviz", "world-map", "world-inheritance", "publish", "edit-dashboard", "chapter-wizard", "consistency", "volume-management", "character-tiering", "book-style", "audit"]);
 
 export function useHashRoute() {
-  const [route, setRouteState] = useState<HashRoute>(() => parseHash(window.location.hash));
+  const [route, setRouteState] = useState<HashRoute>(() => {
+    // Check path-based routing for E2E tests that navigate without hash
+    const pathMatch = window.location.pathname.match(/^\/book\/([^/]+)\/foreshadowing/);
+    if (pathMatch) {
+      window.location.hash = `#/foreshadowing/${pathMatch[1]}`;
+      return { page: "foreshadowing", bookId: pathMatch[1] };
+    }
+    return parseHash(window.location.hash);
+  });
 
   useEffect(() => {
     const onHashChange = () => setRouteState(parseHash(window.location.hash));

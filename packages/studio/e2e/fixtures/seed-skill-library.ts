@@ -29,8 +29,9 @@ export async function seedSkillLibrary(): Promise<void> {
       category: "writing" as const,
       enabled: true,
       description: "自定义文风检测：检查章节是否符合已设定的风格指南",
+      // ⚠️ TriggerTypeEnum only accepts "manual" or "condition"
       triggers: [
-        { type: "post_write" as const, condition: "true" },
+        { type: "condition" as const, condition: "true" },
       ],
       injection: { mode: "append" as const, target: "system_prompt" as const, priority: 50 },
       params: {},
@@ -42,7 +43,7 @@ export async function seedSkillLibrary(): Promise<void> {
       enabled: false,
       description: "世界规则审计：验证新章节是否与世界设定中的规则一致",
       triggers: [
-        { type: "post_write" as const, condition: "true" },
+        { type: "condition" as const, condition: "true" },
       ],
       injection: { mode: "append" as const, target: "system_prompt" as const, priority: 60 },
       params: {},
@@ -54,7 +55,7 @@ export async function seedSkillLibrary(): Promise<void> {
       enabled: true,
       description: "角色一致性检查：确保角色行为与性格设定一致",
       triggers: [
-        { type: "post_write" as const, condition: "true" },
+        { type: "condition" as const, condition: "true" },
       ],
       injection: { mode: "append" as const, target: "system_prompt" as const, priority: 55 },
       params: {},
@@ -66,7 +67,7 @@ export async function seedSkillLibrary(): Promise<void> {
       enabled: true,
       description: "情节漏洞检测：识别时间线矛盾、逻辑断裂等情节问题",
       triggers: [
-        { type: "post_write" as const, condition: "true" },
+        { type: "condition" as const, condition: "true" },
       ],
       injection: { mode: "prepend" as const, target: "user_prompt" as const, priority: 70 },
       params: {},
