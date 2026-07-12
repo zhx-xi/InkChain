@@ -6,7 +6,7 @@ import {
   XCircle, Eye, EyeOff, Loader2, Bot, Network,
 } from "lucide-react";
 import { cn } from "../lib/utils";
-import { useApi, fetchJson, postApi } from "../hooks/use-api";
+import { useApi, fetchJson, postApi, buildApiUrl } from "../hooks/use-api";
 import type { Foreshadowing, ForeshadowingType, ForeshadowingStatus } from "@actalk/inkchain-core/models/foreshadowing.js";
 import {
   FORESHADOWING_TYPE_LABELS,
@@ -536,6 +536,26 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
   const currentChapter = maxChapter;
   const hasNoChapters = bookChapterData && actualChapterCount === 0;
 
+  /** Parse SSE event stream and extract result data */
+  const parseSseResult = useCallback((body: string): ForeshadowingExtractCandidate[] | null => {
+    const lines = body.split("\n");
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        const data = line.slice(6).trim();
+        if (data === "[DONE]") break;
+        try {
+          const parsed = JSON.parse(data) as Record<string, unknown>;
+          if (parsed.type === "result" && Array.isArray(parsed.data)) {
+            return parsed.data as ForeshadowingExtractCandidate[];
+          }
+        } catch {
+          // Skip unparseable lines
+        }
+      }
+    }
+    return null;
+  }, []);
+
   const handleAiExtract = useCallback(async () => {
     setAiExtractLoading(true);
     setAiExtractError(null);
@@ -552,14 +572,32 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       // Yield to let React render the progress bar before starting extraction
       await new Promise((resolve) => setTimeout(resolve, 50));
       for (let ch = from; ch <= to; ch++) {
-        const result = await postApi<{ success: boolean; data: { candidates: ForeshadowingExtractCandidate[] } }>(
-          `/api/foreshadowing/extract`,
-          { skillId: "extract-foreshadowing", bookId, chapterNumber: ch },
-        );
-        // Support both mock format (result.data = array) and real API format (result.data.candidates)
-        const candidates = Array.isArray(result.data)
-          ? result.data
-          : (result.data as { candidates?: ForeshadowingExtractCandidate[] }).candidates ?? [];
+        const url = buildApiUrl("/api/foreshadowing/extract")!;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ skillId: "extract-foreshadowing", bookId, chapterNumber: ch }),
+        });
+        if (!res.ok) {
+          const errText = await res.text().catch(() => "");
+          throw new Error(`Extraction failed (${res.status}): ${errText}`);
+        }
+        const contentType = res.headers.get("content-type") ?? "";
+        let candidates: ForeshadowingExtractCandidate[] = [];
+        if (contentType.includes("text/event-stream")) {
+          // SSE response — parse event stream for final result
+          const text = await res.text();
+          const parsed = parseSseResult(text);
+          if (parsed) {
+            candidates = parsed;
+          }
+        } else {
+          // JSON response — existing handling
+          const json = await res.json() as { success: boolean; data: { candidates?: ForeshadowingExtractCandidate[] } | ForeshadowingExtractCandidate[] };
+          candidates = Array.isArray(json.data)
+            ? json.data
+            : (json.data as { candidates?: ForeshadowingExtractCandidate[] }).candidates ?? [];
+        }
         for (const c of candidates) {
           allCandidates.push({ ...c, chapter: ch });
         }
@@ -1378,7 +1416,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                                     onChange={() => toggleSelectExtract(idx)}
                                     className="sr-only"
                                   />
-                                  <span className="font-medium text-sm text-foreground">{candidate.title}</span>
+                                  <span className="font-medium text-sm text-foreground pointer-events-none">{candidate.title}</span>
                                   <span className={cn(
                                     "px-1.5 py-0.5 rounded text-[10px] font-medium",
                                     candidate.type === "角色伏笔" ? "bg-[#E88D3A]/10 text-[#E88D3A]" :
