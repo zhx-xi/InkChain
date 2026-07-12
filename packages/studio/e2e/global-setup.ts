@@ -151,7 +151,70 @@ export default function globalSetup(): void {
     );
   }
 
-  // ── 5. Build core ──
+  // ── 5. e2e-sidebar-nav book (for book-detail.spec.ts & book-style-page.spec.ts / #583) ──
+  const sidebarNavBookDir = path.join(testProjectDir, "books", "e2e-sidebar-nav");
+  mkdirSync(sidebarNavBookDir, { recursive: true });
+  writeFileSync(
+    path.join(sidebarNavBookDir, "book.json"),
+    JSON.stringify({
+      id: "e2e-sidebar-nav",
+      title: "E2E 侧边栏导航测试",
+      platform: "webnovel", genre: "xianxia", status: "active",
+      targetChapters: 10, chapterWordCount: 2000, language: "zh",
+      createdAt: now, updatedAt: now,
+    }, null, 2),
+    "utf-8",
+  );
+
+  const sidebarNavChaptersDir = path.join(sidebarNavBookDir, "chapters");
+  mkdirSync(sidebarNavChaptersDir, { recursive: true });
+  writeFileSync(
+    path.join(sidebarNavChaptersDir, "index.json"),
+    JSON.stringify([
+      { number: 1, title: "第01章", status: "drafted", wordCount: 1000, createdAt: now, updatedAt: now, volumeId: null, auditIssues: [], lengthWarnings: [] },
+      { number: 2, title: "第02章", status: "drafted", wordCount: 1000, createdAt: now, updatedAt: now, volumeId: null, auditIssues: [], lengthWarnings: [] },
+      { number: 3, title: "第03章", status: "drafted", wordCount: 1000, createdAt: now, updatedAt: now, volumeId: null, auditIssues: [], lengthWarnings: [] },
+    ], null, 2),
+    "utf-8",
+  );
+
+  // ── 6. e2e-book-world-test world (for book-world-extract.spec.ts / #583) ──
+  const worldsDir = path.join(testProjectDir, ".inkos", "worlds");
+  mkdirSync(worldsDir, { recursive: true });
+  writeFileSync(
+    path.join(worldsDir, "e2e-book-world-test.json"),
+    JSON.stringify({
+      id: "e2e-book-world-test",
+      name: "玄幻修仙世界",
+      description: "以修仙为主题的世界设定，包含多种修炼体系和宗门势力",
+      createdAt: now, updatedAt: now,
+      settings: [
+        { id: "s-1", name: "灵气修炼", type: "魔法体系", description: "万物皆有灵气", constraints: [], sortIndex: 0 },
+      ],
+      roles: [
+        { id: "r-1", name: "叶辰", role: "主角", description: "废材逆袭", significance: 5, sortIndex: 0, institutionIds: [], regionIds: [] },
+      ],
+      relations: [
+        { id: "rel-1", sourceId: "r-1", targetId: "r-1", type: "师徒", description: "", sortIndex: 0 },
+      ],
+      regions: [
+        { id: "rg-1", name: "灵武大陆", parentId: null, type: "大陆", description: "", sortIndex: 0, x: null, y: null, regionType: "continent" },
+      ],
+      institutions: [
+        { id: "i-1", name: "青云宗", type: "宗门", leaderId: null, members: [], description: "", sortIndex: 0, regionId: null },
+      ],
+      history: [
+        { id: "h-1", title: "创世之战", timestamp: "远古", description: "天地初开的战争", affectedRegions: [], significance: 5, sortIndex: 0 },
+      ],
+      rules: [
+        { id: "rule-1", name: "修仙等级", type: "魔法", description: "练气→筑基→金丹→元婴", constraints: [], sortIndex: 0 },
+      ],
+      references: [],
+    }, null, 2),
+    "utf-8",
+  );
+
+  // ── 7. Build core ──
   try {
     execSync("pnpm --filter @actalk/inkchain-core build", {
       cwd: workspaceRoot,
