@@ -654,11 +654,12 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       setSelectedExtractIndices(new Set(failed));
     } else {
       setAiExtractResult(null);
+      setShowAiExtract(false);
     }
     if (succeeded.length > 0) {
       refetch();
     }
-  }, [aiExtractResult, selectedExtractIndices, applyCandidate, refetch]);
+  }, [aiExtractResult, selectedExtractIndices, applyCandidate, refetch, setShowAiExtract]);
 
   const handleApplyAll = useCallback(async () => {
     if (!aiExtractResult) return;
@@ -682,11 +683,12 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       setSelectedExtractIndices(new Set(failed));
     } else {
       setAiExtractResult(null);
+      setShowAiExtract(false);
     }
     if (succeeded.length > 0) {
       refetch();
     }
-  }, [aiExtractResult, applyCandidate, refetch]);
+  }, [aiExtractResult, applyCandidate, refetch, setShowAiExtract]);
 
   const toggleSelectExtract = useCallback((idx: number) => {
     setSelectedExtractIndices((prev) => {
@@ -1368,6 +1370,12 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedExtractIndices.has(idx)}
+                                    onChange={() => toggleSelectExtract(idx)}
+                                    className="sr-only"
+                                  />
                                   <span className="font-medium text-sm text-foreground">{candidate.title}</span>
                                   <span className={cn(
                                     "px-1.5 py-0.5 rounded text-[10px] font-medium",
