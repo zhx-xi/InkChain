@@ -355,6 +355,7 @@ export function AgentFlowEditor({
   return (
     <div
       ref={flowWrapperRef}
+      data-testid="reactflow"
       className={cn(
         "rounded-xl border overflow-hidden",
         className,
