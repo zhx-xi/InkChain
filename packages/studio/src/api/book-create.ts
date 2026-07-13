@@ -1,4 +1,4 @@
-import { normalizePlatformOrOther, defaultChapterLength, type Platform } from "@actalk/inkchain-core";
+import { normalizePlatformOrOther, defaultChapterLength, type Platform } from "@inkchain/inkchain-core";
 export { waitForStudioBookReady } from "../lib/book-ready.js";
 export type { StudioBookDetail, WaitForStudioBookReadyOptions } from "../lib/book-ready.js";
 

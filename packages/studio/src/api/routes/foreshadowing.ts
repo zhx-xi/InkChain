@@ -21,7 +21,7 @@ import {
   findForgottenForeshadowing,
   IndexManager,
   type Foreshadowing,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 import { ApiError } from "../errors.js";
 import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 

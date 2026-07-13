@@ -10,7 +10,7 @@ import { ArrowLeft, Globe, AlertTriangle, Check, Minus, ChevronRight, Loader2, B
 import { cn } from "../lib/utils";
 import { useApi, postApi } from "../hooks/use-api";
 import { useHashRoute } from "../hooks/use-hash-route";
-import type { WorldConfig } from "@actalk/inkchain-core";
+import type { WorldConfig } from "@inkchain/inkchain-core";
 
 // ── 维度元信息 ──
 

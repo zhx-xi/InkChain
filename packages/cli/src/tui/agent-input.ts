@@ -4,7 +4,7 @@ import {
   createLLMClient,
   runAgentSession,
   type InteractionSession,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 import { persistProjectSession } from "./session-store.js";
 import { buildPipelineConfig, loadConfig } from "../utils.js";
 
@@ -17,7 +17,7 @@ export async function processTuiAgentInput(params: {
 }) {
   const config = await loadConfig({ requireApiKey: false, projectRoot: params.projectRoot });
   const client = createLLMClient(config.llm);
-  const pipeline = new (await import("@actalk/inkchain-core")).PipelineRunner(
+  const pipeline = new (await import("@inkchain/inkchain-core")).PipelineRunner(
     buildPipelineConfig(config, params.projectRoot, { quiet: true }),
   );
   const userTimestamp = Date.now();

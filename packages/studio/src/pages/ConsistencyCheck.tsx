@@ -7,7 +7,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { RefreshCw, AlertTriangle, CheckCircle2, Eye, EyeOff, XCircle, Info, Loader2 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { postApi } from "../hooks/use-api";
-import type { ConsistencyIssue, ConsistencyReport, IssueType, IssueSeverity } from "@actalk/inkchain-core";
+import type { ConsistencyIssue, ConsistencyReport, IssueType, IssueSeverity } from "@inkchain/inkchain-core";
 
 // ── Local types ──
 

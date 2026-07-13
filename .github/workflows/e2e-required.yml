@@ -16,13 +16,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build-core:
+    name: Build Core (shared)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm --filter @inkchain/inkchain-core build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: core-dist
+          path: packages/core/dist/
+
   rename:
+    needs: [build-core]
     uses: ./.github/workflows/e2e-spec.yml
     with:
       spec: "rename-smoke"
       group-name: "Rename Smoke"
 
   language:
+    needs: [build-core]
     uses: ./.github/workflows/e2e-spec.yml
     with:
       spec: "language-selector"

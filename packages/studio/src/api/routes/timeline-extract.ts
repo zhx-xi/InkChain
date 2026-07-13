@@ -9,7 +9,7 @@ import { join } from "node:path";
 import {
   loadProjectConfig,
   extractTimelineEvents,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 import { ApiError } from "../errors.js";
 import { isSafeBookId } from "../safety.js";
 

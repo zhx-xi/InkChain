@@ -22,7 +22,7 @@ import {
   type CharacterProfileForLabeling,
   type CharacterRelation,
   type RelationsFile,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 
 // ── Constants ──
 

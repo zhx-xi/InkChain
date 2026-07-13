@@ -4,7 +4,7 @@
 import { useState, type ReactNode } from "react";
 import { useWorldAIGen, DEFAULT_GENERATE_PARAMS } from "../hooks/use-world-ai-gen";
 import type { GenerateType } from "../hooks/use-world-ai-gen";
-import type { ChapterCandidate, CharacterCandidate, EventCandidate } from "@actalk/inkchain-core";
+import type { ChapterCandidate, CharacterCandidate, EventCandidate } from "@inkchain/inkchain-core";
 import { Sparkles, Check, X, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 
 // ── Types ──

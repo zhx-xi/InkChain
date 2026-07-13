@@ -3,7 +3,7 @@
 
 import { useState, useCallback } from "react";
 import { postApi } from "./use-api";
-import type { ChapterCandidate, CharacterCandidate, EventCandidate } from "@actalk/inkchain-core";
+import type { ChapterCandidate, CharacterCandidate, EventCandidate } from "@inkchain/inkchain-core";
 
 // ── Types ──
 

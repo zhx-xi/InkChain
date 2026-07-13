@@ -3,7 +3,7 @@ import { mkdtemp, rm, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createStudioServer } from "../api/server.js";
-import { loadStoryGraph } from "@actalk/inkchain-core";
+import { loadStoryGraph } from "@inkchain/inkchain-core";
 
 describe("POST /api/v1/projects/:id/story-graph/delta", () => {
   let root: string;

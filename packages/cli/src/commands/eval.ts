@@ -2,7 +2,7 @@ import { Command } from "commander";
 import {
   StateManager,
   evaluateBookQuality,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 import { findProjectRoot, resolveBookId, log, logError } from "../utils.js";
 
 export const evalCommand = new Command("eval")

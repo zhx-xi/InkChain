@@ -21,7 +21,7 @@ import {
   type PublishPlatform,
   type PublishChapter,
   type ValidationWarning,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 
 interface BookMeta {
   id: string;

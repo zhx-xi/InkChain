@@ -1,4 +1,4 @@
-import type { SessionTag } from "@actalk/inkchain-core";
+import type { SessionTag } from "@inkchain/inkchain-core";
 import { cn } from "@/lib/utils";
 
 export interface SessionTagBadgeProps {

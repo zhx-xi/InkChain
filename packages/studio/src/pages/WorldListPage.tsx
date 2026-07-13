@@ -4,7 +4,7 @@ import { useHashRoute } from "../hooks/use-hash-route";
 import { Search, X, Globe, Plus, Bot, Loader2, FileText, BookOpen, Sparkles } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useApi, postApi } from "../hooks/use-api";
-import type { WorldConfig } from "@actalk/inkchain-core";
+import type { WorldConfig } from "@inkchain/inkchain-core";
 
 interface AiExtractData {
   readonly world: {

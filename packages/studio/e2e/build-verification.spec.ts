@@ -31,8 +31,8 @@ test.describe("Build verification (PR #460 — TS build fix)", () => {
   }
 
   test("1. Core package builds without TS errors", () => {
-    // Normal path: pnpm --filter @actalk/inkchain-core build should exit 0
-    const result = execSync("pnpm --filter @actalk/inkchain-core build", {
+    // Normal path: pnpm --filter @inkchain/inkchain-core build should exit 0
+    const result = execSync("pnpm --filter @inkchain/inkchain-core build", {
       cwd: workspaceRoot(),
       encoding: "utf-8",
       timeout: 120_000,
@@ -49,7 +49,7 @@ test.describe("Build verification (PR #460 — TS build fix)", () => {
   test("2. Core unit tests pass (114 tests, 6 files)", () => {
     // Normal path: core test suite should be 100% green
     // Use exit code-based verification (more reliable than parsing output)
-    execSync("pnpm --filter @actalk/inkchain-core test run", {
+    execSync("pnpm --filter @inkchain/inkchain-core test run", {
       cwd: workspaceRoot(),
       encoding: "utf-8",
       timeout: 120_000,

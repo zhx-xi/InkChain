@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { StateManager, computeAnalytics } from "@actalk/inkchain-core";
+import { StateManager, computeAnalytics } from "@inkchain/inkchain-core";
 import { loadConfig, findProjectRoot, resolveBookId, log, logError } from "../utils.js";
 
 export const analyticsCommand = new Command("analytics")

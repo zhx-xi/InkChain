@@ -1,7 +1,7 @@
 import {
   appendInteractionMessage,
   type InteractionSession,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 
 export function createOptimisticUserMessageSession(
   session: InteractionSession,

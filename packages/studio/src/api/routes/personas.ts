@@ -35,7 +35,7 @@ import {
   summarizePersonaDiff,
   type AgentRole,
   type PersonaConfig,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 
 // ── Presets ──

@@ -36,8 +36,11 @@ jobs:
 
       - run: pnpm install --no-frozen-lockfile
 
-      - name: Build Core
-        run: pnpm --filter @actalk/inkchain-core build
+      - name: Download core build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: core-dist
+          path: packages/core/dist/
 
       - name: Install Playwright browsers
         working-directory: packages/studio

@@ -3,7 +3,7 @@ import {
   StoryGraphSchema,
   createAndPersistBookSession,
   saveSecrets,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readdir, rm } from "node:fs/promises";
