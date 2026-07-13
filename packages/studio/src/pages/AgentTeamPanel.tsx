@@ -767,6 +767,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
         </button>
         <button
           type="button"
+          data-testid="ag-flow-tab"
           onClick={() => setActiveTab("flow")}
           className="px-5 py-2.5 text-sm font-medium transition-all relative"
           style={{
@@ -919,6 +920,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
               </h3>
               <button
                 type="button"
+                data-testid="ag-create-btn"
                 onClick={() => handleOpenCustomAgentDialog()}
                 className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors"
                 style={{ color: "#8B3A3A" }}
@@ -929,12 +931,24 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {AGENTS.map((agent) => (
-                <AgentCard
-                  key={agent.role}
-                  agent={agent}
-                  status={agentStatuses[agent.role] ?? "ready"}
-                  onClick={() => handleAgentClick(agent.role)}
-                />
+                <div key={agent.role} className="relative group">
+                  <AgentCard
+                    agent={agent}
+                    status={agentStatuses[agent.role] ?? "ready"}
+                    onClick={() => handleAgentClick(agent.role)}
+                  />
+                  {/* Edit button overlay */}
+                  <button
+                    type="button"
+                    data-testid="edit"
+                    onClick={() => handleAgentClick(agent.role)}
+                    className="absolute -top-2 -right-2 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                    style={{ backgroundColor: "#8B3A3A", color: "#fff" }}
+                    title={`编辑 ${agent.label}`}
+                  >
+                    <Edit3 size={12} />
+                  </button>
+                </div>
               ))}
               {customAgents.map((agent) => (
                 <div key={agent.id} className="relative group">
