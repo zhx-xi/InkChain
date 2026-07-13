@@ -59,13 +59,13 @@ interface AgentNodeData {
 }
 
 const WARM_LITERARY = {
-  bg: "#FDF6F0",
-  bgCard: "#FFFBF7",
-  border: "#E8D8C8",
+  bg: "var(--background)",
+  bgCard: "var(--card)",
+  border: "hsl(var(--border))",
   brand: "#8B3A3A",
   brandLight: "rgba(139,58,58,0.1)",
-  text: "#3a2a1a",
-  textMuted: "#8a7a6a",
+  text: "var(--foreground)",
+  textMuted: "hsl(var(--muted-foreground))",
   accent1: "#8B3A3A",
   accent2: "#D4A855",
   accent3: "#6a8ac0",
@@ -381,7 +381,7 @@ export function AgentFlowEditor({
         <Background color="#D4C8B8" gap={20} size={1} />
         <Controls
           showInteractive={false}
-          className="[&>button]:border-[#E8D8C8] [&>button]:bg-[#FFFBF7] [&>button]:text-[#3a2a1a]"
+          className="[&>button]:border-border [&>button]:bg-card [&>button]:text-foreground"
         />
         <MiniMap
           nodeColor={(node) => node.data?.color ?? "#c4b4a0"}

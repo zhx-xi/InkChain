@@ -707,7 +707,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4" style={{ backgroundColor: "#FDF6F0" }}>
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4" style={{ backgroundColor: "var(--background)" }}>
         <Loader2 size={24} className="animate-spin" style={{ color: "#8B3A3A" }} />
         <span className="text-sm" style={{ color: "#8a7a6a" }}>加载 Agent Team…</span>
       </div>
@@ -716,13 +716,13 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
 
   if (loadError) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4" style={{ backgroundColor: "#FDF6F0" }}>
+      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4" style={{ backgroundColor: "var(--background)" }}>
         <span className="text-sm" style={{ color: "#dc2626" }}>加载失败：{loadError}</span>
         <button
           type="button"
           onClick={() => window.location.reload()}
           className="rounded-lg px-4 py-2 text-sm font-medium border"
-          style={{ borderColor: "#E8D8C8", color: "#3a2a1a" }}
+          style={{ borderColor: "hsl(var(--border))", color: "#3a2a1a" }}
         >
           重试
         </button>
@@ -733,7 +733,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
   // ── Render ──
 
   return (
-    <div className="fade-in pt-12" style={{ backgroundColor: "#FDF6F0", minHeight: "100%" }}>
+    <div className="fade-in pt-12" style={{ backgroundColor: "var(--background)", minHeight: "100%" }}>
       {/* Back button */}
       <button
         type="button"
@@ -748,7 +748,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
       </button>
 
       {/* Tabs */}
-      <div className="flex gap-0 border-b mb-6" style={{ borderColor: "#E8D8C8" }}>
+      <div className="flex gap-0 border-b mb-6" style={{ borderColor: "hsl(var(--border))" }}>
         <button
           type="button"
           onClick={() => setActiveTab("team")}
@@ -806,8 +806,8 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                     "inline-flex items-center gap-2 rounded-lg border px-3.5 py-2 text-sm font-medium transition-all",
                   )}
                   style={{
-                    borderColor: "#E8D8C8",
-                    backgroundColor: "#FFFBF7",
+                    borderColor: "hsl(var(--border))",
+                    backgroundColor: "var(--card)",
                     color: "#3a2a1a",
                   }}
                 >
@@ -832,8 +832,8 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                     <div
                       className="absolute right-0 top-full mt-1 z-20 w-64 rounded-xl border shadow-lg overflow-hidden"
                       style={{
-                        borderColor: "#E8D8C8",
-                        backgroundColor: "#FFFBF7",
+                        borderColor: "hsl(var(--border))",
+                        backgroundColor: "var(--card)",
                       }}
                     >
                       <div className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider" style={{ color: "#8a7a6a" }}>
@@ -900,8 +900,8 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                 onClick={handleSaveAsTemplate}
                 className="inline-flex items-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-all"
                 style={{
-                  border: "1px solid #E8D8C8",
-                  backgroundColor: "#FFFBF7",
+                  border: "1px solid hsl(var(--border))",
+                  backgroundColor: "var(--card)",
                   color: "#3a2a1a",
                 }}
               >
@@ -968,7 +968,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
           </div>
 
           {/* Collaboration Mode Selector */}
-          <div className="rounded-xl p-4" style={{ border: "1px solid #E8D8C8", backgroundColor: "rgba(255,251,247,0.7)" }}>
+          <div className="rounded-xl p-4" style={{ border: "1px solid hsl(var(--border))", backgroundColor: "color-mix(in srgb, var(--card) 70%, transparent)" }}>
             <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#8a7a6a" }}>
               协作模式
             </h3>
@@ -982,9 +982,9 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                     "px-4 py-2 rounded-lg text-sm font-medium transition-all",
                   )}
                   style={{
-                    backgroundColor: collaborationMode === mode ? "#8B3A3A" : "#FFFBF7",
+                    backgroundColor: collaborationMode === mode ? "#8B3A3A" : "var(--card)",
                     color: collaborationMode === mode ? "#fff" : "#3a2a1a",
-                    border: collaborationMode === mode ? "1px solid #8B3A3A" : "1px solid #E8D8C8",
+                    border: collaborationMode === mode ? "1px solid #8B3A3A" : "1px solid hsl(var(--border))",
                   }}
                 >
                   {mode === "sequential" && "顺序执行"}
@@ -996,7 +996,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
           </div>
 
           {/* Status Legend */}
-          <div className="rounded-xl p-4" style={{ border: "1px solid #E8D8C8", backgroundColor: "rgba(255,251,247,0.7)" }}>
+          <div className="rounded-xl p-4" style={{ border: "1px solid hsl(var(--border))", backgroundColor: "color-mix(in srgb, var(--card) 70%, transparent)" }}>
             <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#8a7a6a" }}>
               状态图例
             </h3>
@@ -1024,7 +1024,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
           </div>
 
           {/* ── Unified Template List ── */}
-          <div className="rounded-xl p-4" style={{ border: "1px solid #E8D8C8", backgroundColor: "rgba(255,251,247,0.7)" }}>
+          <div className="rounded-xl p-4" style={{ border: "1px solid hsl(var(--border))", backgroundColor: "color-mix(in srgb, var(--card) 70%, transparent)" }}>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#8a7a6a" }}>
                 模板库
@@ -1069,7 +1069,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                       )}
                       style={{
                         border: isActive ? "1px solid #8B3A3A" : "1px solid transparent",
-                        backgroundColor: isActive ? "rgba(139,58,58,0.06)" : "#FFFBF7",
+                        backgroundColor: isActive ? "rgba(139,58,58,0.06)" : "var(--card)",
                       }}
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -1150,7 +1150,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                   <div
                     key={`user-${item.id}`}
                     className="flex items-center justify-between rounded-lg px-3 py-2.5"
-                    style={{ border: "1px solid #E8D8C8", backgroundColor: "#FFFBF7" }}
+                    style={{ border: "1px solid hsl(var(--border))", backgroundColor: "var(--card)" }}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div style={{ color: "#D4A855" }}>
@@ -1243,8 +1243,8 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                 <div
                   className="w-full max-w-md rounded-2xl p-6 shadow-xl"
                   style={{
-                    border: "1px solid #E8D8C8",
-                    backgroundColor: "#FFFBF7",
+                    border: "1px solid hsl(var(--border))",
+                    backgroundColor: "var(--card)",
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -1275,8 +1275,8 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                           placeholder="例如: 文风分析师"
                           className="w-full rounded-lg px-3 py-2 text-sm outline-none focus:ring-2"
                           style={{
-                            border: "1px solid #E8D8C8",
-                            backgroundColor: "#FDF6F0",
+                            border: "1px solid hsl(var(--border))",
+                            backgroundColor: "var(--background)",
                             color: "#3a2a1a",
                           }}
                         />
@@ -1292,8 +1292,8 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                           placeholder="例如: style-analyst"
                           className="w-full rounded-lg px-3 py-2 text-sm outline-none focus:ring-2"
                           style={{
-                            border: "1px solid #E8D8C8",
-                            backgroundColor: "#FDF6F0",
+                            border: "1px solid hsl(var(--border))",
+                            backgroundColor: "var(--background)",
                             color: "#3a2a1a",
                           }}
                         />
@@ -1311,8 +1311,8 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                         rows={2}
                         className="w-full rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 resize-none"
                         style={{
-                          border: "1px solid #E8D8C8",
-                          backgroundColor: "#FDF6F0",
+                          border: "1px solid hsl(var(--border))",
+                          backgroundColor: "var(--background)",
                           color: "#3a2a1a",
                         }}
                       />
@@ -1330,8 +1330,8 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                           placeholder="🤖"
                           className="w-full rounded-lg px-3 py-2 text-sm outline-none focus:ring-2"
                           style={{
-                            border: "1px solid #E8D8C8",
-                            backgroundColor: "#FDF6F0",
+                            border: "1px solid hsl(var(--border))",
+                            backgroundColor: "var(--background)",
                             color: "#3a2a1a",
                           }}
                         />
@@ -1374,9 +1374,9 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                         onClick={handleCloseCustomAgentDialog}
                         className="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
                         style={{
-                          border: "1px solid #E8D8C8",
+                          border: "1px solid hsl(var(--border))",
                           color: "#3a2a1a",
-                          backgroundColor: "#FFFBF7",
+                          backgroundColor: "var(--card)",
                         }}
                       >
                         取消
@@ -1419,8 +1419,8 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                 <div
                   className="w-full max-w-md rounded-2xl p-6 shadow-xl"
                   style={{
-                    border: "1px solid #E8D8C8",
-                    backgroundColor: "#FFFBF7",
+                    border: "1px solid hsl(var(--border))",
+                    backgroundColor: "var(--card)",
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -1450,8 +1450,8 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                         placeholder="输入模板名称…"
                         className="w-full rounded-lg px-3 py-2 text-sm outline-none focus:ring-2"
                         style={{
-                          border: "1px solid #E8D8C8",
-                          backgroundColor: "#FDF6F0",
+                          border: "1px solid hsl(var(--border))",
+                          backgroundColor: "var(--background)",
                           color: "#3a2a1a",
                         }}
                       />
@@ -1468,8 +1468,8 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                         rows={3}
                         className="w-full rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 resize-none"
                         style={{
-                          border: "1px solid #E8D8C8",
-                          backgroundColor: "#FDF6F0",
+                          border: "1px solid hsl(var(--border))",
+                          backgroundColor: "var(--background)",
                           color: "#3a2a1a",
                         }}
                       />
@@ -1503,9 +1503,9 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                         onClick={handleTemplateDialogClose}
                         className="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
                         style={{
-                          border: "1px solid #E8D8C8",
+                          border: "1px solid hsl(var(--border))",
                           color: "#3a2a1a",
-                          backgroundColor: "#FFFBF7",
+                          backgroundColor: "var(--card)",
                         }}
                       >
                         取消
@@ -1581,8 +1581,8 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                 onChange={(e) => setCollaborationMode(e.target.value as "sequential" | "parallel" | "hybrid")}
                 className="rounded-lg px-3 py-2 text-sm outline-none"
                 style={{
-                  border: "1px solid #E8D8C8",
-                  backgroundColor: "#FFFBF7",
+                  border: "1px solid hsl(var(--border))",
+                  backgroundColor: "var(--card)",
                   color: "#3a2a1a",
                 }}
               >
@@ -1602,9 +1602,9 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                 onClick={() => handleApplyPreset(preset.id)}
                 className="rounded-lg px-3 py-1.5 text-xs font-medium transition-all"
                 style={{
-                  backgroundColor: selectedPreset === preset.id ? "#8B3A3A" : "#FFFBF7",
+                  backgroundColor: selectedPreset === preset.id ? "#8B3A3A" : "var(--card)",
                   color: selectedPreset === preset.id ? "#fff" : "#3a2a1a",
-                  border: selectedPreset === preset.id ? "1px solid #8B3A3A" : "1px solid #E8D8C8",
+                  border: selectedPreset === preset.id ? "1px solid #8B3A3A" : "1px solid hsl(var(--border))",
                 }}
               >
                 {preset.name}
@@ -1616,14 +1616,14 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
           {flowLoadError && (
             <div
               className="flex flex-col items-center justify-center rounded-xl gap-3"
-              style={{ height: 420, border: "1px solid #E8D8C8", backgroundColor: "rgba(255,251,247,0.7)" }}
+              style={{ height: 420, border: "1px solid hsl(var(--border))", backgroundColor: "color-mix(in srgb, var(--card) 70%, transparent)" }}
             >
               <span className="text-xs" style={{ color: "#dc2626" }}>加载失败：{flowLoadError}</span>
               <button
                 type="button"
                 onClick={() => setFlowRetryCount((c) => c + 1)}
                 className="rounded-lg px-4 py-2 text-sm font-medium"
-                style={{ border: "1px solid #E8D8C8", color: "#3a2a1a", backgroundColor: "#FFFBF7" }}
+                style={{ border: "1px solid hsl(var(--border))", color: "#3a2a1a", backgroundColor: "var(--card)" }}
               >
                 重试
               </button>
@@ -1632,7 +1632,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
           {!flowLoadError && isLoadingFlow && (
             <div
               className="flex items-center justify-center rounded-xl"
-              style={{ height: 420, border: "1px solid #E8D8C8", backgroundColor: "rgba(255,251,247,0.7)" }}
+              style={{ height: 420, border: "1px solid hsl(var(--border))", backgroundColor: "color-mix(in srgb, var(--card) 70%, transparent)" }}
             >
               <div className="flex flex-col items-center gap-3">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#8B3A3A] border-t-transparent" />
@@ -1667,7 +1667,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
           {!flowLoadError && !isLoadingFlow && agentOrder.length === 0 && (
             <div
               className="flex items-center justify-center rounded-xl"
-              style={{ height: 420, border: "1px solid #E8D8C8", backgroundColor: "rgba(255,251,247,0.7)" }}
+              style={{ height: 420, border: "1px solid hsl(var(--border))", backgroundColor: "color-mix(in srgb, var(--card) 70%, transparent)" }}
             >
               <div className="flex flex-col items-center gap-2">
                 <span className="text-sm" style={{ color: "#8a7a6a" }}>暂无流程数据</span>
@@ -1676,7 +1676,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
           )}
 
           {/* Agent order list */}
-          <div className="rounded-xl p-4" style={{ border: "1px solid #E8D8C8", backgroundColor: "rgba(255,251,247,0.7)" }}>
+          <div className="rounded-xl p-4" style={{ border: "1px solid hsl(var(--border))", backgroundColor: "color-mix(in srgb, var(--card) 70%, transparent)" }}>
             <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: "#8a7a6a" }}>
               Agent 执行顺序
             </h3>
@@ -1688,8 +1688,8 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                     key={role}
                     className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm"
                     style={{
-                      backgroundColor: "#FFFBF7",
-                      border: "1px solid #E8D8C8",
+                      backgroundColor: "var(--card)",
+                      border: "1px solid hsl(var(--border))",
                     }}
                   >
                     <span className="text-[10px] font-mono font-bold" style={{ color: "#a08060" }}>
