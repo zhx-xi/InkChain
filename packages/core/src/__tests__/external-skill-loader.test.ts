@@ -2,6 +2,7 @@ import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { delimiter, join, relative } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { DATA_DIR_NAME } from "../utils/data-directory.js";
 import {
   createSkillRegistry,
   loadConfiguredCapabilitySkills,
@@ -108,8 +109,8 @@ describe("external skill loader", () => {
       .rejects.toThrow(/absolute/);
   });
 
-  it("loads project-local skills from .inkos/skills without explicit configuration", async () => {
-    const skillDir = join(root, ".inkos", "skills", "detective-play");
+  it("loads project-local skills from DATA_DIR_NAME/skills without explicit configuration", async () => {
+    const skillDir = join(root, DATA_DIR_NAME, "skills", "detective-play");
     await mkdir(skillDir, { recursive: true });
     await writeFile(
       join(skillDir, "SKILL.md"),

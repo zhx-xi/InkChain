@@ -12,11 +12,12 @@ import { Hono } from "hono";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ApiError } from "../errors.js";
+import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 
 // ── Storage ──
 
 function orderFilePath(root: string): string {
-  return join(root, ".inkos", "agent-order.json");
+  return join(root, DATA_DIR_NAME, "agent-order.json");
 }
 
 async function loadOrder(root: string): Promise<readonly string[]> {
@@ -40,8 +41,7 @@ async function loadOrder(root: string): Promise<readonly string[]> {
 }
 
 async function saveOrder(root: string, order: readonly string[]): Promise<void> {
-  const dir = join(root, ".inkos");
-  await mkdir(dir, { recursive: true });
+  await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
   await writeFile(orderFilePath(root), JSON.stringify(order, null, 2), "utf-8");
 }
 

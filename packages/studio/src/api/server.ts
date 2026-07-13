@@ -106,6 +106,7 @@ import { access, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/p
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { isSafeBookId } from "./safety.js";
 import { ApiError } from "./errors.js";
+import { DATA_DIR_NAME } from "../constants/data-directory.js";
 import { buildStudioBookConfig } from "./book-create.js";
 import { createRelationsRouter } from "./routes/relations.js";
 import { createVolumesRouter } from "./routes/volumes.js";
@@ -524,7 +525,7 @@ function normalizeStudioSkillId(value: unknown, field = "skillId"): string {
 }
 
 function projectSkillsDir(root: string): string {
-  return join(root, ".inkos", "skills");
+  return join(root, DATA_DIR_NAME, "skills");
 }
 
 function projectSkillDir(root: string, id: string): string {
@@ -739,7 +740,7 @@ function resolveExternalChatEditPath(root: string, requestedPath: string): { pat
   if (!CHAT_EDIT_ALLOWED_ROOTS.has(first)) {
     throw new ApiError(400, "UNSUPPORTED_CHAT_EDIT_TARGET", "Chat external edits cannot modify source code, config, or arbitrary project files.");
   }
-  if (rel.includes("/.inkos/") || rel.endsWith("/.inkos") || rel.includes("/secrets") || rel.endsWith(".env")) {
+  if (rel.includes("/.inkos/") || rel.endsWith("/.inkos") || rel.includes(`/${DATA_DIR_NAME}/`) || rel.endsWith(`/${DATA_DIR_NAME}`) || rel.includes("/secrets") || rel.endsWith(".env")) {
     throw new ApiError(400, "UNSUPPORTED_CHAT_EDIT_TARGET", "Chat external edits cannot modify secrets or runtime internals.");
   }
   if (!CHAT_EDIT_TEXT_EXTENSIONS.test(rel)) {

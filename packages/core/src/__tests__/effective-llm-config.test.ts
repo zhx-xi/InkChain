@@ -2,6 +2,7 @@ import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { DATA_DIR_NAME } from "../utils/data-directory.js";
 import { resolveEffectiveLLMConfig } from "../utils/effective-llm-config.js";
 
 describe("resolveEffectiveLLMConfig", () => {
@@ -24,8 +25,8 @@ describe("resolveEffectiveLLMConfig", () => {
   }
 
   async function writeSecrets(services: Record<string, { apiKey: string }>) {
-    await mkdir(join(root, ".inkos"), { recursive: true });
-    await writeFile(join(root, ".inkos", "secrets.json"), JSON.stringify({ services }, null, 2), "utf-8");
+    await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
+    await writeFile(join(root, DATA_DIR_NAME, "secrets.json"), JSON.stringify({ services }, null, 2), "utf-8");
   }
 
   it("Studio consumer 使用 Studio/project 配置，并忽略旧顶层 model/baseUrl", async () => {

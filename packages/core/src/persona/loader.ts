@@ -19,6 +19,7 @@ import {
 } from "../models/persona-config.js";
 import { getDefaultPersona } from "./defaults.js";
 import { serializePersonaConfig } from "../models/persona-config.js";
+import { DATA_DIR_NAME } from "../utils/data-directory.js";
 
 /** Directory where built-in persona files are stored. */
 const BUILTIN_PERSONAS_DIR = join(
@@ -27,7 +28,7 @@ const BUILTIN_PERSONAS_DIR = join(
 );
 
 /** Relative path from project root to the project-level personas directory. */
-const PROJECT_PERSONAS_RELATIVE = ".inkos/personas";
+const PROJECT_PERSONAS_RELATIVE = `${DATA_DIR_NAME}/personas`;
 
 async function tryReadFile(path: string): Promise<string | null> {
   try {

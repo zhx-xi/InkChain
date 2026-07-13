@@ -1038,6 +1038,9 @@ export {
 export { exportInk } from "./interactive-film/export-ink.js";
 export { buildPlayableHtml } from "./interactive-film/export-html.js";
 
+// ── Data Directory (Issue #598) ──
+export { DATA_DIR_NAME, LEGACY_DIR_NAME, dataPath, migratePath, migrateDirConstant } from "./utils/data-directory.js";
+
 // ── Cross-Platform Publish (C1-2) ──
 export {
   type PublishPlatform,

@@ -2,6 +2,7 @@ import { mkdtemp, rm, writeFile, mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
+import { DATA_DIR_NAME } from "../utils/data-directory.js";
 import { loadProjectConfig } from "../utils/config-loader.js";
 
 const ENV_KEYS = [
@@ -100,9 +101,9 @@ describe("loadProjectConfig local provider auth", () => {
       },
       notify: [],
     }, null, 2), "utf-8");
-    await mkdir(join(root, ".inkos"), { recursive: true });
+    await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
     await writeFile(
-      join(root, ".inkos", "secrets.json"),
+      join(root, DATA_DIR_NAME, "secrets.json"),
       JSON.stringify({ services: { moonshot: { apiKey: "sk-moon" } } }, null, 2),
       "utf-8",
     );
@@ -136,9 +137,9 @@ describe("loadProjectConfig local provider auth", () => {
       },
       notify: [],
     }, null, 2), "utf-8");
-    await mkdir(join(root, ".inkos"), { recursive: true });
+    await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
     await writeFile(
-      join(root, ".inkos", "secrets.json"),
+      join(root, DATA_DIR_NAME, "secrets.json"),
       JSON.stringify({ services: { minimax: { apiKey: "sk-minimax" } } }, null, 2),
       "utf-8",
     );
@@ -171,9 +172,9 @@ describe("loadProjectConfig local provider auth", () => {
       },
       notify: [],
     }, null, 2), "utf-8");
-    await mkdir(join(root, ".inkos"), { recursive: true });
+    await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
     await writeFile(
-      join(root, ".inkos", "secrets.json"),
+      join(root, DATA_DIR_NAME, "secrets.json"),
       JSON.stringify({ services: { "custom:内网GPT": { apiKey: "sk-corp" } } }, null, 2),
       "utf-8",
     );
@@ -216,9 +217,9 @@ describe("loadProjectConfig local provider auth", () => {
       "INKOS_LLM_MODEL=gpt-5.4",
       "INKOS_LLM_API_KEY=sk-env",
     ].join("\n"), "utf-8");
-    await mkdir(join(root, ".inkos"), { recursive: true });
+    await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
     await writeFile(
-      join(root, ".inkos", "secrets.json"),
+      join(root, DATA_DIR_NAME, "secrets.json"),
       JSON.stringify({ services: { "custom:内网GPT": { apiKey: "sk-corp" } } }, null, 2),
       "utf-8",
     );
@@ -263,9 +264,9 @@ describe("loadProjectConfig local provider auth", () => {
       "INKOS_LLM_MODEL=kimi-k2.5",
       "INKOS_LLM_API_KEY=sk-env-moon",
     ].join("\n"), "utf-8");
-    await mkdir(join(root, ".inkos"), { recursive: true });
+    await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
     await writeFile(
-      join(root, ".inkos", "secrets.json"),
+      join(root, DATA_DIR_NAME, "secrets.json"),
       JSON.stringify({
         services: {
           google: { apiKey: "sk-google" },

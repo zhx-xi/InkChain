@@ -6,8 +6,9 @@
 import { access, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { WorldConfigSchema, type WorldConfig, type WorldConfigUpdate, type WorldSearchResult, type WorldReference, type WorldReferenceCreate, WORLD_DIMENSION_KEYS, worldSearch, checkReferenceBeforeDelete } from "./world-config.js";
+import { DATA_DIR_NAME } from "../utils/data-directory.js";
 
-const WORLDS_DIR = ".inkos/worlds";
+const WORLDS_DIR = `${DATA_DIR_NAME}/worlds`;
 
 function worldsDir(root: string): string {
   return join(root, WORLDS_DIR);
