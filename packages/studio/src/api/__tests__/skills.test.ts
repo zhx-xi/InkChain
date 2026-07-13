@@ -2,10 +2,11 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 import { createStudioServer } from "../server.js";
 
 async function writeSkill(root: string, id: string, data: Record<string, unknown>): Promise<void> {
-  const dir = join(root, ".inkos", "skills");
+  const dir = join(root, DATA_DIR_NAME, "skills");
   await mkdir(dir, { recursive: true });
   await writeFile(join(dir, `${id}.json`), JSON.stringify({ id, ...data }), "utf-8");
 }
@@ -90,7 +91,7 @@ describe("SkillConfig CRUD API (Issue #76)", () => {
     expect(json.skill.config.category).toBe("world");
     expect(json.skill.config.enabled).toBe(true);
 
-    const saved = await readFile(join(root, ".inkos", "skills", "new-skill.json"), "utf-8");
+    const saved = await readFile(join(root, DATA_DIR_NAME, "skills", "new-skill.json"), "utf-8");
     const parsed = JSON.parse(saved);
     expect(parsed.id).toBe("new-skill");
     expect(parsed.category).toBe("world");
@@ -138,7 +139,7 @@ describe("SkillConfig CRUD API (Issue #76)", () => {
     expect(json.skill.config.description).toBe("After");
     expect(json.skill.config.enabled).toBe(false);
 
-    const saved = JSON.parse(await readFile(join(root, ".inkos", "skills", "update-skill.json"), "utf-8"));
+    const saved = JSON.parse(await readFile(join(root, DATA_DIR_NAME, "skills", "update-skill.json"), "utf-8"));
     expect(saved.description).toBe("After");
     expect(saved.enabled).toBe(false);
   });
@@ -153,7 +154,7 @@ describe("SkillConfig CRUD API (Issue #76)", () => {
     });
 
     expect(res.status).toBe(200);
-    const saved = JSON.parse(await readFile(join(root, ".inkos", "skills", "brand-new-skill.json"), "utf-8"));
+    const saved = JSON.parse(await readFile(join(root, DATA_DIR_NAME, "skills", "brand-new-skill.json"), "utf-8"));
     expect(saved.id).toBe("brand-new-skill");
     expect(saved.category).toBe("character");
   });
@@ -167,7 +168,7 @@ describe("SkillConfig CRUD API (Issue #76)", () => {
     const json = await res.json() as { skill: { config: { enabled: boolean } } };
     expect(json.skill.config.enabled).toBe(false);
 
-    const saved = JSON.parse(await readFile(join(root, ".inkos", "skills", "toggle-skill.json"), "utf-8"));
+    const saved = JSON.parse(await readFile(join(root, DATA_DIR_NAME, "skills", "toggle-skill.json"), "utf-8"));
     expect(saved.enabled).toBe(false);
   });
 

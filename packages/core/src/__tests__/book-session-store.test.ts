@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { DATA_DIR_NAME } from "../utils/data-directory.js";
 import {
   loadBookSession,
   persistBookSession,
@@ -72,7 +73,7 @@ describe("book-session-store", () => {
         createdAt: 1000,
         updatedAt: 1000,
       };
-      const dir = join(tempDir, ".inkos", "sessions");
+      const dir = join(tempDir, DATA_DIR_NAME, "sessions");
       await mkdir(dir, { recursive: true });
       await writeFile(join(dir, "old-session.json"), JSON.stringify(oldFormat));
 
@@ -110,7 +111,7 @@ describe("book-session-store", () => {
           { role: "assistant", content: "好的", thinking: "旧思考" },
         ],
       });
-      await expect(readFile(join(tempDir, ".inkos", "sessions", "legacy-1.jsonl"), "utf-8"))
+      await expect(readFile(join(tempDir, DATA_DIR_NAME, "sessions", "legacy-1.jsonl"), "utf-8"))
         .resolves
         .toContain("request_committed");
     });
@@ -147,10 +148,10 @@ describe("book-session-store", () => {
       const session = await createAndPersistBookSession(tempDir, "book-a", "123456-abcdef");
 
       expect(session.sessionId).toBe("123456-abcdef");
-      await expect(readFile(join(tempDir, ".inkos", "sessions", "123456-abcdef.jsonl"), "utf-8"))
+      await expect(readFile(join(tempDir, DATA_DIR_NAME, "sessions", "123456-abcdef.jsonl"), "utf-8"))
         .resolves
         .toContain("session_created");
-      await expect(readFile(join(tempDir, ".inkos", "sessions", "123456-abcdef.json"), "utf-8"))
+      await expect(readFile(join(tempDir, DATA_DIR_NAME, "sessions", "123456-abcdef.json"), "utf-8"))
         .rejects
         .toThrow();
     });
@@ -188,7 +189,7 @@ describe("book-session-store", () => {
 
     it("listBookSessions 同时列出 JSONL session 和未迁移 legacy JSON session", async () => {
       await createAndPersistBookSession(tempDir, "book-a", "123456-abcdef");
-      const dir = join(tempDir, ".inkos", "sessions");
+      const dir = join(tempDir, DATA_DIR_NAME, "sessions");
       await mkdir(dir, { recursive: true });
       const legacy = { ...createBookSession("book-a", "legacy-1"), updatedAt: 999 };
       await writeFile(join(dir, "legacy-1.json"), JSON.stringify(legacy));

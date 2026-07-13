@@ -32,9 +32,10 @@ import {
   type StoredSkillConfig,
 } from "@actalk/inkchain-core";
 import { ApiError } from "../errors.js";
+import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 
-const PROJECT_SKILLS_DIR = ".inkos/skills";
-const SKILL_VERSIONS_DIR = ".inkos/skills-versions";
+const PROJECT_SKILLS_DIR = `${DATA_DIR_NAME}/skills`;
+const SKILL_VERSIONS_DIR = `${DATA_DIR_NAME}/skills-versions`;
 const VERSION_KEEP = 20; // max versions to retain
 
 export interface ApiSkillResponse {
