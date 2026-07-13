@@ -22,7 +22,7 @@ test.describe("ChapterHistoryPanel — 核心创作功能基线", () => {
   test("2. 版本历史按钮存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     const historyBtn = page.locator(
-      'button:has-text("历史"), button:has-text("版本"), [data-testid*="version"], [data-testid*="Version"]'
+      "button:has-text('历史'), button:has-text('版本'), [data-testid*='version'], [data-testid*='Version']"
     );
     const count = await historyBtn.count();
     console.log(`Version/history buttons: ${count}`);
@@ -31,7 +31,7 @@ test.describe("ChapterHistoryPanel — 核心创作功能基线", () => {
   test("3. 创建快照按钮存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     const snapshotBtn = page.locator(
-      'button:has-text("快照"), button:has-text("Snapshot"), [data-testid*="snapshot"], [data-testid*="Snapshot"]'
+      "button:has-text('快照'), button:has-text('Snapshot'), [data-testid*='snapshot'], [data-testid*='Snapshot']"
     );
     const count = await snapshotBtn.count();
     console.log(`Snapshot buttons: ${count}`);
@@ -40,7 +40,7 @@ test.describe("ChapterHistoryPanel — 核心创作功能基线", () => {
   test("4. 章节内容编辑器存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     const editor = page.locator(
-      '[data-testid="ch-textarea-content"], textarea, [contenteditable="true"], [role="textbox"]'
+      "[data-testid='ch-textarea-content'], textarea, [contenteditable='true'], [role='textbox']"
     );
     const count = await editor.count();
     console.log(`Editor elements: ${count}`);
@@ -49,7 +49,7 @@ test.describe("ChapterHistoryPanel — 核心创作功能基线", () => {
   test("5. 保存按钮存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     const saveBtn = page.locator(
-      'button:has-text("保存"), [data-testid*="save"], [data-testid*="Save"]'
+      "button:has-text('保存'), [data-testid*='save'], [data-testid*='Save']"
     );
     const count = await saveBtn.count();
     console.log(`Save buttons: ${count}`);

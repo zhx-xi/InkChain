@@ -22,7 +22,7 @@ test.describe("WorldListPage — 核心创作功能基线", () => {
   test("2. 创建世界观按钮存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     const createBtn = page.locator(
-      '[data-testid="wl-create-btn"], [data-testid="wl-btn-create-world"], button:has-text("创建"), button:has-text("新建")'
+      "[data-testid='wl-create-btn'], [data-testid='wl-btn-create-world'], button:has-text('创建'), button:has-text('新建')"
     );
     const count = await createBtn.count();
     console.log(`Create world buttons: ${count}`);
@@ -31,7 +31,7 @@ test.describe("WorldListPage — 核心创作功能基线", () => {
   test("3. AI提取按钮存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     const aiBtn = page.locator(
-      '[data-testid*="extract"], [data-testid*="Extract"], button:has-text("AI"), button:has-text("提取")'
+      "[data-testid*='extract'], [data-testid*='Extract'], button:has-text('AI'), button:has-text('提取')"
     );
     const count = await aiBtn.count();
     console.log(`AI extract buttons: ${count}`);
@@ -40,7 +40,7 @@ test.describe("WorldListPage — 核心创作功能基线", () => {
   test("4. 搜索输入框存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     const searchInput = page.locator(
-      'input[type="text"], [data-testid*="search"], [data-testid*="Search"]'
+      "input[type='text'], [data-testid*='search'], [data-testid*='Search']"
     );
     const count = await searchInput.count();
     console.log(`Search inputs: ${count}`);
@@ -49,7 +49,7 @@ test.describe("WorldListPage — 核心创作功能基线", () => {
   test("5. 空状态: 无世界观时显示空状态", async ({ page }) => {
     await page.waitForTimeout(2000);
     const emptyState = page.locator(
-      '[data-testid="wl-empty-state"], [data-testid="wl-state-empty"], :has-text("创建第一个"), :has-text("暂无")'
+      "[data-testid='wl-empty-state'], [data-testid='wl-state-empty'], :has-text('创建第一个'), :has-text('暂无')"
     );
     const hasEmpty = (await emptyState.count()) > 0;
     console.log(`Empty state: ${hasEmpty}`);
@@ -62,7 +62,7 @@ test.describe("WorldListPage — 核心创作功能基线", () => {
     await page.reload();
     await page.waitForTimeout(2000);
     const error = page.locator(
-      '[data-testid="wl-error-state"], [data-testid="wl-state-error"], :has-text("错误"), :has-text("失败"), :has-text("重试")'
+      "[data-testid='wl-error-state'], [data-testid='wl-state-error'], :has-text('错误'), :has-text('失败'), :has-text('重试')"
     );
     const hasError = (await error.count()) > 0;
     console.log(`Error state: ${hasError}`);
@@ -71,7 +71,7 @@ test.describe("WorldListPage — 核心创作功能基线", () => {
   test("7. 世界观列表渲染", async ({ page }) => {
     await page.waitForTimeout(2000);
     const list = page.locator(
-      '[data-testid="wl-table-world-list"], [data-testid*="list"], [data-testid*="List"], table, [role="list"]'
+      "[data-testid='wl-table-world-list'], [data-testid*='list'], [data-testid*='List'], table, [role='list']"
     );
     const count = await list.count();
     console.log(`List elements: ${count}`);

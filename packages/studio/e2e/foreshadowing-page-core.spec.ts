@@ -35,19 +35,19 @@ test.describe("ForeshadowingPage — 核心创作功能基线", () => {
   test("2. 创建伏笔按钮存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     // Try data-testid first, fall back to text content
-    const createBtn = page.locator('[data-testid="fs-create-btn"], [data-testid="fs-btn-create-foreshadowing"], button:has-text("创建")');
+    const createBtn = page.locator("[data-testid='fs-create-btn'], [data-testid='fs-btn-create-foreshadowing'], button:has-text('创建')");
     await expect(createBtn.first()).toBeVisible({ timeout: 10000 });
   });
 
   test("3. AI提取按钮存在", async ({ page }) => {
     await page.waitForTimeout(2000);
-    const aiBtn = page.locator('[data-testid="fs-extract-btn"], [data-testid="fs-btn-ai-extract"], button:has-text("AI")');
+    const aiBtn = page.locator("[data-testid='fs-extract-btn'], [data-testid='fs-btn-ai-extract'], button:has-text('AI')");
     await expect(aiBtn.first()).toBeVisible({ timeout: 10000 });
   });
 
   test("4. 视图切换按钮存在", async ({ page }) => {
     await page.waitForTimeout(2000);
-    const viewBtns = page.locator('[data-testid*="view"], button:has-text("列表"), button:has-text("卡片"), button:has-text("关系")');
+    const viewBtns = page.locator("[data-testid*='view'], button:has-text('列表'), button:has-text('卡片'), button:has-text('关系')");
     const count = await viewBtns.count();
     console.log(`View toggle buttons: ${count}`);
     expect(count).toBeGreaterThanOrEqual(0);
@@ -55,7 +55,7 @@ test.describe("ForeshadowingPage — 核心创作功能基线", () => {
 
   test("5. 搜索输入框存在", async ({ page }) => {
     await page.waitForTimeout(2000);
-    const searchInput = page.locator('[data-testid="fs-search-input"], [data-testid="fs-input-search"], input[type="text"]');
+    const searchInput = page.locator("[data-testid='fs-search-input'], [data-testid='fs-input-search'], input[type='text']");
     const count = await searchInput.count();
     console.log(`Search inputs: ${count}`);
   });
@@ -63,12 +63,12 @@ test.describe("ForeshadowingPage — 核心创作功能基线", () => {
   test("6. 创建伏笔弹窗可打开", async ({ page }) => {
     await page.waitForTimeout(2000);
     // Click create button
-    const createBtn = page.locator('[data-testid="fs-create-btn"], [data-testid="fs-btn-create-foreshadowing"], button:has-text("创建")');
+    const createBtn = page.locator("[data-testid='fs-create-btn'], [data-testid='fs-btn-create-foreshadowing'], button:has-text('创建')");
     if ((await createBtn.count()) > 0) {
       await createBtn.first().click();
       await page.waitForTimeout(1000);
       // Check if a modal/dialog appeared
-      const modal = page.locator('[role="dialog"], [class*="modal"], [class*="dialog"], [class*="Modal"], [class*="Dialog"]');
+      const modal = page.locator("[role='dialog'], [class*='modal'], [class*='dialog'], [class*='Modal'], [class*='Dialog']");
       const modalCount = await modal.count();
       console.log(`Modals after clicking create: ${modalCount}`);
     }
@@ -78,7 +78,7 @@ test.describe("ForeshadowingPage — 核心创作功能基线", () => {
     // Navigate fresh to check loading state
     await page.goto(`${BASE_URL}/book/test-project-123/foreshadowing`);
     // Check for loading indicator or immediate content
-    const spinner = page.locator('[data-testid="fs-loading-spinner"], [data-testid="fs-state-loading"], [class*="spinner"], [class*="loading"]');
+    const spinner = page.locator("[data-testid='fs-loading-spinner'], [data-testid='fs-state-loading'], [class*='spinner'], [class*='loading']");
     const hasSpinner = (await spinner.count()) > 0;
     console.log(`Loading spinner visible: ${hasSpinner}`);
 
@@ -90,7 +90,7 @@ test.describe("ForeshadowingPage — 核心创作功能基线", () => {
 
   test("8. 空状态: 页面在无数据时显示空状态提示", async ({ page }) => {
     await page.waitForTimeout(2000);
-    const emptyState = page.locator('[data-testid="fs-empty-state"], [data-testid="fs-state-empty"], :has-text("创建第一个"), :has-text("暂无")');
+    const emptyState = page.locator("[data-testid='fs-empty-state'], [data-testid='fs-state-empty'], :has-text('创建第一个'), :has-text('暂无')");
     const hasEmpty = (await emptyState.count()) > 0;
     console.log(`Empty state visible: ${hasEmpty}`);
   });
@@ -103,14 +103,14 @@ test.describe("ForeshadowingPage — 核心创作功能基线", () => {
     await page.reload();
     await page.waitForTimeout(2000);
 
-    const errorState = page.locator('[data-testid="fs-error-state"], [data-testid="fs-state-error"], :has-text("错误"), :has-text("失败"), :has-text("重试")');
+    const errorState = page.locator("[data-testid='fs-error-state'], [data-testid='fs-state-error'], :has-text('错误'), :has-text('失败'), :has-text('重试')");
     const hasError = (await errorState.count()) > 0;
     console.log(`Error state visible: ${hasError}`);
   });
 
   test("10. 刷新按钮可点击", async ({ page }) => {
     await page.waitForTimeout(2000);
-    const refreshBtn = page.locator('[data-testid*="refresh"], [data-testid*="Refresh"], button:has-text("刷新")');
+    const refreshBtn = page.locator("[data-testid*='refresh'], [data-testid*='Refresh'], button:has-text('刷新')");
     if ((await refreshBtn.count()) > 0) {
       await refreshBtn.first().click();
       await page.waitForTimeout(1000);

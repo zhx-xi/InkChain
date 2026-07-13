@@ -22,7 +22,7 @@ test.describe("WorldMapPage — 核心创作功能基线", () => {
   test("2. 地图画布渲染", async ({ page }) => {
     await page.waitForTimeout(2000);
     const canvas = page.locator(
-      '[data-testid="wm-canvas-map"], [class*="map"], [class*="Map"], canvas'
+      "[data-testid='wm-canvas-map'], [class*='map'], [class*='Map'], canvas"
     );
     const count = await canvas.count();
     console.log(`Map canvas elements: ${count}`);
@@ -31,7 +31,7 @@ test.describe("WorldMapPage — 核心创作功能基线", () => {
   test("3. 缩放控制按钮存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     const zoomBtns = page.locator(
-      '[data-testid*="zoom"], [data-testid*="Zoom"], button:has-text("放大"), button:has-text("缩小")'
+      "[data-testid*='zoom'], [data-testid*='Zoom'], button:has-text('放大'), button:has-text('缩小')"
     );
     const count = await zoomBtns.count();
     console.log(`Zoom buttons: ${count}`);
@@ -40,7 +40,7 @@ test.describe("WorldMapPage — 核心创作功能基线", () => {
   test("4. 详情面板存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     const detailPanel = page.locator(
-      '[data-testid="wm-detail-panel"], [data-testid*="detail"], [data-testid*="Detail"], [class*="panel"], [class*="Panel"]'
+      "[data-testid='wm-detail-panel'], [data-testid*='detail'], [data-testid*='Detail'], [class*='panel'], [class*='Panel']"
     );
     const count = await detailPanel.count();
     console.log(`Detail panel elements: ${count}`);
@@ -49,7 +49,7 @@ test.describe("WorldMapPage — 核心创作功能基线", () => {
   test("5. 面包屑导航存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     const breadcrumb = page.locator(
-      '[data-testid="wm-breadcrumb"], [data-testid*="breadcrumb"], [aria-label="breadcrumb"], nav[class*="breadcrumb"]'
+      "[data-testid='wm-breadcrumb'], [data-testid*='breadcrumb'], [aria-label='breadcrumb'], nav[class*='breadcrumb']"
     );
     const count = await breadcrumb.count();
     console.log(`Breadcrumb elements: ${count}`);
@@ -58,7 +58,7 @@ test.describe("WorldMapPage — 核心创作功能基线", () => {
   test("6. 工具栏存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     const toolbar = page.locator(
-      '[data-testid="wm-toolbar"], [class*="toolbar"], [class*="Toolbar"], [role="toolbar"]'
+      "[data-testid='wm-toolbar'], [class*='toolbar'], [class*='Toolbar'], [role='toolbar']"
     );
     const count = await toolbar.count();
     console.log(`Toolbar elements: ${count}`);
@@ -67,7 +67,7 @@ test.describe("WorldMapPage — 核心创作功能基线", () => {
   test("7. 空状态: 无数据时显示空状态", async ({ page }) => {
     await page.waitForTimeout(2000);
     const emptyState = page.locator(
-      '[data-testid*="empty"], [data-testid*="Empty"], :has-text("暂无"), :has-text("无数据")'
+      "[data-testid*='empty'], [data-testid*='Empty'], :has-text('暂无'), :has-text('无数据')"
     );
     const hasEmpty = (await emptyState.count()) > 0;
     console.log(`Empty state: ${hasEmpty}`);
@@ -80,7 +80,7 @@ test.describe("WorldMapPage — 核心创作功能基线", () => {
     await page.reload();
     await page.waitForTimeout(2000);
     const error = page.locator(
-      '[data-testid*="error"], [data-testid*="Error"], :has-text("错误"), :has-text("失败")'
+      "[data-testid*='error'], [data-testid*='Error'], :has-text('错误'), :has-text('失败')"
     );
     const hasError = (await error.count()) > 0;
     console.log(`Error state: ${hasError}`);
@@ -89,7 +89,7 @@ test.describe("WorldMapPage — 核心创作功能基线", () => {
   test("9. 返回按钮存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     const backBtn = page.locator(
-      '[data-testid="back-btn"], button:has-text("返回"), [aria-label="返回"]'
+      "[data-testid='back-btn'], button:has-text('返回'), [aria-label='返回']"
     );
     const count = await backBtn.count();
     console.log(`Back buttons: ${count}`);
