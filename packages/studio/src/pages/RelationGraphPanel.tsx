@@ -286,11 +286,17 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
   }, [nodes.length, hasFit]);
 
   // ── Reset handler ──
-  const handleReset = useCallback(() => {
+  const handleReset = useCallback(async () => {
+    if (!window.confirm("确认重置图谱？所有关系和角色将恢复初始状态。")) return;
     selectNode(null);
+    setSelectedVolumeId(null);
     setHasFit(false);
     window.dispatchEvent(new Event("resize"));
-    refreshGraph(bookId);
+    try {
+      await refreshGraph(bookId);
+    } catch {
+      // refreshGraph handles its own error state in the store
+    }
   }, [selectNode, refreshGraph, bookId]);
 
   // ── Node click handler ──
