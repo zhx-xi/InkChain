@@ -1,0 +1,680 @@
+﻿2026-07-13T11:19:14.0809231Z Current runner version: '2.335.1'
+2026-07-13T11:19:14.0834625Z ##[group]Runner Image Provisioner
+2026-07-13T11:19:14.0835512Z Hosted Compute Agent
+2026-07-13T11:19:14.0836191Z Version: 20260624.560
+2026-07-13T11:19:14.0836856Z Commit: 925d229a51159bc391ae97e54a2dd1fe20af789d
+2026-07-13T11:19:14.0837964Z Build Date: 2026-06-24T18:26:47Z
+2026-07-13T11:19:14.0838743Z Worker ID: {1ee6762b-2747-45ea-a371-7fa3cea74b96}
+2026-07-13T11:19:14.0839508Z Azure Region: eastus2
+2026-07-13T11:19:14.0840078Z ##[endgroup]
+2026-07-13T11:19:14.0842171Z ##[group]Operating System
+2026-07-13T11:19:14.0843109Z Ubuntu
+2026-07-13T11:19:14.0843941Z 24.04.4
+2026-07-13T11:19:14.0844759Z LTS
+2026-07-13T11:19:14.0845512Z ##[endgroup]
+2026-07-13T11:19:14.0846176Z ##[group]Runner Image
+2026-07-13T11:19:14.0846853Z Image: ubuntu-24.04
+2026-07-13T11:19:14.0847761Z Version: 20260705.232.1
+2026-07-13T11:19:14.0849290Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260705.232/images/ubuntu/Ubuntu2404-Readme.md
+2026-07-13T11:19:14.0850824Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260705.232
+2026-07-13T11:19:14.0851821Z ##[endgroup]
+2026-07-13T11:19:14.0853111Z ##[group]GITHUB_TOKEN Permissions
+2026-07-13T11:19:14.0855403Z Contents: read
+2026-07-13T11:19:14.0856024Z Metadata: read
+2026-07-13T11:19:14.0856712Z Packages: read
+2026-07-13T11:19:14.0857636Z ##[endgroup]
+2026-07-13T11:19:14.0859742Z Secret source: Actions
+2026-07-13T11:19:14.0860929Z Prepare workflow directory
+2026-07-13T11:19:14.1187257Z Prepare all required actions
+2026-07-13T11:19:14.1224606Z Getting action download info
+2026-07-13T11:19:14.3369961Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-07-13T11:19:14.4033347Z Download action repository 'pnpm/action-setup@v4' (SHA:b906affcce14559ad1aafd4ab0e942779e9f58b1)
+2026-07-13T11:19:14.6322568Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-07-13T11:19:14.8301182Z Uses: zhx-xi/InkChain/.github/workflows/e2e-spec.yml@refs/pull/600/merge (cd63920357937a317ecdf45ef96d09a9c11ce487)
+2026-07-13T11:19:14.8306171Z ##[group] Inputs
+2026-07-13T11:19:14.8307551Z   spec: foreshadow-payoff foreshadowing-dynamic-chapters foreshadowing-flow foreshadowing-page-core foresight-pagination foresight-table
+2026-07-13T11:19:14.8308759Z   group-name: Foreshadowing
+2026-07-13T11:19:14.8309262Z ##[endgroup]
+2026-07-13T11:19:14.8309751Z Complete job name: foreshadowing / Foreshadowing
+2026-07-13T11:19:14.8991787Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-13T11:19:14.9000584Z ##[group]Run actions/checkout@v4
+2026-07-13T11:19:14.9001271Z with:
+2026-07-13T11:19:14.9001692Z   repository: zhx-xi/InkChain
+2026-07-13T11:19:14.9005851Z   token: ***
+2026-07-13T11:19:14.9006282Z   ssh-strict: true
+2026-07-13T11:19:14.9006710Z   ssh-user: git
+2026-07-13T11:19:14.9007310Z   persist-credentials: true
+2026-07-13T11:19:14.9007817Z   clean: true
+2026-07-13T11:19:14.9008249Z   sparse-checkout-cone-mode: true
+2026-07-13T11:19:14.9008754Z   fetch-depth: 1
+2026-07-13T11:19:14.9009170Z   fetch-tags: false
+2026-07-13T11:19:14.9009602Z   show-progress: true
+2026-07-13T11:19:14.9010029Z   lfs: false
+2026-07-13T11:19:14.9010458Z   submodules: false
+2026-07-13T11:19:14.9010897Z   set-safe-directory: true
+2026-07-13T11:19:14.9011543Z ##[endgroup]
+2026-07-13T11:19:15.0023701Z Syncing repository: zhx-xi/InkChain
+2026-07-13T11:19:15.0026008Z ##[group]Getting Git version info
+2026-07-13T11:19:15.0026853Z Working directory is '/home/runner/work/InkChain/InkChain'
+2026-07-13T11:19:15.0028615Z [command]/usr/bin/git version
+2026-07-13T11:19:15.0096126Z git version 2.54.0
+2026-07-13T11:19:15.0176453Z ##[endgroup]
+2026-07-13T11:19:15.0187438Z Temporarily overriding HOME='/home/runner/work/_temp/5c7b77d1-866c-4bcc-9ba0-54fb5077abb2' before making global git config changes
+2026-07-13T11:19:15.0190253Z Adding repository directory to the temporary git global config as a safe directory
+2026-07-13T11:19:15.0192407Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/InkChain/InkChain
+2026-07-13T11:19:15.0227695Z Deleting the contents of '/home/runner/work/InkChain/InkChain'
+2026-07-13T11:19:15.0233614Z ##[group]Initializing the repository
+2026-07-13T11:19:15.0239062Z [command]/usr/bin/git init /home/runner/work/InkChain/InkChain
+2026-07-13T11:19:15.0322385Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-07-13T11:19:15.0324391Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-07-13T11:19:15.0326394Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-07-13T11:19:15.0328148Z hint: call:
+2026-07-13T11:19:15.0329513Z hint:
+2026-07-13T11:19:15.0330677Z hint: 	git config --global init.defaultBranch <name>
+2026-07-13T11:19:15.0331849Z hint:
+2026-07-13T11:19:15.0333013Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-07-13T11:19:15.0334626Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-07-13T11:19:15.0335925Z hint:
+2026-07-13T11:19:15.0336799Z hint: 	git branch -m <name>
+2026-07-13T11:19:15.0339703Z hint:
+2026-07-13T11:19:15.0340628Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-07-13T11:19:15.0341826Z Initialized empty Git repository in /home/runner/work/InkChain/InkChain/.git/
+2026-07-13T11:19:15.0343902Z [command]/usr/bin/git remote add origin https://github.com/zhx-xi/InkChain
+2026-07-13T11:19:15.0389580Z ##[endgroup]
+2026-07-13T11:19:15.0391021Z ##[group]Disabling automatic garbage collection
+2026-07-13T11:19:15.0394316Z [command]/usr/bin/git config --local gc.auto 0
+2026-07-13T11:19:15.0429862Z ##[endgroup]
+2026-07-13T11:19:15.0431497Z ##[group]Setting up auth
+2026-07-13T11:19:15.0437305Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-07-13T11:19:15.0501341Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-07-13T11:19:15.0858096Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-07-13T11:19:15.0920942Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-07-13T11:19:15.1214501Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-07-13T11:19:15.1260719Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-07-13T11:19:15.1533480Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-07-13T11:19:15.1579483Z ##[endgroup]
+2026-07-13T11:19:15.1581353Z ##[group]Fetching the repository
+2026-07-13T11:19:15.1592938Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +cd63920357937a317ecdf45ef96d09a9c11ce487:refs/remotes/pull/600/merge
+2026-07-13T11:19:15.7452013Z From https://github.com/zhx-xi/InkChain
+2026-07-13T11:19:15.7454012Z  * [new ref]         cd63920357937a317ecdf45ef96d09a9c11ce487 -> pull/600/merge
+2026-07-13T11:19:15.7486861Z ##[endgroup]
+2026-07-13T11:19:15.7489953Z ##[group]Determining the checkout info
+2026-07-13T11:19:15.7492554Z ##[endgroup]
+2026-07-13T11:19:15.7496277Z [command]/usr/bin/git sparse-checkout disable
+2026-07-13T11:19:15.7552120Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-07-13T11:19:15.7591885Z ##[group]Checking out the ref
+2026-07-13T11:19:15.7594740Z [command]/usr/bin/git checkout --progress --force refs/remotes/pull/600/merge
+2026-07-13T11:19:15.8839826Z Note: switching to 'refs/remotes/pull/600/merge'.
+2026-07-13T11:19:15.8841182Z 
+2026-07-13T11:19:15.8842743Z You are in 'detached HEAD' state. You can look around, make experimental
+2026-07-13T11:19:15.8844675Z changes and commit them, and you can discard any commits you make in this
+2026-07-13T11:19:15.8846514Z state without impacting any branches by switching back to a branch.
+2026-07-13T11:19:15.8847668Z 
+2026-07-13T11:19:15.8848250Z If you want to create a new branch to retain commits you create, you may
+2026-07-13T11:19:15.8849640Z do so (now or later) by using -c with the switch command. Example:
+2026-07-13T11:19:15.8850463Z 
+2026-07-13T11:19:15.8851016Z   git switch -c <new-branch-name>
+2026-07-13T11:19:15.8851867Z 
+2026-07-13T11:19:15.8852253Z Or undo this operation with:
+2026-07-13T11:19:15.8852829Z 
+2026-07-13T11:19:15.8853195Z   git switch -
+2026-07-13T11:19:15.8853787Z 
+2026-07-13T11:19:15.8854620Z Turn off this advice by setting config variable advice.detachedHead to false
+2026-07-13T11:19:15.8855797Z 
+2026-07-13T11:19:15.8856923Z HEAD is now at cd63920 Merge cd1cc596e0ec9e639694a170b5761f43af436210 into f2d20e90018e98c57431aa0aeb2705b95c472449
+2026-07-13T11:19:15.8861511Z ##[endgroup]
+2026-07-13T11:19:15.8911655Z [command]/usr/bin/git log -1 --format=%H
+2026-07-13T11:19:15.8941911Z cd63920357937a317ecdf45ef96d09a9c11ce487
+2026-07-13T11:19:15.9345947Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-13T11:19:15.9351048Z ##[group]Run pnpm/action-setup@v4
+2026-07-13T11:19:15.9352176Z with:
+2026-07-13T11:19:15.9353054Z   version: 10
+2026-07-13T11:19:15.9353992Z   dest: ~/setup-pnpm
+2026-07-13T11:19:15.9354987Z   run_install: null
+2026-07-13T11:19:15.9355969Z   cache: false
+2026-07-13T11:19:15.9357101Z   cache_dependency_path: pnpm-lock.yaml
+2026-07-13T11:19:15.9358327Z   package_json_file: package.json
+2026-07-13T11:19:15.9359455Z   standalone: false
+2026-07-13T11:19:15.9360400Z ##[endgroup]
+2026-07-13T11:19:16.0827944Z ##[group]Running self-installer...
+2026-07-13T11:19:16.4813852Z (node:2292) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-07-13T11:19:16.6438854Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-13T11:19:16.6440206Z Progress: resolved 1, reused 0, downloaded 0, added 0
+2026-07-13T11:19:16.6545902Z Packages: +1
+2026-07-13T11:19:16.6546251Z +
+2026-07-13T11:19:17.0621493Z Progress: resolved 1, reused 0, downloaded 1, added 1, done
+2026-07-13T11:19:17.0946827Z 
+2026-07-13T11:19:17.0947698Z dependencies:
+2026-07-13T11:19:17.0948364Z + pnpm 10.34.5 (11.12.0 is available)
+2026-07-13T11:19:17.0948698Z 
+2026-07-13T11:19:17.0975088Z Done in 828ms
+2026-07-13T11:19:17.1198551Z ##[endgroup]
+2026-07-13T11:19:17.1199098Z Installation Completed!
+2026-07-13T11:19:17.1411755Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-13T11:19:17.1412994Z ##[group]Run actions/setup-node@v4
+2026-07-13T11:19:17.1413258Z with:
+2026-07-13T11:19:17.1413481Z   node-version: 22
+2026-07-13T11:19:17.1413685Z   cache: pnpm
+2026-07-13T11:19:17.1413895Z   always-auth: false
+2026-07-13T11:19:17.1414119Z   check-latest: false
+2026-07-13T11:19:17.1416824Z   token: ***
+2026-07-13T11:19:17.1417159Z env:
+2026-07-13T11:19:17.1417447Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-07-13T11:19:17.1418012Z ##[endgroup]
+2026-07-13T11:19:17.2876555Z Found in cache @ /opt/hostedtoolcache/node/22.23.1/x64
+2026-07-13T11:19:17.2882329Z (node:2306) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-07-13T11:19:17.2883177Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-07-13T11:19:17.2885078Z ##[group]Environment details
+2026-07-13T11:19:19.9957933Z node: v22.23.1
+2026-07-13T11:19:19.9958621Z npm: 10.9.8
+2026-07-13T11:19:19.9958965Z yarn: 1.22.22
+2026-07-13T11:19:19.9979044Z ##[endgroup]
+2026-07-13T11:19:20.0012146Z [command]/home/runner/setup-pnpm/node_modules/.bin/pnpm store path --silent
+2026-07-13T11:19:20.6284123Z /home/runner/setup-pnpm/node_modules/.bin/store/v10
+2026-07-13T11:19:20.7133782Z Cache hit for: node-cache-Linux-x64-pnpm-b890bf678828b266c22d4e8c8085cd824462092b4825d302e1c36024d2e8b444
+2026-07-13T11:19:20.7230178Z (node:2306) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-07-13T11:19:21.2941939Z Received 123725187 of 123725187 (100.0%), 225.2 MBs/sec
+2026-07-13T11:19:21.2942693Z Cache Size: ~118 MB (123725187 B)
+2026-07-13T11:19:21.2977253Z [command]/usr/bin/tar -xf /home/runner/work/_temp/137d93dd-4a28-420c-b57f-967324b3f744/cache.tzst -P -C /home/runner/work/InkChain/InkChain --use-compress-program unzstd
+2026-07-13T11:19:23.3236749Z Cache restored successfully
+2026-07-13T11:19:23.3303686Z Cache restored from key: node-cache-Linux-x64-pnpm-b890bf678828b266c22d4e8c8085cd824462092b4825d302e1c36024d2e8b444
+2026-07-13T11:19:23.3536398Z ##[group]Run pnpm install --no-frozen-lockfile
+2026-07-13T11:19:23.3536858Z [36;1mpnpm install --no-frozen-lockfile[0m
+2026-07-13T11:19:23.3667796Z shell: /usr/bin/bash -e {0}
+2026-07-13T11:19:23.3668077Z env:
+2026-07-13T11:19:23.3668348Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-07-13T11:19:23.3668705Z ##[endgroup]
+2026-07-13T11:19:23.6874192Z Scope: all 4 workspace projects
+2026-07-13T11:19:23.8808989Z Progress: resolved 0, reused 1, downloaded 0, added 0
+2026-07-13T11:19:23.9967447Z packages/core                            |  WARN  deprecated @mariozechner/pi-agent-core@0.67.1
+2026-07-13T11:19:24.0095387Z packages/core                            |  WARN  deprecated @mariozechner/pi-ai@0.67.1
+2026-07-13T11:19:24.8888761Z Progress: resolved 744, reused 730, downloaded 0, added 0
+2026-07-13T11:19:25.8889261Z Progress: resolved 1139, reused 1042, downloaded 0, added 0
+2026-07-13T11:19:26.7373975Z  WARN  3 deprecated subdependencies found: @ungap/structured-clone@1.3.0, lodash.isequal@4.5.0, node-domexception@1.0.0
+2026-07-13T11:19:26.7618150Z Packages: +1065
+2026-07-13T11:19:26.7618898Z ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+2026-07-13T11:19:26.8898959Z Progress: resolved 1162, reused 1065, downloaded 0, added 0
+2026-07-13T11:19:27.8912225Z Progress: resolved 1162, reused 1065, downloaded 0, added 874
+2026-07-13T11:19:28.0109239Z Progress: resolved 1162, reused 1065, downloaded 0, added 1065, done
+2026-07-13T11:19:28.5556361Z 
+2026-07-13T11:19:28.5557169Z devDependencies:
+2026-07-13T11:19:28.5557737Z + cross-env 10.1.0
+2026-07-13T11:19:28.5557965Z 
+2026-07-13T11:19:28.5825506Z Done in 5.1s using pnpm v10.34.5
+2026-07-13T11:19:28.6412861Z ##[group]Run pnpm --filter @actalk/inkchain-core build
+2026-07-13T11:19:28.6413285Z [36;1mpnpm --filter @actalk/inkchain-core build[0m
+2026-07-13T11:19:28.6449783Z shell: /usr/bin/bash -e {0}
+2026-07-13T11:19:28.6450041Z env:
+2026-07-13T11:19:28.6450301Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-07-13T11:19:28.6450624Z ##[endgroup]
+2026-07-13T11:19:28.9927683Z 
+2026-07-13T11:19:28.9948544Z > @actalk/inkchain-core@3.0.0 build /home/runner/work/InkChain/InkChain/packages/core
+2026-07-13T11:19:28.9980904Z > tsc && node -e "import('node:fs').then(({cpSync})=>{try{cpSync('src/skills/extraction','dist/skills/extraction',{recursive:true})}catch(e){console.warn('extraction copy skipped:',e.message)}})"
+2026-07-13T11:19:28.9997254Z 
+2026-07-13T11:19:40.5953234Z ##[group]Run PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --with-deps
+2026-07-13T11:19:40.5953891Z [36;1mPLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --with-deps[0m
+2026-07-13T11:19:40.5989674Z shell: /usr/bin/bash -e {0}
+2026-07-13T11:19:40.5989959Z env:
+2026-07-13T11:19:40.5990250Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-07-13T11:19:40.5990595Z ##[endgroup]
+2026-07-13T11:19:42.3713759Z Installing dependencies...
+2026-07-13T11:19:42.3783045Z Switching to root user to install dependencies...
+2026-07-13T11:19:42.4888920Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+2026-07-13T11:19:42.5089030Z Get:6 https://packages.microsoft.com/repos/azure-cli noble InRelease [3564 B]
+2026-07-13T11:19:42.5198792Z Get:7 https://packages.microsoft.com/ubuntu/24.04/prod noble InRelease [3600 B]
+2026-07-13T11:19:42.5301313Z Hit:2 http://azure.archive.ubuntu.com/ubuntu noble InRelease
+2026-07-13T11:19:42.5302724Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble-updates InRelease [126 kB]
+2026-07-13T11:19:42.5328409Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble-backports InRelease [126 kB]
+2026-07-13T11:19:42.5368421Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble-security InRelease [126 kB]
+2026-07-13T11:19:42.5408723Z Get:8 https://dl.google.com/linux/chrome-stable/deb stable InRelease [1825 B]
+2026-07-13T11:19:42.5962425Z Get:9 https://packages.microsoft.com/repos/azure-cli noble/main amd64 Packages [2314 B]
+2026-07-13T11:19:42.6432555Z Get:10 https://packages.microsoft.com/ubuntu/24.04/prod noble/main arm64 Packages [181 kB]
+2026-07-13T11:19:42.6501235Z Get:11 https://packages.microsoft.com/ubuntu/24.04/prod noble/main amd64 Packages [214 kB]
+2026-07-13T11:19:42.6536151Z Get:12 https://packages.microsoft.com/ubuntu/24.04/prod noble/main armhf Packages [11.6 kB]
+2026-07-13T11:19:42.7541236Z Get:13 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Packages [1092 kB]
+2026-07-13T11:19:42.7619295Z Get:14 http://azure.archive.ubuntu.com/ubuntu noble-updates/main Translation-en [269 kB]
+2026-07-13T11:19:42.7626974Z Get:15 http://azure.archive.ubuntu.com/ubuntu noble-updates/main amd64 Components [181 kB]
+2026-07-13T11:19:42.7645795Z Get:16 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Packages [1660 kB]
+2026-07-13T11:19:42.7742370Z Get:17 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe Translation-en [327 kB]
+2026-07-13T11:19:42.7788368Z Get:18 http://azure.archive.ubuntu.com/ubuntu noble-updates/universe amd64 Components [388 kB]
+2026-07-13T11:19:42.7818258Z Get:19 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted amd64 Packages [1225 kB]
+2026-07-13T11:19:42.7868578Z Get:20 http://azure.archive.ubuntu.com/ubuntu noble-updates/restricted Translation-en [276 kB]
+2026-07-13T11:19:42.7888357Z Get:21 http://azure.archive.ubuntu.com/ubuntu noble-updates/multiverse amd64 Components [940 B]
+2026-07-13T11:19:42.8137251Z Get:22 http://azure.archive.ubuntu.com/ubuntu noble-backports/main amd64 Components [5744 B]
+2026-07-13T11:19:42.8572187Z Get:23 http://azure.archive.ubuntu.com/ubuntu noble-backports/universe amd64 Components [10.5 kB]
+2026-07-13T11:19:42.8861187Z Get:24 https://dl.google.com/linux/chrome-stable/deb stable/main amd64 Packages [1217 B]
+2026-07-13T11:19:42.9388007Z Get:25 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Packages [827 kB]
+2026-07-13T11:19:42.9443705Z Get:26 http://azure.archive.ubuntu.com/ubuntu noble-security/main Translation-en [187 kB]
+2026-07-13T11:19:42.9479394Z Get:27 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 Components [44.8 kB]
+2026-07-13T11:19:42.9480633Z Get:28 http://azure.archive.ubuntu.com/ubuntu noble-security/main amd64 c-n-f Metadata [11.9 kB]
+2026-07-13T11:19:42.9508254Z Get:29 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Packages [1174 kB]
+2026-07-13T11:19:42.9555787Z Get:30 http://azure.archive.ubuntu.com/ubuntu noble-security/universe Translation-en [231 kB]
+2026-07-13T11:19:42.9579162Z Get:31 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 Components [76.3 kB]
+2026-07-13T11:19:42.9588136Z Get:32 http://azure.archive.ubuntu.com/ubuntu noble-security/universe amd64 c-n-f Metadata [24.2 kB]
+2026-07-13T11:19:47.5921500Z Fetched 8808 kB in 1s (7339 kB/s)
+2026-07-13T11:19:48.2810563Z Reading package lists...
+2026-07-13T11:19:48.3099240Z Reading package lists...
+2026-07-13T11:19:48.4888679Z Building dependency tree...
+2026-07-13T11:19:48.4895180Z Reading state information...
+2026-07-13T11:19:48.6606787Z libasound2t64 is already the newest version (1.2.11-1ubuntu0.2).
+2026-07-13T11:19:48.6607912Z libasound2t64 set to manually installed.
+2026-07-13T11:19:48.6608779Z libatk-bridge2.0-0t64 is already the newest version (2.52.0-1build1).
+2026-07-13T11:19:48.6609656Z libatk-bridge2.0-0t64 set to manually installed.
+2026-07-13T11:19:48.6610554Z libatk1.0-0t64 is already the newest version (2.52.0-1build1).
+2026-07-13T11:19:48.6611232Z libatk1.0-0t64 set to manually installed.
+2026-07-13T11:19:48.6611874Z libatspi2.0-0t64 is already the newest version (2.52.0-1build1).
+2026-07-13T11:19:48.6612449Z libatspi2.0-0t64 set to manually installed.
+2026-07-13T11:19:48.6612897Z libcairo2 is already the newest version (1.18.0-3build1).
+2026-07-13T11:19:48.6613311Z libcairo2 set to manually installed.
+2026-07-13T11:19:48.6613767Z libcups2t64 is already the newest version (2.4.7-1.2ubuntu7.14).
+2026-07-13T11:19:48.6614198Z libcups2t64 set to manually installed.
+2026-07-13T11:19:48.6614650Z libdbus-1-3 is already the newest version (1.14.10-4ubuntu4.1).
+2026-07-13T11:19:48.6615076Z libdbus-1-3 set to manually installed.
+2026-07-13T11:19:48.6615522Z libdrm2 is already the newest version (2.4.125-1ubuntu0.1~24.04.2).
+2026-07-13T11:19:48.6615962Z libdrm2 set to manually installed.
+2026-07-13T11:19:48.6616393Z libgbm1 is already the newest version (25.2.8-0ubuntu0.24.04.2).
+2026-07-13T11:19:48.6616836Z libgbm1 set to manually installed.
+2026-07-13T11:19:48.6617630Z libglib2.0-0t64 is already the newest version (2.80.0-6ubuntu3.8).
+2026-07-13T11:19:48.6618322Z libglib2.0-0t64 set to manually installed.
+2026-07-13T11:19:48.6618905Z libnspr4 is already the newest version (2:4.35-1.1build1).
+2026-07-13T11:19:48.6619326Z libnspr4 set to manually installed.
+2026-07-13T11:19:48.6619734Z libnss3 is already the newest version (2:3.98-1ubuntu0.2).
+2026-07-13T11:19:48.6620123Z libnss3 set to manually installed.
+2026-07-13T11:19:48.6620551Z libpango-1.0-0 is already the newest version (1.52.1+ds-1build1).
+2026-07-13T11:19:48.6620975Z libpango-1.0-0 set to manually installed.
+2026-07-13T11:19:48.6621402Z libx11-6 is already the newest version (2:1.8.7-1build1).
+2026-07-13T11:19:48.6621784Z libx11-6 set to manually installed.
+2026-07-13T11:19:48.6622167Z libxcb1 is already the newest version (1.15-1ubuntu2).
+2026-07-13T11:19:48.6622552Z libxcb1 set to manually installed.
+2026-07-13T11:19:48.6622997Z libxcomposite1 is already the newest version (1:0.4.5-1build3).
+2026-07-13T11:19:48.6623431Z libxcomposite1 set to manually installed.
+2026-07-13T11:19:48.6623870Z libxdamage1 is already the newest version (1:1.1.6-1build1).
+2026-07-13T11:19:48.6624282Z libxdamage1 set to manually installed.
+2026-07-13T11:19:48.6624692Z libxext6 is already the newest version (2:1.3.4-1build2).
+2026-07-13T11:19:48.6625087Z libxext6 set to manually installed.
+2026-07-13T11:19:48.6625502Z libxfixes3 is already the newest version (1:6.0.0-2build1).
+2026-07-13T11:19:48.6625899Z libxfixes3 set to manually installed.
+2026-07-13T11:19:48.6626311Z libxkbcommon0 is already the newest version (1.6.0-1build1).
+2026-07-13T11:19:48.6626715Z libxkbcommon0 set to manually installed.
+2026-07-13T11:19:48.6627347Z libxrandr2 is already the newest version (2:1.5.2-2build1).
+2026-07-13T11:19:48.6627737Z libxrandr2 set to manually installed.
+2026-07-13T11:19:48.6628140Z xvfb is already the newest version (2:21.1.12-1ubuntu1.6).
+2026-07-13T11:19:48.6629052Z fonts-noto-color-emoji is already the newest version (2.047-0ubuntu0.24.04.1).
+2026-07-13T11:19:48.6629798Z libfontconfig1 is already the newest version (2.15.0-1.1ubuntu2).
+2026-07-13T11:19:48.6630239Z libfontconfig1 set to manually installed.
+2026-07-13T11:19:48.6630700Z libfreetype6 is already the newest version (2.13.2+dfsg-1ubuntu0.1).
+2026-07-13T11:19:48.6631138Z libfreetype6 set to manually installed.
+2026-07-13T11:19:48.6631570Z fonts-liberation is already the newest version (1:2.1.5-3).
+2026-07-13T11:19:48.6632009Z fonts-liberation set to manually installed.
+2026-07-13T11:19:48.6632432Z The following additional packages will be installed:
+2026-07-13T11:19:48.6632812Z   xfonts-encodings xfonts-utils
+2026-07-13T11:19:48.6633115Z Recommended packages:
+2026-07-13T11:19:48.6633437Z   fonts-ipafont-mincho fonts-tlwg-loma
+2026-07-13T11:19:48.6927796Z The following NEW packages will be installed:
+2026-07-13T11:19:48.6929133Z   fonts-freefont-ttf fonts-ipafont-gothic fonts-tlwg-loma-otf fonts-unifont
+2026-07-13T11:19:48.6933243Z   fonts-wqy-zenhei xfonts-cyrillic xfonts-encodings xfonts-scalable
+2026-07-13T11:19:48.6934237Z   xfonts-utils
+2026-07-13T11:19:48.7125357Z 0 upgraded, 9 newly installed, 0 to remove and 38 not upgraded.
+2026-07-13T11:19:48.7126042Z Need to get 21.1 MB of archives.
+2026-07-13T11:19:48.7126519Z After this operation, 79.5 MB of additional disk space will be used.
+2026-07-13T11:19:48.7127248Z Get:1 file:/etc/apt/apt-mirrors.txt Mirrorlist [144 B]
+2026-07-13T11:19:48.7355741Z Get:2 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 fonts-ipafont-gothic all 00303-21ubuntu1 [3513 kB]
+2026-07-13T11:19:48.8165464Z Get:3 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 fonts-freefont-ttf all 20211204+svn4273-2 [5641 kB]
+2026-07-13T11:19:48.9117902Z Get:4 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 fonts-tlwg-loma-otf all 1:0.7.3-1 [107 kB]
+2026-07-13T11:19:48.9153430Z Get:5 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 fonts-unifont all 1:15.1.01-1build1 [2993 kB]
+2026-07-13T11:19:48.9744887Z Get:6 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 fonts-wqy-zenhei all 0.9.45-8 [7472 kB]
+2026-07-13T11:19:49.0840549Z Get:7 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 xfonts-encodings all 1:1.0.5-0ubuntu2 [578 kB]
+2026-07-13T11:19:49.1203379Z Get:8 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 xfonts-utils amd64 1:7.7+6build3 [94.4 kB]
+2026-07-13T11:19:49.1238185Z Get:9 http://azure.archive.ubuntu.com/ubuntu noble/universe amd64 xfonts-cyrillic all 1:1.0.5+nmu1 [384 kB]
+2026-07-13T11:19:49.1649558Z Get:10 http://azure.archive.ubuntu.com/ubuntu noble/main amd64 xfonts-scalable all 1:1.0.3-1.3 [304 kB]
+2026-07-13T11:19:49.6362675Z Fetched 21.1 MB in 0s (45.1 MB/s)
+2026-07-13T11:19:49.6593257Z Selecting previously unselected package fonts-ipafont-gothic.
+2026-07-13T11:19:49.6944970Z (Reading database ... 
+2026-07-13T11:19:49.6945346Z (Reading database ... 5%
+2026-07-13T11:19:49.6945671Z (Reading database ... 10%
+2026-07-13T11:19:49.6946062Z (Reading database ... 15%
+2026-07-13T11:19:49.6947873Z (Reading database ... 20%
+2026-07-13T11:19:49.6948267Z (Reading database ... 25%
+2026-07-13T11:19:49.6948651Z (Reading database ... 30%
+2026-07-13T11:19:49.6949004Z (Reading database ... 35%
+2026-07-13T11:19:49.6949258Z (Reading database ... 40%
+2026-07-13T11:19:49.6949506Z (Reading database ... 45%
+2026-07-13T11:19:49.6949756Z (Reading database ... 50%
+2026-07-13T11:19:49.7005618Z (Reading database ... 55%
+2026-07-13T11:19:49.7721228Z (Reading database ... 60%
+2026-07-13T11:19:49.8503653Z (Reading database ... 65%
+2026-07-13T11:19:50.0184887Z (Reading database ... 70%
+2026-07-13T11:19:50.0944197Z (Reading database ... 75%
+2026-07-13T11:19:50.2123738Z (Reading database ... 80%
+2026-07-13T11:19:50.4327426Z (Reading database ... 85%
+2026-07-13T11:19:50.6636554Z (Reading database ... 90%
+2026-07-13T11:19:50.8251822Z (Reading database ... 95%
+2026-07-13T11:19:50.8252223Z (Reading database ... 100%
+2026-07-13T11:19:50.8253006Z (Reading database ... 202701 files and directories currently installed.)
+2026-07-13T11:19:50.8299546Z Preparing to unpack .../0-fonts-ipafont-gothic_00303-21ubuntu1_all.deb ...
+2026-07-13T11:19:50.8396123Z Unpacking fonts-ipafont-gothic (00303-21ubuntu1) ...
+2026-07-13T11:19:51.0723623Z Selecting previously unselected package fonts-freefont-ttf.
+2026-07-13T11:19:51.0857365Z Preparing to unpack .../1-fonts-freefont-ttf_20211204+svn4273-2_all.deb ...
+2026-07-13T11:19:51.0863684Z Unpacking fonts-freefont-ttf (20211204+svn4273-2) ...
+2026-07-13T11:19:51.1680148Z Selecting previously unselected package fonts-tlwg-loma-otf.
+2026-07-13T11:19:51.1813603Z Preparing to unpack .../2-fonts-tlwg-loma-otf_1%3a0.7.3-1_all.deb ...
+2026-07-13T11:19:51.1820792Z Unpacking fonts-tlwg-loma-otf (1:0.7.3-1) ...
+2026-07-13T11:19:51.2030473Z Selecting previously unselected package fonts-unifont.
+2026-07-13T11:19:51.2162509Z Preparing to unpack .../3-fonts-unifont_1%3a15.1.01-1build1_all.deb ...
+2026-07-13T11:19:51.2169803Z Unpacking fonts-unifont (1:15.1.01-1build1) ...
+2026-07-13T11:19:51.3253912Z Selecting previously unselected package fonts-wqy-zenhei.
+2026-07-13T11:19:51.3386841Z Preparing to unpack .../4-fonts-wqy-zenhei_0.9.45-8_all.deb ...
+2026-07-13T11:19:51.3491247Z Unpacking fonts-wqy-zenhei (0.9.45-8) ...
+2026-07-13T11:19:51.8185484Z Selecting previously unselected package xfonts-encodings.
+2026-07-13T11:19:51.8319126Z Preparing to unpack .../5-xfonts-encodings_1%3a1.0.5-0ubuntu2_all.deb ...
+2026-07-13T11:19:51.8325890Z Unpacking xfonts-encodings (1:1.0.5-0ubuntu2) ...
+2026-07-13T11:19:51.8618172Z Selecting previously unselected package xfonts-utils.
+2026-07-13T11:19:51.8749239Z Preparing to unpack .../6-xfonts-utils_1%3a7.7+6build3_amd64.deb ...
+2026-07-13T11:19:51.8755387Z Unpacking xfonts-utils (1:7.7+6build3) ...
+2026-07-13T11:19:51.9070278Z Selecting previously unselected package xfonts-cyrillic.
+2026-07-13T11:19:51.9201098Z Preparing to unpack .../7-xfonts-cyrillic_1%3a1.0.5+nmu1_all.deb ...
+2026-07-13T11:19:51.9207813Z Unpacking xfonts-cyrillic (1:1.0.5+nmu1) ...
+2026-07-13T11:19:51.9542195Z Selecting previously unselected package xfonts-scalable.
+2026-07-13T11:19:51.9674410Z Preparing to unpack .../8-xfonts-scalable_1%3a1.0.3-1.3_all.deb ...
+2026-07-13T11:19:51.9681505Z Unpacking xfonts-scalable (1:1.0.3-1.3) ...
+2026-07-13T11:19:52.0104568Z Setting up fonts-wqy-zenhei (0.9.45-8) ...
+2026-07-13T11:19:52.0218934Z Setting up fonts-freefont-ttf (20211204+svn4273-2) ...
+2026-07-13T11:19:52.0234944Z Setting up fonts-tlwg-loma-otf (1:0.7.3-1) ...
+2026-07-13T11:19:52.0252591Z Setting up xfonts-encodings (1:1.0.5-0ubuntu2) ...
+2026-07-13T11:19:52.0269003Z Setting up fonts-ipafont-gothic (00303-21ubuntu1) ...
+2026-07-13T11:19:52.0337764Z update-alternatives: using /usr/share/fonts/opentype/ipafont-gothic/ipag.ttf to provide /usr/share/fonts/truetype/fonts-japanese-gothic.ttf (fonts-japanese-gothic.ttf) in auto mode
+2026-07-13T11:19:52.0355606Z Setting up fonts-unifont (1:15.1.01-1build1) ...
+2026-07-13T11:19:52.0372386Z Setting up xfonts-utils (1:7.7+6build3) ...
+2026-07-13T11:19:52.0411205Z Setting up xfonts-cyrillic (1:1.0.5+nmu1) ...
+2026-07-13T11:19:52.0765438Z Setting up xfonts-scalable (1:1.0.3-1.3) ...
+2026-07-13T11:19:52.1106537Z Processing triggers for man-db (2.12.0-4build2) ...
+2026-07-13T11:19:52.1125865Z Not building database; man-db/auto-update is not 'true'.
+2026-07-13T11:19:52.1138788Z Processing triggers for fontconfig (2.15.0-1.1ubuntu2) ...
+2026-07-13T11:19:52.8309735Z 
+2026-07-13T11:19:52.8310394Z Running kernel seems to be up-to-date.
+2026-07-13T11:19:52.8310760Z 
+2026-07-13T11:19:52.8310995Z No services need to be restarted.
+2026-07-13T11:19:52.8311276Z 
+2026-07-13T11:19:52.8311494Z No containers need to be restarted.
+2026-07-13T11:19:52.8311793Z 
+2026-07-13T11:19:52.8312080Z No user sessions are running outdated binaries.
+2026-07-13T11:19:52.8312399Z 
+2026-07-13T11:19:52.8312849Z No VM guests are running outdated hypervisor (qemu) binaries on this host.
+2026-07-13T11:19:53.6915279Z Downloading Chrome for Testing 149.0.7827.55 (playwright chromium v1228) from https://cdn.playwright.dev/builds/cft/149.0.7827.55/linux64/chrome-linux64.zip
+2026-07-13T11:19:54.6888287Z |                                                                                |   0% of 177 MiB
+2026-07-13T11:19:54.8295007Z |■■■■■■■■                                                                        |  10% of 177 MiB
+2026-07-13T11:19:54.9100684Z |■■■■■■■■■■■■■■■■                                                                |  20% of 177 MiB
+2026-07-13T11:19:54.9827641Z |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 177 MiB
+2026-07-13T11:19:55.0446232Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 177 MiB
+2026-07-13T11:19:55.1044443Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 177 MiB
+2026-07-13T11:19:55.1641731Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 177 MiB
+2026-07-13T11:19:55.2296937Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 177 MiB
+2026-07-13T11:19:55.2821032Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 177 MiB
+2026-07-13T11:19:55.3377599Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 177 MiB
+2026-07-13T11:19:55.4132601Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 177 MiB
+2026-07-13T11:19:57.9209113Z Chrome for Testing 149.0.7827.55 (playwright chromium v1228) downloaded to /home/runner/work/InkChain/InkChain/node_modules/.pnpm/playwright-core@1.61.0/node_modules/playwright-core/.local-browsers/chromium-1228
+2026-07-13T11:19:57.9211428Z Downloading FFmpeg (playwright ffmpeg v1011) from https://cdn.playwright.dev/dbazure/download/playwright/builds/ffmpeg/1011/ffmpeg-linux.zip
+2026-07-13T11:19:58.9077989Z |                                                                                |   0% of 2.3 MiB
+2026-07-13T11:19:58.9194234Z |■■■■■■■■                                                                        |  10% of 2.3 MiB
+2026-07-13T11:19:58.9290841Z |■■■■■■■■■■■■■■■■                                                                |  20% of 2.3 MiB
+2026-07-13T11:19:58.9382017Z |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 2.3 MiB
+2026-07-13T11:19:58.9447311Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 2.3 MiB
+2026-07-13T11:19:58.9485635Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 2.3 MiB
+2026-07-13T11:19:58.9513653Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 2.3 MiB
+2026-07-13T11:19:58.9547660Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 2.3 MiB
+2026-07-13T11:19:58.9558406Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 2.3 MiB
+2026-07-13T11:19:58.9586299Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 2.3 MiB
+2026-07-13T11:19:58.9600311Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 2.3 MiB
+2026-07-13T11:19:59.0160210Z FFmpeg (playwright ffmpeg v1011) downloaded to /home/runner/work/InkChain/InkChain/node_modules/.pnpm/playwright-core@1.61.0/node_modules/playwright-core/.local-browsers/ffmpeg-1011
+2026-07-13T11:19:59.0161990Z Downloading Chrome Headless Shell 149.0.7827.55 (playwright chromium-headless-shell v1228) from https://cdn.playwright.dev/builds/cft/149.0.7827.55/linux64/chrome-headless-shell-linux64.zip
+2026-07-13T11:20:00.0330696Z |                                                                                |   0% of 114.2 MiB
+2026-07-13T11:20:00.1477741Z |■■■■■■■■                                                                        |  10% of 114.2 MiB
+2026-07-13T11:20:00.2027819Z |■■■■■■■■■■■■■■■■                                                                |  20% of 114.2 MiB
+2026-07-13T11:20:00.2579150Z |■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 114.2 MiB
+2026-07-13T11:20:00.3076385Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 114.2 MiB
+2026-07-13T11:20:00.3437713Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 114.2 MiB
+2026-07-13T11:20:00.3889541Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 114.2 MiB
+2026-07-13T11:20:00.4272753Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 114.2 MiB
+2026-07-13T11:20:00.4668432Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 114.2 MiB
+2026-07-13T11:20:00.5126219Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 114.2 MiB
+2026-07-13T11:20:00.5557211Z |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 114.2 MiB
+2026-07-13T11:20:02.3916193Z Chrome Headless Shell 149.0.7827.55 (playwright chromium-headless-shell v1228) downloaded to /home/runner/work/InkChain/InkChain/node_modules/.pnpm/playwright-core@1.61.0/node_modules/playwright-core/.local-browsers/chromium_headless_shell-1228
+2026-07-13T11:20:02.4483720Z ##[group]Run mkdir -p test-project
+2026-07-13T11:20:02.4484077Z [36;1mmkdir -p test-project[0m
+2026-07-13T11:20:02.4484380Z [36;1mcat > test-project/inkchain.json << 'EOF'[0m
+2026-07-13T11:20:02.4484678Z [36;1m{[0m
+2026-07-13T11:20:02.4484891Z [36;1m  "name": "E2E Test Project",[0m
+2026-07-13T11:20:02.4485163Z [36;1m  "version": "0.1.0",[0m
+2026-07-13T11:20:02.4485410Z [36;1m  "language": "zh",[0m
+2026-07-13T11:20:02.4485640Z [36;1m  "llm": {[0m
+2026-07-13T11:20:02.4485859Z [36;1m    "provider": "openai",[0m
+2026-07-13T11:20:02.4486116Z [36;1m    "service": "custom",[0m
+2026-07-13T11:20:02.4486565Z [36;1m    "configSource": "env",[0m
+2026-07-13T11:20:02.4486885Z [36;1m    "baseUrl": "http://localhost:11434/v1",[0m
+2026-07-13T11:20:02.4487450Z [36;1m    "apiKey": "",[0m
+2026-07-13T11:20:02.4487702Z [36;1m    "model": "gpt-4o-mini",[0m
+2026-07-13T11:20:02.4487966Z [36;1m    "temperature": 0.7,[0m
+2026-07-13T11:20:02.4488250Z [36;1m    "thinkingBudget": 0,[0m
+2026-07-13T11:20:02.4488496Z [36;1m    "apiFormat": "chat",[0m
+2026-07-13T11:20:02.4488755Z [36;1m    "stream": true[0m
+2026-07-13T11:20:02.4488987Z [36;1m  }[0m
+2026-07-13T11:20:02.4489174Z [36;1m}[0m
+2026-07-13T11:20:02.4489355Z [36;1mEOF[0m
+2026-07-13T11:20:02.4525428Z shell: /usr/bin/bash -e {0}
+2026-07-13T11:20:02.4525694Z env:
+2026-07-13T11:20:02.4525954Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-07-13T11:20:02.4526279Z ##[endgroup]
+2026-07-13T11:20:02.4641210Z ##[group]Run node_modules/.bin/tsx src/api/index.ts > /tmp/api-server.log 2>&1 &
+2026-07-13T11:20:02.4641780Z [36;1mnode_modules/.bin/tsx src/api/index.ts > /tmp/api-server.log 2>&1 &[0m
+2026-07-13T11:20:02.4642198Z [36;1mecho $! > /tmp/api-server.pid[0m
+2026-07-13T11:20:02.4642623Z [36;1m# Give tsx time to compile the 6000-line server.ts before curl loop starts[0m
+2026-07-13T11:20:02.4643017Z [36;1msleep 15[0m
+2026-07-13T11:20:02.4643248Z [36;1mfor i in $(seq 1 60); do[0m
+2026-07-13T11:20:02.4643696Z [36;1m  if curl -s -o /dev/null -w "%{http_code}" http://localhost:4581 | grep -q "2\|3\|4"; then[0m
+2026-07-13T11:20:02.4644165Z [36;1m    echo "API ready after ${i}s"[0m
+2026-07-13T11:20:02.4644434Z [36;1m    break[0m
+2026-07-13T11:20:02.4644641Z [36;1m  fi[0m
+2026-07-13T11:20:02.4644840Z [36;1m  sleep 1[0m
+2026-07-13T11:20:02.4645037Z [36;1mdone[0m
+2026-07-13T11:20:02.4677426Z shell: /usr/bin/bash -e {0}
+2026-07-13T11:20:02.4677706Z env:
+2026-07-13T11:20:02.4677999Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-07-13T11:20:02.4678330Z   INKCHAIN_STUDIO_PORT: 4581
+2026-07-13T11:20:02.4678589Z   INKCHAIN_AGENT_LLM_STUB: 1
+2026-07-13T11:20:02.4678846Z   INKCHAIN_PROJECT_ROOT: test-project
+2026-07-13T11:20:02.4679113Z ##[endgroup]
+2026-07-13T11:20:17.5088702Z API ready after 1s
+2026-07-13T11:20:17.5121415Z ##[group]Run node_modules/.bin/vite --host --port 4580 &
+2026-07-13T11:20:17.5121861Z [36;1mnode_modules/.bin/vite --host --port 4580 &[0m
+2026-07-13T11:20:17.5122195Z [36;1mecho $! > /tmp/vite-server.pid[0m
+2026-07-13T11:20:17.5122479Z [36;1mfor i in $(seq 1 30); do[0m
+2026-07-13T11:20:17.5122820Z [36;1m  if curl -s http://localhost:4580 > /dev/null 2>&1; then[0m
+2026-07-13T11:20:17.5123184Z [36;1m    echo "Vite ready after ${i}s"[0m
+2026-07-13T11:20:17.5123474Z [36;1m    break[0m
+2026-07-13T11:20:17.5123684Z [36;1m  fi[0m
+2026-07-13T11:20:17.5123883Z [36;1m  sleep 1[0m
+2026-07-13T11:20:17.5124084Z [36;1mdone[0m
+2026-07-13T11:20:17.5159181Z shell: /usr/bin/bash -e {0}
+2026-07-13T11:20:17.5159440Z env:
+2026-07-13T11:20:17.5159702Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-07-13T11:20:17.5160061Z   INKCHAIN_STUDIO_PORT: 4581
+2026-07-13T11:20:17.5160302Z ##[endgroup]
+2026-07-13T11:20:17.8796698Z 
+2026-07-13T11:20:17.8798057Z   [32m[1mVITE[22m v6.4.1[39m  [2mready in [0m[1m326[22m[2m[0m ms[22m
+2026-07-13T11:20:17.8798441Z 
+2026-07-13T11:20:17.8800511Z   [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m4580[22m/[39m
+2026-07-13T11:20:17.8801466Z   [32m➜[39m  [1mNetwork[22m: [36mhttp://10.1.0.54:[1m4580[22m/[39m
+2026-07-13T11:20:18.6076594Z Vite ready after 2s
+2026-07-13T11:20:23.6188294Z ##[group]Run PLAYWRIGHT_BROWSERS_PATH=0 npx playwright test foreshadow-payoff foreshadowing-dynamic-chapters foreshadowing-flow foreshadowing-page-core foresight-pagination foresight-table --config=playwright.ci.config.ts --reporter=list
+2026-07-13T11:20:23.6190097Z [36;1mPLAYWRIGHT_BROWSERS_PATH=0 npx playwright test foreshadow-payoff foreshadowing-dynamic-chapters foreshadowing-flow foreshadowing-page-core foresight-pagination foresight-table --config=playwright.ci.config.ts --reporter=list[0m
+2026-07-13T11:20:23.6225745Z shell: /usr/bin/bash -e {0}
+2026-07-13T11:20:23.6225994Z env:
+2026-07-13T11:20:23.6226250Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-07-13T11:20:23.6226566Z ##[endgroup]
+2026-07-13T11:20:25.1503374Z 
+2026-07-13T11:20:25.1504538Z > @actalk/inkchain-core@3.0.0 build /home/runner/work/InkChain/InkChain/packages/core
+2026-07-13T11:20:25.1506623Z > tsc && node -e "import('node:fs').then(({cpSync})=>{try{cpSync('src/skills/extraction','dist/skills/extraction',{recursive:true})}catch(e){console.warn('extraction copy skipped:',e.message)}})"
+2026-07-13T11:20:25.1508045Z 
+2026-07-13T11:20:36.7959031Z [global-setup] All E2E seed data created successfully
+2026-07-13T11:20:36.9943312Z 
+2026-07-13T11:20:36.9944078Z Running 29 tests using 1 worker
+2026-07-13T11:20:36.9960435Z 
+2026-07-13T11:20:40.0828462Z   ✓   1 e2e/foreshadow-payoff.spec.ts:52:3 › 伏笔提取 — lastMentionedChapter 与 大纲未指定 › 1. 提取结果中 lastMentionedChapter 和 expectedPayoffChapter 正确显示 (2.4s)
+2026-07-13T11:20:42.1432930Z   ✓   2 e2e/foreshadow-payoff.spec.ts:82:3 › 伏笔提取 — lastMentionedChapter 与 大纲未指定 › 2. 已有伏笔列表中 expectedPayoffChapter=null 显示「大纲未指定」 (2.0s)
+2026-07-13T11:20:43.5985623Z   ✓   3 e2e/foreshadowing-dynamic-chapters.spec.ts:31:1 › 1. AI 提取按钮在正常章节数下可点击 (1.4s)
+2026-07-13T11:20:46.1909436Z   ✓   4 e2e/foreshadowing-dynamic-chapters.spec.ts:40:1 › 2. 零章节时 AI 提取按钮禁用并显示提示 (2.6s)
+2026-07-13T11:20:47.9911409Z   ✓   5 e2e/foreshadowing-dynamic-chapters.spec.ts:71:1 › 3. Foreshadowing API 使用动态章节数而非 999 (1.8s)
+2026-07-13T11:20:49.9148016Z   ✓   6 e2e/foreshadowing-flow.spec.ts:96:3 › Foreshadowing — 核心创作流E2E › 1. 页面加载显示空状态 (1.9s)
+2026-07-13T11:20:52.2608440Z   ✓   7 e2e/foreshadowing-flow.spec.ts:115:3 › Foreshadowing — 核心创作流E2E › 2. 手动创建伏笔保存后列表刷新 (2.3s)
+2026-07-13T11:20:54.7563889Z   ✓   8 e2e/foreshadowing-flow.spec.ts:130:3 › Foreshadowing — 核心创作流E2E › 3. AI提取: 选章节范围→提取→审阅→应用→列表出现伏笔 (2.5s)
+2026-07-13T11:20:57.8471502Z   ✓   9 e2e/foreshadowing-flow.spec.ts:181:3 › Foreshadowing — 核心创作流E2E › 4. 选择性应用: 勾选部分仅已选保存 (3.1s)
+2026-07-13T11:20:59.8180142Z   ✓  10 e2e/foreshadowing-flow.spec.ts:236:3 › Foreshadowing — 核心创作流E2E › 5. 伏笔编辑: 点击修改保存 (2.0s)
+2026-07-13T11:21:05.6905729Z   ✘  11 e2e/foreshadowing-flow.spec.ts:266:3 › Foreshadowing — 核心创作流E2E › 6. 伏笔删除: 删除确认后列表移除 (5.8s)
+2026-07-13T11:21:12.4741570Z   ✘  12 e2e/foreshadowing-flow.spec.ts:294:3 › Foreshadowing — 核心创作流E2E › 7. 过滤: 按类型和状态过滤 (6.1s)
+2026-07-13T11:21:18.4553601Z   ✘  13 e2e/foreshadowing-flow.spec.ts:329:3 › Foreshadowing — 核心创作流E2E › 8. 搜索: 关键词搜索 (5.3s)
+2026-07-13T11:21:21.6898741Z   ✓  14 e2e/foreshadowing-flow.spec.ts:350:3 › Foreshadowing — 核心创作流E2E › 9. 进度条: 多章节提取显示进度 (2.6s)
+2026-07-13T11:21:25.4537326Z   ✓  15 e2e/foreshadowing-flow.spec.ts:378:3 › Foreshadowing — 核心创作流E2E › 10. 错误状态: API失败显示错误 (3.7s)
+2026-07-13T11:21:29.1966653Z Found 1 headings on ForeshadowingPage
+2026-07-13T11:21:29.3378205Z   ✓  16 e2e/foreshadowing-page-core.spec.ts:22:3 › ForeshadowingPage — 核心创作功能基线 › 1. 正常加载: 页面显示标题和主要按钮 (3.9s)
+2026-07-13T11:21:32.1897796Z   ✓  17 e2e/foreshadowing-page-core.spec.ts:35:3 › ForeshadowingPage — 核心创作功能基线 › 2. 创建伏笔按钮存在 (2.8s)
+2026-07-13T11:21:35.0474340Z   ✓  18 e2e/foreshadowing-page-core.spec.ts:42:3 › ForeshadowingPage — 核心创作功能基线 › 3. AI提取按钮存在 (2.8s)
+2026-07-13T11:21:37.7427327Z View toggle buttons: 5
+2026-07-13T11:21:37.8877237Z   ✓  19 e2e/foreshadowing-page-core.spec.ts:48:3 › ForeshadowingPage — 核心创作功能基线 › 4. 视图切换按钮存在 (2.8s)
+2026-07-13T11:21:40.5774449Z Search inputs: 1
+2026-07-13T11:21:40.7281620Z   ✓  20 e2e/foreshadowing-page-core.spec.ts:56:3 › ForeshadowingPage — 核心创作功能基线 › 5. 搜索输入框存在 (2.8s)
+2026-07-13T11:21:44.4703932Z Modals after clicking create: 1
+2026-07-13T11:21:44.6159699Z   ✓  21 e2e/foreshadowing-page-core.spec.ts:63:3 › ForeshadowingPage — 核心创作功能基线 › 6. 创建伏笔弹窗可打开 (3.9s)
+2026-07-13T11:21:45.6399451Z Loading spinner visible: false
+2026-07-13T11:21:48.7629325Z   ✓  22 e2e/foreshadowing-page-core.spec.ts:77:3 › ForeshadowingPage — 核心创作功能基线 › 7. 加载中状态: 页面有加载指示器或内容 (4.1s)
+2026-07-13T11:21:51.4795172Z Empty state visible: true
+2026-07-13T11:21:51.6304899Z   ✓  23 e2e/foreshadowing-page-core.spec.ts:91:3 › ForeshadowingPage — 核心创作功能基线 › 8. 空状态: 页面在无数据时显示空状态提示 (2.9s)
+2026-07-13T11:21:55.0270559Z Error state visible: false
+2026-07-13T11:21:55.1707468Z   ✓  24 e2e/foreshadowing-page-core.spec.ts:98:3 › ForeshadowingPage — 核心创作功能基线 › 9. 错误状态: API失败时页面显示错误提示 (3.5s)
+2026-07-13T11:21:58.9085274Z Refresh button clicked
+2026-07-13T11:21:59.0173673Z   ✓  25 e2e/foreshadowing-page-core.spec.ts:111:3 › ForeshadowingPage — 核心创作功能基线 › 10. 刷新按钮可点击 (3.8s)
+2026-07-13T11:22:02.0022584Z   ✓  26 e2e/foresight-pagination.spec.ts:12:3 › Foreshadowing — 分页视图 › 1. 页面加载后表格模式可切换 (3.0s)
+2026-07-13T11:22:05.2906146Z   ✓  27 e2e/foresight-pagination.spec.ts:26:3 › Foreshadowing — 分页视图 › 2. 视图模式切换流畅 (3.3s)
+2026-07-13T11:22:08.2731966Z   ✓  28 e2e/foresight-table.spec.ts:14:3 › Foreshadowing — 表格视图 › 1. 视图切换按钮可见且表格默认渲染 (2.9s)
+2026-07-13T11:22:11.8900067Z   ✓  29 e2e/foresight-table.spec.ts:40:3 › Foreshadowing — 表格视图 › 2. 点击表格按钮切换视图模式 (3.6s)
+2026-07-13T11:22:11.9436572Z 
+2026-07-13T11:22:11.9457532Z 
+2026-07-13T11:22:11.9459140Z   1) e2e/foreshadowing-flow.spec.ts:266:3 › Foreshadowing — 核心创作流E2E › 6. 伏笔删除: 删除确认后列表移除 ──────────
+2026-07-13T11:22:11.9459832Z 
+2026-07-13T11:22:11.9460109Z     Error: expect(locator).toBeVisible() failed
+2026-07-13T11:22:11.9460452Z 
+2026-07-13T11:22:11.9461006Z     Locator: getByText('神秘戒指')
+2026-07-13T11:22:11.9461513Z     Expected: visible
+2026-07-13T11:22:11.9461890Z     Timeout: 3000ms
+2026-07-13T11:22:11.9462386Z     Error: element(s) not found
+2026-07-13T11:22:11.9462650Z 
+2026-07-13T11:22:11.9462788Z     Call log:
+2026-07-13T11:22:11.9463209Z       - Expect "toBeVisible" with timeout 3000ms
+2026-07-13T11:22:11.9465916Z       - waiting for getByText('神秘戒指')
+2026-07-13T11:22:11.9466204Z 
+2026-07-13T11:22:11.9466212Z 
+2026-07-13T11:22:11.9466325Z       288 |
+2026-07-13T11:22:11.9466681Z       289 |     // Other entries should remain
+2026-07-13T11:22:11.9467665Z     > 290 |     await expect(page.getByText("神秘戒指")).toBeVisible({ timeout: 3_000 });
+2026-07-13T11:22:11.9468349Z           |                                          ^
+2026-07-13T11:22:11.9469197Z       291 |     await expect(page.getByText("失踪的师父")).toBeVisible({ timeout: 3_000 });
+2026-07-13T11:22:11.9469796Z       292 |   });
+2026-07-13T11:22:11.9470112Z       293 |
+2026-07-13T11:22:11.9470865Z         at /home/runner/work/InkChain/InkChain/packages/studio/e2e/foreshadowing-flow.spec.ts:290:42
+2026-07-13T11:22:11.9471507Z 
+2026-07-13T11:22:11.9472642Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+2026-07-13T11:22:11.9474066Z     test-results/foreshadowing-flow-Foreshadowing-—-核心创作流E2E-6-伏笔删除-删除确认后列表移除/test-failed-1.png
+2026-07-13T11:22:11.9475431Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+2026-07-13T11:22:11.9475936Z 
+2026-07-13T11:22:11.9476727Z     Error Context: test-results/foreshadowing-flow-Foreshadowing-—-核心创作流E2E-6-伏笔删除-删除确认后列表移除/error-context.md
+2026-07-13T11:22:11.9477923Z 
+2026-07-13T11:22:11.9478623Z   2) e2e/foreshadowing-flow.spec.ts:294:3 › Foreshadowing — 核心创作流E2E › 7. 过滤: 按类型和状态过滤 ─────────────
+2026-07-13T11:22:11.9479145Z 
+2026-07-13T11:22:11.9479368Z     Error: expect(locator).toBeVisible() failed
+2026-07-13T11:22:11.9479662Z 
+2026-07-13T11:22:11.9479900Z     Locator: getByText('神秘戒指')
+2026-07-13T11:22:11.9480258Z     Expected: visible
+2026-07-13T11:22:11.9480495Z     Timeout: 3000ms
+2026-07-13T11:22:11.9480738Z     Error: element(s) not found
+2026-07-13T11:22:11.9480926Z 
+2026-07-13T11:22:11.9481022Z     Call log:
+2026-07-13T11:22:11.9481290Z       - Expect "toBeVisible" with timeout 3000ms
+2026-07-13T11:22:11.9481673Z       - waiting for getByText('神秘戒指')
+2026-07-13T11:22:11.9481856Z 
+2026-07-13T11:22:11.9481862Z 
+2026-07-13T11:22:11.9481950Z       313 |
+2026-07-13T11:22:11.9482261Z       314 |     // Only 物品伏笔 entries should show
+2026-07-13T11:22:11.9482773Z     > 315 |     await expect(page.getByText("神秘戒指")).toBeVisible({ timeout: 3_000 });
+2026-07-13T11:22:11.9483221Z           |                                          ^
+2026-07-13T11:22:11.9483720Z       316 |     await expect(page.getByText("古墓钥匙")).toBeVisible({ timeout: 3_000 });
+2026-07-13T11:22:11.9484328Z       317 |     await expect(page.getByText("门口的石像")).not.toBeVisible({ timeout: 2_000 });
+2026-07-13T11:22:11.9484711Z       318 |
+2026-07-13T11:22:11.9485158Z         at /home/runner/work/InkChain/InkChain/packages/studio/e2e/foreshadowing-flow.spec.ts:315:42
+2026-07-13T11:22:11.9485547Z 
+2026-07-13T11:22:11.9485940Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+2026-07-13T11:22:11.9486742Z     test-results/foreshadowing-flow-Foreshadowing-—-核心创作流E2E-7-过滤-按类型和状态过滤/test-failed-1.png
+2026-07-13T11:22:11.9487841Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+2026-07-13T11:22:11.9488132Z 
+2026-07-13T11:22:11.9488610Z     Error Context: test-results/foreshadowing-flow-Foreshadowing-—-核心创作流E2E-7-过滤-按类型和状态过滤/error-context.md
+2026-07-13T11:22:11.9489035Z 
+2026-07-13T11:22:11.9489469Z   3) e2e/foreshadowing-flow.spec.ts:329:3 › Foreshadowing — 核心创作流E2E › 8. 搜索: 关键词搜索 ────────────────
+2026-07-13T11:22:11.9489814Z 
+2026-07-13T11:22:11.9489964Z     Error: expect(locator).toBeVisible() failed
+2026-07-13T11:22:11.9490173Z 
+2026-07-13T11:22:11.9490336Z     Locator: getByText('神秘戒指')
+2026-07-13T11:22:11.9490589Z     Expected: visible
+2026-07-13T11:22:11.9490807Z     Timeout: 3000ms
+2026-07-13T11:22:11.9491258Z     Error: element(s) not found
+2026-07-13T11:22:11.9491423Z 
+2026-07-13T11:22:11.9491507Z     Call log:
+2026-07-13T11:22:11.9491773Z       - Expect "toBeVisible" with timeout 3000ms
+2026-07-13T11:22:11.9492147Z       - waiting for getByText('神秘戒指')
+2026-07-13T11:22:11.9492328Z 
+2026-07-13T11:22:11.9492333Z 
+2026-07-13T11:22:11.9492462Z       339 |     await searchInput.fill("");
+2026-07-13T11:22:11.9492787Z       340 |     await page.waitForTimeout(500);
+2026-07-13T11:22:11.9493306Z     > 341 |     await expect(page.getByText("神秘戒指")).toBeVisible({ timeout: 3_000 });
+2026-07-13T11:22:11.9493887Z           |                                          ^
+2026-07-13T11:22:11.9494376Z       342 |     await expect(page.getByText("门口的石像")).toBeVisible({ timeout: 3_000 });
+2026-07-13T11:22:11.9494738Z       343 |
+2026-07-13T11:22:11.9495012Z       344 |     // Search with no match should show empty state
+2026-07-13T11:22:11.9495810Z         at /home/runner/work/InkChain/InkChain/packages/studio/e2e/foreshadowing-flow.spec.ts:341:42
+2026-07-13T11:22:11.9496382Z 
+2026-07-13T11:22:11.9497192Z     attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+2026-07-13T11:22:11.9498331Z     test-results/foreshadowing-flow-Foreshadowing-—-核心创作流E2E-8-搜索-关键词搜索/test-failed-1.png
+2026-07-13T11:22:11.9499424Z     ────────────────────────────────────────────────────────────────────────────────────────────────
+2026-07-13T11:22:11.9499866Z 
+2026-07-13T11:22:11.9500569Z     Error Context: test-results/foreshadowing-flow-Foreshadowing-—-核心创作流E2E-8-搜索-关键词搜索/error-context.md
+2026-07-13T11:22:11.9501219Z 
+2026-07-13T11:22:11.9501338Z   3 failed
+2026-07-13T11:22:11.9502136Z     e2e/foreshadowing-flow.spec.ts:266:3 › Foreshadowing — 核心创作流E2E › 6. 伏笔删除: 删除确认后列表移除 ───────────
+2026-07-13T11:22:11.9503441Z     e2e/foreshadowing-flow.spec.ts:294:3 › Foreshadowing — 核心创作流E2E › 7. 过滤: 按类型和状态过滤 ──────────────
+2026-07-13T11:22:11.9504642Z     e2e/foreshadowing-flow.spec.ts:329:3 › Foreshadowing — 核心创作流E2E › 8. 搜索: 关键词搜索 ─────────────────
+2026-07-13T11:22:11.9505292Z   26 passed (1.8m)
+2026-07-13T11:22:11.9721818Z ##[error]Process completed with exit code 1.
+2026-07-13T11:22:11.9771545Z ##[group]Run kill $(cat /tmp/api-server.pid) 2>/dev/null || true
+2026-07-13T11:22:11.9772039Z [36;1mkill $(cat /tmp/api-server.pid) 2>/dev/null || true[0m
+2026-07-13T11:22:11.9772447Z [36;1mkill $(cat /tmp/vite-server.pid) 2>/dev/null || true[0m
+2026-07-13T11:22:11.9807506Z shell: /usr/bin/bash -e {0}
+2026-07-13T11:22:11.9807816Z env:
+2026-07-13T11:22:11.9808093Z   PNPM_HOME: /home/runner/setup-pnpm/node_modules/.bin
+2026-07-13T11:22:11.9808428Z ##[endgroup]
+2026-07-13T11:22:11.9998684Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-13T11:22:12.0000529Z Post job cleanup.
+2026-07-13T11:22:12.1563364Z Pruning is unnecessary.
+2026-07-13T11:22:12.1747126Z Node 20 is being deprecated. This workflow is running with Node 24 by default. If you need to temporarily use Node 20, you can set the ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true environment variable. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+2026-07-13T11:22:12.1748303Z Post job cleanup.
+2026-07-13T11:22:12.2643424Z [command]/usr/bin/git version
+2026-07-13T11:22:12.2722008Z git version 2.54.0
+2026-07-13T11:22:12.2766817Z Temporarily overriding HOME='/home/runner/work/_temp/24a70416-353a-4133-a7fd-eaea78b2a1b2' before making global git config changes
+2026-07-13T11:22:12.2768747Z Adding repository directory to the temporary git global config as a safe directory
+2026-07-13T11:22:12.2783741Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/InkChain/InkChain
+2026-07-13T11:22:12.2838094Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-07-13T11:22:12.2894292Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-07-13T11:22:12.3218793Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-07-13T11:22:12.3258002Z http.https://github.com/.extraheader
+2026-07-13T11:22:12.3268146Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-07-13T11:22:12.3342301Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-07-13T11:22:12.3640203Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-07-13T11:22:12.3682619Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-07-13T11:22:12.4103130Z Cleaning up orphan processes
+2026-07-13T11:22:12.4460199Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/checkout@v4, actions/setup-node@v4, pnpm/action-setup@v4. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

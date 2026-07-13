@@ -134,13 +134,18 @@ export class IndexManager {
 
   /**
    * List all items in a namespace by reading the directory and loading each file.
-   * Uses the cache for already-loaded items.
+   * Always evicts the namespace cache first to ensure consistency with disk,
+   * accommodating out-of-band writes (e.g., seed scripts that bypass the API).
+   * Newly loaded items are re-cached for subsequent direct get/set calls.
    */
   async list<T = unknown>(
     root: string,
     namespace: string,
     parser?: (raw: string) => T,
   ): Promise<T[]> {
+    // Evict stale cache entries for this namespace before reading from disk,
+    // so out-of-band file writes (e.g. E2E seedForeshadowing) take effect.
+    this.evict(root, namespace);
     const dir = join(root, namespace);
     let files: string[];
     try {
