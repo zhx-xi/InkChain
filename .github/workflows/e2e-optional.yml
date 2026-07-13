@@ -37,10 +37,10 @@ jobs:
       flow: ${{ steps.filter.outputs.flow }}
       misc: ${{ steps.filter.outputs.misc }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4.4.0
         with:
           fetch-depth: 0  # needed by dorny/paths-filter for PR diff
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v3.0.3
         id: filter
         with:
           filters: |
