@@ -47,6 +47,7 @@ export function DetailPanel({
   edges,
   nodes,
   onClose,
+  onSave,
   className,
 }: DetailPanelProps) {
   // Filter edges connected to this node
@@ -134,43 +135,88 @@ export function DetailPanel({
         </div>
       </div>
 
-      {/* Tier label */}
-      <div className="px-4 pb-2">
-        <span className="inline-block text-[11px] text-muted-foreground/70 bg-secondary/50 px-2 py-0.5 rounded-full">
-          {TIER_LABELS[node.tier] ?? node.tier}
-        </span>
-      </div>
-
-      {/* Description */}
-      {node.description && (
-        <div className="px-4 pb-3">
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            {node.description}
-          </p>
+      {isEditing ? (
+        /* ── Edit form ── */
+        <div className="px-4 pb-3 space-y-3">
+          <div>
+            <label className="block text-[11px] text-muted-foreground/60 mb-1">角色名称</label>
+            <input
+              type="text"
+              value={editName}
+              onChange={(e) => setEditName(e.target.value)}
+              className="w-full rounded-lg border border-border/30 bg-background/50 px-2.5 py-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/50 transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] text-muted-foreground/60 mb-1">描述</label>
+            <textarea
+              value={editDescription}
+              onChange={(e) => setEditDescription(e.target.value)}
+              rows={3}
+              className="w-full rounded-lg border border-border/30 bg-background/50 px-2.5 py-1.5 text-xs text-foreground resize-none focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/50 transition-colors"
+            />
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button
+              type="button"
+              onClick={handleSave}
+              className="flex-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+              aria-label="保存"
+            >
+              保存
+            </button>
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="flex-1 rounded-lg border border-border/30 bg-background/50 px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="取消"
+            >
+              取消
+            </button>
+          </div>
         </div>
+      ) : (
+        /* ── Read-only view ── */
+        <>
+          {/* Tier label */}
+          <div className="px-4 pb-2">
+            <span className="inline-block text-[11px] text-muted-foreground/70 bg-secondary/50 px-2 py-0.5 rounded-full">
+              {TIER_LABELS[node.tier] ?? node.tier}
+            </span>
+          </div>
+
+          {/* Description */}
+          {node.description && (
+            <div className="px-4 pb-3">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {node.description}
+              </p>
+            </div>
+          )}
+
+          {/* Metadata */}
+          <div className="px-4 pb-3 space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground/60">出场章节数</span>
+              <span className="text-foreground/80 font-medium">
+                {node.chapterAppearances}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground/60">关联关系</span>
+              <span className="text-foreground/80 font-medium">
+                {relatedEdges.length}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground/60">角色路径</span>
+              <span className="text-foreground/60 text-[10px] truncate ml-2 max-w-[140px]">
+                {node.rolePath}
+              </span>
+            </div>
+          </div>
+        </>
       )}
-
-      {/* Metadata */}
-      <div className="px-4 pb-3 space-y-1.5">
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground/60">出场章节数</span>
-          <span className="text-foreground/80 font-medium">
-            {node.chapterAppearances}
-          </span>
-        </div>
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground/60">关联关系</span>
-          <span className="text-foreground/80 font-medium">
-            {relatedEdges.length}
-          </span>
-        </div>
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-muted-foreground/60">角色路径</span>
-          <span className="text-foreground/60 text-[10px] truncate ml-2 max-w-[140px]">
-            {node.rolePath}
-          </span>
-        </div>
-      </div>
 
       {/* Divider */}
       <div className="mx-4 border-t border-border/20" />
