@@ -42,6 +42,7 @@ interface ExtractionResponse {
   proposals: RelationProposal[];
   sourceChapters: number[];
   sourceCharacters: string[];
+  characterTiers: Record<string, string>;
   existingRelationsCount: number;
 }
 
@@ -68,6 +69,16 @@ const RELATION_COLORS: Record<string, string> = {
   mentor: "#8B5CF6",
   blood: "#F59E0B",
   secret_crush: "#EC4899",
+};
+
+// ── Character Tier Display Config ──
+
+const TIER_DISPLAY: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  protagonist: { label: "主角", color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-300" },
+  supporting: { label: "重要", color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-300" },
+  guest: { label: "次要", color: "text-indigo-600", bg: "bg-indigo-50", border: "border-indigo-300" },
+  one_shot: { label: "客串", color: "text-gray-600", bg: "bg-gray-50", border: "border-gray-300" },
+  scene: { label: "一次性", color: "text-zinc-500", bg: "bg-zinc-50", border: "border-zinc-200" },
 };
 
 // ── Props ──
@@ -101,6 +112,7 @@ export function RelationExtractionReviewPanel({
   const [proposals, setProposals] = useState<ProposalState[]>([]);
   const [sourceChapters, setSourceChapters] = useState<number[]>([]);
   const [sourceCharacters, setSourceCharacters] = useState<string[]>([]);
+  const [characterTiers, setCharacterTiers] = useState<Record<string, string>>({});
   const [expandedProposals, setExpandedProposals] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -169,6 +181,7 @@ export function RelationExtractionReviewPanel({
       );
       setSourceChapters(data.sourceChapters);
       setSourceCharacters(data.sourceCharacters);
+      setCharacterTiers(data.characterTiers ?? {});
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -612,15 +625,40 @@ export function RelationExtractionReviewPanel({
 
             {/* Source info */}
             {proposals.length > 0 && sourceCharacters.length > 0 && (
-              <div className="flex items-center gap-2 mb-4 p-2.5 rounded-lg bg-secondary/20 text-xs text-muted-foreground">
-                <span className="font-medium text-foreground/70">识别角色：</span>
-                {sourceCharacters.join("、")}
+              <div className="mb-4 p-3 rounded-lg bg-secondary/20 text-xs text-muted-foreground space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-foreground/70 shrink-0">识别角色：</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {sourceCharacters.map((name) => {
+                      const tier = characterTiers[name];
+                      const display = tier ? TIER_DISPLAY[tier] : null;
+                      return (
+                        <span
+                          key={name}
+                          data-testid={`character-tier-${name}`}
+                          className={cn(
+                            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border",
+                            display
+                              ? `${display.color} ${display.bg} ${display.border}`
+                              : "text-muted-foreground bg-secondary/30 border-border/30",
+                          )}
+                        >
+                          {name}
+                          {display && (
+                            <span className={cn("opacity-70", display.color)}>
+                              {display.label}
+                            </span>
+                          )}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
                 {sourceChapters.length > 0 && (
-                  <>
-                    <span className="text-muted-foreground/30 mx-1">|</span>
-                    <span className="font-medium text-foreground/70">章节：</span>
-                    {sourceChapters.join("、")}
-                  </>
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-foreground/70 shrink-0">章节：</span>
+                    <span>{sourceChapters.join("、")}</span>
+                  </div>
                 )}
               </div>
             )}
