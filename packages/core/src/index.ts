@@ -1038,9 +1038,6 @@ export {
 export { exportInk } from "./interactive-film/export-ink.js";
 export { buildPlayableHtml } from "./interactive-film/export-html.js";
 
-// ── IndexManager (Issue #597) ──
-export { IndexManager } from "./state/index-manager.js";
-
 // ── Cross-Platform Publish (C1-2) ──
 export {
   type PublishPlatform,

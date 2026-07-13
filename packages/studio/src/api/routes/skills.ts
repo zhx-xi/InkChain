@@ -27,7 +27,6 @@ import {
   loadSkillConfigs,
   SkillConfigSchema,
   SkillConfigUpdateSchema,
-  IndexManager,
   type SkillConfig,
   type SkillSource,
   type StoredSkillConfig,
@@ -178,32 +177,40 @@ async function loadMergedSkills(root: string): Promise<ReadonlyArray<StoredSkill
   return result.skills;
 }
 
-function skillConfigParser(raw: string): SkillConfig {
-  return SkillConfigSchema.parse(JSON.parse(raw));
-}
-
 async function loadProjectSkillFile(root: string, id: string): Promise<SkillConfig | null> {
-  const idx = IndexManager.getInstance();
-  return idx.get<SkillConfig>(root, PROJECT_SKILLS_DIR, id, skillConfigParser);
+  try {
+    const raw = await readFile(projectSkillPath(root, id), "utf-8");
+    const parsed = JSON.parse(raw) as unknown;
+    return SkillConfigSchema.parse(parsed);
+  } catch (error) {
+    if (
+      typeof error === "object"
+      && error !== null
+      && "code" in error
+      && (error as { code?: unknown }).code === "ENOENT"
+    ) {
+      return null;
+    }
+    throw error;
+  }
 }
 
 async function writeProjectSkill(root: string, config: SkillConfig): Promise<void> {
   // Snapshot current version before overwriting
   await snapshotBeforeWrite(root, config);
 
-  const idx = IndexManager.getInstance();
-  await idx.set(root, PROJECT_SKILLS_DIR, config.id, config);
+  const dir = join(root, PROJECT_SKILLS_DIR);
+  await mkdir(dir, { recursive: true });
+  await writeFile(projectSkillPath(root, config.id), JSON.stringify(config, null, 2), "utf-8");
 }
 
 async function deleteProjectSkillFile(root: string, id: string): Promise<boolean> {
-  const path = projectSkillPath(root, id);
   try {
-    await access(path);
+    await access(projectSkillPath(root, id));
   } catch {
     return false;
   }
-  await rm(path, { force: true });
-  IndexManager.getInstance().evict(root, PROJECT_SKILLS_DIR, id);
+  await rm(projectSkillPath(root, id), { force: true });
   return true;
 }
 
