@@ -31,6 +31,15 @@ describe("WorldConfig schemas (Issue #77)", () => {
     expect(parsed.name).toBe("Test World");
     expect(parsed.settings).toEqual([]);
     expect(parsed.roles).toEqual([]);
+    expect(parsed.bookIds).toEqual([]);
+  });
+
+  it("parses world config with bookIds (Issue #601)", () => {
+    const parsed = WorldConfigSchema.parse({
+      ...minimalWorld(),
+      bookIds: ["book-1", "book-2"],
+    });
+    expect(parsed.bookIds).toEqual(["book-1", "book-2"]);
   });
 
   it("parses all 7 dimensions", () => {
