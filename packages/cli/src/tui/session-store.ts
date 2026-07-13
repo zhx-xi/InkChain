@@ -3,4 +3,4 @@ export {
   loadProjectSession,
   persistProjectSession,
   resolveSessionActiveBook,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";

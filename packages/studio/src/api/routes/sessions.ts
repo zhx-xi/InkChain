@@ -21,8 +21,8 @@ import {
   mergeBookSessions,
   autoArchiveStaleSessions,
   loadSessionTags,
-} from "@actalk/inkchain-core";
-import type { SessionTag } from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
+import type { SessionTag } from "@inkchain/inkchain-core";
 
 /**
  * Transform a BookSessionSummary to a client-friendly SessionListItem.

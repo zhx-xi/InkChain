@@ -1,4 +1,4 @@
-import type { InteractionMessage } from "@actalk/inkchain-core";
+import type { InteractionMessage } from "@inkchain/inkchain-core";
 
 export interface InputHistoryState {
   readonly cursor: number | null;

@@ -3,7 +3,7 @@
 
 import { useState, type ReactNode } from "react";
 import { useMapAIGen } from "../../hooks/use-map-ai-gen";
-import type { MapRegionCandidate } from "@actalk/inkchain-core";
+import type { MapRegionCandidate } from "@inkchain/inkchain-core";
 import { Sparkles, Check, X, Loader2, Globe, Upload, Edit3, Map, RefreshCw } from "lucide-react";
 
 // ── Types ──

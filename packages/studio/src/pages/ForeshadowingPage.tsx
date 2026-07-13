@@ -7,13 +7,13 @@ import {
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useApi, fetchJson, postApi, buildApiUrl } from "../hooks/use-api";
-import type { Foreshadowing, ForeshadowingType, ForeshadowingStatus } from "@actalk/inkchain-core/models/foreshadowing.js";
+import type { Foreshadowing, ForeshadowingType, ForeshadowingStatus } from "@inkchain/inkchain-core/models/foreshadowing.js";
 import {
   FORESHADOWING_TYPE_LABELS,
   FORESHADOWING_STATUS_LABELS,
   ForeshadowingTypeEnum,
   ForeshadowingStatusEnum,
-} from "@actalk/inkchain-core/models/foreshadowing.js";
+} from "@inkchain/inkchain-core/models/foreshadowing.js";
 
 interface ForeshadowingResponseItem extends Foreshadowing {
   _forgotten?: boolean;

@@ -13,13 +13,13 @@ import type {
   WorldDimensionKey,
   WorldSearchResult,
   WorldReference,
-} from "@actalk/inkchain-core/models/world-config.js";
-import type { ExtractedWorld } from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core/models/world-config.js";
+import type { ExtractedWorld } from "@inkchain/inkchain-core";
 import {
   WORLD_DIMENSION_KEYS,
   WorldConfigSchema,
   WorldConfigUpdateSchema,
-} from "@actalk/inkchain-core/models/world-config.js";
+} from "@inkchain/inkchain-core/models/world-config.js";
 import {
   ArrowLeft, Save, Trash2, Plus, BookPlus, X, Globe, Search, ChevronUp, ChevronDown, Download, Upload, ListChecks, Check, GripVertical, ChevronRight, ChevronLeft, Link2, ExternalLink, AlertTriangle, Map,
 } from "lucide-react";

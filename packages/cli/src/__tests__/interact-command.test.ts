@@ -39,7 +39,7 @@ const {
   })),
 }));
 
-vi.mock("@actalk/inkchain-core", async () => ({
+vi.mock("@inkchain/inkchain-core", async () => ({
   PipelineRunner: class PipelineRunnerMock {
     constructor(_config: unknown) {}
   },

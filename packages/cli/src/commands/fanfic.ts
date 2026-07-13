@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import { readFile, readdir, stat } from "node:fs/promises";
 import { join, resolve, basename } from "node:path";
-import { deriveBookIdFromTitle, normalizePlatformOrOther, PipelineRunner, type BookConfig, type FanficMode } from "@actalk/inkchain-core";
+import { deriveBookIdFromTitle, normalizePlatformOrOther, PipelineRunner, type BookConfig, type FanficMode } from "@inkchain/inkchain-core";
 import { loadConfig, buildPipelineConfig, findProjectRoot, resolveBookId, log, logError } from "../utils.js";
 
 export const fanficCommand = new Command("fanfic")
@@ -99,7 +99,7 @@ fanficCommand
       await loadConfig();
       const root = findProjectRoot();
       const bookId = await resolveBookId(bookIdArg, root);
-      const { StateManager } = await import("@actalk/inkchain-core");
+      const { StateManager } = await import("@inkchain/inkchain-core");
       const state = new StateManager(root);
       const bookDir = state.bookDir(bookId);
 
@@ -137,7 +137,7 @@ fanficCommand
       const config = await loadConfig();
       const root = findProjectRoot();
       const bookId = await resolveBookId(bookIdArg, root);
-      const { StateManager } = await import("@actalk/inkchain-core");
+      const { StateManager } = await import("@inkchain/inkchain-core");
       const state = new StateManager(root);
       const book = await state.loadBookConfig(bookId);
 

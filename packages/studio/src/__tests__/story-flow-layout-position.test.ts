@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { layoutStoryGraph } from "../lib/story-flow-layout";
-import { StoryGraphSchema } from "@actalk/inkchain-core";
+import { StoryGraphSchema } from "@inkchain/inkchain-core";
 
 describe("layoutStoryGraph respects stored position", () => {
   it("uses node.position when present, BFS otherwise", () => {

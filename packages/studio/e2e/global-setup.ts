@@ -4,7 +4,7 @@ import path from "path";
 import { mkdirSync, writeFileSync } from "fs";
 
 /**
- * Rebuild @actalk/inkchain-core before E2E tests start.
+ * Rebuild @inkchain/inkchain-core before E2E tests start.
  *
  * The E2E API server (tsx watch src/api/index.ts) imports core via the pnpm
  * workspace symlink, which resolves to packages/core/dist/index.js — the
@@ -216,7 +216,7 @@ export default function globalSetup(): void {
 
   // ── 7. Build core ──
   try {
-    execSync("pnpm --filter @actalk/inkchain-core build", {
+    execSync("pnpm --filter @inkchain/inkchain-core build", {
       cwd: workspaceRoot,
       stdio: "inherit",
     });
