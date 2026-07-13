@@ -99,6 +99,84 @@ describe("Volumes CRUD", () => {
   });
 });
 
+describe("GET /:id/volumes/:volumeId/chapters", () => {
+  let root: string;
+  let bookDir: string;
+  let bookId: string;
+  let router: ReturnType<typeof createVolumesRouter>;
+
+  beforeEach(async () => {
+    const ctx = await createTempBook();
+    root = ctx.root;
+    bookDir = ctx.bookDir;
+    bookId = ctx.bookId;
+    router = createVolumesRouter((id: string) => join(root, "books", id));
+  });
+
+  afterEach(async () => {
+    await rm(root, { recursive: true, force: true });
+  });
+
+  it("returns chapters for a volume when index is a plain array (StateManager format)", async () => {
+    const v = await createVolume(router, bookId, "卷一");
+    // Write chapters index as plain array (StateManager format)
+    await writeFile(join(bookDir, "chapters", "index.json"), JSON.stringify([
+      { number: 1, title: "第一章", status: "draft", wordCount: 500, volumeId: v.id },
+      { number: 2, title: "第二章", status: "draft", wordCount: 600, volumeId: v.id },
+      { number: 3, title: "第三章", status: "draft", wordCount: 700, volumeId: null },
+    ], null, 2), "utf-8");
+
+    const res = await router.request(`/${bookId}/volumes/${v.id}/chapters`);
+    expect(res.status).toBe(200);
+    const json = await res.json() as { volumeId: string; chapters: Array<{ number: number; title: string }> };
+    expect(json.volumeId).toBe(v.id);
+    expect(json.chapters).toHaveLength(2);
+    expect(json.chapters[0].number).toBe(1);
+    expect(json.chapters[1].number).toBe(2);
+  });
+
+  it("returns chapters for a volume when index is wrapped {chapters:[...]} format", async () => {
+    const v = await createVolume(router, bookId, "卷一");
+    // Write chapters index as wrapped format
+    await writeFile(join(bookDir, "chapters", "index.json"), JSON.stringify({
+      chapters: [
+        { number: 5, title: "第五章", status: "draft", wordCount: 800, volumeId: v.id },
+      ],
+    }, null, 2), "utf-8");
+
+    const res = await router.request(`/${bookId}/volumes/${v.id}/chapters`);
+    expect(res.status).toBe(200);
+    const json = await res.json() as { volumeId: string; chapters: Array<{ number: number; title: string }> };
+    expect(json.chapters).toHaveLength(1);
+    expect(json.chapters[0].number).toBe(5);
+  });
+
+  it("returns empty chapters when volume has no chapters assigned", async () => {
+    const v = await createVolume(router, bookId, "空卷");
+    await writeFile(join(bookDir, "chapters", "index.json"), JSON.stringify([
+      { number: 1, title: "第一章", status: "draft", wordCount: 500, volumeId: null },
+    ], null, 2), "utf-8");
+
+    const res = await router.request(`/${bookId}/volumes/${v.id}/chapters`);
+    expect(res.status).toBe(200);
+    const json = await res.json() as { volumeId: string; chapters: Array<unknown> };
+    expect(json.chapters).toHaveLength(0);
+  });
+
+  it("returns 404 for non-existent volume", async () => {
+    const res = await router.request(`/${bookId}/volumes/non-existent/chapters`);
+    expect(res.status).toBe(404);
+  });
+
+  it("returns empty chapters when chapters index does not exist", async () => {
+    const v = await createVolume(router, bookId, "无索引");
+    const res = await router.request(`/${bookId}/volumes/${v.id}/chapters`);
+    expect(res.status).toBe(200);
+    const json = await res.json() as { volumeId: string; chapters: Array<unknown> };
+    expect(json.chapters).toHaveLength(0);
+  });
+});
+
 describe("Volume deletion - cascade behavior", () => {
   let root: string;
   let bookDir: string;

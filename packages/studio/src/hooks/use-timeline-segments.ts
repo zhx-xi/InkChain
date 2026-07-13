@@ -168,9 +168,13 @@ export function useTimelineSegments(bookId: string) {
     }
 
     const chapters = volumeChaptersMap.get(selectedVolumeId);
-    if (!chapters || chapters.length === 0) {
-      // Volume has no chapters (or chapters not loaded yet) → show all
+    if (chapters === undefined) {
+      // Chapters not loaded yet → show all (transient, will be fixed on next render)
       return allEvents;
+    }
+    if (chapters.length === 0) {
+      // Volume has no chapters → show no events (correct)
+      return [];
     }
 
     const chapterSet = new Set(chapters);
