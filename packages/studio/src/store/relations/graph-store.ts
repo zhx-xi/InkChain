@@ -17,6 +17,8 @@ interface GraphState {
   /** Force a full reload from API even if already loading. */
   refreshGraph: (bookId: string) => Promise<void>;
   selectNode: (nodeId: string | null) => void;
+  /** Update a node's label and description in local state. */
+  updateNode: (nodeId: string, data: { label?: string; description?: string }) => void;
 }
 
 /**
@@ -128,10 +130,16 @@ async function doLoadGraph(
         r.validUntilChapter !== undefined &&
         r.validUntilChapter < currentMaxChapter;
 
+      // Use resolved role path for source/target to stay consistent with
+      // node IDs (resolvedRolePath). This ensures DetailPanel's relatedEdges
+      // filter (e.source === node.id) works correctly.
+      const resolvedSource = nodeMap.get(r.sourceRoleId)?.id ?? r.sourceRoleId;
+      const resolvedTarget = nodeMap.get(r.targetRoleId)?.id ?? r.targetRoleId;
+
       return {
         id: r.id,
-        source: r.sourceRoleId,
-        target: r.targetRoleId,
+        source: resolvedSource,
+        target: resolvedTarget,
         relationType: r.relationType,
         label: r.customLabel ?? getRelationLabel(r.relationType),
         customLabel: r.customLabel,
@@ -175,6 +183,16 @@ export const useGraphStore = create<GraphState>()((set, get) => ({
 
   selectNode: (nodeId: string | null) => {
     set({ selectedNodeId: nodeId });
+  },
+
+  updateNode: (nodeId: string, data: { label?: string; description?: string }) => {
+    const { nodes } = get();
+    const updated = nodes.map((n) =>
+      n.id === nodeId
+        ? { ...n, ...(data.label !== undefined ? { label: data.label } : {}), ...(data.description !== undefined ? { description: data.description } : {}) }
+        : n,
+    );
+    set({ nodes: updated, dataVersion: get().dataVersion + 1 });
   },
 }));
 

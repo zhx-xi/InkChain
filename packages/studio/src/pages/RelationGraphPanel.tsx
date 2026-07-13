@@ -111,6 +111,7 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
   const selectedNodeId = useGraphStore((s) => s.selectedNodeId);
   const loadGraph = useGraphStore((s) => s.loadGraph);
   const selectNode = useGraphStore((s) => s.selectNode);
+  const updateNode = useGraphStore((s) => s.updateNode);
 
   const [simplified, setSimplified] = useState(false);
   const [selectedVolumeId, setSelectedVolumeId] = useState<string | null>(null);
@@ -302,6 +303,17 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
   const selectedNode = useMemo(
     () => storeNodes.find((n) => n.id === selectedNodeId) ?? null,
     [storeNodes, selectedNodeId],
+  );
+
+  // ── Save handler called by DetailPanel when user edits a character ──
+  const handleSaveNode = useCallback(
+    (updatedNode: GraphNodeData, _updatedEdges: GraphEdgeData[]) => {
+      updateNode(updatedNode.id, {
+        label: updatedNode.label,
+        description: updatedNode.description,
+      });
+    },
+    [updateNode],
   );
 
   // ── Loading state ──
@@ -702,6 +714,7 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
           edges={storeEdges}
           nodes={storeNodes}
           onClose={() => selectNode(null)}
+          onSave={handleSaveNode}
           className="border-l border-border/20"
         />
       )}
