@@ -1,6 +1,6 @@
 // ── Persona CRUD API Route ──
 // Provides project-level persona config CRUD operations.
-// Persona files are stored in {projectRoot}/.inkos/personas/ as YAML frontmatter + Markdown body.
+// Persona files are stored in {projectRoot}/{DATA_DIR_NAME}/personas/ as YAML frontmatter + Markdown body.
 //
 // Routes (mounted at /api/v1/project):
 //   GET    /personas                      — List all persona summaries
@@ -257,7 +257,7 @@ export function createPersonasRouter(getProjectRoot: () => string): Hono {
       const config = await readPersonaConfig(root, role);
 
       // Also read the raw file content for the body
-      const projectDir = join(root, ".inkos", "personas");
+      const projectDir = join(root, DATA_DIR_NAME, "personas");
       const body = await readFile(join(projectDir, `${role}.md`), "utf-8")
         .then((raw) => {
           const parsedFile = parsePersonaConfig(raw);
@@ -391,7 +391,7 @@ export function createPersonasRouter(getProjectRoot: () => string): Hono {
 
     // Delete project-level file. After deletion, readPersonaConfig will fall back to built-in/default.
     const root = getProjectRoot();
-    const personasDir = join(root, ".inkos", "personas");
+    const personasDir = join(root, DATA_DIR_NAME, "personas");
     try {
       await rm(join(personasDir, `${role}.md`), { force: true });
     } catch {
