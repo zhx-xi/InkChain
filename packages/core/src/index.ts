@@ -1040,6 +1040,8 @@ export { buildPlayableHtml } from "./interactive-film/export-html.js";
 
 // ── IndexManager (Issue #597) ──
 export { IndexManager } from "./state/index-manager.js";
+// ── Data Directory (Issue #598) ──
+export { DATA_DIR_NAME, LEGACY_DIR_NAME, dataPath, migratePath, migrateDirConstant } from "./utils/data-directory.js";
 
 // ── Cross-Platform Publish (C1-2) ──
 export {

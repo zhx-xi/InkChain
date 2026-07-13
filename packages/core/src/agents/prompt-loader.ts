@@ -3,7 +3,7 @@
  * project-level override support and built-in fallback constants.
  *
  * Resolution chain:
- *   1. Project-level: .inkos/personas/{agentType}.md (requires bookDir)
+ *   1. Project-level: {DATA_DIR_NAME}/personas/{agentType}.md (requires bookDir)
  *   2. Builtin-level: prompts/default/{agentType}.md (from this package)
  *   3. Fallback: hardcoded constants in FALLBACK_PROMPTS
  */
@@ -11,6 +11,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { DATA_DIR_NAME } from "../utils/data-directory.js";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -160,7 +161,7 @@ function getBuiltinPromptDir(): string {
  * Resolve the project-level prompt directory for a given book.
  */
 export function getProjectPromptDir(bookDir: string): string {
-  return join(bookDir, ".inkos", "personas");
+  return join(bookDir, DATA_DIR_NAME, "personas");
 }
 
 // ---------------------------------------------------------------------------
@@ -171,7 +172,7 @@ export function getProjectPromptDir(bookDir: string): string {
  * Load a system prompt for the given agent type.
  *
  * Resolution order:
- *   1. Project-level file at {bookDir}/.inkos/personas/{agentType}.md
+ *   1. Project-level file at {bookDir}/{DATA_DIR_NAME}/personas/{agentType}.md
  *   2. Builtin file at prompts/default/{agentType}.md
  *   3. Fallback hardcoded string from FALLBACK_PROMPTS
  *

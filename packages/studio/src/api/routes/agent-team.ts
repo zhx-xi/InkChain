@@ -14,6 +14,7 @@ import {
   type AgentTeamConfig,
 } from "@actalk/inkchain-core";
 import { ApiError } from "../errors.js";
+import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 
 const DEFAULT_AGENT_ROLES = [
   "writer", "architect", "planner", "editor", "auditor", "observer", "reviser",
@@ -31,7 +32,7 @@ function defaultAgentTeamConfig(): AgentTeamConfig {
 }
 
 function agentTeamConfigPath(root: string): string {
-  return join(root, ".inkos", "agent-team.json");
+  return join(root, DATA_DIR_NAME, "agent-team.json");
 }
 
 async function loadAgentTeamConfig(root: string): Promise<AgentTeamConfig> {
@@ -57,8 +58,7 @@ async function loadAgentTeamConfig(root: string): Promise<AgentTeamConfig> {
 }
 
 async function saveAgentTeamConfig(root: string, config: AgentTeamConfig): Promise<void> {
-  const dir = join(root, ".inkos");
-  await mkdir(dir, { recursive: true });
+  await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
   await writeFile(agentTeamConfigPath(root), JSON.stringify(config, null, 2), "utf-8");
 }
 

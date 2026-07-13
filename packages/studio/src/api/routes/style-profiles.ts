@@ -13,8 +13,9 @@ import { join } from "node:path";
 import { existsSync } from "node:fs";
 import { learnStyle, summarizeStyleProfile, serializeStyleProfile, IndexManager, type EnhancedStyleProfile } from "@actalk/inkchain-core";
 import { ApiError } from "../errors.js";
+import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 
-const PROFILES_DIR = ".inkos/style-profiles";
+const PROFILES_DIR = `${DATA_DIR_NAME}/style-profiles`;
 
 function profilePath(root: string, id: string): string {
   return join(root, PROFILES_DIR, `${id}.json`);

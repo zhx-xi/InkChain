@@ -1,8 +1,9 @@
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { InteractionSessionSchema, type InteractionSession, GlobalSessionSchema, type GlobalSession } from "./session.js";
+import { DATA_DIR_NAME } from "../utils/data-directory.js";
 
-const SESSION_DIR = ".inkos";
+const SESSION_DIR = DATA_DIR_NAME;
 const SESSION_FILE = "session.json";
 
 export function resolveProjectSessionPath(projectRoot: string): string {
