@@ -138,7 +138,6 @@ jobs:
               - 'packages/studio/e2e/analysis*'
               - 'packages/studio/e2e/export*'
               - 'packages/studio/e2e/import*'
-              - 'packages/studio/e2e/index-manager*'
               - 'packages/studio/e2e/log-viewer*'
               - 'packages/studio/e2e/player*'
               - 'packages/studio/e2e/service*'
@@ -268,5 +267,5 @@ jobs:
     if: needs.changes.outputs.misc == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
-      spec: "analysis consistency-check-panel export import-manager index-manager log-viewer log-viewer-508 player service-list-page session-archive genre-manager character-tiering validation cross-feature radar-view radar-view-510 truth-files volume-dnd daemon-control doctor-view build-verification project-settings issue-394-world-association issue-406-timeline-filter issue-410-audit-cache issue-413-audit-context issue-421-builtin-skill-edit"
+      spec: "analysis consistency-check-panel export import-manager log-viewer log-viewer-508 player service-list-page session-archive genre-manager character-tiering validation cross-feature radar-view radar-view-510 truth-files volume-dnd daemon-control doctor-view build-verification project-settings issue-394-world-association issue-406-timeline-filter issue-410-audit-cache issue-413-audit-context issue-421-builtin-skill-edit"
       group-name: "Misc"
