@@ -34,7 +34,6 @@ import {
 } from "../models/persona-config.js";
 import { readPersonaConfig } from "../persona/loader.js";
 import { getDefaultPersona, DEFAULT_PERSONAS } from "../persona/defaults.js";
-import { DATA_DIR_NAME } from "../utils/data-directory.js";
 
 // ── Test Data ──
 
@@ -365,7 +364,7 @@ describe("Per-1/5: YAML Frontmatter Serialization", () => {
 describe("Per-2: Priority Loading", () => {
   it("project-level persona overrides built-in", async () => {
     const tmpRoot = join(tmpdir(), `inkos-golden-priority-${Date.now()}`);
-    await mkdir(join(tmpRoot, DATA_DIR_NAME, "personas"), { recursive: true });
+    await mkdir(join(tmpRoot, ".inkos", "personas"), { recursive: true });
 
     try {
       // Write a project-level persona file
@@ -378,7 +377,7 @@ version: 1
 ---
 项目级配置
 `;
-      await writeFile(join(tmpRoot, DATA_DIR_NAME, "personas", "writer.md"), projectYaml, "utf-8");
+      await writeFile(join(tmpRoot, ".inkos", "personas", "writer.md"), projectYaml, "utf-8");
 
       // Read should return project-level, not built-in
       const config = await readPersonaConfig(tmpRoot, "writer");
@@ -391,7 +390,7 @@ version: 1
 
   it("falls back to built-in when no project-level exists", async () => {
     const tmpRoot = join(tmpdir(), `inkos-golden-fallback-${Date.now()}`);
-    await mkdir(join(tmpRoot, DATA_DIR_NAME), { recursive: true });
+    await mkdir(join(tmpRoot, ".inkos"), { recursive: true });
 
     try {
       // No persona file — should fall back to built-in or default
@@ -405,7 +404,7 @@ version: 1
 
   it("falls back to hardcoded default when no file exists for any role", async () => {
     const tmpRoot = join(tmpdir(), `inkos-golden-default-${Date.now()}`);
-    await mkdir(join(tmpRoot, DATA_DIR_NAME), { recursive: true });
+    await mkdir(join(tmpRoot, ".inkos"), { recursive: true });
 
     try {
       // All 7 roles should resolve to some config
@@ -565,14 +564,14 @@ describe("Per-1: Behavior Variant Coverage", () => {
 describe("Per-9: Full Integration", () => {
   it("all 8 Per features work together end-to-end", async () => {
     const tmpRoot = join(tmpdir(), `inkos-golden-full-${Date.now()}`);
-    await mkdir(join(tmpRoot, DATA_DIR_NAME, "personas"), { recursive: true });
+    await mkdir(join(tmpRoot, ".inkos", "personas"), { recursive: true });
 
     try {
       // Step 1: Create persona file (Per-1 Schema + Per-2 Loader)
       const writerConfig = createValidPersona("writer");
       const fileContent = serializePersonaConfig(writerConfig, "## 完整测试\n\n端到端验证。");
       await writeFile(
-        join(tmpRoot, DATA_DIR_NAME, "personas", "writer.md"),
+        join(tmpRoot, ".inkos", "personas", "writer.md"),
         fileContent,
         "utf-8",
       );

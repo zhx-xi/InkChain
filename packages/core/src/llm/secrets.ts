@@ -5,13 +5,12 @@ import {
   encryptApiKeyForProject,
   decryptApiKeyForProject,
 } from "./encryption.js";
-import { DATA_DIR_NAME } from "../utils/data-directory.js";
 
 export interface SecretsFile {
   services: Record<string, { apiKey: string }>;
 }
 
-const SECRETS_DIR = DATA_DIR_NAME;
+const SECRETS_DIR = ".inkos";
 const SECRETS_FILE = "secrets.json";
 
 const LEGACY_SERVICE_ID_REMAP: Record<string, string> = {

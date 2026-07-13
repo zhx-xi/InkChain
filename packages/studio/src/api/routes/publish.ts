@@ -14,7 +14,6 @@ import { readFile, readdir, writeFile, mkdir } from "node:fs/promises";
 import { join, dirname } from "node:path";
 import { existsSync } from "node:fs";
 import { ApiError } from "../errors.js";
-import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 import {
   getAdapter,
   buildExportArtifact,
@@ -56,7 +55,7 @@ function safeDir(root: string, bookId: string): string {
   if (!/^[a-z0-9_-]+$/i.test(bookId)) {
     throw new ApiError(400, "INVALID_BOOK_ID", `Invalid book id: ${bookId}`);
   }
-  return join(root, DATA_DIR_NAME, "books", bookId);
+  return join(root, ".inkos", "books", bookId);
 }
 
 async function readBookMeta(root: string, bookId: string): Promise<BookMeta> {

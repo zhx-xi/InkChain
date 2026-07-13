@@ -13,9 +13,8 @@ import { join } from "node:path";
 import { existsSync } from "node:fs";
 import { learnStyle, summarizeStyleProfile, serializeStyleProfile, type EnhancedStyleProfile } from "@actalk/inkchain-core";
 import { ApiError } from "../errors.js";
-import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 
-const PROFILES_DIR = `${DATA_DIR_NAME}/style-profiles`;
+const PROFILES_DIR = ".inkos/style-profiles";
 
 function profilesDir(root: string): string {
   return join(root, PROFILES_DIR);

@@ -41,7 +41,6 @@ vi.mock("@mariozechner/pi-ai", () => ({
   getEnvApiKey: vi.fn(() => undefined),
 }));
 
-import { DATA_DIR_NAME } from "../utils/data-directory.js";
 import { resolveServiceModel } from "../llm/service-resolver.js";
 
 describe("resolveServiceModel", () => {
@@ -57,9 +56,9 @@ describe("resolveServiceModel", () => {
   });
 
   it("resolves built-in service with key from secrets", async () => {
-    await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
+    await mkdir(join(root, ".inkos"), { recursive: true });
     await writeFile(
-      join(root, DATA_DIR_NAME, "secrets.json"),
+      join(root, ".inkos", "secrets.json"),
       JSON.stringify({ services: { moonshot: { apiKey: "sk-moon" } } }),
     );
 
@@ -72,9 +71,9 @@ describe("resolveServiceModel", () => {
   });
 
   it("resolves deepseek with correct temperature", async () => {
-    await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
+    await mkdir(join(root, ".inkos"), { recursive: true });
     await writeFile(
-      join(root, DATA_DIR_NAME, "secrets.json"),
+      join(root, ".inkos", "secrets.json"),
       JSON.stringify({ services: { deepseek: { apiKey: "sk-deep" } } }),
     );
 
@@ -86,9 +85,9 @@ describe("resolveServiceModel", () => {
   });
 
   it("resolves Google to native google-generative-ai model", async () => {
-    await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
+    await mkdir(join(root, ".inkos"), { recursive: true });
     await writeFile(
-      join(root, DATA_DIR_NAME, "secrets.json"),
+      join(root, ".inkos", "secrets.json"),
       JSON.stringify({ services: { google: { apiKey: "sk-google" } } }),
     );
 
@@ -101,9 +100,9 @@ describe("resolveServiceModel", () => {
   });
 
   it("preserves DeepSeek tool-result bridge compatibility on resolved model", async () => {
-    await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
+    await mkdir(join(root, ".inkos"), { recursive: true });
     await writeFile(
-      join(root, DATA_DIR_NAME, "secrets.json"),
+      join(root, ".inkos", "secrets.json"),
       JSON.stringify({ services: { deepseek: { apiKey: "sk-deep" } } }),
     );
 
@@ -113,9 +112,9 @@ describe("resolveServiceModel", () => {
   });
 
   it("constructs model from preset when getModel returns undefined", async () => {
-    await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
+    await mkdir(join(root, ".inkos"), { recursive: true });
     await writeFile(
-      join(root, DATA_DIR_NAME, "secrets.json"),
+      join(root, ".inkos", "secrets.json"),
       JSON.stringify({ services: { deepseek: { apiKey: "sk-deep" } } }),
     );
 
@@ -172,9 +171,9 @@ describe("resolveServiceModel", () => {
   });
 
   it("resolves custom service with baseUrl", async () => {
-    await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
+    await mkdir(join(root, ".inkos"), { recursive: true });
     await writeFile(
-      join(root, DATA_DIR_NAME, "secrets.json"),
+      join(root, ".inkos", "secrets.json"),
       JSON.stringify({ services: { "custom:内网GPT": { apiKey: "sk-corp" } } }),
     );
 
@@ -190,9 +189,9 @@ describe("resolveServiceModel", () => {
   });
 
   it("resolves custom service with responses api format", async () => {
-    await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
+    await mkdir(join(root, ".inkos"), { recursive: true });
     await writeFile(
-      join(root, DATA_DIR_NAME, "secrets.json"),
+      join(root, ".inkos", "secrets.json"),
       JSON.stringify({ services: { "custom:内网GPT": { apiKey: "sk-corp" } } }),
     );
 
@@ -210,9 +209,9 @@ describe("resolveServiceModel", () => {
   });
 
   it("resolves MiniMax using the OpenAI-compatible preset endpoint", async () => {
-    await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
+    await mkdir(join(root, ".inkos"), { recursive: true });
     await writeFile(
-      join(root, DATA_DIR_NAME, "secrets.json"),
+      join(root, ".inkos", "secrets.json"),
       JSON.stringify({ services: { minimax: { apiKey: "sk-minimax" } } }),
     );
 

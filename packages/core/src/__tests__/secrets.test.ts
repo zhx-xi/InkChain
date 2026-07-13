@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { DATA_DIR_NAME } from "../utils/data-directory.js";
 import { loadSecrets, saveSecrets, getServiceApiKey } from "../llm/secrets.js";
 import { mkdtemp, rm, mkdir, writeFile, readFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -17,15 +16,15 @@ describe("secrets", () => {
   });
 
   describe("loadSecrets", () => {
-    it("returns empty when secrets.json does not exist", async () => {
+    it("returns empty when .inkos/secrets.json does not exist", async () => {
       const secrets = await loadSecrets(root);
       expect(secrets).toEqual({ services: {} });
     });
 
     it("reads existing secrets file", async () => {
-      await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
+      await mkdir(join(root, ".inkos"), { recursive: true });
       await writeFile(
-        join(root, DATA_DIR_NAME, "secrets.json"),
+        join(root, ".inkos", "secrets.json"),
         JSON.stringify({ services: { moonshot: { apiKey: "sk-test" } } }),
       );
       const secrets = await loadSecrets(root);
@@ -34,11 +33,11 @@ describe("secrets", () => {
   });
 
   describe("saveSecrets", () => {
-    it("creates data dir and writes encrypted secrets file", async () => {
+    it("creates .inkos dir and writes encrypted secrets file", async () => {
       await saveSecrets(root, {
         services: { deepseek: { apiKey: "sk-deep" } },
       });
-      const raw = await readFile(join(root, DATA_DIR_NAME, "secrets.json"), "utf-8");
+      const raw = await readFile(join(root, ".inkos", "secrets.json"), "utf-8");
       const parsed = JSON.parse(raw);
       // Key is encrypted on disk with aes256gcm: prefix
       expect(parsed.services.deepseek.apiKey).toMatch(/^aes256gcm:/);
@@ -48,9 +47,9 @@ describe("secrets", () => {
     });
 
     it("overwrites existing plaintext secrets with encrypted ones", async () => {
-      await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
+      await mkdir(join(root, ".inkos"), { recursive: true });
       await writeFile(
-        join(root, DATA_DIR_NAME, "secrets.json"),
+        join(root, ".inkos", "secrets.json"),
         JSON.stringify({ services: { old: { apiKey: "old-key" } } }),
       );
       await saveSecrets(root, {
@@ -62,9 +61,9 @@ describe("secrets", () => {
     });
 
     it("migrates existing plaintext keys to encrypted on read+save cycle", async () => {
-      await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
+      await mkdir(join(root, ".inkos"), { recursive: true });
       await writeFile(
-        join(root, DATA_DIR_NAME, "secrets.json"),
+        join(root, ".inkos", "secrets.json"),
         JSON.stringify({ services: { moonshot: { apiKey: "sk-plaintext" } } }),
       );
       // loadSecrets reads plaintext → saveSecrets encrypts (auto-migration happens if needed)
@@ -73,7 +72,7 @@ describe("secrets", () => {
       // Force a save
       await saveSecrets(root, secrets);
       // Now the file should contain encrypted values
-      const raw = await readFile(join(root, DATA_DIR_NAME, "secrets.json"), "utf-8");
+      const raw = await readFile(join(root, ".inkos", "secrets.json"), "utf-8");
       const parsed = JSON.parse(raw);
       expect(parsed.services.moonshot.apiKey).toMatch(/^aes256gcm:/);
       // loadSecrets can still read it back as plaintext
@@ -84,9 +83,9 @@ describe("secrets", () => {
 
   describe("getServiceApiKey", () => {
     it("returns key from secrets.json first", async () => {
-      await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
+      await mkdir(join(root, ".inkos"), { recursive: true });
       await writeFile(
-        join(root, DATA_DIR_NAME, "secrets.json"),
+        join(root, ".inkos", "secrets.json"),
         JSON.stringify({ services: { moonshot: { apiKey: "sk-from-file" } } }),
       );
       const key = await getServiceApiKey(root, "moonshot");
@@ -106,9 +105,9 @@ describe("secrets", () => {
     });
 
     it("handles custom service with colon key format", async () => {
-      await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
+      await mkdir(join(root, ".inkos"), { recursive: true });
       await writeFile(
-        join(root, DATA_DIR_NAME, "secrets.json"),
+        join(root, ".inkos", "secrets.json"),
         JSON.stringify({
           services: { "custom:内网GPT": { apiKey: "sk-custom" } },
         }),

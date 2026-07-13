@@ -3,7 +3,6 @@ import { mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
-import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 import { createPersonasRouter } from "../routes/personas.js";
 import { AgentRoleEnum } from "@actalk/inkchain-core";
 
@@ -19,7 +18,7 @@ async function ensureDir(dir: string): Promise<void> {
 }
 
 async function writePersonaFile(projectRoot: string, role: string, config: Record<string, unknown>, body = ""): Promise<void> {
-  const personasDir = join(projectRoot, DATA_DIR_NAME, "personas");
+  const personasDir = join(projectRoot, ".inkos", "personas");
   await ensureDir(personasDir);
   const frontmatter = Object.entries(config)
     .map(([key, value]) => `${key}: ${JSON.stringify(typeof value === "string" ? value : value)}`)
@@ -104,7 +103,7 @@ describe("Personas CRUD API", () => {
       expect(body.persona.personalityTraits).toEqual(["热血", "直白"]);
 
       // Verify persistence
-      const filePath = join(projectRoot, DATA_DIR_NAME, "personas", "writer.md");
+      const filePath = join(projectRoot, ".inkos", "personas", "writer.md");
       const saved = await readFile(filePath, "utf-8");
       expect(saved).toContain("热血 Writer");
       expect(saved).toContain("这是一个自定义的 writer 配置");
@@ -151,7 +150,7 @@ describe("Personas CRUD API", () => {
       });
 
       // Verify it exists
-      let filePath = join(projectRoot, DATA_DIR_NAME, "personas", "writer.md");
+      let filePath = join(projectRoot, ".inkos", "personas", "writer.md");
       let exists = await readFile(filePath, "utf-8").then(() => true).catch(() => false);
       expect(exists).toBe(true);
 

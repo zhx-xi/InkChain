@@ -2,7 +2,6 @@ import { mkdir, mkdtemp, rm, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 import { createStudioServer } from "../server.js";
 
 describe("Agent Team Config API (Issue #197 — GET/PUT /api/v1/project/agent-team)", () => {
@@ -38,7 +37,7 @@ describe("Agent Team Config API (Issue #197 — GET/PUT /api/v1/project/agent-te
   });
 
   it("GET returns saved config from file", async () => {
-    const configDir = join(root, DATA_DIR_NAME);
+    const configDir = join(root, ".inkos");
     await mkdir(configDir, { recursive: true });
     await writeFile(
       join(configDir, "agent-team.json"),
@@ -133,7 +132,7 @@ describe("Agent Team Config API (Issue #197 — GET/PUT /api/v1/project/agent-te
     expect(res.status).toBe(400);
   });
 
-  it("PUT creates agent-team.json on disk", async () => {
+  it("PUT creates .inkos/agent-team.json on disk", async () => {
     const app = createStudioServer({} as never, root);
 
     await app.request("/api/v1/project/agent-team", {
@@ -154,7 +153,7 @@ describe("Agent Team Config API (Issue #197 — GET/PUT /api/v1/project/agent-te
       }),
     });
 
-    const filePath = join(root, DATA_DIR_NAME, "agent-team.json");
+    const filePath = join(root, ".inkos", "agent-team.json");
     const content = JSON.parse(await readFile(filePath, "utf-8"));
     expect(content.schemaVersion).toBe("1");
     expect(content.collaborationMode).toBe("sequential");

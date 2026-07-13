@@ -9,7 +9,6 @@ import {
   filterEnabled,
   defaultBuiltinRoot,
 } from "../skill-config-loader.js";
-import { DATA_DIR_NAME } from "../../utils/data-directory.js";
 import type { StoredSkillConfig } from "../skill-config.js";
 
 describe("skill config loader (Issue #74)", () => {
@@ -20,7 +19,7 @@ describe("skill config loader (Issue #74)", () => {
     projectRoot = await mkdtemp(join(tmpdir(), "inkos-skill-proj-"));
     builtinRoot = await mkdtemp(join(tmpdir(), "inkos-skill-builtin-"));
     await mkdir(join(builtinRoot, "skills"), { recursive: true });
-    await mkdir(join(projectRoot, DATA_DIR_NAME, "skills"), { recursive: true });
+    await mkdir(join(projectRoot, ".inkos/skills"), { recursive: true });
   });
 
   afterEach(async () => {
@@ -52,7 +51,7 @@ describe("skill config loader (Issue #74)", () => {
   });
 
   it("loads project skills when only project directory has files", async () => {
-    await writeSkill(join(projectRoot, DATA_DIR_NAME, "skills"), "custom-helper", {
+    await writeSkill(join(projectRoot, ".inkos/skills"), "custom-helper", {
       id: "custom-helper",
       category: "utility",
       description: "Project-local utility",
@@ -69,7 +68,7 @@ describe("skill config loader (Issue #74)", () => {
       description: "Builtin version",
       enabled: true,
     });
-    await writeSkill(join(projectRoot, DATA_DIR_NAME, "skills"), "shared", {
+    await writeSkill(join(projectRoot, ".inkos/skills"), "shared", {
       id: "shared",
       category: "writing",
       description: "Project override",
@@ -80,7 +79,7 @@ describe("skill config loader (Issue #74)", () => {
       category: "analysis",
       description: "Only in builtin",
     });
-    await writeSkill(join(projectRoot, DATA_DIR_NAME, "skills"), "project-only", {
+    await writeSkill(join(projectRoot, ".inkos/skills"), "project-only", {
       id: "project-only",
       category: "character",
       description: "Only in project",

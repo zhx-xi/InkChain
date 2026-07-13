@@ -22,9 +22,8 @@ import {
   type Foreshadowing,
 } from "@actalk/inkchain-core";
 import { ApiError } from "../errors.js";
-import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 
-const FS_DIR = `${DATA_DIR_NAME}/foreshadowing`;
+const FS_DIR = ".inkos/foreshadowing";
 
 function entryPath(root: string, id: string): string {
   return join(root, FS_DIR, `${id}.json`);

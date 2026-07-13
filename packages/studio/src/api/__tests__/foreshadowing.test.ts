@@ -2,7 +2,6 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 import { createStudioServer } from "../server.js";
 
 async function writeForeshadowing(
@@ -10,7 +9,7 @@ async function writeForeshadowing(
   data: Record<string, unknown>,
 ): Promise<void> {
   const { mkdir, writeFile } = await import("node:fs/promises");
-  const dir = join(root, DATA_DIR_NAME, "foreshadowing");
+  const dir = join(root, ".inkos", "foreshadowing");
   await mkdir(dir, { recursive: true });
   await writeFile(
     join(dir, `${data.id}.json`),

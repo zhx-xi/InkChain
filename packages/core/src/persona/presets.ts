@@ -18,7 +18,6 @@ import {
 } from "../models/persona-config.js";
 import { getDefaultPersona, DEFAULT_PERSONAS } from "./defaults.js";
 import yaml from "js-yaml";
-import { DATA_DIR_NAME } from "../utils/data-directory.js";
 
 // ── Preset Source Types ──
 
@@ -34,7 +33,7 @@ export interface PresetSummary {
 
 // ── Relative path for project-level presets ──
 
-const PROJECT_PRESETS_RELATIVE = `${DATA_DIR_NAME}/presets`;
+const PROJECT_PRESETS_RELATIVE = ".inkos/presets";
 
 // ── Helper ──
 

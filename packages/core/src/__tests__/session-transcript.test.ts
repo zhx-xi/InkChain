@@ -16,7 +16,6 @@ import type {
   RequestCommittedEvent,
   RequestStartedEvent,
 } from "../interaction/session-transcript-schema.js";
-import { DATA_DIR_NAME } from "../utils/data-directory.js";
 
 describe("session transcript codec", () => {
   let projectRoot: string;
@@ -89,7 +88,7 @@ describe("session transcript codec", () => {
   });
 
   it("跳过坏行并保留合法 event", async () => {
-    const dir = join(projectRoot, DATA_DIR_NAME, "sessions");
+    const dir = join(projectRoot, ".inkos", "sessions");
     await mkdir(dir, { recursive: true });
     await writeFile(
       join(dir, "s1.jsonl"),

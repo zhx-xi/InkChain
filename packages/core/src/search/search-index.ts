@@ -2,11 +2,10 @@
 // Tokenizes Chinese text by character, English/Latin by whitespace,
 // and builds/manages an in-memory inverted index with on-disk persistence.
 //
-// Storage: {projectRoot}/{DATA_DIR_NAME}/search_index.json
+// Storage: {projectRoot}/.inkos/search_index.json
 
 import { readFile, writeFile, mkdir, readdir as fsReaddir } from "node:fs/promises";
 import { join, dirname } from "node:path";
-import { DATA_DIR_NAME } from "../utils/data-directory.js";
 
 // ── Types ──
 
@@ -41,7 +40,7 @@ export interface SearchIndex {
 
 // ── Storage path ──
 
-const SEARCH_INDEX_REL = `${DATA_DIR_NAME}/search_index.json`;
+const SEARCH_INDEX_REL = ".inkos/search_index.json";
 
 export function searchIndexPath(projectRoot: string): string {
   return join(projectRoot, SEARCH_INDEX_REL);
@@ -539,7 +538,7 @@ export async function persistSearchIndex(
  *   - tags loaded from session-tags.json
  *
  * @param projectRoot  The project root directory.
- * @param sessionsDirPath  The sessions directory (e.g., {projectRoot}/{DATA_DIR_NAME}/sessions).
+ * @param sessionsDirPath  The sessions directory (e.g., {projectRoot}/.inkos/sessions).
  * @param tagsById     Optional map of sessionId -> tag names for tagging docs.
  */
 export async function buildIndexFromSessions(
@@ -636,12 +635,12 @@ export async function buildIndexFromSessions(
  * Convenience function that loads tags and sessions in one pass.
  */
 export async function rebuildSearchIndex(projectRoot: string): Promise<SearchIndex> {
-  const sessionsDirPath = join(projectRoot, DATA_DIR_NAME, "sessions");
+  const sessionsDirPath = join(projectRoot, ".inkos", "sessions");
 
   // Try to load tags
   let tagsById: Record<string, string[]> = {};
   try {
-    const tagsRaw = await readFile(join(projectRoot, DATA_DIR_NAME, "session-tags.json"), "utf-8");
+    const tagsRaw = await readFile(join(projectRoot, ".inkos", "session-tags.json"), "utf-8");
     const tagsParsed = JSON.parse(tagsRaw);
     const tagsData = tagsParsed?.tags as Record<string, Array<{ name: string }>> | undefined;
     if (tagsData) {

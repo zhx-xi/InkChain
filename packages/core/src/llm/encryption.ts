@@ -2,7 +2,6 @@ import { createCipheriv, createDecipheriv, randomBytes, createHash } from "node:
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { hostname } from "node:os";
-import { DATA_DIR_NAME } from "../utils/data-directory.js";
 
 /**
  * AES-256-GCM encryption utilities for API key storage.
@@ -21,7 +20,7 @@ import { DATA_DIR_NAME } from "../utils/data-directory.js";
 export const ENCRYPTION_PREFIX = "aes256gcm:";
 
 const KEY_FILE = ".key.enc";
-const KEY_DIR = DATA_DIR_NAME;
+const KEY_DIR = ".inkos";
 
 /** Return true if the value looks like an encrypted string. */
 export function isEncrypted(value: string): boolean {

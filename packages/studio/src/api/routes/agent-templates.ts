@@ -13,7 +13,6 @@ import { Hono } from "hono";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ApiError } from "../errors.js";
-import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 
 // ── Types ──
 
@@ -77,7 +76,7 @@ function validateOptionalRecord(value: unknown): Record<string, unknown> | undef
 // ── Storage ──
 
 function templatesFilePath(root: string): string {
-  return join(root, DATA_DIR_NAME, "agent-templates.json");
+  return join(root, ".inkos", "agent-templates.json");
 }
 
 async function loadTemplates(root: string): Promise<AgentTemplate[]> {
@@ -101,7 +100,8 @@ async function loadTemplates(root: string): Promise<AgentTemplate[]> {
 }
 
 async function saveTemplates(root: string, templates: AgentTemplate[]): Promise<void> {
-  await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
+  const dir = join(root, ".inkos");
+  await mkdir(dir, { recursive: true });
   await writeFile(templatesFilePath(root), JSON.stringify(templates, null, 2), "utf-8");
 }
 

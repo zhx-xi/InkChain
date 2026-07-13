@@ -26,7 +26,6 @@ vi.mock("@mariozechner/pi-ai", () => ({
   getEnvApiKey: vi.fn(() => undefined),
 }));
 
-import { DATA_DIR_NAME } from "../utils/data-directory.js";
 import { resolveServiceModel } from "../llm/service-resolver.js";
 
 describe("resolveServiceModel regression — preset baseUrl override", () => {
@@ -34,9 +33,9 @@ describe("resolveServiceModel regression — preset baseUrl override", () => {
 
   beforeEach(async () => {
     root = await mkdtemp(join(tmpdir(), "inkos-resolver-reg-"));
-    await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
+    await mkdir(join(root, ".inkos"), { recursive: true });
     await writeFile(
-      join(root, DATA_DIR_NAME, "secrets.json"),
+      join(root, ".inkos", "secrets.json"),
       JSON.stringify({ services: { minimax: { apiKey: "sk-minimax-test" } } }),
     );
   });

@@ -11,12 +11,11 @@ import {
   type VoiceProfile,
   type VoiceProfilesFile,
 } from "../models/voice-profile.js";
-import { DATA_DIR_NAME } from "../utils/data-directory.js";
 
 // ── Path Resolution ──
 
 export function resolveVoiceProfilesPath(projectRoot: string): string {
-  return join(projectRoot, DATA_DIR_NAME, "voice-profiles.json");
+  return join(projectRoot, ".inkos", "voice-profiles.json");
 }
 
 // ── Internal Helpers ──
