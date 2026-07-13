@@ -74,7 +74,7 @@ test.describe("RelationGraphPanel — 核心创作功能基线", () => {
   test("7. 空状态: 无关系时显示空状态", async ({ page }) => {
     await page.waitForTimeout(2000);
     const emptyState = page.locator(
-      "[data-testid='rg-empty-state'], [data-testid='rg-state-empty'], text=创建第一个, text=暂无, text=添加第一个"
+      "[data-testid='rg-empty-state'], [data-testid='rg-state-empty'], :has-text('创建第一个'), :has-text('暂无'), :has-text('添加第一个')"
     );
     const hasEmpty = (await emptyState.count()) > 0;
     console.log(`Empty state visible: ${hasEmpty}`);
@@ -87,7 +87,7 @@ test.describe("RelationGraphPanel — 核心创作功能基线", () => {
     await page.reload();
     await page.waitForTimeout(2000);
     const error = page.locator(
-      "[data-testid='rg-error-state'], [data-testid='rg-state-error'], text=错误, text=失败, text=重试"
+      "[data-testid='rg-error-state'], [data-testid='rg-state-error'], :has-text('错误'), :has-text('失败'), :has-text('重试')"
     );
     const hasError = (await error.count()) > 0;
     console.log(`Error state visible: ${hasError}`);
