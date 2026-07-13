@@ -1,7 +1,7 @@
 // ── Skill Config CRUD API (Issue #76 — Skill-3) ──
 //
 // Project-level Skill configuration management using the new SkillConfig JSON
-// schema from @actalk/inkchain-core. Stores files as `.inkos/skills/<id>.json` and
+// schema from @inkchain/inkchain-core. Stores files as `.inkos/skills/<id>.json` and
 // merges them with builtin skills from the defaults package.
 //
 // Version History (Issue #96 — Skill-9):
@@ -30,7 +30,7 @@ import {
   type SkillConfig,
   type SkillSource,
   type StoredSkillConfig,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 import { ApiError } from "../errors.js";
 import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 

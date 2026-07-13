@@ -30,7 +30,7 @@ import {
   type ForeshadowingContext,
   type ContinueCandidate,
   type ConflictIssue,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 import { readFile, readdir } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -194,13 +194,13 @@ async function loadBookChapterSummaries(root: string, bookId: string): Promise<s
 
 // Note: These type imports are used in the function signatures above.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { CharacterRelation } from "@actalk/inkchain-core";
+import type { CharacterRelation } from "@inkchain/inkchain-core";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { TimelineEvent } from "@actalk/inkchain-core";
+import type { TimelineEvent } from "@inkchain/inkchain-core";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { Foreshadowing } from "@actalk/inkchain-core";
+import type { Foreshadowing } from "@inkchain/inkchain-core";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import type { CurrentStateFact } from "@actalk/inkchain-core";
+import type { CurrentStateFact } from "@inkchain/inkchain-core";
 
 async function buildContinueContext(
   root: string,

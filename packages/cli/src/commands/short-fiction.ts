@@ -14,10 +14,10 @@ import {
   type Logger,
   type OnStreamProgress,
   type ShortFictionReference,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 import { buildPipelineConfig, findProjectRoot, loadConfig, log, logError } from "../utils.js";
 
-export { extractResponsesImageBase64, resolveCoverApiKey } from "@actalk/inkchain-core";
+export { extractResponsesImageBase64, resolveCoverApiKey } from "@inkchain/inkchain-core";
 
 export const shortCommand = new Command("short")
   .description("Short fiction production workflow");

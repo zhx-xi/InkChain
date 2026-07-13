@@ -8,7 +8,7 @@ import { cn } from "../lib/utils";
 import { usePresetList, usePresetDetail, useApplyPreset, useSavePreset } from "../hooks/use-preset-api";
 import { usePersonaList } from "../hooks/use-persona-api";
 import { AGENTS } from "./AgentCard";
-import type { AgentRole } from "@actalk/inkchain-core/models/persona-config.js";
+import type { AgentRole } from "@inkchain/inkchain-core/models/persona-config.js";
 
 // ── Props ──
 

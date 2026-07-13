@@ -15,8 +15,8 @@
     "types": ["node", "vitest/globals"],
     "paths": {
       "@/*": ["./src/*"],
-      "@actalk/inkchain-core": ["../core/src/index.ts"],
-      "@actalk/inkchain-core/*": ["../core/src/*"]
+      "@inkchain/inkchain-core": ["../core/src/index.ts"],
+      "@inkchain/inkchain-core/*": ["../core/src/*"]
     },
     "baseUrl": "."
   },

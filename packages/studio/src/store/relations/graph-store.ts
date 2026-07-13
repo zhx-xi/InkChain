@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { fetchJson } from "../../hooks/use-api";
-import type { CharacterRelation } from "@actalk/inkchain-core";
+import type { CharacterRelation } from "@inkchain/inkchain-core";
 import type { GraphNodeData, GraphEdgeData } from "./types";
 import { fuzzyMatchRoleId, roleFromPath, type RoleRef } from "../../lib/truth-display";
 
@@ -180,7 +180,7 @@ export const useGraphStore = create<GraphState>()((set, get) => ({
 
 /**
  * Map a RelationType to a human-readable Chinese label.
- * Uses an inline map instead of importing from @actalk/inkchain-core to keep the
+ * Uses an inline map instead of importing from @inkchain/inkchain-core to keep the
  * frontend bundle lean and avoid cross-package dependency concerns.
  */
 function getRelationLabel(type: string): string {

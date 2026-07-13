@@ -1,4 +1,4 @@
-import type { StoryGraph } from "@actalk/inkchain-core/interactive-film/graph-schema";
+import type { StoryGraph } from "@inkchain/inkchain-core/interactive-film/graph-schema";
 
 export interface FlowNodeData {
   readonly label: string;

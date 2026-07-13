@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { ConsolidatorAgent } from "@actalk/inkchain-core";
+import { ConsolidatorAgent } from "@inkchain/inkchain-core";
 import { loadConfig, buildPipelineConfig, findProjectRoot, resolveBookId, log, logError } from "../utils.js";
 
 export const consolidateCommand = new Command("consolidate")
@@ -19,7 +19,7 @@ export const consolidateCommand = new Command("consolidate")
         projectRoot: root,
       });
 
-      const { StateManager } = await import("@actalk/inkchain-core");
+      const { StateManager } = await import("@inkchain/inkchain-core");
       const state = new StateManager(root);
       const bookDir = state.bookDir(bookId);
 

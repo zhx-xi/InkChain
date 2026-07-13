@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 
 import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 import { createPersonasRouter } from "../routes/personas.js";
-import { AgentRoleEnum } from "@actalk/inkchain-core";
+import { AgentRoleEnum } from "@inkchain/inkchain-core";
 
 // ── Helpers ──
 

@@ -18,7 +18,7 @@ import {
   addSessionTag,
   removeSessionTag,
   listTagsByName,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 import { randomUUID } from "node:crypto";
 
 /**

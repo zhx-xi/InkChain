@@ -1,4 +1,4 @@
-import type { StoryNode } from "@actalk/inkchain-core/interactive-film/graph-schema";
+import type { StoryNode } from "@inkchain/inkchain-core/interactive-film/graph-schema";
 
 export function genNodeId(): string {
   return `node-${crypto.randomUUID().slice(0, 8)}`;

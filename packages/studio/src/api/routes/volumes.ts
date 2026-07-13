@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 
 // ── Inline type definitions ──
-// Schema validation is handled by @actalk/inkchain-core VolumeSchema after PR #106 is merged.
+// Schema validation is handled by @inkchain/inkchain-core VolumeSchema after PR #106 is merged.
 // For now, use simple runtime type checks.
 
 type VolumeStatus = "draft" | "active" | "completed";

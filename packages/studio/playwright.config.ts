@@ -2,7 +2,7 @@ import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./e2e",
-  // Rebuild @actalk/inkchain-core before starting the E2E server.  The API server
+  // Rebuild @inkchain/inkchain-core before starting the E2E server.  The API server
   // (tsx watch src/api/index.ts) imports core via its compiled dist/index.js,
   // not the TypeScript source.  A stale dist causes runtime behaviour to
   // diverge from the sources, making otherwise-correct logic invisible to the
@@ -30,7 +30,7 @@ export default defineConfig({
   //   INKCHAIN_E2E_PROJECT_ROOT="C:/path/to/project" pnpm start:e2e
   //
   // To run E2E tests against real LLM APIs (requires configured API keys):
-  //   set INKCHAIN_E2E_REAL_LLM=1 && pnpm --filter @actalk/inkchain-studio exec playwright test
+  //   set INKCHAIN_E2E_REAL_LLM=1 && pnpm --filter @inkchain/inkchain-studio exec playwright test
   // This skips page.route() mocking for AI extraction endpoints, letting
   // requests pass through to the real backend. See e2e/fixtures/mock-llm-helper.ts.
   // CI always runs with Mock mode (default).

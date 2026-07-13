@@ -11,7 +11,7 @@ import { Hono } from "hono";
 import { readFile, writeFile, mkdir, rm, readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
-import { learnStyle, summarizeStyleProfile, serializeStyleProfile, type EnhancedStyleProfile } from "@actalk/inkchain-core";
+import { learnStyle, summarizeStyleProfile, serializeStyleProfile, type EnhancedStyleProfile } from "@inkchain/inkchain-core";
 import { ApiError } from "../errors.js";
 import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 
@@ -157,9 +157,9 @@ export function createStyleProfilesRouter(root: string) {
 
 // Re-export for convenience
 function profileToConstraints(profile: EnhancedStyleProfile) {
-  const { formatStyleConstraintsSection } = require("@actalk/inkchain-core");
+  const { formatStyleConstraintsSection } = require("@inkchain/inkchain-core");
   return formatStyleConstraintsSection(
-    (require("@actalk/inkchain-core") as any).profileToConstraints?.(profile) ?? [],
+    (require("@inkchain/inkchain-core") as any).profileToConstraints?.(profile) ?? [],
     profile.language ?? "zh",
   );
 }

@@ -76,16 +76,16 @@ describe.sequential("publish packaging", () => {
       );
       await writeFile(
         join(tempCoreDir, "package.json"),
-        `${JSON.stringify({ name: "@actalk/inkchain-core", version: "0.4.6" }, null, 2)}\n`,
+        `${JSON.stringify({ name: "@inkchain/inkchain-core", version: "0.4.6" }, null, 2)}\n`,
       );
       await writeFile(
         join(tempCliDir, "package.json"),
         `${JSON.stringify(
           {
-            name: "@actalk/inkchain-cli",
+            name: "@inkchain/inkchain-cli",
             version: "0.4.6",
             dependencies: {
-              "@actalk/inkchain-core": "workspace:*",
+              "@inkchain/inkchain-core": "workspace:*",
               commander: "^13.0.0",
             },
           },
@@ -111,7 +111,7 @@ describe.sequential("publish packaging", () => {
       expect(rootPackageJson.version).toBe("0.4.8-canary.7");
       expect(corePackageJson.version).toBe("0.4.8-canary.7");
       expect(cliPackageJson.version).toBe("0.4.8-canary.7");
-      expect(cliPackageJson.dependencies["@actalk/inkchain-core"]).toBe("0.4.8-canary.7");
+      expect(cliPackageJson.dependencies["@inkchain/inkchain-core"]).toBe("0.4.8-canary.7");
     } finally {
       await rm(tempRoot, { recursive: true, force: true });
     }
@@ -120,8 +120,8 @@ describe.sequential("publish packaging", () => {
   it("keeps source CLI dependencies linked through the workspace protocol", async () => {
     const cliPackageJson = await sourceCliPackageJsonPromise;
 
-    expect(cliPackageJson.dependencies["@actalk/inkchain-core"]).toBe("workspace:*");
-    expect(cliPackageJson.dependencies["@actalk/inkchain-studio"]).toBe("workspace:*");
+    expect(cliPackageJson.dependencies["@inkchain/inkchain-core"]).toBe("workspace:*");
+    expect(cliPackageJson.dependencies["@inkchain/inkchain-studio"]).toBe("workspace:*");
   });
 
   it("verifies publishable manifests before npm publish runs", async () => {
@@ -154,16 +154,16 @@ describe.sequential("publish packaging", () => {
       );
       await writeFile(
         join(tempCoreDir, "package.json"),
-        `${JSON.stringify({ name: "@actalk/inkchain-core", version: "0.5.1" }, null, 2)}\n`,
+        `${JSON.stringify({ name: "@inkchain/inkchain-core", version: "0.5.1" }, null, 2)}\n`,
       );
       await writeFile(
         join(tempCliDir, "package.json"),
         `${JSON.stringify(
           {
-            name: "@actalk/inkchain-cli",
+            name: "@inkchain/inkchain-cli",
             version: "0.5.1",
             dependencies: {
-              "@actalk/inkchain-core": "workspace:*",
+              "@inkchain/inkchain-core": "workspace:*",
               commander: "^13.0.0",
             },
           },
@@ -204,16 +204,16 @@ describe.sequential("publish packaging", () => {
       );
       await writeFile(
         join(tempCoreDir, "package.json"),
-        `${JSON.stringify({ name: "@actalk/inkchain-core", version: "0.5.1" }, null, 2)}\n`,
+        `${JSON.stringify({ name: "@inkchain/inkchain-core", version: "0.5.1" }, null, 2)}\n`,
       );
       await writeFile(
         join(tempCliDir, "package.json"),
         `${JSON.stringify(
           {
-            name: "@actalk/inkchain-cli",
+            name: "@inkchain/inkchain-cli",
             version: "0.5.1",
             dependencies: {
-              "@actalk/inkchain-core": "workspace:0.5.0",
+              "@inkchain/inkchain-core": "workspace:0.5.0",
             },
           },
           null,
@@ -247,8 +247,8 @@ describe.sequential("publish packaging", () => {
       );
       const studioPackageJson = await sourceStudioPackageJsonPromise;
 
-      expect(packedPackageJson.dependencies["@actalk/inkchain-core"]).toBe(corePackageJson.version);
-      expect(packedPackageJson.dependencies["@actalk/inkchain-studio"]).toBe(studioPackageJson.version);
+      expect(packedPackageJson.dependencies["@inkchain/inkchain-core"]).toBe(corePackageJson.version);
+      expect(packedPackageJson.dependencies["@inkchain/inkchain-studio"]).toBe(studioPackageJson.version);
     } finally {
       await rm(packDir, { recursive: true, force: true });
     }

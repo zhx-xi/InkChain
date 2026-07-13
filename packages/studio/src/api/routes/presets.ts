@@ -17,8 +17,8 @@ import {
   deletePreset,
   type PersonaConfig,
   type AgentRole,
-} from "@actalk/inkchain-core";
-import type { PersonaConfig as PC } from "@actalk/inkchain-core/models/persona-config.js";
+} from "@inkchain/inkchain-core";
+import type { PersonaConfig as PC } from "@inkchain/inkchain-core/models/persona-config.js";
 
 // ── Route factory ──
 

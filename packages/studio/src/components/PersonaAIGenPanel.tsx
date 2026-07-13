@@ -8,7 +8,7 @@ import { X, Send, Loader2, AlertCircle, CheckCircle2, ChevronDown, ChevronRight,
 import { cn } from "../lib/utils";
 import { usePersonaAIGen } from "../hooks/use-persona-ai-gen";
 import { AGENTS } from "./AgentCard";
-import type { PersonaConfig, AgentRole } from "@actalk/inkchain-core/models/persona-config.js";
+import type { PersonaConfig, AgentRole } from "@inkchain/inkchain-core/models/persona-config.js";
 
 // ── Props ──
 

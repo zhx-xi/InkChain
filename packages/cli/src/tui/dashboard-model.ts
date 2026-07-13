@@ -3,7 +3,7 @@ import type {
   InteractionEvent,
   InteractionMessage,
   InteractionSession,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 import { formatModeLabel, normalizeStageLabel, type TuiCopy } from "./i18n.js";
 
 export interface DashboardMessageRow {

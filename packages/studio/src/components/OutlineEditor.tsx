@@ -17,7 +17,7 @@ import type {
   OutlineFile,
   PlotLine,
   KeyEvent,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 
 // ── Constants ──
 

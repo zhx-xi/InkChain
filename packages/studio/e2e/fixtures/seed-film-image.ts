@@ -1,4 +1,4 @@
-import { saveStoryGraph, StoryGraphSchema } from "@actalk/inkchain-core";
+import { saveStoryGraph, StoryGraphSchema } from "@inkchain/inkchain-core";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { mkdir, writeFile } from "node:fs/promises";

@@ -7,7 +7,7 @@ const loadBookConfigMock = vi.fn();
 const logMock = vi.fn();
 const logErrorMock = vi.fn();
 
-vi.mock("@actalk/inkchain-core", () => ({
+vi.mock("@inkchain/inkchain-core", () => ({
   DEFAULT_REVISE_MODE: "spot-fix",
   PipelineRunner: class {
     reviseDraft = reviseDraftMock;
