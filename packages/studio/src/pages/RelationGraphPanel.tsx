@@ -287,7 +287,6 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
 
   // ── Reset handler ──
   const handleReset = useCallback(() => {
-    if (!window.confirm("确认重置关系图谱？重置将刷新图谱数据，恢复初始状态。")) return;
     selectNode(null);
     setHasFit(false);
     window.dispatchEvent(new Event("resize"));
