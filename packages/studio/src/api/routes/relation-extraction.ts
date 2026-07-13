@@ -159,6 +159,7 @@ export function createRelationExtractionRouter(
         proposals: result.proposals,
         sourceChapters: result.sourceChapters,
         sourceCharacters: result.sourceCharacters,
+        characterTiers: result.characterTiers,
         existingRelationsCount: relationsFile.relations.length,
       });
     } catch (err) {

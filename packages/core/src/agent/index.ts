@@ -22,6 +22,8 @@ export { runAgentSession, evictAgentCache, type AgentSessionConfig, type AgentSe
 export { createBookContextTransform } from "./context-transform.js";
 export {
   extractRelationsFromProse,
+  normalizeParsedResult,
+  parseProposalsFromLLMResponse,
   type RelationProposal,
   type ExtractionResult,
 } from "./relation-extractor.js";
