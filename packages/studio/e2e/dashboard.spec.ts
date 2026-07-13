@@ -16,11 +16,11 @@ test.describe("Dashboard — 项目首页/仪表盘", () => {
     expect(bodyText.length).toBeGreaterThan(0);
 
     // Breadcrumb should be present
-    const breadcrumbHome = page.locator('[data-testid="breadcrumb-home"], [data-testid="dash-breadcrumb"], nav[class*="breadcrumb"], .breadcrumb').first();
+    const breadcrumbHome = page.locator("[data-testid='breadcrumb-home'], [data-testid='dash-breadcrumb'], nav[class*='breadcrumb'], .breadcrumb").first();
     const breadcrumbVisible = await breadcrumbHome.isVisible({ timeout: 3000 }).catch(() => false);
 
     // Sidebar toggle should be present
-    const sidebarToggle = page.locator('[data-testid="sidebar-toggle"], button[class*="sidebar"], [aria-label*="sidebar"], [aria-label*="Sidebar"]').first();
+    const sidebarToggle = page.locator("[data-testid='sidebar-toggle'], button[class*='sidebar'], [aria-label*='sidebar'], [aria-label*='Sidebar']").first();
     const sidebarVisible = await sidebarToggle.isVisible({ timeout: 2000 }).catch(() => false);
 
     // Dashboard should display
