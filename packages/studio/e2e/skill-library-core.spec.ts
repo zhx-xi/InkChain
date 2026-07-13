@@ -22,7 +22,7 @@ test.describe("SkillListPage — 核心创作功能基线", () => {
   test("2. 创建Skill按钮存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     const createBtn = page.locator(
-      '[data-testid="sk-create-btn"], [data-testid="sk-btn-create-skill"], button:has-text("创建"), button:has-text("新建")'
+      "[data-testid='sk-create-btn'], [data-testid='sk-btn-create-skill'], button:has-text('创建'), button:has-text('新建')"
     );
     const count = await createBtn.count();
     console.log(`Create skill buttons: ${count}`);
@@ -31,7 +31,7 @@ test.describe("SkillListPage — 核心创作功能基线", () => {
   test("3. 搜索输入框存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     const searchInput = page.locator(
-      '[data-testid="sk-search-input"], input[type="text"], [data-testid*="search"]'
+      "[data-testid='sk-search-input'], input[type='text'], [data-testid*='search']"
     );
     const count = await searchInput.count();
     console.log(`Search inputs: ${count}`);
@@ -40,7 +40,7 @@ test.describe("SkillListPage — 核心创作功能基线", () => {
   test("4. 启用/禁用开关存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     const toggle = page.locator(
-      '[data-testid*="toggle"], [data-testid*="Toggle"], [role="switch"], input[type="checkbox"]'
+      "[data-testid*='toggle'], [data-testid*='Toggle'], [role='switch'], input[type='checkbox']"
     );
     const count = await toggle.count();
     console.log(`Toggle elements: ${count}`);
@@ -49,7 +49,7 @@ test.describe("SkillListPage — 核心创作功能基线", () => {
   test("5. 分类筛选选择器存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     const filterSelect = page.locator(
-      '[data-testid*="category"], [data-testid*="filter"], select, [role="combobox"]'
+      "[data-testid*='category'], [data-testid*='filter'], select, [role='combobox']"
     );
     const count = await filterSelect.count();
     console.log(`Category filter elements: ${count}`);
@@ -58,7 +58,7 @@ test.describe("SkillListPage — 核心创作功能基线", () => {
   test("6. 空状态: 无Skill时显示", async ({ page }) => {
     await page.waitForTimeout(2000);
     const emptyState = page.locator(
-      '[data-testid*="empty"], [data-testid*="Empty"], :has-text("创建第一个"), :has-text("暂无")'
+      "[data-testid*='empty'], [data-testid*='Empty'], :has-text('创建第一个'), :has-text('暂无')"
     );
     const hasEmpty = (await emptyState.count()) > 0;
     console.log(`Empty state: ${hasEmpty}`);
@@ -71,7 +71,7 @@ test.describe("SkillListPage — 核心创作功能基线", () => {
     await page.reload();
     await page.waitForTimeout(2000);
     const error = page.locator(
-      '[data-testid*="error"], [data-testid*="Error"], :has-text("错误"), :has-text("失败")'
+      "[data-testid*='error'], [data-testid*='Error'], :has-text('错误'), :has-text('失败')"
     );
     const hasError = (await error.count()) > 0;
     console.log(`Error state: ${hasError}`);
@@ -80,7 +80,7 @@ test.describe("SkillListPage — 核心创作功能基线", () => {
   test("8. 分页控件存在", async ({ page }) => {
     await page.waitForTimeout(2000);
     const pagination = page.locator(
-      '[data-testid*="pagination"], button:has-text("上一页"), button:has-text("下一页")'
+      "[data-testid*='pagination'], button:has-text('上一页'), button:has-text('下一页')"
     );
     const count = await pagination.count();
     console.log(`Pagination elements: ${count}`);
@@ -89,7 +89,7 @@ test.describe("SkillListPage — 核心创作功能基线", () => {
   test("9. 编辑按钮存在 (列表项)", async ({ page }) => {
     await page.waitForTimeout(2000);
     const editBtns = page.locator(
-      'button:has-text("编辑"), [data-testid*="edit"], [data-testid*="Edit"]'
+      "button:has-text('编辑'), [data-testid*='edit'], [data-testid*='Edit']"
     );
     const count = await editBtns.count();
     console.log(`Edit buttons: ${count}`);

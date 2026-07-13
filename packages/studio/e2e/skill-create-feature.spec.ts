@@ -20,7 +20,7 @@ test.describe("Skill 库 — 创建功能端到端验证", () => {
 
     // Find create button
     const createBtn = page.locator(
-      '[data-testid="sk-create-btn"], [data-testid="sk-btn-create-skill"], button:has-text("创建"), button:has-text("新建")'
+      "[data-testid='sk-create-btn'], [data-testid='sk-btn-create-skill'], button:has-text('创建'), button:has-text('新建')"
     );
     const createCount = await createBtn.count();
     console.log(`Create skill buttons: ${createCount}`);
@@ -32,7 +32,7 @@ test.describe("Skill 库 — 创建功能端到端验证", () => {
 
       // Fill in skill name if form opens
       const nameInput = page.locator(
-        'input[placeholder*="名称"], input[placeholder*="name"], input[placeholder*="Skill"], [data-testid*="name-input"]'
+        "input[placeholder*='名称'], input[placeholder*='name'], input[placeholder*='Skill'], [data-testid*='name-input']"
       );
       const skillName = `E2E Test Skill ${Date.now()}`;
       if (await nameInput.isVisible({ timeout: 3000 }).catch(() => false)) {
@@ -41,7 +41,7 @@ test.describe("Skill 库 — 创建功能端到端验证", () => {
 
       // Fill in description if available
       const descInput = page.locator(
-        'textarea, [data-testid*="description"], [data-testid*="desc"]'
+        "textarea, [data-testid*='description'], [data-testid*='desc']"
       );
       if (await descInput.isVisible({ timeout: 1000 }).catch(() => false)) {
         await descInput.fill("Created by E2E test for Issue #611");
@@ -49,7 +49,7 @@ test.describe("Skill 库 — 创建功能端到端验证", () => {
 
       // Save/create
       const saveBtn = page.locator(
-        'button:has-text("保存"), button:has-text("创建"), button:has-text("确认"), [data-testid*="save"]'
+        "button:has-text('保存'), button:has-text('创建'), button:has-text('确认'), [data-testid*='save']"
       );
       if (await saveBtn.first().isVisible({ timeout: 2000 }).catch(() => false)) {
         await saveBtn.first().click();
@@ -73,20 +73,20 @@ test.describe("Skill 库 — 创建功能端到端验证", () => {
 
   test("2. 可用性验证: 创建后的Skill在Agent/写作流程中可选 (normal)", async ({ page }) => {
     const createBtn = page.locator(
-      '[data-testid="sk-create-btn"], button:has-text("创建")'
+      "[data-testid='sk-create-btn'], button:has-text('创建')"
     );
     if ((await createBtn.count()) === 0) return;
 
     await createBtn.first().click();
     await page.waitForTimeout(1500);
 
-    const nameInput = page.locator('input[placeholder*="名称"], input[placeholder*="name"]');
+    const nameInput = page.locator("input[placeholder*='名称'], input[placeholder*='name']");
     const skillName = `Skill-611-${Date.now()}`;
     if (await nameInput.isVisible({ timeout: 2000 }).catch(() => false)) {
       await nameInput.fill(skillName);
     }
 
-    const saveBtn = page.locator('button:has-text("保存"), button:has-text("创建")');
+    const saveBtn = page.locator("button:has-text('保存'), button:has-text('创建')");
     if (await saveBtn.first().isVisible({ timeout: 2000 }).catch(() => false)) {
       await saveBtn.first().click();
     }
@@ -117,14 +117,14 @@ test.describe("Skill 库 — 创建功能端到端验证", () => {
     });
 
     const createBtn = page.locator(
-      '[data-testid="sk-create-btn"], button:has-text("创建")'
+      "[data-testid='sk-create-btn'], button:has-text('创建')"
     );
     if ((await createBtn.count()) === 0) return;
 
     await createBtn.first().click();
     await page.waitForTimeout(1500);
 
-    const confirmBtn = page.locator('button:has-text("保存"), button:has-text("创建")');
+    const confirmBtn = page.locator("button:has-text('保存'), button:has-text('创建')");
     if (await confirmBtn.first().isVisible({ timeout: 2000 }).catch(() => false)) {
       await confirmBtn.first().click();
     }
@@ -133,7 +133,7 @@ test.describe("Skill 库 — 创建功能端到端验证", () => {
 
     // Assert: error state is shown gracefully
     const errorEl = page.locator(
-      '[data-testid*="error"], text=错误, text=Error, text=失败'
+      "[data-testid*='error'], text=错误, text=Error, text=失败"
     );
     const hasError = (await errorEl.count()) > 0;
     console.log(`Error displayed on API failure: ${hasError}`);
@@ -160,13 +160,13 @@ test.describe("Skill 库 — 创建功能端到端验证", () => {
 
     // Check for empty state or create button (user can still create)
     const emptyState = page.locator(
-      '[data-testid*="empty"], [data-testid*="Empty"], text=暂无, text=创建第一个'
+      "[data-testid*='empty'], [data-testid*='Empty'], text=暂无, text=创建第一个"
     );
     const hasEmptyState = (await emptyState.count()) > 0;
     console.log(`Empty state displayed: ${hasEmptyState}`);
 
     // Create button should still exist
-    const createBtn = page.locator('[data-testid="sk-create-btn"], button:has-text("创建")');
+    const createBtn = page.locator("[data-testid='sk-create-btn'], button:has-text('创建')");
     const createVisible = await createBtn.first().isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`Create button visible in empty state: ${createVisible}`);
   });
