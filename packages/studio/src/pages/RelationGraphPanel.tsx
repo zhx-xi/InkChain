@@ -112,6 +112,7 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
   const loadGraph = useGraphStore((s) => s.loadGraph);
   const selectNode = useGraphStore((s) => s.selectNode);
   const updateNode = useGraphStore((s) => s.updateNode);
+  const refreshGraph = useGraphStore((s) => s.refreshGraph);
 
   const [simplified, setSimplified] = useState(false);
   const [selectedVolumeId, setSelectedVolumeId] = useState<string | null>(null);
@@ -286,10 +287,12 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
 
   // ── Reset handler ──
   const handleReset = useCallback(() => {
+    if (!window.confirm("确认重置关系图谱？重置将刷新图谱数据，恢复初始状态。")) return;
     selectNode(null);
     setHasFit(false);
     window.dispatchEvent(new Event("resize"));
-  }, [selectNode]);
+    refreshGraph(bookId);
+  }, [selectNode, refreshGraph, bookId]);
 
   // ── Node click handler ──
   const onNodeClick: OnNodeClick = useCallback(
