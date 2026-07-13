@@ -34,7 +34,9 @@ export interface SkillLoadDiagnostic {
   readonly message: string;
 }
 
-const PROJECT_SKILLS_DIRNAME = ".inkos/skills";
+import { DATA_DIR_NAME } from "../utils/data-directory.js";
+
+const PROJECT_SKILLS_DIRNAME = `${DATA_DIR_NAME}/skills`;
 
 /**
  * Load all skill configs from project-level and builtin-level directories.

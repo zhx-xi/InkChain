@@ -36,6 +36,7 @@ import {
   type AgentRole,
   type PersonaConfig,
 } from "@actalk/inkchain-core";
+import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 
 // ── Presets ──
 
@@ -49,7 +50,7 @@ try {
 }
 
 /** Relative path from project root for project-level presets. */
-const PROJECT_PRESETS_RELATIVE = ".inkos/presets";
+const PROJECT_PRESETS_RELATIVE = `${DATA_DIR_NAME}/presets`;
 
 // ── Helpers ──
 
