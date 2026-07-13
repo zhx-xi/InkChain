@@ -49,7 +49,7 @@ export async function deleteWorld(root: string, id: string): Promise<boolean> {
     return false;
   }
   await rm(worldPathStr, { force: true });
-  idx.evict(WORLDS_DIR, id);
+  idx.evict(root, WORLDS_DIR, id);
   return true;
 }
 

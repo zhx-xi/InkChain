@@ -203,7 +203,7 @@ async function deleteProjectSkillFile(root: string, id: string): Promise<boolean
     return false;
   }
   await rm(path, { force: true });
-  IndexManager.getInstance().evict(PROJECT_SKILLS_DIR, id);
+  IndexManager.getInstance().evict(root, PROJECT_SKILLS_DIR, id);
   return true;
 }
 

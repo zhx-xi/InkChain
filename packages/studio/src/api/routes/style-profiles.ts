@@ -126,7 +126,7 @@ export function createStyleProfilesRouter(root: string) {
       throw new ApiError(404, "PROFILE_NOT_FOUND", `Style profile not found: ${id}`);
     }
     await rm(path, { force: true });
-    IndexManager.getInstance().evict(PROFILES_DIR, id);
+    IndexManager.getInstance().evict(root, PROFILES_DIR, id);
     return c.json({ ok: true, id });
   });
 

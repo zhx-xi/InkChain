@@ -108,7 +108,7 @@ describe("IndexManager (Issue #597)", () => {
     await idx.set(TMP_ROOT, NS, "evict-me", { data: 1 });
     await idx.set(TMP_ROOT, NS, "keep-me", { data: 2 });
 
-    idx.evict(NS, "evict-me");
+    idx.evict(TMP_ROOT, NS, "evict-me");
 
     // evict-me should be evicted from cache
     // get will load from disk again (cache miss)
@@ -120,8 +120,7 @@ describe("IndexManager (Issue #597)", () => {
     await idx.set(TMP_ROOT, NS, "a", { id: "a" });
     await idx.set(TMP_ROOT, NS, "b", { id: "b" });
 
-    idx.evict(NS);
-
+    idx.evict(TMP_ROOT, NS);
     // Should load from disk (cache miss)
     const a = await idx.get(TMP_ROOT, NS, "a");
     expect(a).toEqual({ id: "a" });
@@ -189,7 +188,7 @@ describe("IndexManager (Issue #597)", () => {
     await idx.set(TMP_ROOT, NS, "fs-test", { x: 1, y: 2 });
 
     // Clear cache and re-read
-    idx.evict(NS, "fs-test");
+    idx.evict(TMP_ROOT, NS, "fs-test");
     const result = await idx.get<{ x: number; y: number }>(TMP_ROOT, NS, "fs-test");
     expect(result).toEqual({ x: 1, y: 2 });
   });
@@ -223,11 +222,11 @@ describe("IndexManager (Issue #597)", () => {
   });
 
   it("does not throw when evicting non-existent entry", () => {
-    expect(() => idx.evict(NS, "does-not-exist")).not.toThrow();
+    expect(() => idx.evict(TMP_ROOT, NS, "does-not-exist")).not.toThrow();
   });
 
   it("does not throw when evicting non-existent namespace", () => {
-    expect(() => idx.evict("no-such-ns")).not.toThrow();
+    expect(() => idx.evict(TMP_ROOT, "no-such-ns")).not.toThrow();
   });
 
   it("handles deeply nested data", async () => {

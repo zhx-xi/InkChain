@@ -184,7 +184,7 @@ export function createForeshadowingRouter(root: string) {
     } catch {
       // ignore
     }
-    IndexManager.getInstance().evict(FS_DIR, id);
+    IndexManager.getInstance().evict(root, FS_DIR, id);
     return c.json({ ok: true, id });
   });
 
