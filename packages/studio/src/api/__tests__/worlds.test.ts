@@ -2,6 +2,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 import { createStudioServer } from "../server.js";
 
 function sampleWorld(id: string) {
@@ -22,7 +23,7 @@ function sampleWorld(id: string) {
 }
 
 async function writeWorld(root: string, id: string): Promise<void> {
-  const dir = join(root, ".inkos", "worlds");
+  const dir = join(root, DATA_DIR_NAME, "worlds");
   await mkdir(dir, { recursive: true });
   await writeFile(join(dir, `${id}.json`), JSON.stringify(sampleWorld(id)), "utf-8");
 }
