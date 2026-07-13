@@ -81,6 +81,7 @@ export function createWorld(id: string, name: string, description = ""): WorldCo
     history: [],
     rules: [],
     references: [],
+  bookIds: [],
   };
 }
 

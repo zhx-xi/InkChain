@@ -190,6 +190,8 @@ export const WorldConfigSchema = z.object({
   history: z.array(WorldHistoryEventSchema).default([]),
   rules: z.array(WorldRuleSchema).default([]),
   references: z.array(WorldReferenceSchema).default([]),
+  /** Book IDs associated with this world (Issue #601) */
+  bookIds: z.array(z.string()).default([]),
 });
 export type WorldConfig = z.infer<typeof WorldConfigSchema>;
 

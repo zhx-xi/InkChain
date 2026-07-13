@@ -97,6 +97,7 @@ describe("StateManager", () => {
         history: [],
         rules: [],
         references: [],
+        bookIds: [],
       };
       await saveWorld(tempDir, world);
       await manager.saveBookConfig("test-book", {
