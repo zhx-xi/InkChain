@@ -9,7 +9,7 @@ export const E2E_WORLD_ID = "e2e-book-world-test";
 
 export async function seedBookWorldExtract(): Promise<void> {
   // Seed a world linked to the book
-  const worldsDir = join(E2E_ROOT, ".inkos", "worlds");
+  const worldsDir = join(E2E_ROOT, ".inkchain", "worlds");
   await mkdir(worldsDir, { recursive: true });
 
   const now = new Date("2026-07-04T00:00:00.000Z").toISOString();
