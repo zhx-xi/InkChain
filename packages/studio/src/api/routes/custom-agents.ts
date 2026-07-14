@@ -13,6 +13,7 @@ import { Hono } from "hono";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { ApiError } from "../errors.js";
+import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 
 // ── Types ──
 
@@ -123,7 +124,7 @@ function validateOptionalStringArray(value: unknown): ReadonlyArray<string> | un
 // ── Storage ──
 
 function customAgentsFilePath(root: string): string {
-  return join(root, ".inkos", "custom-agents.json");
+  return join(root, DATA_DIR_NAME, "custom-agents.json");
 }
 
 async function loadCustomAgents(root: string): Promise<CustomAgent[]> {
@@ -147,8 +148,7 @@ async function loadCustomAgents(root: string): Promise<CustomAgent[]> {
 }
 
 async function saveCustomAgents(root: string, agents: CustomAgent[]): Promise<void> {
-  const dir = join(root, ".inkos");
-  await mkdir(dir, { recursive: true });
+  await mkdir(join(root, DATA_DIR_NAME), { recursive: true });
   await writeFile(customAgentsFilePath(root), JSON.stringify(agents, null, 2), "utf-8");
 }
 

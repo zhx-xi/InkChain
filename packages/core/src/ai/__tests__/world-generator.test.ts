@@ -45,6 +45,7 @@ const MOCK_WORLD: WorldConfig = {
     { id: "rule1", name: "魔法守恒定律", type: "魔法", description: "释放魔法的能量来源于自然界", constraints: [], sortIndex: 0 },
   ],
   references: [],
+  bookIds: [],
 };
 
 const DEFAULT_PARAMS: GenerationParams = {

@@ -10,7 +10,7 @@ test.beforeAll(async () => {
 test.beforeEach(async ({ page }) => {
   // Ensure consistent starting point — navigate to Book-A if not already there
   await page.goto(`/#/book/${E2E_BOOK_ID}`);
-  await expect(page.getByText("E2E 跨功能测试书")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByRole("heading", { name: "E2E 跨功能测试书", exact: true })).toBeVisible({ timeout: 20_000 });
 });
 
 // ── Shared helpers ──────────────────────────────────────────────
@@ -84,7 +84,7 @@ test.describe("跨功能集成E2E", () => {
 
     // ── 5. Navigate to audit page ──
     await page.goto(`/#/book/${E2E_BOOK_ID}`);
-    await expect(page.getByText("E2E 跨功能测试书")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole("heading", { name: "E2E 跨功能测试书", exact: true })).toBeVisible({ timeout: 20_000 });
 
     // Verify chapters are still there after all navigation
     await expect(page.getByText("第一章 初入修仙")).toBeVisible({ timeout: 5_000 });
@@ -101,7 +101,7 @@ test.describe("跨功能集成E2E", () => {
     }
 
     // Verify page still renders correctly after API call
-    await expect(page.getByText("E2E 跨功能测试书")).toBeVisible({ timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: "E2E 跨功能测试书", exact: true })).toBeVisible({ timeout: 10_000 });
   });
 
   test("X2. 多书隔离: Book-A数据不泄露到Book-B", async ({ page }) => {
@@ -145,7 +145,7 @@ test.describe("跨功能集成E2E", () => {
 
     // ── Verify Book-A data still intact after visiting Book-B ──
     await page.goto(`/#/book/${E2E_BOOK_ID}`);
-    await expect(page.getByText("E2E 跨功能测试书")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole("heading", { name: "E2E 跨功能测试书", exact: true })).toBeVisible({ timeout: 20_000 });
     await expect(page.getByText("第一章 初入修仙")).toBeVisible({ timeout: 5_000 });
     await expect(page.getByText("第五章 回归")).toBeVisible({ timeout: 5_000 });
   });
@@ -196,7 +196,7 @@ test.describe("跨功能集成E2E", () => {
   test("X4. 面板间距一致性: 所有面板/弹窗 top >= 72px", async ({ page }) => {
     // Navigate to book page
     await page.goto(`/#/book/${E2E_BOOK_ID}`);
-    await expect(page.getByText("E2E 跨功能测试书")).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole("heading", { name: "E2E 跨功能测试书", exact: true })).toBeVisible({ timeout: 20_000 });
 
     // Collect all visible panels and dialogs
     const panelCheck = async (): Promise<void> => {

@@ -1,4 +1,4 @@
-import { formatLengthCount, resolveLengthCountingMode } from "@actalk/inkchain-core";
+import { formatLengthCount, resolveLengthCountingMode } from "@inkchain/inkchain-core";
 
 export type CliLanguage = "zh" | "en";
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { computePhaseProgress, computeStaleFlags } from "../lib/film-wizard-progress";
-import { StoryGraphSchema } from "@actalk/inkchain-core";
+import { StoryGraphSchema } from "@inkchain/inkchain-core";
 
 const empty = StoryGraphSchema.parse({ schemaVersion: 1, projectId: "p", title: "", variables: [], nodes: [], endings: [] });
 const full = StoryGraphSchema.parse({

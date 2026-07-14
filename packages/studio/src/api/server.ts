@@ -101,11 +101,12 @@ import {
   type LogEntry,
   type RequestedIntent,
   type SessionKind,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 import { access, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { isSafeBookId } from "./safety.js";
 import { ApiError } from "./errors.js";
+import { DATA_DIR_NAME } from "../constants/data-directory.js";
 import { buildStudioBookConfig } from "./book-create.js";
 import { createRelationsRouter } from "./routes/relations.js";
 import { createVolumesRouter } from "./routes/volumes.js";
@@ -524,7 +525,7 @@ function normalizeStudioSkillId(value: unknown, field = "skillId"): string {
 }
 
 function projectSkillsDir(root: string): string {
-  return join(root, ".inkos", "skills");
+  return join(root, DATA_DIR_NAME, "skills");
 }
 
 function projectSkillDir(root: string, id: string): string {
@@ -739,7 +740,7 @@ function resolveExternalChatEditPath(root: string, requestedPath: string): { pat
   if (!CHAT_EDIT_ALLOWED_ROOTS.has(first)) {
     throw new ApiError(400, "UNSUPPORTED_CHAT_EDIT_TARGET", "Chat external edits cannot modify source code, config, or arbitrary project files.");
   }
-  if (rel.includes("/.inkos/") || rel.endsWith("/.inkos") || rel.includes("/secrets") || rel.endsWith(".env")) {
+  if (rel.includes("/.inkos/") || rel.endsWith("/.inkos") || rel.includes(`/${DATA_DIR_NAME}/`) || rel.endsWith(`/${DATA_DIR_NAME}`) || rel.includes("/secrets") || rel.endsWith(".env")) {
     throw new ApiError(400, "UNSUPPORTED_CHAT_EDIT_TARGET", "Chat external edits cannot modify secrets or runtime internals.");
   }
   if (!CHAT_EDIT_TEXT_EXTENSIONS.test(rel)) {
@@ -2248,7 +2249,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // --- Genres ---
 
   app.get("/api/v1/genres", async (c) => {
-    const { listAvailableGenres, readGenreProfile } = await import("@actalk/inkchain-core");
+    const { listAvailableGenres, readGenreProfile } = await import("@inkchain/inkchain-core");
     const rawGenres = await listAvailableGenres(root);
     const genres = await Promise.all(
       rawGenres.map(async (g) => {
@@ -2348,7 +2349,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     // run (or a server restart) can also drop it — so a bare 404 is ambiguous
     // ("done" vs "never existed"). Check disk: if the foundation is fully
     // written, the book really is ready; report that truthfully.
-    const { isBookFoundationComplete } = await import("@actalk/inkchain-core");
+    const { isBookFoundationComplete } = await import("@inkchain/inkchain-core");
     if (await isBookFoundationComplete(state.bookDir(id))) {
       return c.json({ status: "ready" });
     }
@@ -2498,7 +2499,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     // can warn users their edits won't reach the runtime.
     // Hotfix: only tag as legacy when the book actually HAS the new layout.
     // Pre-Phase-5 books use story_bible/book_rules as the authoritative source.
-    const { isNewLayoutBook, tryParseBookRulesFrontmatter } = await import("@actalk/inkchain-core");
+    const { isNewLayoutBook, tryParseBookRulesFrontmatter } = await import("@inkchain/inkchain-core");
     const legacy = LEGACY_SHIM_FILES.has(file) && await isNewLayoutBook(bookDir);
 
     try {
@@ -2619,7 +2620,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       let worldSummary: any = null;
       if (worldId) {
         try {
-          const { loadWorld } = await import("@actalk/inkchain-core");
+          const { loadWorld } = await import("@inkchain/inkchain-core");
           const world: any = await loadWorld(root, worldId as string);
           if (world) {
             worldSummary = {
@@ -3491,7 +3492,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     }
 
     // Hotfix: only tag shim files as legacy when the book has the new layout.
-    const { isNewLayoutBook } = await import("@actalk/inkchain-core");
+    const { isNewLayoutBook } = await import("@inkchain/inkchain-core");
     const newLayout = await isNewLayoutBook(bookDir);
 
     async function describe(relPath: string): Promise<{ readonly name: string; readonly size: number; readonly preview: string; readonly legacy?: true; readonly readonly?: true; readonly readonlyReason?: string } | null> {
@@ -4652,7 +4653,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
 
       const content = await readFile(join(chaptersDir, match), "utf-8");
       const currentConfig = await loadCurrentProjectConfig();
-      const { ContinuityAuditor } = await import("@actalk/inkchain-core");
+      const { ContinuityAuditor } = await import("@inkchain/inkchain-core");
       const auditor = new ContinuityAuditor({
         client: createLLMClient(currentConfig.llm),
         model: currentConfig.llm.model,
@@ -4770,7 +4771,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   app.get("/api/v1/genres/:id", async (c) => {
     const genreId = c.req.param("id");
     try {
-      const { readGenreProfile } = await import("@actalk/inkchain-core");
+      const { readGenreProfile } = await import("@inkchain/inkchain-core");
       const { profile, body } = await readGenreProfile(root, genreId);
       return c.json({ profile, body });
     } catch (e) {
@@ -4784,7 +4785,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       throw new ApiError(400, "INVALID_GENRE_ID", `Invalid genre ID: "${genreId}"`);
     }
     try {
-      const { getBuiltinGenresDir } = await import("@actalk/inkchain-core");
+      const { getBuiltinGenresDir } = await import("@inkchain/inkchain-core");
       const { mkdir: mkdirFs, copyFile } = await import("node:fs/promises");
       const builtinDir = getBuiltinGenresDir();
       const projectGenresDir = join(root, "genres");
@@ -4954,7 +4955,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       if (!match) return c.json({ error: "Chapter not found" }, 404);
 
       const content = await readFile(join(chaptersDir, match), "utf-8");
-      const { analyzeAITells } = await import("@actalk/inkchain-core");
+      const { analyzeAITells } = await import("@inkchain/inkchain-core");
       const result = analyzeAITells(content);
       return c.json({ chapterNumber: chapterNum, ...result });
     } catch (e) {
@@ -4976,7 +4977,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     // story_bible.md or book_rules.md does nothing at runtime (the pipeline
     // reads outline/ instead). For pre-Phase-5 books these ARE authoritative.
     if (LEGACY_SHIM_FILES.has(file)) {
-      const { isNewLayoutBook } = await import("@actalk/inkchain-core");
+      const { isNewLayoutBook } = await import("@inkchain/inkchain-core");
       if (await isNewLayoutBook(bookDir)) {
         return c.json(
           { error: "Legacy compat shim; edit outline/story_frame.md instead" },
@@ -5096,7 +5097,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
       const chaptersDir = join(bookDir, "chapters");
       const files = await readdir(chaptersDir);
       const mdFiles = files.filter((f) => f.endsWith(".md") && /^\d{4}/.test(f)).sort();
-      const { analyzeAITells } = await import("@actalk/inkchain-core");
+      const { analyzeAITells } = await import("@inkchain/inkchain-core");
 
       const results = await Promise.all(
         mdFiles.map(async (f) => {
@@ -5117,7 +5118,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   app.get("/api/v1/books/:id/detect/stats", async (c) => {
     const id = c.req.param("id");
     try {
-      const { loadDetectionHistory, analyzeDetectionInsights } = await import("@actalk/inkchain-core");
+      const { loadDetectionHistory, analyzeDetectionInsights } = await import("@inkchain/inkchain-core");
       const bookDir = state.bookDir(id);
       const history = await loadDetectionHistory(bookDir);
       const insights = analyzeDetectionInsights(history);
@@ -5232,7 +5233,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     if (!text?.trim()) return c.json({ error: "text is required" }, 400);
 
     try {
-      const { analyzeStyle } = await import("@actalk/inkchain-core");
+      const { analyzeStyle } = await import("@inkchain/inkchain-core");
       const profile = analyzeStyle(text, sourceName ?? "unknown");
       return c.json(profile);
     } catch (e) {
@@ -5268,7 +5269,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
 
     broadcast("import:start", { bookId: id, type: "chapters" });
     try {
-      const { splitChapters } = await import("@actalk/inkchain-core");
+      const { splitChapters } = await import("@inkchain/inkchain-core");
       const chapters = [...splitChapters(text, splitRegex)];
 
       const pipeline = new PipelineRunner(await buildPipelineConfig());
@@ -5504,7 +5505,7 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
 
   app.get("/api/v1/doctor", async (c) => {
     const { existsSync } = await import("node:fs");
-    const { GLOBAL_ENV_PATH } = await import("@actalk/inkchain-core");
+    const { GLOBAL_ENV_PATH } = await import("@inkchain/inkchain-core");
 
     const checks = {
       inkosJson: existsSync(join(root, "inkchain.json")),

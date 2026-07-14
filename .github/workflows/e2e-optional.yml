@@ -37,10 +37,10 @@ jobs:
       flow: ${{ steps.filter.outputs.flow }}
       misc: ${{ steps.filter.outputs.misc }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0  # needed by dorny/paths-filter for PR diff
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
@@ -138,6 +138,7 @@ jobs:
               - 'packages/studio/e2e/analysis*'
               - 'packages/studio/e2e/export*'
               - 'packages/studio/e2e/import*'
+              - 'packages/studio/e2e/index-manager*'
               - 'packages/studio/e2e/log-viewer*'
               - 'packages/studio/e2e/player*'
               - 'packages/studio/e2e/service*'
@@ -155,11 +156,30 @@ jobs:
               - 'packages/studio/e2e/project-settings*'
               - 'packages/studio/e2e/issue*'
 
+  # ── Build Core once, share across all E2E jobs ────────────────
+  build-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 10
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --no-frozen-lockfile
+      - run: pnpm --filter @inkchain/inkchain-core build
+      - uses: actions/upload-artifact@v6
+        with:
+          name: core-dist
+          path: packages/core/dist/
+
   # ── E2E groups (conditionally triggered) ────────────────────────
   # On push to main: always runs. On PR: only when relevant files changed.
 
   agent:
-    needs: changes
+    needs: [changes, build-core]
     if: needs.changes.outputs.agent == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
@@ -167,7 +187,7 @@ jobs:
       group-name: "Agent Team"
 
   dashboard:
-    needs: changes
+    needs: [changes, build-core]
     if: needs.changes.outputs.dashboard == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
@@ -175,7 +195,7 @@ jobs:
       group-name: "Dashboard"
 
   book:
-    needs: changes
+    needs: [changes, build-core]
     if: needs.changes.outputs.book == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
@@ -183,7 +203,7 @@ jobs:
       group-name: "Book"
 
   chapter:
-    needs: changes
+    needs: [changes, build-core]
     if: needs.changes.outputs.chapter == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
@@ -191,7 +211,7 @@ jobs:
       group-name: "Chapter"
 
   audit:
-    needs: changes
+    needs: [changes, build-core]
     if: needs.changes.outputs.audit == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
@@ -199,7 +219,7 @@ jobs:
       group-name: "Audit"
 
   authoring:
-    needs: changes
+    needs: [changes, build-core]
     if: needs.changes.outputs.authoring == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
@@ -207,7 +227,7 @@ jobs:
       group-name: "Authoring"
 
   timeline:
-    needs: changes
+    needs: [changes, build-core]
     if: needs.changes.outputs.timeline == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
@@ -215,7 +235,7 @@ jobs:
       group-name: "Timeline"
 
   foreshadowing:
-    needs: changes
+    needs: [changes, build-core]
     if: needs.changes.outputs.foreshadowing == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
@@ -223,7 +243,7 @@ jobs:
       group-name: "Foreshadowing"
 
   world:
-    needs: changes
+    needs: [changes, build-core]
     if: needs.changes.outputs.world == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
@@ -231,7 +251,7 @@ jobs:
       group-name: "World"
 
   style:
-    needs: changes
+    needs: [changes, build-core]
     if: needs.changes.outputs.style == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
@@ -239,7 +259,7 @@ jobs:
       group-name: "Style Detection"
 
   film:
-    needs: changes
+    needs: [changes, build-core]
     if: needs.changes.outputs.film == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
@@ -247,7 +267,7 @@ jobs:
       group-name: "Interactive Film"
 
   skill:
-    needs: changes
+    needs: [changes, build-core]
     if: needs.changes.outputs.skill == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
@@ -255,7 +275,7 @@ jobs:
       group-name: "Skills"
 
   flow:
-    needs: changes
+    needs: [changes, build-core]
     if: needs.changes.outputs.flow == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
@@ -263,9 +283,9 @@ jobs:
       group-name: "Flow & Relations"
 
   misc:
-    needs: changes
+    needs: [changes, build-core]
     if: needs.changes.outputs.misc == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
-      spec: "analysis consistency-check-panel export import-manager log-viewer log-viewer-508 player service-list-page session-archive genre-manager character-tiering validation cross-feature radar-view radar-view-510 truth-files volume-dnd daemon-control doctor-view build-verification project-settings issue-394-world-association issue-406-timeline-filter issue-410-audit-cache issue-413-audit-context issue-421-builtin-skill-edit"
+      spec: "analysis consistency-check-panel export import-manager index-manager log-viewer log-viewer-508 player service-list-page session-archive genre-manager character-tiering validation cross-feature radar-view radar-view-510 truth-files volume-dnd daemon-control doctor-view build-verification project-settings issue-394-world-association issue-406-timeline-filter issue-410-audit-cache issue-413-audit-context issue-421-builtin-skill-edit"
       group-name: "Misc"

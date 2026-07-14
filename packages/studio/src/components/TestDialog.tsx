@@ -7,7 +7,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { X, Send, Loader2, AlertCircle, Bot, User } from "lucide-react";
 import { fetchJson, postApi } from "../hooks/use-api";
-import type { AgentRole } from "@actalk/inkchain-core/models/persona-config.js";
+import type { AgentRole } from "@inkchain/inkchain-core/models/persona-config.js";
 
 // ── Types ──
 

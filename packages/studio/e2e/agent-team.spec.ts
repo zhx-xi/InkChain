@@ -9,12 +9,12 @@ test("1. 加载Agent Team→7个Agent卡片显示", async ({ page }) => {
   await page.goto("/#/agents");
 
   // Wait for the team panel to render and finish loading
-  await expect(page.getByText("Agent Team")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "Agent Team", exact: true })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText("7 个协作 Agent 的 Persona 配置面板")).toBeVisible();
 
   // Should see the status legend — indicates team config loaded
   await expect(page.getByText("状态图例")).toBeVisible();
-  await expect(page.getByText("就绪")).toBeVisible();
+  await expect(page.getByText("就绪").first()).toBeVisible();
   await expect(page.getByText("禁用")).toBeVisible();
 
   // Agent cards: at least writer, architect, planner are shown
@@ -25,7 +25,7 @@ test("1. 加载Agent Team→7个Agent卡片显示", async ({ page }) => {
 
 test("2. 团队配置Tab: 切换agent开关", async ({ page }) => {
   await page.goto("/#/agents");
-  await expect(page.getByText("Agent Team")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "Agent Team", exact: true })).toBeVisible({ timeout: 15_000 });
 
   // The "重置为默认" button must be visible (proves the team panel rendered)
   await expect(page.getByText("重置为默认")).toBeVisible();
@@ -34,16 +34,16 @@ test("2. 团队配置Tab: 切换agent开关", async ({ page }) => {
   await expect(page.getByText("团队配置")).toBeVisible();
 
   // Click the preset dropdown
-  await page.getByText("默认预设").click();
+  await page.getByText("默认预设").first().click();
   // A preset menu item should appear
-  await expect(page.getByText("热血玄幻")).toBeVisible();
+  await expect(page.getByText("热血玄幻").first()).toBeVisible();
   await expect(page.getByText("言情")).toBeVisible();
   await expect(page.getByText("悬疑推理")).toBeVisible();
 });
 
 test("3. 流程编辑Tab: ReactFlow图渲染", async ({ page }) => {
   await page.goto("/#/agents");
-  await expect(page.getByText("Agent Team")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "Agent Team", exact: true })).toBeVisible({ timeout: 15_000 });
 
   // Switch to the pipeline tab
   await page.getByText("流程编辑").click();
@@ -68,7 +68,7 @@ test("3. 流程编辑Tab: ReactFlow图渲染", async ({ page }) => {
 
 test("4. Tab切换: 数据保持", async ({ page }) => {
   await page.goto("/#/agents");
-  await expect(page.getByText("Agent Team")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "Agent Team", exact: true })).toBeVisible({ timeout: 15_000 });
 
   // Switch to pipeline tab
   await page.getByText("流程编辑").click();
@@ -77,27 +77,27 @@ test("4. Tab切换: 数据保持", async ({ page }) => {
   // Switch back to team tab
   await page.getByText("团队配置").click();
   await expect(page.getByText("状态图例")).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText("就绪")).toBeVisible();
+  await expect(page.getByText("就绪").first()).toBeVisible();
 });
 
 test("5. 预设选择→配置更新", async ({ page }) => {
   await page.goto("/#/agents");
-  await expect(page.getByText("Agent Team")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "Agent Team", exact: true })).toBeVisible({ timeout: 15_000 });
 
   // Open preset dropdown
-  await page.getByText("默认预设").click();
+  await page.getByText("默认预设").first().click();
 
-  // Select "热血玄幻" preset
-  await page.getByText("热血玄幻").click();
+  // Select "热血玄幻" preset (first() because it appears in both dropdown and template list)
+  await page.getByText("热血玄幻").first().click();
 
   // After selection, the preset name in the button should update
   // (it may briefly show "忙碌" state for all agents during the 1.5s animation)
-  await expect(page.getByText("热血玄幻")).toBeVisible({ timeout: 5_000 });
+  await expect(page.getByText("热血玄幻").first()).toBeVisible({ timeout: 5_000 });
 });
 
 test("6. 创建模板→保存→列表中可见", async ({ page }) => {
   await page.goto("/#/agents");
-  await expect(page.getByText("Agent Team")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "Agent Team", exact: true })).toBeVisible({ timeout: 15_000 });
 
   // Click "另存为模板" button
   await page.getByText("另存为模板").click();

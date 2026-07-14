@@ -2,6 +2,7 @@ import { readFile, readdir, stat } from "node:fs/promises";
 import { homedir } from "node:os";
 import { delimiter, isAbsolute, join } from "node:path";
 import yaml from "js-yaml";
+import { DATA_DIR_NAME } from "../utils/data-directory.js";
 import {
   CapabilitySkillManifestSchema,
   type CapabilitySkillManifest,
@@ -84,9 +85,9 @@ function configuredSkillDirs(input: LoadConfiguredCapabilitySkillsInput): Config
     .split(delimiter)
     .map((value) => value.trim())
     .filter(Boolean);
-  const userRoot = input.userRoot ?? join(homedir(), ".inkos");
+  const userRoot = input.userRoot ?? join(homedir(), DATA_DIR_NAME);
   return [
-    { path: join(input.projectRoot, ".inkos", "skills"), explicit: false },
+    { path: join(input.projectRoot, DATA_DIR_NAME, "skills"), explicit: false },
     { path: join(userRoot, "skills"), explicit: false },
     ...envDirs.map((path) => ({ path, explicit: true })),
   ];

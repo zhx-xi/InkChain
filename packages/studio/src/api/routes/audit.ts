@@ -12,6 +12,7 @@ import { join } from "node:path";
 import { existsSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { ApiError } from "../errors.js";
+import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 
 // ── 审计数据类型 ──
 
@@ -42,7 +43,7 @@ export interface ChapterAuditResult {
 // ── 持久化 ──
 
 function auditDir(root: string, bookId: string): string {
-  return join(root, ".inkos", "books", bookId, "audit");
+  return join(root, DATA_DIR_NAME, "books", bookId, "audit");
 }
 
 function chapterAuditPath(root: string, bookId: string, chapterNumber: number): string {

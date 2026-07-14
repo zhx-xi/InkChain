@@ -97,10 +97,10 @@ export async function resolveStudioLaunch(root: string): Promise<StudioLaunchSpe
   }
 
   const builtEntry = await firstAccessiblePath([
-    join(root, "node_modules", "@actalk", "inkchain-studio", "dist", "api", "index.js"),
-    join(root, "node_modules", "@actalk", "inkchain-studio", "server.cjs"),
-    join(cliPackageRoot, "node_modules", "@actalk", "inkchain-studio", "dist", "api", "index.js"),
-    join(cliPackageRoot, "node_modules", "@actalk", "inkchain-studio", "server.cjs"),
+    join(root, "node_modules", "@inkchain", "inkchain-studio", "dist", "api", "index.js"),
+    join(root, "node_modules", "@inkchain", "inkchain-studio", "server.cjs"),
+    join(cliPackageRoot, "node_modules", "@inkchain", "inkchain-studio", "dist", "api", "index.js"),
+    join(cliPackageRoot, "node_modules", "@inkchain", "inkchain-studio", "server.cjs"),
     join(cliPackageRoot, "..", "inkchain-studio", "dist", "api", "index.js"),
     join(cliPackageRoot, "..", "inkchain-studio", "server.cjs"),
   ]);

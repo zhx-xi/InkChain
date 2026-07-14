@@ -2,6 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 import { createStudioServer } from "../server.js";
 
 async function writeForeshadowing(
@@ -9,7 +10,7 @@ async function writeForeshadowing(
   data: Record<string, unknown>,
 ): Promise<void> {
   const { mkdir, writeFile } = await import("node:fs/promises");
-  const dir = join(root, ".inkos", "foreshadowing");
+  const dir = join(root, DATA_DIR_NAME, "foreshadowing");
   await mkdir(dir, { recursive: true });
   await writeFile(
     join(dir, `${data.id}.json`),
@@ -150,5 +151,52 @@ describe("Foreshadowing CRUD API (Issue #84)", () => {
     // Verify deletion
     const getRes = await app.request("/api/foreshadowing/f-del");
     expect(getRes.status).toBe(404);
+  });
+
+  it("DELETE /api/foreshadowing/batch deletes multiple entries", async () => {
+    await writeForeshadowing(root, { id: "f-b1", title: "Batch 1" });
+    await writeForeshadowing(root, { id: "f-b2", title: "Batch 2" });
+    await writeForeshadowing(root, { id: "f-b3", title: "Keep me" });
+
+    const app = createStudioServer({} as never, root);
+    const res = await app.request("/api/foreshadowing/batch", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: ["f-b1", "f-b2"] }),
+    });
+    expect(res.status).toBe(200);
+    const json = await res.json() as { ok: boolean; deletedCount: number; ids: string[] };
+    expect(json.ok).toBe(true);
+    expect(json.deletedCount).toBe(2);
+    expect(json.ids).toEqual(["f-b1", "f-b2"]);
+
+    // Verify deletions
+    const get1 = await app.request("/api/foreshadowing/f-b1");
+    expect(get1.status).toBe(404);
+    const get2 = await app.request("/api/foreshadowing/f-b2");
+    expect(get2.status).toBe(404);
+    // Verify kept
+    const get3 = await app.request("/api/foreshadowing/f-b3");
+    expect(get3.status).toBe(200);
+  });
+
+  it("DELETE /api/foreshadowing/batch rejects empty ids", async () => {
+    const app = createStudioServer({} as never, root);
+    const res = await app.request("/api/foreshadowing/batch", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids: [] }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("DELETE /api/foreshadowing/batch rejects invalid body", async () => {
+    const app = createStudioServer({} as never, root);
+    const res = await app.request("/api/foreshadowing/batch", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+    expect(res.status).toBe(400);
   });
 });

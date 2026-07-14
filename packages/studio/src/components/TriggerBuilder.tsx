@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Plus, Trash2, GripVertical, ChevronDown, ChevronUp } from "lucide-react";
-import type { TriggerConfig } from "@actalk/inkchain-core";
+import type { TriggerConfig } from "@inkchain/inkchain-core";
 
 // ── Condition type definitions ──
 

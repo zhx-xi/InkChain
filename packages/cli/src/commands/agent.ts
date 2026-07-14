@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { PipelineRunner, runAgentSession } from "@actalk/inkchain-core";
+import { PipelineRunner, runAgentSession } from "@inkchain/inkchain-core";
 import { buildPipelineConfig, loadConfig, createClient, findProjectRoot, resolveBookId, resolveContext, log, logError } from "../utils.js";
 
 export const agentCommand = new Command("agent")

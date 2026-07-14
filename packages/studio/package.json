@@ -1,5 +1,5 @@
 {
-  "name": "@actalk/inkchain-studio",
+  "name": "@inkchain/inkchain-studio",
   "version": "3.0.0",
   "description": "InkChain Studio — web workbench for story creation, InkChain Short, covers, and open-world interactive play",
   "type": "module",
@@ -34,7 +34,7 @@
     "typecheck": "tsc --noEmit && tsc -p tsconfig.server.json --noEmit"
   },
   "dependencies": {
-    "@actalk/inkchain-core": "workspace:*",
+    "@inkchain/inkchain-core": "workspace:*",
     "@base-ui/react": "^1.3.0",
     "@fontsource-variable/geist": "^5.2.8",
     "@hono/node-server": "^1.13.0",

@@ -1,4 +1,4 @@
-import type { ActionPayload, ActionSource, PlayMode, RequestedIntent, SessionKind } from "@actalk/inkchain-core";
+import type { ActionPayload, ActionSource, PlayMode, RequestedIntent, SessionKind } from "@inkchain/inkchain-core";
 
 // -- Data types --
 

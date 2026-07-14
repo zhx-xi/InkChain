@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Copy, FileText, Sparkles, X } from "lucide-react";
 import { cn } from "../lib/utils";
 import { fetchJson } from "../hooks/use-api";
-import type { SkillConfig } from "@actalk/inkchain-core";
+import type { SkillConfig } from "@inkchain/inkchain-core";
 
 // ── Built-in skill templates ──
 

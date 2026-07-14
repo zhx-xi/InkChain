@@ -5,12 +5,13 @@ import {
   type SessionTag,
   type SessionTagsFile,
 } from "./session-tags.js";
+import { DATA_DIR_NAME } from "../utils/data-directory.js";
 
 /**
  * Resolve the path to the session tags file within a project root.
  */
 export function resolveSessionTagsPath(projectRoot: string): string {
-  return join(projectRoot, ".inkos", "session-tags.json");
+  return join(projectRoot, DATA_DIR_NAME, "session-tags.json");
 }
 
 /**

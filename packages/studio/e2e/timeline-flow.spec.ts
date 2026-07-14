@@ -78,7 +78,7 @@ test.describe("Timeline — 核心创作流E2E", () => {
     await expect(page.getByText("击败魔头")).toBeVisible({ timeout: 5_000 });
 
     // Event count should have increased
-    await expect(page.getByText("5 个事件")).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("5 个事件", { exact: true })).toBeVisible({ timeout: 3_000 });
 
     // Create another event
     await createEventViaUI(page, {
@@ -86,7 +86,7 @@ test.describe("Timeline — 核心创作流E2E", () => {
       description: "众人举行庆功宴",
     });
     await expect(page.getByText("庆功宴")).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByText("6 个事件")).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("6 个事件", { exact: true })).toBeVisible({ timeout: 3_000 });
   });
 
   test("3. AI提取: 选章节提取应用后事件出现", async ({ page }) => {
@@ -139,7 +139,7 @@ test.describe("Timeline — 核心创作流E2E", () => {
     await expect(page.getByText("下山历练")).toBeVisible({ timeout: 3_000 });
 
     // Event count should reflect additions
-    await expect(page.getByText("6 个事件")).toBeVisible({ timeout: 3_000 });
+    await expect(page.getByText("6 个事件", { exact: true })).toBeVisible({ timeout: 3_000 });
   });
 
   test("4. 选择性应用事件: 勾选部分仅已选保存", async ({ page }) => {
@@ -319,7 +319,7 @@ test.describe("Timeline — 核心创作流E2E", () => {
 
     // The timeline canvas should be scrollable
     // Simulate scroll on the timeline container
-    const timelineCanvas = page.locator('[data-testid="timeline-canvas"]').first();
+    const timelineCanvas = page.locator("[data-testid='timeline-canvas']").first();
     if (await timelineCanvas.isVisible({ timeout: 2_000 }).catch(() => false)) {
       await timelineCanvas.evaluate((el) => {
         el.scrollLeft = 200;

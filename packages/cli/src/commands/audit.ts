@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { PipelineRunner } from "@actalk/inkchain-core";
+import { PipelineRunner } from "@inkchain/inkchain-core";
 import { loadConfig, buildPipelineConfig, findProjectRoot, resolveBookId, log, logError } from "../utils.js";
 
 export const auditCommand = new Command("audit")

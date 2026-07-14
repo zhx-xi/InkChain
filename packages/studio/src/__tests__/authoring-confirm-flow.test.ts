@@ -3,7 +3,7 @@ import { mkdtemp, rm, mkdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createStudioServer } from "../api/server.js";
-import { createAndPersistBookSession, loadStoryGraph } from "@actalk/inkchain-core";
+import { createAndPersistBookSession, loadStoryGraph } from "@inkchain/inkchain-core";
 
 const INKOS_CONFIG = JSON.stringify({
   name: "test-project",

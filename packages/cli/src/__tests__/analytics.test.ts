@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { computeAnalytics } from "@actalk/inkchain-core";
+import { computeAnalytics } from "@inkchain/inkchain-core";
 
 describe("computeAnalytics", () => {
   it("returns zeros for empty chapters", () => {

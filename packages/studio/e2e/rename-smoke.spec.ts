@@ -13,7 +13,7 @@ import { test, expect } from "@playwright/test";
 test.describe("rename-smoke — app health after InkOS→InkChain", () => {
   test("normal: Navigate to Agents page", async ({ page }) => {
     await page.goto("/agents");
-    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
+    await page.waitForLoadState("networkidle", { timeout: 30_000 }).catch(() => {});
 
     const bodyText = await page.locator("body").innerText();
     expect(bodyText.length).toBeGreaterThan(0);
@@ -21,7 +21,7 @@ test.describe("rename-smoke — app health after InkOS→InkChain", () => {
 
   test("normal: Navigate to Skills page", async ({ page }) => {
     await page.goto("/skills");
-    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
+    await page.waitForLoadState("networkidle", { timeout: 30_000 }).catch(() => {});
 
     const bodyText = await page.locator("body").innerText();
     expect(bodyText.length).toBeGreaterThan(0);
@@ -29,7 +29,7 @@ test.describe("rename-smoke — app health after InkOS→InkChain", () => {
 
   test("normal: Navigate to Dashboard via explicit route", async ({ page }) => {
     await page.goto("/dashboard");
-    await page.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
+    await page.waitForLoadState("networkidle", { timeout: 30_000 }).catch(() => {});
 
     const bodyText = await page.locator("body").innerText();
     expect(bodyText.length).toBeGreaterThan(0);

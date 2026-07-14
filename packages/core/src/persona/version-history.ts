@@ -10,10 +10,11 @@ import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { PersonaConfig, AgentRole } from "../models/persona-config.js";
 import { PersonaConfigSchema } from "../models/persona-config.js";
+import { DATA_DIR_NAME } from "../utils/data-directory.js";
 
 // ── Constants ──
 
-const VERSIONS_DIR_RELATIVE = ".inkos/persona-versions";
+const VERSIONS_DIR_RELATIVE = `${DATA_DIR_NAME}/persona-versions`;
 const VERSION_KEEP = 20;
 
 // ── Types ──

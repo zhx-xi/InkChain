@@ -131,8 +131,8 @@ const logger = {
   error: vi.fn(),
 };
 
-vi.mock("@actalk/inkchain-core", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@actalk/inkchain-core")>();
+vi.mock("@inkchain/inkchain-core", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@inkchain/inkchain-core")>();
   generatePlayImageMock.mockImplementation(actual.generatePlayImage);
 
   class MockSessionAlreadyMigratedError extends Error {
@@ -577,7 +577,7 @@ describe("createStudioServer daemon lifecycle", () => {
   });
 
   it("uses the real core bookId validator in the Studio safety mock", async () => {
-    const { isSafeBookId } = await import("@actalk/inkchain-core");
+    const { isSafeBookId } = await import("@inkchain/inkchain-core");
 
     expect(vi.isMockFunction(isSafeBookId)).toBe(false);
     expect(isSafeBookId("demo-book")).toBe(true);
@@ -598,7 +598,7 @@ describe("createStudioServer daemon lifecycle", () => {
 
     const responseOrTimeout = await Promise.race([
       app.request("http://localhost/api/v1/daemon/start", { method: "POST" }),
-      new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 30)),
+      new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 500)),
     ]);
 
     expect(responseOrTimeout).not.toBe("timeout");

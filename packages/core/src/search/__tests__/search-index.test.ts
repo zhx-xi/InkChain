@@ -4,6 +4,7 @@ import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import { mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { DATA_DIR_NAME } from "../../utils/data-directory.js";
 import {
   createSearchIndex,
   addToIndex,
@@ -315,7 +316,7 @@ describe("persistSearchIndex / loadSearchIndex", () => {
 
   beforeEach(async () => {
     tempDir = await mkdtemp(join(tmpdir(), "inkos-search-test-"));
-    await mkdir(join(tempDir, ".inkos"), { recursive: true });
+    await mkdir(join(tempDir, DATA_DIR_NAME), { recursive: true });
   });
 
   afterEach(async () => {
@@ -340,7 +341,7 @@ describe("persistSearchIndex / loadSearchIndex", () => {
   });
 
   it("returns empty index for corrupted file", async () => {
-    await writeFile(join(tempDir, ".inkos", "search_index.json"), "not valid json", "utf-8");
+    await writeFile(join(tempDir, DATA_DIR_NAME, "search_index.json"), "not valid json", "utf-8");
     const loaded = await loadSearchIndex(tempDir);
     expect(loaded.docs).toEqual({});
   });
@@ -353,7 +354,7 @@ describe("buildIndexFromSessions", () => {
 
   beforeEach(async () => {
     tempDir = await mkdtemp(join(tmpdir(), "inkos-session-search-"));
-    await mkdir(join(tempDir, ".inkos", "sessions"), { recursive: true });
+    await mkdir(join(tempDir, DATA_DIR_NAME, "sessions"), { recursive: true });
   });
 
   afterEach(async () => {
@@ -362,7 +363,7 @@ describe("buildIndexFromSessions", () => {
 
   function writeSession(sessionId: string, events: unknown[]) {
     const lines = events.map((e) => JSON.stringify(e)).join("\n");
-    return writeFile(join(tempDir, ".inkos", "sessions", `${sessionId}.jsonl`), lines + "\n", "utf-8");
+    return writeFile(join(tempDir, DATA_DIR_NAME, "sessions", `${sessionId}.jsonl`), lines + "\n", "utf-8");
   }
 
   it("indexes a session from JSONL events", async () => {
@@ -410,7 +411,7 @@ describe("buildIndexFromSessions", () => {
       },
     ]);
 
-    const sessionsDir = join(tempDir, ".inkos", "sessions");
+    const sessionsDir = join(tempDir, DATA_DIR_NAME, "sessions");
     const index = await buildIndexFromSessions(tempDir, sessionsDir);
 
     expect(index.docs["session-1"]).toBeDefined();
@@ -419,7 +420,7 @@ describe("buildIndexFromSessions", () => {
   });
 
   it("handles empty sessions dir", async () => {
-    const sessionsDir = join(tempDir, ".inkos", "sessions");
+    const sessionsDir = join(tempDir, DATA_DIR_NAME, "sessions");
     const index = await buildIndexFromSessions(tempDir, sessionsDir);
     expect(Object.keys(index.docs)).toHaveLength(0);
   });
@@ -440,7 +441,7 @@ describe("buildIndexFromSessions", () => {
       },
     ]);
 
-    const sessionsDir = join(tempDir, ".inkos", "sessions");
+    const sessionsDir = join(tempDir, DATA_DIR_NAME, "sessions");
     const tagsById: Record<string, string[]> = {
       "session-1": ["important", "writing"],
     };
@@ -461,7 +462,7 @@ describe("rebuildSearchIndex / searchSessions", () => {
 
   beforeEach(async () => {
     tempDir = await mkdtemp(join(tmpdir(), "inkos-search-int-"));
-    await mkdir(join(tempDir, ".inkos", "sessions"), { recursive: true });
+    await mkdir(join(tempDir, DATA_DIR_NAME, "sessions"), { recursive: true });
 
     // Write a couple sessions
     const session1 = [
@@ -491,7 +492,7 @@ describe("rebuildSearchIndex / searchSessions", () => {
       }),
       "",
     ].join("\n");
-    await writeFile(join(tempDir, ".inkos", "sessions", "s1.jsonl"), session1, "utf-8");
+    await writeFile(join(tempDir, DATA_DIR_NAME, "sessions", "s1.jsonl"), session1, "utf-8");
 
     const session2 = [
       JSON.stringify({
@@ -520,7 +521,7 @@ describe("rebuildSearchIndex / searchSessions", () => {
       }),
       "",
     ].join("\n");
-    await writeFile(join(tempDir, ".inkos", "sessions", "s2.jsonl"), session2, "utf-8");
+    await writeFile(join(tempDir, DATA_DIR_NAME, "sessions", "s2.jsonl"), session2, "utf-8");
   });
 
   afterEach(async () => {
