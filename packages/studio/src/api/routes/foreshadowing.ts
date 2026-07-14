@@ -177,6 +177,30 @@ export function createForeshadowingRouter(root: string) {
     return c.json({ foreshadowing: updated });
   });
 
+  // DELETE /api/foreshadowing/batch — batch delete (MUST come before /:id)
+  router.delete("/batch", async (c) => {
+    let body: { ids?: string[] };
+    try {
+      body = await c.req.json();
+    } catch {
+      throw new ApiError(400, "INVALID_JSON", "Request body must be valid JSON");
+    }
+    const ids = body.ids ?? [];
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw new ApiError(400, "INVALID_REQUEST", "ids must be a non-empty array");
+    }
+    let deletedCount = 0;
+    for (const id of ids) {
+      try {
+        await rm(entryPath(root, id), { force: true });
+        deletedCount++;
+      } catch {
+        // ignore individual failures
+      }
+    }
+    return c.json({ ok: true, deletedCount, ids });
+  });
+
   // DELETE /api/foreshadowing/:id — delete
   router.delete("/:id", async (c) => {
     const id = c.req.param("id");
