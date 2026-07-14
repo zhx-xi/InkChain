@@ -55,10 +55,10 @@ export function AgentCard({ agent, status, displayName, onClick, className, test
   return (
     <button
       type="button"
-      data-testid={testId}
+      data-testid={testId ?? `ag-agent-card-${agent.role}`}
       onClick={onClick}
       className={cn(
-        "group/card relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 transition-all duration-200",
+        "group/card relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 transition-all duration-200 w-full min-h-[180px]",
         "hover:shadow-lg hover:-translate-y-0.5",
         status === "disabled"
           ? "border-border/20 bg-muted/20 opacity-50 cursor-not-allowed"
