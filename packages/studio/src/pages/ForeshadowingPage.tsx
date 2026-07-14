@@ -813,8 +813,6 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
     }
   }, [selectedIds, refetch]);
 
-  const selectedCount = selectedExtractIndices.size;
-
   const filtered = useMemo(() => {
     const list = data?.foreshadowing ?? [];
     return list.filter((f) => {
@@ -1146,7 +1144,6 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
             </button>
             </div>
           </div>
-        </div>
       )}
 
       {/* Table View — always show when data exists (even during refetch) */}
