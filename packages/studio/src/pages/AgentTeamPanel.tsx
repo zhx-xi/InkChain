@@ -921,7 +921,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
               </h3>
               <button
                 type="button"
-                data-testid="ag-btn-create-agent"
+                data-testid="ag-create-btn"
                 onClick={() => handleOpenCustomAgentDialog()}
                 className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors"
                 style={{ color: "#8B3A3A" }}
@@ -937,7 +937,6 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                   agent={agent}
                   status={agentStatuses[agent.role] ?? "ready"}
                   onClick={() => handleAgentClick(agent.role)}
-                  testId={`ag-edit-btn-${agent.role}`}
                 />
               ))}
               {customAgents.map((agent) => (
@@ -955,7 +954,6 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                     displayName={agent.name}
                     onClick={() => handleAgentClick(agent.id)}
                     className="border-dashed"
-                    testId={`ag-edit-btn-${agent.id}`}
                   />
                   {/* Delete custom agent button */}
                   <button
