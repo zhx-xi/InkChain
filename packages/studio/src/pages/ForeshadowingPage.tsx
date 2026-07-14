@@ -842,6 +842,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                 key={mode}
                 type="button"
                 onClick={() => setViewMode(mode)}
+                data-testid={mode === "graph" ? "fs-btn-view-graph" : mode === "table" ? "fs-btn-view-table" : "fs-btn-view-card"}
                 className={cn(
                   "px-2.5 py-1.5 text-xs rounded-md transition font-medium",
                   viewMode === mode
@@ -1132,38 +1133,48 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       {/* Relation Graph View — always show when data exists (even during refetch) */}
       {filtered.length > 0 && viewMode === "graph" && (
         <div className="rounded-xl border border-border/40 bg-card p-8">
-          <p className="text-sm text-muted-foreground text-center">
-            关系图视图：通过 predecessor/successor 连线展示伏笔之间的关系。
-          </p>
-          <div className="mt-6 space-y-4 max-w-lg mx-auto">
-            {filtered.map((f) => (
-              <div
-                key={f.id}
-                onClick={() => setEditingEntry(f as unknown as Foreshadowing)}
-                className="rounded-lg border border-border/30 bg-background p-4 cursor-pointer hover:shadow-sm transition-shadow"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-medium text-sm text-foreground">{f.title}</span>
-                  <span className={cn(
-                    "px-1.5 py-0.5 rounded text-[10px] font-medium",
-                    TYPE_BG[f.type as ForeshadowingType],
-                  )}>
-                    {FORESHADOWING_TYPE_LABELS[f.type as ForeshadowingType]}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3 text-[11px] text-muted-foreground/60">
-                  <span>第 {f.createdChapter} 章</span>
-                  <span className={cn(
-                    "inline-flex items-center gap-1 text-xs font-medium",
-                    STATUS_COLORS[f.status as ForeshadowingStatus],
-                  )}>
-                    {STATUS_ICONS[f.status as ForeshadowingStatus]}
-                    {FORESHADOWING_STATUS_LABELS[f.status as ForeshadowingStatus]}
-                  </span>
-                </div>
-              </div>
+          <svg width="100%" height="400" className="graph-visualization">
+            {/* Draw edges as connections between consecutive items */}
+            {filtered.slice(0, -1).map((_, idx) => (
+              <line
+                key={`edge-${idx}`}
+                x1="10%"
+                y1={`${((idx + 0.5) / Math.max(filtered.length - 1, 1)) * 80 + 10}%`}
+                x2="90%"
+                y2={`${((idx + 1.5) / Math.max(filtered.length - 1, 1)) * 80 + 10}%`}
+                stroke="#888"
+                strokeWidth="1"
+                className="edge"
+              />
             ))}
-          </div>
+            {/* Draw nodes for each foreshadowing item */}
+            {filtered.map((f, idx) => {
+              const yPos = 50 + idx * (360 / Math.max(filtered.length, 1));
+              return (
+                <g key={f.id} className="graph-node" onClick={() => setEditingEntry(f as any)} style={{cursor: 'pointer'}}>
+                  <rect
+                    x="30%"
+                    y={yPos - 12}
+                    width="40%"
+                    height="24"
+                    rx="8"
+                    fill={TYPE_COLORS[f.type as '情节伏笔' | '角色伏笔' | '物品伏笔' | '设定伏笔'] || '#888'}
+                    opacity="0.2"
+                  />
+                  <text
+                    x="50%"
+                    y={yPos + 4}
+                    textAnchor="middle"
+                    fontSize="12"
+                    fill="currentColor"
+                    className="fill-foreground"
+                  >
+                    {f.title.length > 20 ? f.title.slice(0, 20) + '...' : f.title}
+                  </text>
+                </g>
+              );
+            })}
+          </svg>
         </div>
       )}
 
