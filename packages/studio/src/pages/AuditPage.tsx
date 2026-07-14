@@ -674,7 +674,7 @@ export function AuditPage({ bookId, nav }: AuditPageProps) {
       {/* ── Chapter Audit List ── */}
       <div data-testid="au-table-audit-list" className="space-y-2">
         {filteredChapters.length === 0 && (
-          <div data-testid="au-state-all-passed" className="text-center py-16 text-muted-foreground">
+          <div className="text-center py-16 text-muted-foreground">
             <ShieldCheck size={40} className="mx-auto mb-4 opacity-30" />
             <p className="text-sm">
               {volumeFilter ? "该卷下暂无章节数据" : "暂无章节数据"}
