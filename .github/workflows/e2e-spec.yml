@@ -43,7 +43,7 @@ jobs:
           {
             "name": "E2E Test Project",
             "version": "0.1.0",
-            "language": "",
+            "language": "zh",
             "llm": {
               "provider": "openai",
               "service": "custom",
