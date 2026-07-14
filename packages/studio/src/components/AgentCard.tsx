@@ -45,14 +45,16 @@ interface AgentCardProps {
   readonly displayName?: string;
   readonly onClick?: () => void;
   readonly className?: string;
+  readonly testId?: string;
 }
 
-export function AgentCard({ agent, status, displayName, onClick, className }: AgentCardProps) {
+export function AgentCard({ agent, status, displayName, onClick, className, testId }: AgentCardProps) {
   const statusCfg = STATUS_CONFIG[status];
 
   return (
     <button
       type="button"
+      data-testid={testId}
       onClick={onClick}
       className={cn(
         "group/card relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 transition-all duration-200",
