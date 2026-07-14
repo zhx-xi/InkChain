@@ -197,7 +197,7 @@ export function SkillListPage() {
         <button
           type="button"
           data-testid="sk-create-btn"
-          onClick={() => setShowCreateDialog(true)}
+          onClick={() => setCreateMode("blank")}
           className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
         >
           <Plus size={16} />
