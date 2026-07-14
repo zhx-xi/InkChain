@@ -1,0 +1,10 @@
+fix(timeline): add data-testid attributes and custom zoom controls for E2E
+
+Adds data-testid attributes required by the timeline-zoom-drag E2E tests:
+- tl-canvas-reactflow on ReactFlow wrapper
+- tl-btn-zoom-in, tl-btn-zoom-out, tl-btn-fit-view on custom zoom buttons
+- tl-state-loading on loading state
+- tl-state-empty on empty state
+
+The custom TimelineZoomControls component uses useReactFlow() hook
+to call zoomIn(), zoomOut(), and fitView().
