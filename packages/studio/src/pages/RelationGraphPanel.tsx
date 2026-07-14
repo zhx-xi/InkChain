@@ -114,6 +114,7 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
   const refreshGraph = useGraphStore((s) => s.refreshGraph);
   const selectNode = useGraphStore((s) => s.selectNode);
   const updateNode = useGraphStore((s) => s.updateNode);
+  const refreshGraph = useGraphStore((s) => s.refreshGraph);
 
   const [simplified, setSimplified] = useState(false);
   const [selectedVolumeId, setSelectedVolumeId] = useState<string | null>(null);
@@ -290,11 +291,18 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
   }, [nodes.length, hasFit]);
 
   // ── Reset handler ──
-  const handleReset = useCallback(() => {
+  const handleReset = useCallback(async () => {
+    if (!window.confirm("确认重置图谱？所有关系和角色将恢复初始状态。")) return;
     selectNode(null);
+    setSelectedVolumeId(null);
     setHasFit(false);
     window.dispatchEvent(new Event("resize"));
-  }, [selectNode]);
+    try {
+      await refreshGraph(bookId);
+    } catch {
+      // refreshGraph handles its own error state in the store
+    }
+  }, [selectNode, refreshGraph, bookId]);
 
   // ── Node click handler ──
   const onNodeClick: OnNodeClick = useCallback(
@@ -581,6 +589,7 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
             <button
               type="button"
               onClick={handleReset}
+              data-testid="rg-btn-reset"
               className="rounded-lg bg-card/80 border border-border/30 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
             >
               重置
