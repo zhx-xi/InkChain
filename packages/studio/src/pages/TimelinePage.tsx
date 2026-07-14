@@ -831,7 +831,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
     }
 
     return nodes;
-  }, [filteredEvents, uniqueChapters, uniqueCharacters, isLightweightMode]);
+  }, [filteredEvents, uniqueChapters, uniqueCharacters, isLightweightMode, collapsedVolumes, collapsedChapters, selectedVolumeId]);
 
   // ── Build ReactFlow edges for cross-role connections ──
   const timelineEdges = useMemo(() => {
@@ -1400,6 +1400,53 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
                 <option key={ch} value={ch}>第 {ch} 章</option>
               ))}
             </select>
+
+            {/* Chapter collapse/expand toggle */}
+            {uniqueChapters.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  const chapterNum = parseInt(chapterFilter, 10);
+                  if (!isNaN(chapterNum)) {
+                    toggleChapterCollapse(chapterNum);
+                  } else {
+                    // Toggle all chapters
+                    if (collapsedChapters.size > 0) {
+                      setCollapsedChapters(new Set());
+                    } else {
+                      setCollapsedChapters(new Set(uniqueChapters));
+                    }
+                  }
+                }}
+                data-testid="tl-btn-chapter-collapse"
+                className="rounded-lg bg-card/60 border border-border/20 px-2 py-1 text-muted-foreground hover:text-foreground transition-colors"
+                title={collapsedChapters.size > 0 ? "展开章节" : "折叠章节"}
+              >
+                {collapsedChapters.size > 0 ? (
+                  <ChevronRight size={14} />
+                ) : (
+                  <ChevronDown size={14} />
+                )}
+              </button>
+            )}
+
+            {/* Expand/Collapse All button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (collapsedVolumes.size > 0 || collapsedChapters.size > 0) {
+                  setCollapsedVolumes(new Set());
+                  setCollapsedChapters(new Set());
+                } else {
+                  setCollapsedVolumes(new Set(['__all__']));
+                  setCollapsedChapters(new Set(uniqueChapters));
+                }
+              }}
+              data-testid="tl-btn-expand-all"
+              className="rounded-lg bg-card/60 border border-border/20 px-2.5 py-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {collapsedVolumes.size > 0 || collapsedChapters.size > 0 ? '全部展开' : '全部折叠'}
+            </button>
 
             {/* Legend */}
             <div className="flex items-center gap-2 rounded-lg bg-card/50 border border-border/20 px-2.5 py-1.5">
