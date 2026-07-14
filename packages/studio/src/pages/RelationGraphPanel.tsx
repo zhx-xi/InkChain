@@ -12,12 +12,13 @@ import {
   type NodeTypes,
   type EdgeTypes,
   type OnNodeClick,
+  type OnEdgeClick,
   type ReactFlowInstance,
 } from "@xyflow/react";
 import "@xyflow/react/dist/base.css";
 import { useGraphStore } from "../store/relations/graph-store";
 import { fetchJson } from "../hooks/use-api";
-import { ArrowLeft, Sparkles, Download } from "lucide-react";
+import { ArrowLeft, Sparkles, Download, Trash2, X } from "lucide-react";
 import { useHashRoute } from "../hooks/use-hash-route";
 import { AlertBanner } from "../components/graph/AlertBanner";
 import { MemoCharacterNode } from "../components/graph/CharacterNode";
@@ -110,6 +111,7 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
   const error = useGraphStore((s) => s.error);
   const selectedNodeId = useGraphStore((s) => s.selectedNodeId);
   const loadGraph = useGraphStore((s) => s.loadGraph);
+  const refreshGraph = useGraphStore((s) => s.refreshGraph);
   const selectNode = useGraphStore((s) => s.selectNode);
   const updateNode = useGraphStore((s) => s.updateNode);
 
@@ -122,6 +124,9 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
   const reactFlowInstance = useRef<ReactFlowInstance | null>(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const exportBtnRef = useRef<HTMLDivElement>(null);
+  const [selectedEdgeId, setSelectedEdgeId] = useState<string | null>(null);
+  const [deleteConfirmEdge, setDeleteConfirmEdge] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // ── Load graph data on mount ──
   useEffect(() => {
@@ -285,18 +290,60 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
   }, [nodes.length, hasFit]);
 
   // ── Reset handler ──
-  const handleReset = useCallback(() => {
+  const handleReset = useCallback(async () => {
+    if (!window.confirm("确认重置图谱？所有关系和角色将恢复初始状态。")) return;
     selectNode(null);
+    setSelectedVolumeId(null);
     setHasFit(false);
     window.dispatchEvent(new Event("resize"));
-  }, [selectNode]);
+    try {
+      await refreshGraph(bookId);
+    } catch {
+      // refreshGraph handles its own error state in the store
+    }
+  }, [selectNode, refreshGraph, bookId]);
 
   // ── Node click handler ──
   const onNodeClick: OnNodeClick = useCallback(
     (_event, node) => {
+      setSelectedEdgeId(null);
       selectNode(selectedNodeId === node.id ? null : node.id);
     },
     [selectedNodeId, selectNode],
+  );
+
+  // ── Edge click handler ──
+  const onEdgeClick: OnEdgeClick = useCallback(
+    (_event, edge) => {
+      selectNode(null);
+      setSelectedEdgeId((prev) => (prev === edge.id ? null : edge.id));
+    },
+    [],
+  );
+
+  // ── Edge delete API call ──
+  const handleDeleteEdge = useCallback(async () => {
+    if (!deleteConfirmEdge) return;
+    setDeleteLoading(true);
+    try {
+      await fetchJson(`/books/${bookId}/relations/${deleteConfirmEdge}`, {
+        method: "DELETE",
+      });
+      setDeleteConfirmEdge(null);
+      setSelectedEdgeId(null);
+      // Refresh graph from API
+      await refreshGraph(bookId);
+    } catch {
+      alert("删除关系失败，请重试");
+    } finally {
+      setDeleteLoading(false);
+    }
+  }, [deleteConfirmEdge, bookId, refreshGraph]);
+
+  // ── Selected edge data ──
+  const selectedEdge = useMemo(
+    () => storeEdges.find((e) => e.id === selectedEdgeId) ?? null,
+    [storeEdges, selectedEdgeId],
   );
 
   // ── Selected node data for detail panel ──
@@ -541,6 +588,7 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
             <button
               type="button"
               onClick={handleReset}
+              data-testid="rg-btn-reset"
               className="rounded-lg bg-card/80 border border-border/30 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
             >
               重置
@@ -663,6 +711,83 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
           </div>
         )}
 
+        {/* Edge action bar */}
+        {selectedEdge && (
+          <div
+            className="flex items-center justify-center gap-2 px-4 py-2 border-b border-border/10 bg-card/50 backdrop-blur-sm"
+            data-testid="delete-relation-bar"
+          >
+            <span className="text-xs text-muted-foreground">
+              已选择关系：{selectedEdge.label || selectedEdge.relationType}
+            </span>
+            <button
+              type="button"
+              data-testid="rg-btn-delete-relation"
+              onClick={() => setDeleteConfirmEdge(selectedEdge.id)}
+              className="inline-flex items-center gap-1 rounded-lg bg-destructive/10 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/20 transition-colors"
+            >
+              <Trash2 size={12} />
+              删除关系
+            </button>
+          </div>
+        )}
+
+        {/* Delete confirmation dialog */}
+        {deleteConfirmEdge && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
+            onClick={() => { if (!deleteLoading) setDeleteConfirmEdge(null); }}
+          >
+            <div
+              data-testid="rg-modal-confirm-delete"
+              className="rounded-xl bg-card border border-border/20 shadow-xl max-w-sm w-full mx-4 overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-border/10">
+                <h3 className="text-sm font-semibold text-foreground">确认删除关系</h3>
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirmEdge(null)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                  disabled={deleteLoading}
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="px-5 py-4">
+                <p className="text-sm text-muted-foreground">
+                  确定要删除这条关系吗？此操作不可撤销。
+                </p>
+              </div>
+              <div className="flex items-center justify-end gap-2 px-5 py-3 bg-muted/30 border-t border-border/10">
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirmEdge(null)}
+                  disabled={deleteLoading}
+                  className="rounded-lg bg-card border border-border/20 px-4 py-2 text-xs font-medium text-foreground hover:bg-accent/50 transition-colors disabled:opacity-50"
+                >
+                  取消
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteEdge}
+                  disabled={deleteLoading}
+                  className="rounded-lg bg-destructive px-4 py-2 text-xs font-medium text-destructive-foreground hover:bg-destructive/90 transition-colors disabled:opacity-50 inline-flex items-center gap-1.5"
+                >
+                  {deleteLoading ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      删除中…
+                    </>
+                  ) : (
+                    "确认删除"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ReactFlow canvas */}
         <div ref={reactFlowRef} className="flex-1 min-h-0">
           <ReactFlow
@@ -671,6 +796,7 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             onNodeClick={onNodeClick}
+            onEdgeClick={onEdgeClick}
             onInit={(instance) => { reactFlowInstance.current = instance; }}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}

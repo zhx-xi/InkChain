@@ -360,12 +360,15 @@ export function Sidebar({ nav, activePage, sse, t }: {
               return (
                 <div key={book.id}>
                   {/* 书名行：箭头展开；标题进入该书，避免聊天区停留在上一本文稿。 */}
-                  <div className="group/book flex items-center">
+                  {/* pointer-events-none on wrapper + pointer-events-auto on buttons
+                      prevents this div from intercepting click events on the content
+                      area when a page uses absolute inset-0 positioning (e.g. book-create). */}
+                  <div className="group/book flex items-center pointer-events-none">
                     <button
                       type="button"
                       aria-label={isExpanded ? `折叠 ${book.title}` : `展开 ${book.title}`}
                       onClick={() => toggleBook(book.id)}
-                      className="flex h-8 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground/60 hover:bg-secondary/30 hover:text-foreground transition-colors"
+                      className="pointer-events-auto flex h-8 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground/60 hover:bg-secondary/30 hover:text-foreground transition-colors"
                     >
                       <ChevronRight
                         size={12}
@@ -375,7 +378,7 @@ export function Sidebar({ nav, activePage, sse, t }: {
                     <button
                       type="button"
                       onClick={() => openBook(book.id)}
-                      className={`flex min-w-0 flex-1 items-center gap-1.5 py-1.5 pr-2 rounded-md text-[15px] leading-6 transition-colors ${
+                      className={`pointer-events-auto flex min-w-0 flex-1 items-center gap-1.5 py-1.5 pr-2 rounded-md text-[15px] leading-6 transition-colors ${
                         isActiveBook ? "text-foreground font-medium" : "text-muted-foreground hover:text-foreground hover:bg-secondary/30"
                       }`}
                     >
