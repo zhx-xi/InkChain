@@ -782,6 +782,19 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
     });
   }, []);
 
+  const filtered = useMemo(() => {
+    const list = data?.foreshadowing ?? [];
+    return list.filter((f) => {
+      if (statusFilter !== "all" && f.status !== statusFilter) return false;
+      if (typeFilter !== "all" && f.type !== typeFilter) return false;
+      if (query.trim()) {
+        const q = query.toLowerCase();
+        return f.title.toLowerCase().includes(q) || f.description.toLowerCase().includes(q);
+      }
+      return true;
+    });
+  }, [data, statusFilter, typeFilter, query]);
+
   const toggleSelectAll = useCallback(() => {
     setSelectedIds((prev) => {
       const list = filtered;
@@ -812,19 +825,6 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       setBatchDeleting(false);
     }
   }, [selectedIds, refetch]);
-
-  const filtered = useMemo(() => {
-    const list = data?.foreshadowing ?? [];
-    return list.filter((f) => {
-      if (statusFilter !== "all" && f.status !== statusFilter) return false;
-      if (typeFilter !== "all" && f.type !== typeFilter) return false;
-      if (query.trim()) {
-        const q = query.toLowerCase();
-        return f.title.toLowerCase().includes(q) || f.description.toLowerCase().includes(q);
-      }
-      return true;
-    });
-  }, [data, statusFilter, typeFilter, query]);
 
   // Derived — whether empty-state should show. De-coupled from loading/refetch:
   // filtered.length is 0 when data is null (from data?.foreshadowing ?? []),
