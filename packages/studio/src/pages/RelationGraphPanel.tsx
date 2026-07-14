@@ -549,6 +549,7 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
             <button
               type="button"
               onClick={handleReset}
+              data-testid="rg-btn-reset"
               className="rounded-lg bg-card/80 border border-border/30 px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
             >
               重置
