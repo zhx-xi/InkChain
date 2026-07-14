@@ -751,6 +751,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
       <div className="flex gap-0 border-b mb-6" style={{ borderColor: "hsl(var(--border))" }}>
         <button
           type="button"
+          data-testid="ag-config-tab"
           onClick={() => setActiveTab("team")}
           className="px-5 py-2.5 text-sm font-medium transition-all relative"
           style={{
@@ -767,6 +768,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
         </button>
         <button
           type="button"
+          data-testid="ag-flow-tab"
           onClick={() => setActiveTab("flow")}
           className="px-5 py-2.5 text-sm font-medium transition-all relative"
           style={{
@@ -919,12 +921,13 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
               </h3>
               <button
                 type="button"
+                data-testid="ag-btn-create-agent"
                 onClick={() => handleOpenCustomAgentDialog()}
                 className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors"
                 style={{ color: "#8B3A3A" }}
               >
                 <UserPlus size={12} />
-                <span>添加自定义</span>
+                <span>创建自定义 Agent</span>
               </button>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -934,6 +937,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                   agent={agent}
                   status={agentStatuses[agent.role] ?? "ready"}
                   onClick={() => handleAgentClick(agent.role)}
+                  testId={`ag-edit-btn-${agent.role}`}
                 />
               ))}
               {customAgents.map((agent) => (
@@ -951,6 +955,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
                     displayName={agent.name}
                     onClick={() => handleAgentClick(agent.id)}
                     className="border-dashed"
+                    testId={`ag-edit-btn-${agent.id}`}
                   />
                   {/* Delete custom agent button */}
                   <button
