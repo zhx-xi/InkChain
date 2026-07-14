@@ -1,0 +1,5 @@
+fix(agent-card): add data-testid and consistent min-height for E2E
+
+- Adds data-testid="ag-agent-card-{role}" for E2E test targeting
+- Adds w-full and min-h-[180px] to ensure consistent card sizing
+  across different agents regardless of content length
