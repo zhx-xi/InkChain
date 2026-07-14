@@ -1,9 +1,5 @@
 name: E2E Spec Runner
 
-# Reusable workflow: start API+Vite servers, run one spec group.
-# Called by e2e-tests.yml in parallel for each page/feature group.
-# Each call runs on a separate VM → ports never conflict.
-
 on:
   workflow_call:
     inputs:
@@ -21,31 +17,24 @@ jobs:
     name: ${{ inputs.group-name }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
-
     steps:
       - uses: actions/checkout@v6
-
       - uses: pnpm/action-setup@v6
         with:
           version: 10
-
       - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
-
       - run: pnpm install --no-frozen-lockfile
-
       - name: Download core build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           name: core-dist
           path: packages/core/dist/
-
       - name: Install Playwright browsers
         working-directory: packages/studio
         run: PLAYWRIGHT_BROWSERS_PATH=0 npx playwright install chromium --with-deps
-
       - name: Prepare test project (inkchain.json)
         working-directory: packages/studio
         run: |
@@ -69,7 +58,6 @@ jobs:
             }
           }
           EOF
-
       - name: Start API server
         working-directory: packages/studio
         env:
@@ -79,7 +67,6 @@ jobs:
         run: |
           node_modules/.bin/tsx src/api/index.ts > /tmp/api-server.log 2>&1 &
           echo $! > /tmp/api-server.pid
-          # Give tsx time to compile the 6000-line server.ts before curl loop starts
           sleep 15
           for i in $(seq 1 60); do
             if curl -s -o /dev/null -w "%{http_code}" http://localhost:4581 | grep -q "2\|3\|4"; then
@@ -88,7 +75,6 @@ jobs:
             fi
             sleep 1
           done
-
       - name: Start Vite dev server
         working-directory: packages/studio
         env:
@@ -103,11 +89,9 @@ jobs:
             fi
             sleep 1
           done
-
       - name: Run ${{ inputs.group-name }} tests
         working-directory: packages/studio
         run: PLAYWRIGHT_BROWSERS_PATH=0 npx playwright test ${{ inputs.spec }} --config=playwright.ci.config.ts --reporter=list
-
       - name: Stop servers
         if: always()
         run: |

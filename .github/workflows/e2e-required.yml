@@ -1,7 +1,7 @@
 name: E2E Required
 
 # Gatekeeper: must pass for merge.  Only runs the rename smoke
-# and language selector — tests that are stable and verify the
+# and language selector X tests that are stable and verify the
 # app boots correctly.  Other E2E groups run in e2e-optional.yml
 # and do not block PRs.
 
@@ -30,7 +30,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --no-frozen-lockfile
       - run: pnpm --filter @inkchain/inkchain-core build
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: core-dist
           path: packages/core/dist/
