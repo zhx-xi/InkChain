@@ -951,7 +951,7 @@ export function ChatPage({ activeBookId, mode = activeBookId ? "book" : "book-cr
   })();
 
   return (
-    <div className="flex flex-col h-full flex-1 min-w-0 relative">
+    <div className="flex flex-col h-full flex-1 min-w-0 relative pointer-events-auto">
       {/* Message scroll area */}
       <div
         ref={scrollRef}
