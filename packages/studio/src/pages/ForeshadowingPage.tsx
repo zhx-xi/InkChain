@@ -1144,6 +1144,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
             </button>
             </div>
           </div>
+        </div>
       )}
 
       {/* Table View — always show when data exists (even during refetch) */}
