@@ -400,7 +400,7 @@ export function App() {
             </div>
           )}
           {route.page === "film-author" && (
-            <div className="absolute inset-0 flex min-w-0">
+            <div className="absolute inset-0 flex min-w-0 pointer-events-none">
               <ChatPage
                 activeBookId={route.projectId}
                 mode="interactive-film-authoring"
