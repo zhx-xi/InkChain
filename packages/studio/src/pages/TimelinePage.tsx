@@ -5,6 +5,7 @@ import {
   Background,
   BackgroundVariant,
   useNodesState,
+  useReactFlow,
   type Node,
   type Edge,
   type NodeProps,
@@ -107,6 +108,44 @@ export function computeNoRoleY(
 }
 
 // ── FPS Counter (dev-mode only) ──
+
+// ── Zoom Controls (custom buttons with data-testid for E2E) ──
+
+function TimelineZoomControls() {
+  const { zoomIn, zoomOut, fitView } = useReactFlow();
+
+  return (
+    <div className="absolute bottom-4 right-14 z-10 flex items-center gap-1 rounded-lg border border-border/20 bg-card/90 p-1 shadow-sm">
+      <button
+        type="button"
+        data-testid="tl-btn-zoom-in"
+        onClick={() => zoomIn()}
+        className="flex h-7 w-7 items-center justify-center rounded-md text-sm font-bold text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+        title="放大"
+      >
+        +
+      </button>
+      <button
+        type="button"
+        data-testid="tl-btn-zoom-out"
+        onClick={() => zoomOut()}
+        className="flex h-7 w-7 items-center justify-center rounded-md text-sm font-bold text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+        title="缩小"
+      >
+        −
+      </button>
+      <button
+        type="button"
+        data-testid="tl-btn-fit-view"
+        onClick={() => fitView({ padding: 0.3 })}
+        className="flex h-7 w-7 items-center justify-center rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+        title="适应画布"
+      >
+        ⊞
+      </button>
+    </div>
+  );
+}
 
 function FpsCounter() {
   const [fps, setFps] = useState(0);
@@ -1225,7 +1264,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
   // ── Loading state ──
   if (loading) {
     return (
-      <div data-testid="tl-loading-spinner" className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+      <div data-testid="tl-state-loading tl-loading-spinner" className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -1273,7 +1312,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
   // ── Empty state ──
   if (events.length === 0) {
     return (
-      <><div data-testid="tl-empty-state" className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+      <><div data-testid="tl-state-empty tl-empty-state" className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
         <div className="flex flex-col items-center justify-center min-h-[400px] gap-3">
           <svg
             className="w-12 h-12 text-muted-foreground/30"
@@ -1517,7 +1556,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
         </div>
 
         {/* ReactFlow canvas */}
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0" data-testid="tl-canvas-reactflow">
           <ReactFlow
             nodes={nodes}
             edges={timelineEdges}
@@ -1552,6 +1591,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
               showInteractive={false}
               className="!shadow-sm !border !border-border/20 !rounded-lg"
             />
+            <TimelineZoomControls />
           </ReactFlow>
         </div>
 
