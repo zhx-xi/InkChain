@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: unit-${{ github.head_ref || github.run_id }}
+  group: unit-${ { github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
@@ -29,12 +29,12 @@ jobs:
 
       - name: Cache node_modules
         id: cache-nm
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             node_modules
             packages/*/node_modules
-          key: nm-${{ hashFiles('pnpm-lock.yaml') }}
+          key: nm-${ { hashFiles('pnpm-lock.yaml') }}
 
       - if: steps.cache-nm.outputs.cache-hit != 'true'
         run: pnpm install --no-frozen-lockfile
@@ -61,12 +61,12 @@ jobs:
 
       - name: Cache node_modules
         id: cache-nm
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             node_modules
             packages/*/node_modules
-          key: nm-${{ hashFiles('pnpm-lock.yaml') }}
+          key: nm-${ { hashFiles('pnpm-lock.yaml') }}
 
       - if: steps.cache-nm.outputs.cache-hit != 'true'
         run: pnpm install --no-frozen-lockfile
@@ -98,12 +98,12 @@ jobs:
 
       - name: Cache node_modules
         id: cache-nm
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             node_modules
             packages/*/node_modules
-          key: nm-${{ hashFiles('pnpm-lock.yaml') }}
+          key: nm-${ { hashFiles('pnpm-lock.yaml') }}
 
       - if: steps.cache-nm.outputs.cache-hit != 'true'
         run: pnpm install --no-frozen-lockfile

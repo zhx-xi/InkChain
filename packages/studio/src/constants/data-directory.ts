@@ -9,6 +9,7 @@
 //   const filePath = join(root, DATA_DIR, "worlds", "xxx.json");
 
 import { access, mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { constants } from "node:fs";
 
@@ -49,8 +50,7 @@ export async function resolveDataDirName(root: string): Promise<string> {
  * Returns the data dir name synchronously based on disk state at call time.
  */
 export function resolveDataDirNameSync(root: string): string {
-  const { existsSync } = require("node:fs") as typeof import("node:fs");
-  if (existsSync(join(root, DATA_DIR_NAME))) return DATA_DIR_NAME;
+    if (existsSync(join(root, DATA_DIR_NAME))) return DATA_DIR_NAME;
   if (existsSync(join(root, LEGACY_DIR_NAME))) return LEGACY_DIR_NAME;
   return DATA_DIR_NAME;
 }

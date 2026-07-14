@@ -1,3 +1,5 @@
+import { join } from "node:path";
+
 // ── Data Directory Configuration (Issue #598) ──
 //
 // Centralized data directory name for the project runtime data store.
@@ -21,7 +23,7 @@ export const LEGACY_DIR_NAME = ".inkos";
  *   dataPath(root, "worlds", "my-world.json") → <root>/.inkchain/worlds/my-world.json
  */
 export function dataPath(root: string, ...segments: string[]): string {
-  const { join } = require("node:path") as typeof import("node:path");
+  
   return join(root, DATA_DIR_NAME, ...segments);
 }
 

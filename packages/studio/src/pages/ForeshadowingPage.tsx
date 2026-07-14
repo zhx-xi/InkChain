@@ -3,7 +3,7 @@ import { ArrowLeft, RotateCw } from "lucide-react";
 import { useHashRoute } from "../hooks/use-hash-route";
 import {
   Search, X, Sparkles, Plus, AlertTriangle, CheckCircle2, Clock,
-  XCircle, Eye, EyeOff, Loader2, Bot, Network,
+  XCircle, Eye, EyeOff, Loader2, Bot, Network, Trash2,
 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useApi, fetchJson, postApi, buildApiUrl } from "../hooks/use-api";
@@ -535,6 +535,12 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
 
+  // Batch delete state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBatchDeleteConfirm, setShowBatchDeleteConfirm] = useState(false);
+  const [batchDeleting, setBatchDeleting] = useState(false);
+  const [batchDeleteError, setBatchDeleteError] = useState<string | null>(null);
+
   // Note: showEmptyState is defined after `filtered` (useMemo) below.
 
   // Use dynamically fetched chapter count instead of hardcoded 999
@@ -762,6 +768,20 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
 
   const selectedCount = selectedExtractIndices.size;
 
+  // ── Batch delete handlers ──
+
+  const toggleSelectId = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
   const filtered = useMemo(() => {
     const list = data?.foreshadowing ?? [];
     return list.filter((f) => {
@@ -774,6 +794,37 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       return true;
     });
   }, [data, statusFilter, typeFilter, query]);
+
+  const toggleSelectAll = useCallback(() => {
+    setSelectedIds((prev) => {
+      const list = filtered;
+      if (list.length === 0) return prev;
+      if (prev.size === list.length) {
+        return new Set<string>();
+      }
+      return new Set(list.map((f) => f.id));
+    });
+  }, [filtered]);
+
+  const handleBatchDelete = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+    setBatchDeleting(true);
+    setBatchDeleteError(null);
+    try {
+      await fetchJson("/api/foreshadowing/batch", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      });
+      setSelectedIds(new Set());
+      setShowBatchDeleteConfirm(false);
+      refetch();
+    } catch (err) {
+      setBatchDeleteError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBatchDeleting(false);
+    }
+  }, [selectedIds, refetch]);
 
   // Derived — whether empty-state should show. De-coupled from loading/refetch:
   // filtered.length is 0 when data is null (from data?.foreshadowing ?? []),
@@ -928,6 +979,27 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         </select>
       </div>
 
+      {/* Batch action toolbar — visible when items are selected */}
+      {selectedIds.size > 0 && filtered.length > 0 && (
+        <div
+          data-testid="fs-batch-toolbar"
+          className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-4 py-3"
+        >
+          <span className="text-sm text-foreground">
+            已选 <strong>{selectedIds.size}</strong> 项
+          </span>
+          <button
+            type="button"
+            data-testid="fs-batch-delete"
+            onClick={() => setShowBatchDeleteConfirm(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-destructive px-3 py-1.5 text-sm font-medium text-destructive-foreground shadow-sm transition hover:bg-destructive/90"
+          >
+            <Trash2 size={14} />
+            批量删除
+          </button>
+        </div>
+      )}
+
       {/* Error */}
       {error && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" data-testid="fs-state-error">
@@ -946,6 +1018,9 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       {/* Loading — only on initial load, not during re-fetch */}
       {loading && data === null && (
         <div className="space-y-3" data-testid="fs-state-loading">
+          <div className="flex items-center justify-center py-4" data-testid="fs-loading-spinner">
+            <Loader2 size={24} className="animate-spin text-primary" />
+          </div>
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="rounded-xl border border-border/40 bg-card p-4 space-y-3 animate-pulse">
               <div className="h-4 w-48 bg-muted rounded" />
@@ -977,18 +1052,37 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       {filtered.length > 0 && viewMode === "card" && (
         <div className="space-y-2">
           {paginated.map((f) => (
-            <button
+            <div
               key={f.id}
-              type="button"
-              onClick={() => setEditingEntry(f as unknown as Foreshadowing)}
+              data-testid={`fs-item-${f.id}`}
               className={cn(
-                "w-full text-left rounded-xl border bg-card p-4 transition-all hover:shadow-sm",
+                "rounded-xl border bg-card p-4 transition-all hover:shadow-sm",
                 f._forgotten
                   ? "border-destructive/40 bg-destructive/[0.03]"
                   : "border-border/40",
+                selectedIds.has(f.id) && "ring-1 ring-primary/40",
               )}
             >
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <button
+                  type="button"
+                  data-testid={`fs-checkbox-${f.id}`}
+                  onClick={(e) => { e.stopPropagation(); toggleSelectId(f.id); }}
+                  className={cn(
+                    "mt-1 w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors",
+                    selectedIds.has(f.id)
+                      ? "bg-primary border-primary text-primary-foreground"
+                      : "border-border/60 hover:border-primary/50",
+                  )}
+                >
+                  {selectedIds.has(f.id) && <span className="text-[10px] leading-none">✓</span>}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingEntry(f as unknown as Foreshadowing)}
+                  className="flex-1 min-w-0 text-left"
+                >
+                <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className={cn(
@@ -1049,6 +1143,8 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                 </div>
               </div>
             </button>
+            </div>
+          </div>
           ))}
         </div>
       )}
@@ -1056,9 +1152,31 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       {/* Table View — always show when data exists (even during refetch) */}
       {filtered.length > 0 && viewMode === "table" && (
         <div className="overflow-x-auto rounded-xl border border-border/40 bg-card">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm" data-testid="fs-table-foreshadowing-list">
             <thead>
               <tr className="border-b border-border/30 bg-muted/30">
+                <th className="px-3 py-3 w-10">
+                  <button
+                    type="button"
+                    data-testid="fs-select-all"
+                    onClick={(e) => { e.stopPropagation(); toggleSelectAll(); }}
+                    className={cn(
+                      "w-4 h-4 rounded border flex items-center justify-center transition-colors",
+                      selectedIds.size === filtered.length && filtered.length > 0
+                        ? "bg-primary border-primary text-primary-foreground"
+                        : selectedIds.size > 0
+                          ? "bg-primary/50 border-primary/50 text-primary-foreground"
+                          : "border-border/60 hover:border-primary/50",
+                    )}
+                  >
+                    {(selectedIds.size === filtered.length && filtered.length > 0) && (
+                      <span className="text-[10px] leading-none">✓</span>
+                    )}
+                    {selectedIds.size > 0 && selectedIds.size < filtered.length && (
+                      <span className="text-[10px] leading-none">—</span>
+                    )}
+                  </button>
+                </th>
                 {[
                   { key: "title", label: "标题" },
                   { key: "type", label: "类型" },
@@ -1089,12 +1207,29 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
               {sorted.map((f) => (
                 <tr
                   key={f.id}
+                  data-testid={`fs-item-${f.id}`}
                   onClick={() => setEditingEntry(f as unknown as Foreshadowing)}
                   className={cn(
                     "border-b border-border/20 transition-colors cursor-pointer",
                     f._forgotten ? "bg-destructive/[0.02] hover:bg-destructive/[0.04]" : "hover:bg-muted/20",
+                    selectedIds.has(f.id) && "bg-primary/[0.03]",
                   )}
                 >
+                  <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      data-testid={`fs-checkbox-${f.id}`}
+                      onClick={() => toggleSelectId(f.id)}
+                      className={cn(
+                        "w-4 h-4 rounded border flex items-center justify-center transition-colors",
+                        selectedIds.has(f.id)
+                          ? "bg-primary border-primary text-primary-foreground"
+                          : "border-border/60 hover:border-primary/50",
+                      )}
+                    >
+                      {selectedIds.has(f.id) && <span className="text-[10px] leading-none">✓</span>}
+                    </button>
+                  </td>
                   <td className={cn(
                     "px-4 py-3 font-medium",
                     f._forgotten ? "text-destructive" : "text-foreground",
@@ -1133,7 +1268,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
       {/* Relation Graph View — always show when data exists (even during refetch) */}
       {filtered.length > 0 && viewMode === "graph" && (
         <div className="rounded-xl border border-border/40 bg-card p-8">
-          <svg width="100%" height="400" className="graph-visualization">
+          <svg width="100%" height="400" className="graph-visualization" data-testid="fs-graph-svg">
             {/* Draw edges as connections between consecutive items */}
             {filtered.slice(0, -1).map((_, idx) => (
               <line
@@ -1251,6 +1386,49 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
         onClose={() => setEditingEntry(null)}
         onSaved={refetch}
       />
+
+      {/* Batch Delete Confirmation Dialog */}
+      {showBatchDeleteConfirm && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/35 backdrop-blur-[2px] pt-16" data-testid="fs-modal-confirm-delete">
+          <button
+            type="button"
+            aria-label="关闭"
+            className="absolute inset-0 cursor-default"
+            onClick={() => setShowBatchDeleteConfirm(false)}
+          />
+          <div className="relative w-full max-w-sm rounded-xl border border-border/55 bg-card shadow-2xl mx-4">
+            <div className="p-6 space-y-4">
+              <h2 className="text-lg font-semibold">确认批量删除</h2>
+              <p className="text-sm text-muted-foreground">
+                确认删除已选的 <strong>{selectedIds.size}</strong> 条伏笔？此操作不可撤销。
+              </p>
+              {batchDeleteError && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                  {batchDeleteError}
+                </div>
+              )}
+              <div className="flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowBatchDeleteConfirm(false)}
+                  disabled={batchDeleting}
+                  className="px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBatchDelete}
+                  disabled={batchDeleting}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground shadow-sm transition hover:bg-destructive/90 disabled:opacity-60"
+                >
+                  {batchDeleting ? "删除中…" : "确认删除"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* AI Extract Modal */}
       {showAiExtract && (
@@ -1539,6 +1717,64 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
                   )}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Batch Delete Confirmation Dialog */}
+      {showBatchDeleteConfirm && (
+        <div
+          className="fixed inset-0 z-[80] flex items-center justify-center bg-background/35 backdrop-blur-[2px]"
+          role="dialog"
+          aria-modal="true"
+          data-testid="fs-modal-confirm-delete"
+        >
+          <button
+            type="button"
+            aria-label="关闭"
+            className="absolute inset-0 cursor-default"
+            onClick={() => { if (!batchDeleting) { setShowBatchDeleteConfirm(false); setBatchDeleteError(null); } }}
+          />
+          <div className="relative w-full max-w-md rounded-xl border border-border/55 bg-card shadow-2xl mx-4">
+            <div className="px-6 py-5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <AlertTriangle size={20} className="text-destructive" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">确认批量删除</h3>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    确定要删除选中的 <strong>{selectedIds.size}</strong> 项伏笔吗？此操作不可撤销。
+                  </p>
+                </div>
+              </div>
+
+              {batchDeleteError && (
+                <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive" data-testid="fs-state-error">
+                  {batchDeleteError}
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-border/45 px-6 py-4">
+              <button
+                type="button"
+                onClick={() => { setShowBatchDeleteConfirm(false); setBatchDeleteError(null); }}
+                disabled={batchDeleting}
+                className="rounded-lg px-4 py-2 text-sm text-muted-foreground hover:bg-secondary/60 transition-colors disabled:opacity-50"
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                onClick={handleBatchDelete}
+                disabled={batchDeleting}
+                className="inline-flex items-center gap-2 rounded-lg bg-destructive px-4 py-2 text-sm font-semibold text-destructive-foreground shadow-sm transition hover:bg-destructive/90 disabled:opacity-60"
+              >
+                {batchDeleting && <Loader2 size={14} className="animate-spin" />}
+                {batchDeleting ? "删除中…" : "确认删除"}
+              </button>
             </div>
           </div>
         </div>

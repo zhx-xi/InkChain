@@ -58,8 +58,8 @@ test.describe("AgentTeamPanel — 核心创作功能基线", () => {
   test("6. 空状态: 无Agent时显示空状态", async ({ page }) => {
     await page.waitForTimeout(2000);
     const emptyState = page.locator(
-      "[data-testid*='empty'], [data-testid*='Empty'], text=创建第一个, text=暂无"
-    );
+      "[data-testid*='empty'], [data-testid*='Empty']"
+    ).or(page.getByText("创建第一个")).or(page.getByText("暂无"));
     const hasEmpty = (await emptyState.count()) > 0;
     console.log(`Empty state: ${hasEmpty}`);
   });
@@ -71,8 +71,8 @@ test.describe("AgentTeamPanel — 核心创作功能基线", () => {
     await page.reload();
     await page.waitForTimeout(2000);
     const error = page.locator(
-      "[data-testid*='error'], [data-testid*='Error'], text=错误, text=失败"
-    );
+      "[data-testid*='error'], [data-testid*='Error']"
+    ).or(page.getByText("错误")).or(page.getByText("失败"));
     const hasError = (await error.count()) > 0;
     console.log(`Error state: ${hasError}`);
   });
