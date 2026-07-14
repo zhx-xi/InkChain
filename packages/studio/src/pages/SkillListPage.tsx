@@ -251,14 +251,14 @@ export function SkillListPage() {
 
       {/* Error */}
       {error && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" data-testid="sl-state-error">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" data-testid="sk-state-error">
           加载失败：{error}
         </div>
       )}
 
       {/* Loading */}
       {loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" data-testid="sl-state-loading">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" data-testid="sk-state-loading">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="rounded-xl border border-border/40 bg-card p-4 space-y-3 animate-pulse">
               <div className="h-4 w-24 bg-muted rounded" />
@@ -272,7 +272,7 @@ export function SkillListPage() {
 
       {/* Empty */}
       {!loading && !error && filteredSkills.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-center" data-testid="sl-state-empty">
+        <div className="flex flex-col items-center justify-center py-16 text-center" data-testid="sk-state-empty">
           <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3">
             <Sparkles size={20} className="text-muted-foreground/40" />
           </div>
@@ -292,7 +292,7 @@ export function SkillListPage() {
             共 {filteredSkills.length} 个 Skill
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" data-testid="sk-list-skills">
             {pagedSkills.map((item) => {
               const config = item.config;
               const source = item.source;
@@ -314,7 +314,9 @@ export function SkillListPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           {source === "builtin" && (
-                            <Puzzle size={14} className="text-muted-foreground/40 shrink-0" />
+                            <span data-testid="sk-tag-builtin">
+                              <Puzzle size={14} className="text-muted-foreground/40 shrink-0" />
+                            </span>
                           )}
                           <h3 className="font-medium text-foreground truncate">
                             {config.id}
@@ -346,6 +348,7 @@ export function SkillListPage() {
                         {source === "project" && !/^(interactive-film-authoring|narrative-intelligence-agent)/.test(config.id) && (
                           <button
                             type="button"
+                            data-testid="sk-btn-edit-skill"
                             onClick={() => handleEditSkill(config.id, source)}
                             className="rounded-lg border border-border/40 p-1.5 text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors"
                             title="编辑 Skill"
@@ -462,6 +465,7 @@ export function SkillListPage() {
                         <div className="pt-2 border-t border-border/20">
                           <button
                             type="button"
+                            data-testid="sk-btn-edit-skill"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleEditSkill(config.id, source);
