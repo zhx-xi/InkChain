@@ -13,7 +13,7 @@ export const updateCommand = new Command("update")
       log(`Current version: ${currentVersion}`);
       log("Checking npm registry...");
 
-      const remoteVersion = execSync("npm view @actalk/inkchain-cli version", {
+      const remoteVersion = execSync("npm view @inkchain/inkchain-cli version", {
         encoding: "utf-8",
       }).trim();
 
@@ -35,11 +35,11 @@ export const updateCommand = new Command("update")
       }
 
       log(`Updating: ${currentVersion} → ${remoteVersion}`);
-      execSync("npm install -g @actalk/inkchain-cli@latest", { stdio: "inherit" });
+      execSync("npm install -g @inkchain/inkchain-cli@latest", { stdio: "inherit" });
       log(`Updated to ${remoteVersion}.`);
     } catch (e) {
       logError(`Update failed: ${e}`);
-      log("You can also update manually: npm install -g @actalk/inkchain-cli@latest");
+      log("You can also update manually: npm install -g @inkchain/inkchain-cli@latest");
       process.exit(1);
     }
   });

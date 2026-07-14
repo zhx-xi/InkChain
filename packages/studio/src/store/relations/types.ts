@@ -1,5 +1,5 @@
 import type { CharacterTier } from "../../lib/truth-display";
-import type { RelationType } from "@actalk/inkchain-core";
+import type { RelationType } from "@inkchain/inkchain-core";
 
 export interface GraphNodeData {
   id: string;

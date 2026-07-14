@@ -3,7 +3,7 @@
 // diff highlights vs original text and confirm/save functionality.
 
 import React, { useState, useCallback, useMemo } from "react";
-import type { ExtractedWorld, ExtractResult } from "@actalk/inkchain-core";
+import type { ExtractedWorld, ExtractResult } from "@inkchain/inkchain-core";
 
 // ── Dimension metadata ──
 

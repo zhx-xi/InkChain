@@ -9,7 +9,7 @@ import {
   RelationsFileSchema,
   type CharacterRelation,
   type RelationsFile,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 
 // ── Helpers ──
 

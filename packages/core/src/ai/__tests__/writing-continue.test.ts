@@ -62,6 +62,7 @@ function makeWorldConfig(): WorldConfig {
       { id: "rule1", name: "魔法守恒", type: "魔法", description: "魔法不能凭空产生", constraints: ["施法需要等价交换"], sortIndex: 0 },
     ],
     references: [],
+    bookIds: [],
   };
 }
 

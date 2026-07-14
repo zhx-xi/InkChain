@@ -4,7 +4,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useApi } from "../hooks/use-api";
 import { MapGenPanel } from "../components/world-editor/MapGenPanel";
-import type { WorldConfig, WorldRegion, WorldHistoryEvent } from "@actalk/inkchain-core";
+import type { WorldConfig, WorldRegion, WorldHistoryEvent } from "@inkchain/inkchain-core";
 import { ArrowLeft, Globe, Map, Sparkles, X, Circle } from "lucide-react";
 
 // ── Types ──

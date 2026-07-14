@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: unit-${{ github.head_ref || github.run_id }}
+  group: unit-${ { github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 jobs:
@@ -16,18 +16,28 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 10
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
 
-      - run: pnpm install --no-frozen-lockfile
+      - name: Cache node_modules
+        id: cache-nm
+        uses: actions/cache@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: nm-${ { hashFiles('pnpm-lock.yaml') }}
+
+      - if: steps.cache-nm.outputs.cache-hit != 'true'
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run Core tests
         working-directory: packages/core
@@ -38,18 +48,28 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 10
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
 
-      - run: pnpm install --no-frozen-lockfile
+      - name: Cache node_modules
+        id: cache-nm
+        uses: actions/cache@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: nm-${ { hashFiles('pnpm-lock.yaml') }}
+
+      - if: steps.cache-nm.outputs.cache-hit != 'true'
+        run: pnpm install --no-frozen-lockfile
 
       - name: Build CLI
         working-directory: packages/cli
@@ -65,18 +85,28 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         with:
           version: 10
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: pnpm
 
-      - run: pnpm install --no-frozen-lockfile
+      - name: Cache node_modules
+        id: cache-nm
+        uses: actions/cache@v5
+        with:
+          path: |
+            node_modules
+            packages/*/node_modules
+          key: nm-${ { hashFiles('pnpm-lock.yaml') }}
+
+      - if: steps.cache-nm.outputs.cache-hit != 'true'
+        run: pnpm install --no-frozen-lockfile
 
       - name: Run Studio unit tests
         working-directory: packages/studio

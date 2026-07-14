@@ -2,7 +2,7 @@ import { Command } from "commander";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { join } from "node:path";
 import { findProjectRoot, log, logError, GLOBAL_CONFIG_DIR, GLOBAL_ENV_PATH } from "../utils.js";
-import { listModelsForService } from "@actalk/inkchain-core";
+import { listModelsForService } from "@inkchain/inkchain-core";
 
 export const configCommand = new Command("config")
   .description("Manage project configuration");

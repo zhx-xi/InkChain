@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import type { LLMConfig } from "../models/project.js";
 import type { CharacterRelation } from "../models/relations.js";
 import { RelationType } from "../models/relations.js";
+import { CharacterTier } from "../models/character.js";
 import { createLLMClient, chatCompletion } from "../llm/provider.js";
 
 // ── Types ──
@@ -28,6 +29,7 @@ export interface ExtractionResult {
   proposals: RelationProposal[];
   sourceChapters: number[];
   sourceCharacters: string[];
+  characterTiers: Record<string, CharacterTier>;
 }
 
 interface ExtractionPromptContext {
@@ -38,9 +40,11 @@ interface ExtractionPromptContext {
 // ── Prompt Templates ──
 
 function buildSystemPrompt(): string {
-  return `你是一位资深文学分析专家，擅长从小说叙事文本中分析角色之间的关系。
+  return `你是一位资深文学分析专家，擅长从小说叙事文本中分析角色之间的互动关系以及角色的叙事重要性。
 
-你的任务是从给定的叙事文本中，识别出角色之间的互动，并推断他们之间的关系类型。
+你的任务分为两部分：
+1. 识别角色之间的互动，推断关系类型
+2. 分析每个角色的叙事重要性（角色层级）
 
 ## 关系类型定义
 
@@ -50,6 +54,14 @@ function buildSystemPrompt(): string {
 - mentor（师徒）：教导与被教导的关系，一方传授知识/技能
 - blood（血缘）：有血缘关系的家庭成员
 - secret_crush（暗恋）：一方对另一方有单向的爱慕之情（未表露或未确认）
+
+## 角色层级定义（根据叙事重要性从高到低）
+
+- protagonist（主角）：全程推动核心叙事，是故事的核心人物，出场频率最高，拥有最多对话和内心描写
+- supporting（重要角色）：推动关键段落或支线剧情，有较多出场和独立故事线
+- guest（次要角色）：阶段性出场，辅助主线或推动特定情节转变
+- one_shot（客串角色）：场景NPC或群像角色，仅有少量出场
+- scene（一次性角色）：出场仅1-2句，为特定场景服务
 
 ## 输出格式
 
@@ -71,9 +83,21 @@ function buildSystemPrompt(): string {
       }
     }
   ],
-  "sourceCharacters": ["角色A", "角色B"]
+  "sourceCharacters": ["角色A", "角色B"],
+  "characterTiers": {
+    "角色A": "protagonist",
+    "角色B": "supporting"
+  }
 }
 \`\`\`
+
+## 判定角色层级的依据
+
+- protagonist：主导叙事的核心角色，出场最多、最有发言权、推动主要冲突
+- supporting：有独立故事线和关键作用，但不是唯一焦点
+- guest：只出现在部分章节，对主线有辅助作用
+- one_shot：仅出现在零散场景中，作用有限
+- scene：只出现1-2句话的角色
 
 ## 要求
 
@@ -83,8 +107,9 @@ function buildSystemPrompt(): string {
    - closeness（亲密度）：1-5 的整数
    - trust（信任度）：1-5 的整数
    - intensity（强度）：1-5 的整数
-4. 只输出 JSON，不要 markdown 代码块包裹（除非整个响应被代码块包裹，我会从中提取）
-5. 如果没有发现任何角色关系，返回 { "proposals": [], "sourceCharacters": [] }`;
+4. characterTiers 必须覆盖所有在 sourceCharacters 和 proposals 中出现的角色
+5. 只输出 JSON，不要 markdown 代码块包裹（除非整个响应被代码块包裹，我会从中提取）
+6. 如果没有发现任何角色关系，返回 { "proposals": [], "sourceCharacters": [], "characterTiers": {} }`;
 }
 
 function buildUserPrompt(
@@ -127,9 +152,10 @@ ${prose}
 
 // ── LLM Response Parser ──
 
-function parseProposalsFromLLMResponse(
+/** @internal exported for testing */
+export function parseProposalsFromLLMResponse(
   text: string,
-): { proposals: Omit<RelationProposal, "id">[]; sourceCharacters: string[] } | null {
+): { proposals: Omit<RelationProposal, "id">[]; sourceCharacters: string[]; characterTiers: Record<string, CharacterTier> } | null {
   const trimmed = text.trim();
 
   // Try parsing as-is
@@ -178,17 +204,30 @@ function parseProposalsFromLLMResponse(
   return null;
 }
 
-function normalizeParsedResult(
+/** @internal exported for testing */
+export function normalizeParsedResult(
   parsed: Record<string, unknown>,
-): { proposals: Omit<RelationProposal, "id">[]; sourceCharacters: string[] } | null {
+): { proposals: Omit<RelationProposal, "id">[]; sourceCharacters: string[]; characterTiers: Record<string, CharacterTier> } | null {
   const proposalsRaw = parsed.proposals ?? parsed;
   const proposals = Array.isArray(proposalsRaw) ? proposalsRaw : [];
   const sourceCharacters = Array.isArray(parsed.sourceCharacters)
     ? parsed.sourceCharacters.map(String)
     : [];
+  const rawTiers = parsed.characterTiers;
+  const characterTiers: Record<string, CharacterTier> = {};
+  if (rawTiers && typeof rawTiers === "object" && !Array.isArray(rawTiers)) {
+    for (const [name, tier] of Object.entries(rawTiers as Record<string, unknown>)) {
+      const tierStr = String(tier ?? "");
+      // Validate against CharacterTier enum values
+      const validTiers: string[] = Object.values(CharacterTier);
+      if (validTiers.includes(tierStr)) {
+        characterTiers[name] = tierStr as CharacterTier;
+      }
+    }
+  }
 
   if (proposals.length === 0) {
-    return { proposals: [], sourceCharacters };
+    return { proposals: [], sourceCharacters, characterTiers };
   }
 
   const validProposals: Omit<RelationProposal, "id">[] = [];
@@ -233,7 +272,7 @@ function normalizeParsedResult(
     });
   }
 
-  return { proposals: validProposals, sourceCharacters };
+  return { proposals: validProposals, sourceCharacters, characterTiers };
 }
 
 // ── Main Extraction Function ──
@@ -256,7 +295,7 @@ export async function extractRelationsFromProse(
   },
 ): Promise<ExtractionResult> {
   if (!prose || prose.trim().length === 0) {
-    return { proposals: [], sourceChapters: [], sourceCharacters: [] };
+    return { proposals: [], sourceChapters: [], sourceCharacters: [], characterTiers: {} };
   }
 
   const chapterNumbers = options?.chapterNumbers ?? [];
@@ -299,6 +338,7 @@ export async function extractRelationsFromProse(
       proposals: [],
       sourceChapters: chapterNumbers,
       sourceCharacters: [],
+      characterTiers: {},
     };
   }
 
@@ -312,5 +352,6 @@ export async function extractRelationsFromProse(
     proposals,
     sourceChapters: chapterNumbers,
     sourceCharacters: parsed.sourceCharacters,
+    characterTiers: parsed.characterTiers,
   };
 }

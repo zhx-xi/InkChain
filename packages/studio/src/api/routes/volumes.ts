@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 
 // ── Inline type definitions ──
-// Schema validation is handled by @actalk/inkchain-core VolumeSchema after PR #106 is merged.
+// Schema validation is handled by @inkchain/inkchain-core VolumeSchema after PR #106 is merged.
 // For now, use simple runtime type checks.
 
 type VolumeStatus = "draft" | "active" | "completed";
@@ -428,8 +428,18 @@ export function createVolumesRouter(bookDir: (id: string) => string) {
     let chapters: Array<{ number: number; title: string; status: string; wordCount: number; volumeId: string | null }> = [];
     try {
       const raw = await readFile(join(dir, "chapters", "index.json"), "utf-8");
-      const allChapters = JSON.parse(raw) as Record<string, unknown>;
-      chapters = (Array.isArray(allChapters.chapters) ? allChapters.chapters : []).filter(
+      const parsed = JSON.parse(raw) as unknown;
+      // StateManager.saveChapterIndexAt stores chapters as a plain array.
+      // Also support { chapters: [...] } wrapped format for resilience.
+      let allChapters: Array<Record<string, unknown>>;
+      if (Array.isArray(parsed)) {
+        allChapters = parsed;
+      } else if (parsed && typeof parsed === "object" && "chapters" in (parsed as Record<string, unknown>) && Array.isArray((parsed as Record<string, unknown>).chapters)) {
+        allChapters = (parsed as Record<string, unknown>).chapters as Array<Record<string, unknown>>;
+      } else {
+        allChapters = [];
+      }
+      chapters = allChapters.filter(
         (ch: unknown) => isRecord(ch) && (ch.volumeId ?? null) === volumeId,
       ) as typeof chapters;
     } catch {

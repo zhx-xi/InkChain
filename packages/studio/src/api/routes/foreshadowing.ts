@@ -10,7 +10,7 @@
 //   POST   /:id/payoff    — Mark a foreshadowing as paid off at a given chapter
 
 import { Hono } from "hono";
-import { readdir, readFile, writeFile, mkdir, rm } from "node:fs/promises";
+import { readdir, rm } from "node:fs/promises";
 import { join } from "node:path";
 import {
   ForeshadowingSchema,
@@ -19,59 +19,35 @@ import {
   ForeshadowingTypeEnum,
   ForeshadowingStatusEnum,
   findForgottenForeshadowing,
+  IndexManager,
   type Foreshadowing,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 import { ApiError } from "../errors.js";
+import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 
-const FS_DIR = ".inkos/foreshadowing";
+const FS_DIR = `${DATA_DIR_NAME}/foreshadowing`;
 
 function entryPath(root: string, id: string): string {
   return join(root, FS_DIR, `${id}.json`);
 }
 
+function foreshadowingParser(raw: string): Foreshadowing {
+  return ForeshadowingSchema.parse(JSON.parse(raw));
+}
+
 async function readEntry(root: string, id: string): Promise<Foreshadowing | null> {
-  try {
-    const raw = await readFile(entryPath(root, id), "utf-8");
-    return ForeshadowingSchema.parse(JSON.parse(raw));
-  } catch (error) {
-    if (
-      typeof error === "object"
-      && error !== null
-      && "code" in error
-      && (error as { code?: unknown }).code === "ENOENT"
-    ) {
-      return null;
-    }
-    throw error;
-  }
+  const idx = IndexManager.getInstance();
+  return idx.get<Foreshadowing>(root, FS_DIR, id, foreshadowingParser);
 }
 
 async function writeEntry(root: string, entry: Foreshadowing): Promise<void> {
-  const dir = join(root, FS_DIR);
-  await mkdir(dir, { recursive: true });
-  await writeFile(entryPath(root, entry.id), JSON.stringify(entry, null, 2), "utf-8");
+  const idx = IndexManager.getInstance();
+  await idx.set(root, FS_DIR, entry.id, entry);
 }
 
 async function listEntries(root: string): Promise<Foreshadowing[]> {
-  const dir = join(root, FS_DIR);
-  let files: string[];
-  try {
-    files = await readdir(dir);
-  } catch {
-    return [];
-  }
-  const entries: Foreshadowing[] = [];
-  for (const file of files) {
-    if (!file.endsWith(".json")) continue;
-    try {
-      const raw = await readFile(join(dir, file), "utf-8");
-      const entry = ForeshadowingSchema.parse(JSON.parse(raw));
-      entries.push(entry);
-    } catch {
-      // Skip malformed entries
-      continue;
-    }
-  }
+  const idx = IndexManager.getInstance();
+  const entries = await idx.list<Foreshadowing>(root, FS_DIR, foreshadowingParser);
   return entries.sort((a, b) => a.createdChapter - b.createdChapter);
 }
 
@@ -201,6 +177,30 @@ export function createForeshadowingRouter(root: string) {
     return c.json({ foreshadowing: updated });
   });
 
+  // DELETE /api/foreshadowing/batch — batch delete (MUST come before /:id)
+  router.delete("/batch", async (c) => {
+    let body: { ids?: string[] };
+    try {
+      body = await c.req.json();
+    } catch {
+      throw new ApiError(400, "INVALID_JSON", "Request body must be valid JSON");
+    }
+    const ids = body.ids ?? [];
+    if (!Array.isArray(ids) || ids.length === 0) {
+      throw new ApiError(400, "INVALID_REQUEST", "ids must be a non-empty array");
+    }
+    let deletedCount = 0;
+    for (const id of ids) {
+      try {
+        await rm(entryPath(root, id), { force: true });
+        deletedCount++;
+      } catch {
+        // ignore individual failures
+      }
+    }
+    return c.json({ ok: true, deletedCount, ids });
+  });
+
   // DELETE /api/foreshadowing/:id — delete
   router.delete("/:id", async (c) => {
     const id = c.req.param("id");
@@ -209,6 +209,7 @@ export function createForeshadowingRouter(root: string) {
     } catch {
       // ignore
     }
+    IndexManager.getInstance().evict(root, FS_DIR, id);
     return c.json({ ok: true, id });
   });
 

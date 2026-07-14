@@ -5,6 +5,7 @@ import {
   Background,
   BackgroundVariant,
   useNodesState,
+  useReactFlow,
   type Node,
   type Edge,
   type NodeProps,
@@ -79,11 +80,14 @@ const LEFT_MARGIN = 160;   // Space for character Y-axis labels
 const TOP_MARGIN = 80;     // Space for chapter X-axis labels
 const HEADER_NODE_WIDTH = 140;
 const HEADER_NODE_HEIGHT = 36;
+const MAX_VISIBLE_EVENTS_PER_CELL = 3;  // Collapse threshold: show +N more when exceeded
 
 // ── Gap computation helpers (exported for testing) ──
 
 /** Compute the vertical gap between character rows based on max events in any cell */
 export function computeDynamicRowGap(maxCellEvents: number): number {
+  // Ensure row gap is large enough to accommodate the tallest stack of events in any cell,
+  // plus 16px bottom padding, and never below ROW_GAP_Y baseline.
   return Math.max(ROW_GAP_Y, (NODE_HEIGHT + 4) * maxCellEvents + 16);
 }
 
@@ -104,6 +108,44 @@ export function computeNoRoleY(
 }
 
 // ── FPS Counter (dev-mode only) ──
+
+// ── Zoom Controls (custom buttons with data-testid for E2E) ──
+
+function TimelineZoomControls() {
+  const { zoomIn, zoomOut, fitView } = useReactFlow();
+
+  return (
+    <div className="absolute bottom-4 right-14 z-10 flex items-center gap-1 rounded-lg border border-border/20 bg-card/90 p-1 shadow-sm">
+      <button
+        type="button"
+        data-testid="tl-btn-zoom-in"
+        onClick={() => zoomIn()}
+        className="flex h-7 w-7 items-center justify-center rounded-md text-sm font-bold text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+        title="放大"
+      >
+        +
+      </button>
+      <button
+        type="button"
+        data-testid="tl-btn-zoom-out"
+        onClick={() => zoomOut()}
+        className="flex h-7 w-7 items-center justify-center rounded-md text-sm font-bold text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+        title="缩小"
+      >
+        −
+      </button>
+      <button
+        type="button"
+        data-testid="tl-btn-fit-view"
+        onClick={() => fitView({ padding: 0.3 })}
+        className="flex h-7 w-7 items-center justify-center rounded-md text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+        title="适应画布"
+      >
+        ⊞
+      </button>
+    </div>
+  );
+}
 
 function FpsCounter() {
   const [fps, setFps] = useState(0);
@@ -145,6 +187,7 @@ function TimelineEventNode({ data, selected }: NodeProps<TimelineEventNodeType>)
     // Lightweight mode: minimal rendering for 500+ events
     return (
       <div
+        data-testid="tl-event-node"
         className="relative flex flex-col gap-0.5 px-2 py-1.5 rounded border transition-colors duration-100 cursor-pointer"
         style={{
           backgroundColor: color.bg,
@@ -175,6 +218,7 @@ function TimelineEventNode({ data, selected }: NodeProps<TimelineEventNodeType>)
 
   return (
     <div
+      data-testid="tl-event-node"
       className="relative flex flex-col gap-1 px-3 py-2 rounded-lg border transition-all duration-200 cursor-pointer min-w-[140px] shadow-sm hover:shadow-md"
       style={{
         backgroundColor: color.bg,
@@ -215,6 +259,31 @@ function TimelineEventNode({ data, selected }: NodeProps<TimelineEventNodeType>)
 
 const MemoTimelineEventNode = memo(TimelineEventNode);
 
+// ── Custom Overflow / Collapse Node ──
+
+interface OverflowNodeData {
+  label: string;
+  cellKey: string;
+  hiddenCount: number;
+}
+
+type OverflowNodeType = Node<OverflowNodeData, "overflowIndicator">;
+
+function OverflowIndicatorNode({ data }: NodeProps<OverflowNodeType>) {
+  return (
+    <div
+      data-testid={`tl-cell-overflow-btn-${data.cellKey}`}
+      className="flex items-center justify-center rounded-lg border border-dashed border-muted-foreground/30 bg-card/60 text-xs text-muted-foreground cursor-pointer hover:bg-card hover:border-muted-foreground/50 transition-colors"
+      style={{ width: NODE_WIDTH, minHeight: 28 }}
+      title={`展开其余 ${data.hiddenCount} 个事件`}
+    >
+      <span className="font-medium">+{data.hiddenCount} 更多</span>
+    </div>
+  );
+}
+
+const MemoOverflowIndicatorNode = memo(OverflowIndicatorNode);
+
 // ── Custom Chapter Header Node ──
 
 function ChapterHeaderNode({ data }: NodeProps<ChapterHeaderNodeType>) {
@@ -250,6 +319,7 @@ const MemoCharacterHeaderNode = memo(CharacterHeaderNode);
 
 const nodeTypes: NodeTypes = {
   timelineEvent: MemoTimelineEventNode,
+  overflowIndicator: MemoOverflowIndicatorNode,
   chapterHeader: MemoChapterHeaderNode,
   characterHeader: MemoCharacterHeaderNode,
 };
@@ -579,6 +649,19 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
   const [characterFilter, setCharacterFilter] = useState<string>("");
   const [chapterFilter, setChapterFilter] = useState<string>("");
 
+  // Collapse/expand state for event cells: cellKey → expanded (true = show all)
+  const [expandedCells, setExpandedCells] = useState<Set<string>>(() => new Set());
+
+  /** Toggle a cell from collapsed to expanded (show all hidden events) */
+  const expandCell = useCallback((cellKey: string) => {
+    setExpandedCells((prev) => {
+      if (prev.has(cellKey)) return prev; // already expanded
+      const next = new Set(prev);
+      next.add(cellKey);
+      return next;
+    });
+  }, []);
+
   // Detail dialog state
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
 
@@ -722,7 +805,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
 
     // Compute dynamic gaps based on max events in any cell
     const maxCellEvents = Math.max(...Array.from(cellCounts.values()), 1);
-    const dynamicRowGap = Math.max(ROW_GAP_Y, (NODE_HEIGHT + 4) * maxCellEvents + 16);
+    const dynamicRowGap = computeDynamicRowGap(maxCellEvents);
 
     // Dynamic column gap: widen columns when cells are dense (many events stacked vertically)
     const columnGap = COLUMN_GAP_X;
@@ -775,6 +858,15 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
         const cellKey = `ch-${e.chapter}-norole`;
         const count = eventCellCounts.get(cellKey) ?? 0;
         eventCellCounts.set(cellKey, count + 1);
+
+        // Collapse check: if collapsed and beyond max visible, skip and add overflow node later
+        const totalInCell = cellCounts.get(cellKey) ?? 1;
+        const isCollapsed = !expandedCells.has(cellKey) && totalInCell > MAX_VISIBLE_EVENTS_PER_CELL;
+        if (isCollapsed && count >= MAX_VISIBLE_EVENTS_PER_CELL) {
+          // Skip this event; overflow indicator will be placed after the loop
+          continue;
+        }
+
         nodes.push({
           id: e.id,
           type: "timelineEvent",
@@ -805,6 +897,13 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
           const count = eventCellCounts.get(cellKey) ?? 0;
           eventCellCounts.set(cellKey, count + 1);
 
+          // Collapse check: if collapsed and beyond max visible, skip
+          const totalInCell = cellCounts.get(cellKey) ?? 1;
+          const isCollapsed = !expandedCells.has(cellKey) && totalInCell > MAX_VISIBLE_EVENTS_PER_CELL;
+          if (isCollapsed && count >= MAX_VISIBLE_EVENTS_PER_CELL) {
+            continue;
+          }
+
           nodes.push({
             id: `${e.id}-${character}`,
             type: "timelineEvent",
@@ -828,6 +927,57 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
           } satisfies Node);
         }
       }
+    }
+
+    // Third pass: add overflow indicators for collapsed cells
+    for (const [cellKey, totalCount] of cellCounts) {
+      if (totalCount <= MAX_VISIBLE_EVENTS_PER_CELL) continue;
+      if (expandedCells.has(cellKey)) continue; // already expanded
+
+      // Determine position: at the end of the visible stack
+      const visibleCount = Math.min(totalCount, MAX_VISIBLE_EVENTS_PER_CELL);
+      const [prefix, chStr, ...rest] = cellKey.split("-");
+      // cellKey format: "ch-{chapter}-char-{character}" or "ch-{chapter}-norole"
+      // e.g. "ch-2-char-林夕" → prefix="ch", chStr="2", rest=["char", "林夕"]
+      const chapter = parseInt(chStr, 10);
+      if (isNaN(chapter)) continue;
+
+      let charIdx = -1;
+      if (rest[0] === "char" && rest.length >= 2) {
+        const characterName = rest.slice(1).join("-");
+        charIdx = characterIndexMap.get(characterName) ?? -1;
+        if (charIdx < 0) continue;
+      }
+
+      const chIdx = chapterIndexMap.get(chapter);
+      if (chIdx === undefined) continue;
+
+      const baseX = LEFT_MARGIN + chIdx * columnGap + (columnGap - NODE_WIDTH) / 2;
+      const baseY = TOP_MARGIN;
+      const hiddenCount = totalCount - MAX_VISIBLE_EVENTS_PER_CELL;
+
+      let overflowY: number;
+      if (charIdx >= 0) {
+        // Character-associated cell
+        overflowY = baseY + charIdx * dynamicRowGap + visibleCount * (NODE_HEIGHT + 4);
+      } else {
+        // No-role cell
+        overflowY = baseY + uniqueCharacters.length * dynamicRowGap + visibleCount * (NODE_HEIGHT + 4);
+      }
+
+      nodes.push({
+        id: `overflow-${cellKey}`,
+        type: "overflowIndicator",
+        position: { x: baseX, y: overflowY },
+        data: {
+          label: `+${hiddenCount} 更多`,
+          cellKey,
+          hiddenCount,
+        },
+        draggable: false,
+        deletable: false,
+        selectable: false,
+      });
     }
 
     return nodes;
@@ -894,9 +1044,14 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
     setNodes(initialNodes);
   }, [initialNodes, setNodes]);
 
-  // ── Node click handler: show detail dialog ──
+  // ── Node click handler: show detail dialog or expand overflow ──
   const onNodeClick: NodeMouseHandler = useCallback(
     (_event, node) => {
+      if (node.type === "overflowIndicator") {
+        const cellKey = (node.data as OverflowNodeData).cellKey;
+        expandCell(cellKey);
+        return;
+      }
       if (node.type !== "timelineEvent") return;
       const edata = node.data as unknown as TimelineNodeData;
       // Find the original event from the full list
@@ -905,7 +1060,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
         setSelectedEvent(event);
       }
     },
-    [events],
+    [events, expandCell],
   );
 
   // ── Node double-click handler: open edit dialog ──
@@ -1140,7 +1295,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
   // ── Loading state ──
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
+      <div data-testid="tl-state-loading tl-loading-spinner" className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
         <div data-testid="tl-state-loading" className="flex items-center justify-center min-h-[400px]">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
@@ -1382,6 +1537,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
 
             {/* Character filter */}
             <input
+              data-testid="character-filter"
               type="text"
               placeholder="筛选角色…"
               value={characterFilter}
@@ -1495,7 +1651,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
         </div>
 
         {/* ReactFlow canvas */}
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0" data-testid="tl-canvas-reactflow">
           <ReactFlow
             nodes={nodes}
             edges={timelineEdges}
@@ -1530,6 +1686,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
               showInteractive={false}
               className="!shadow-sm !border !border-border/20 !rounded-lg"
             />
+            <TimelineZoomControls />
           </ReactFlow>
         </div>
 

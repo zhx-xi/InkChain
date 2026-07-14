@@ -5,7 +5,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
 import { cn } from "../lib/utils";
-import type { PersonaConfig } from "@actalk/inkchain-core/models/persona-config.js";
+import type { PersonaConfig } from "@inkchain/inkchain-core/models/persona-config.js";
 
 // ── Mock Skill Data ──
 // In production, this would be fetched from the Skills API.

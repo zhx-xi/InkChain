@@ -8,44 +8,27 @@
 //   POST   /:id/analyze   — Auto-analyze text into a style profile
 
 import { Hono } from "hono";
-import { readFile, writeFile, mkdir, rm, readdir } from "node:fs/promises";
+import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import { existsSync } from "node:fs";
-import { learnStyle, summarizeStyleProfile, serializeStyleProfile, type EnhancedStyleProfile } from "@actalk/inkchain-core";
+import { learnStyle, summarizeStyleProfile, serializeStyleProfile, type EnhancedStyleProfile } from "@inkchain/inkchain-core";
 import { ApiError } from "../errors.js";
+import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 
-const PROFILES_DIR = ".inkos/style-profiles";
-
-function profilesDir(root: string): string {
-  return join(root, PROFILES_DIR);
-}
+const PROFILES_DIR = `${DATA_DIR_NAME}/style-profiles`;
 
 function profilePath(root: string, id: string): string {
-  return join(profilesDir(root), `${id}.json`);
-}
-
-async function listProfiles(root: string): Promise<string[]> {
-  const dir = profilesDir(root);
-  try {
-    const entries = await readdir(dir);
-    return entries.filter((e) => e.endsWith(".json")).map((e) => e.replace(/\.json$/, ""));
-  } catch {
-    return [];
-  }
+  return join(root, PROFILES_DIR, `${id}.json`);
 }
 
 async function loadProfile(root: string, id: string): Promise<EnhancedStyleProfile | null> {
-  try {
-    const raw = await readFile(profilePath(root, id), "utf-8");
-    return JSON.parse(raw) as EnhancedStyleProfile;
-  } catch {
-    return null;
-  }
+  const idx = IndexManager.getInstance();
+  return idx.get<EnhancedStyleProfile>(root, PROFILES_DIR, id);
 }
 
 async function saveProfile(root: string, id: string, profile: EnhancedStyleProfile): Promise<void> {
-  await mkdir(profilesDir(root), { recursive: true });
-  await writeFile(profilePath(root, id), JSON.stringify(profile, null, 2), "utf-8");
+  const idx = IndexManager.getInstance();
+  await idx.set(root, PROFILES_DIR, id, profile);
 }
 
 export function createStyleProfilesRouter(root: string) {
@@ -53,12 +36,8 @@ export function createStyleProfilesRouter(root: string) {
 
   // GET /api/style-profiles — list profiles
   router.get("/", async (c) => {
-    const ids = await listProfiles(root);
-    const profiles: EnhancedStyleProfile[] = [];
-    for (const id of ids) {
-      const p = await loadProfile(root, id);
-      if (p) profiles.push(p);
-    }
+    const idx = IndexManager.getInstance();
+    const profiles = await idx.list<EnhancedStyleProfile>(root, PROFILES_DIR);
     return c.json({ profiles });
   });
 
@@ -148,6 +127,7 @@ export function createStyleProfilesRouter(root: string) {
       throw new ApiError(404, "PROFILE_NOT_FOUND", `Style profile not found: ${id}`);
     }
     await rm(path, { force: true });
+    IndexManager.getInstance().evict(root, PROFILES_DIR, id);
     return c.json({ ok: true, id });
   });
 
@@ -156,9 +136,9 @@ export function createStyleProfilesRouter(root: string) {
 
 // Re-export for convenience
 function profileToConstraints(profile: EnhancedStyleProfile) {
-  const { formatStyleConstraintsSection } = require("@actalk/inkchain-core");
+  const { formatStyleConstraintsSection } = require("@inkchain/inkchain-core");
   return formatStyleConstraintsSection(
-    (require("@actalk/inkchain-core") as any).profileToConstraints?.(profile) ?? [],
+    (require("@inkchain/inkchain-core") as any).profileToConstraints?.(profile) ?? [],
     profile.language ?? "zh",
   );
 }

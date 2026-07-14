@@ -3,7 +3,7 @@
 
 import { useState, useCallback } from "react";
 import { postApi } from "./use-api";
-import type { PersonaConfig, AgentRole } from "@actalk/inkchain-core/models/persona-config.js";
+import type { PersonaConfig, AgentRole } from "@inkchain/inkchain-core/models/persona-config.js";
 
 // ── Types ──
 

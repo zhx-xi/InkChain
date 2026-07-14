@@ -24,8 +24,8 @@ test.describe("AgentHubPage — 补充场景", () => {
     await page.goto("/#/agents");
     await expect(page.getByText("Agent Team").first()).toBeVisible({ timeout: 15_000 });
 
-    // Click "添加自定义" button
-    const addBtn = page.getByText("添加自定义");
+    // Click "创建自定义 Agent" button
+    const addBtn = page.getByTestId("ag-btn-create-agent");
     await expect(addBtn).toBeVisible();
     await addBtn.click();
 
@@ -67,7 +67,7 @@ test.describe("AgentHubPage — 补充场景", () => {
     await expect(page.getByText("Agent Team").first()).toBeVisible({ timeout: 15_000 });
 
     // Open add custom agent dialog
-    await page.getByText("添加自定义").click();
+    await page.getByTestId("ag-btn-create-agent").click();
     await expect(page.getByText(/添加自定义 Agent|编辑自定义 Agent/)).toBeVisible({ timeout: 5_000 });
 
     // Try to save with empty name

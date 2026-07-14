@@ -6,9 +6,9 @@ test.beforeEach(async () => { await seedFlowEditorGraph(); }); // reset graph ea
 test("add node via editor increases node count", async ({ page }) => {
   await page.goto(`/#/flow/${E2E_FE_ID}`);
   await page.getByTestId("flow-edit-toggle").click();
-  const before = await page.locator('[data-testid^="flow-node-"]').count();
+  const before = await page.locator("[data-testid^='flow-node-']").count();
   await page.getByTestId("flow-add-node").click();
-  await expect.poll(async () => page.locator('[data-testid^="flow-node-"]').count()).toBe(before + 1);
+  await expect.poll(async () => page.locator("[data-testid^='flow-node-']").count()).toBe(before + 1);
 });
 
 test("dragging a node persists its position across reload", async ({ page }) => {

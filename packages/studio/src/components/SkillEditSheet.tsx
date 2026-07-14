@@ -2,10 +2,10 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { X, Save, Loader2, Plus, Trash2, Search, Bot, History, RotateCcw, ChevronDown, ChevronRight, Copy, Sparkles, FileText, Puzzle, AlertTriangle } from "lucide-react";
 import { cn } from "../lib/utils";
 import { fetchJson } from "../hooks/use-api";
-import type { SkillConfig, SkillCategory, TriggerConfig, InjectionConfig } from "@actalk/inkchain-core/models/skill-config.js";
-import type { AgentRole } from "@actalk/inkchain-core/models/persona-config.js";
-import { SKILL_CATEGORY_LABELS } from "@actalk/inkchain-core/models/skill-config.js";
-import { AGENT_ROLE_LABELS, AgentRoleEnum } from "@actalk/inkchain-core/models/persona-config.js";
+import type { SkillConfig, SkillCategory, TriggerConfig, InjectionConfig } from "@inkchain/inkchain-core/models/skill-config.js";
+import type { AgentRole } from "@inkchain/inkchain-core/models/persona-config.js";
+import { SKILL_CATEGORY_LABELS } from "@inkchain/inkchain-core/models/skill-config.js";
+import { AGENT_ROLE_LABELS, AgentRoleEnum } from "@inkchain/inkchain-core/models/persona-config.js";
 import { AGENTS } from "./AgentCard";
 import { TriggerBuilder } from "./TriggerBuilder";
 
@@ -405,6 +405,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
             {!readOnly && (
               <button
                 type="button"
+                data-testid="save-btn"
                 onClick={handleSave}
                 disabled={saving || !draft || (!isCreateMode && !hasChanges)}
                 className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-[14px] font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:opacity-60"
@@ -540,6 +541,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
                   <label className="text-[13px] font-medium text-foreground">Skill ID</label>
                   <input
                     type="text"
+                    data-testid="name-input"
                     value={draft.id}
                     onChange={(e) => setDraft({ ...draft, id: e.target.value })}
                     placeholder="skill-id (kebab-case)"
@@ -558,6 +560,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
                 ) : (
                   <input
                     type="text"
+                    data-testid="description-input"
                     value={draft.description}
                     onChange={(e) => setDraft({ ...draft, description: e.target.value })}
                     placeholder="Skill 用途描述"

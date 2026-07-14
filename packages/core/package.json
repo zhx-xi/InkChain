@@ -1,5 +1,5 @@
 {
-  "name": "@actalk/inkchain-core",
+  "name": "@inkchain/inkchain-core",
   "version": "3.0.0",
   "description": "InkChain core engine for story creation agents: governed context, writing, audit, revision, covers, and interactive worlds",
   "keywords": [

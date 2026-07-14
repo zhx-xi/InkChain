@@ -17,7 +17,7 @@ async function navigateToStyle(page: import("@playwright/test").Page): Promise<v
   // Use getByRole with exact name to avoid conflict with "文风检测" buttons
   // and "E2E 文风检测测试" book title in seed data
   await page.getByRole("button", { name: "文风", exact: true }).click();
-  await expect(page.getByText("Style Manager").or(page.getByText("文风检测"))).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole("heading", { name: /Style Manager|文风检测/ })).toBeVisible({ timeout: 10_000 });
 }
 
 test("1. 加载文风检测→页面显示", async ({ page }) => {

@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { fetchJson, postApi } from "./use-api";
-import type { PersonaPreset } from "@actalk/inkchain-core/models/persona-config.js";
+import type { PersonaPreset } from "@inkchain/inkchain-core/models/persona-config.js";
 
 // ── Types ──
 

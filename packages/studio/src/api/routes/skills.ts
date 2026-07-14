@@ -1,7 +1,7 @@
 // ── Skill Config CRUD API (Issue #76 — Skill-3) ──
 //
 // Project-level Skill configuration management using the new SkillConfig JSON
-// schema from @actalk/inkchain-core. Stores files as `.inkos/skills/<id>.json` and
+// schema from @inkchain/inkchain-core. Stores files as `.inkos/skills/<id>.json` and
 // merges them with builtin skills from the defaults package.
 //
 // Version History (Issue #96 — Skill-9):
@@ -27,14 +27,16 @@ import {
   loadSkillConfigs,
   SkillConfigSchema,
   SkillConfigUpdateSchema,
+  IndexManager,
   type SkillConfig,
   type SkillSource,
   type StoredSkillConfig,
-} from "@actalk/inkchain-core";
+} from "@inkchain/inkchain-core";
 import { ApiError } from "../errors.js";
+import { DATA_DIR_NAME } from "../../constants/data-directory.js";
 
-const PROJECT_SKILLS_DIR = ".inkos/skills";
-const SKILL_VERSIONS_DIR = ".inkos/skills-versions";
+const PROJECT_SKILLS_DIR = `${DATA_DIR_NAME}/skills`;
+const SKILL_VERSIONS_DIR = `${DATA_DIR_NAME}/skills-versions`;
 const VERSION_KEEP = 20; // max versions to retain
 
 export interface ApiSkillResponse {
@@ -177,40 +179,32 @@ async function loadMergedSkills(root: string): Promise<ReadonlyArray<StoredSkill
   return result.skills;
 }
 
+function skillConfigParser(raw: string): SkillConfig {
+  return SkillConfigSchema.parse(JSON.parse(raw));
+}
+
 async function loadProjectSkillFile(root: string, id: string): Promise<SkillConfig | null> {
-  try {
-    const raw = await readFile(projectSkillPath(root, id), "utf-8");
-    const parsed = JSON.parse(raw) as unknown;
-    return SkillConfigSchema.parse(parsed);
-  } catch (error) {
-    if (
-      typeof error === "object"
-      && error !== null
-      && "code" in error
-      && (error as { code?: unknown }).code === "ENOENT"
-    ) {
-      return null;
-    }
-    throw error;
-  }
+  const idx = IndexManager.getInstance();
+  return idx.get<SkillConfig>(root, PROJECT_SKILLS_DIR, id, skillConfigParser);
 }
 
 async function writeProjectSkill(root: string, config: SkillConfig): Promise<void> {
   // Snapshot current version before overwriting
   await snapshotBeforeWrite(root, config);
 
-  const dir = join(root, PROJECT_SKILLS_DIR);
-  await mkdir(dir, { recursive: true });
-  await writeFile(projectSkillPath(root, config.id), JSON.stringify(config, null, 2), "utf-8");
+  const idx = IndexManager.getInstance();
+  await idx.set(root, PROJECT_SKILLS_DIR, config.id, config);
 }
 
 async function deleteProjectSkillFile(root: string, id: string): Promise<boolean> {
+  const path = projectSkillPath(root, id);
   try {
-    await access(projectSkillPath(root, id));
+    await access(path);
   } catch {
     return false;
   }
-  await rm(projectSkillPath(root, id), { force: true });
+  await rm(path, { force: true });
+  IndexManager.getInstance().evict(root, PROJECT_SKILLS_DIR, id);
   return true;
 }
 

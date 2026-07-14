@@ -3,7 +3,7 @@
 // Includes progress bar + file content preview (Issue #363).
 
 import React, { useState, useRef, useCallback, useMemo } from "react";
-import type { ExtractResult } from "@actalk/inkchain-core";
+import type { ExtractResult } from "@inkchain/inkchain-core";
 
 // ── Progress stage definitions ──
 

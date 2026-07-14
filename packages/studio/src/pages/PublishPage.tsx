@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft, Download, BookOpen, Eye, Check, X as XIcon, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { fetchJson, useApi } from "../hooks/use-api";
-import type { BookConfig } from "@actalk/inkchain-core";
+import type { BookConfig } from "@inkchain/inkchain-core";
 
 // ── API response types ──
 

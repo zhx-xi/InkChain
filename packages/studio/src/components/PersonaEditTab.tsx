@@ -9,7 +9,7 @@ import type {
   PersonaConfig,
   BehaviorConstraint,
   BehaviorStyle,
-} from "@actalk/inkchain-core/models/persona-config.js";
+} from "@inkchain/inkchain-core/models/persona-config.js";
 
 // ── Props ──
 

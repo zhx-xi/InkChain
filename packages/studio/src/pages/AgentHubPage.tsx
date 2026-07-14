@@ -15,7 +15,7 @@ interface AgentHubPageProps {
 
 export function AgentHubPage({ nav }: AgentHubPageProps) {
   return (
-    <div className="flex flex-col h-full pt-12 fade-in" style={{ backgroundColor: "#FDF6F0" }}>
+    <div className="flex flex-col h-full pt-12 fade-in">
       <AgentTeamPanel nav={nav} />
     </div>
   );
