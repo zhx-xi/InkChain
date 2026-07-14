@@ -1,3 +1,4 @@
+import { Edit3 } from "lucide-react";
 import { cn } from "../lib/utils";
 
 // ── Agent Role Type ──
@@ -45,15 +46,16 @@ interface AgentCardProps {
   readonly displayName?: string;
   readonly onClick?: () => void;
   readonly className?: string;
+  readonly testId?: string;
 }
 
-export function AgentCard({ agent, status, displayName, onClick, className }: AgentCardProps) {
+export function AgentCard({ agent, status, displayName, onClick, className, testId }: AgentCardProps) {
   const statusCfg = STATUS_CONFIG[status];
 
   return (
     <button
       type="button"
-      data-testid={`ag-agent-card-${agent.role}`}
+      data-testid={testId ?? `ag-agent-card-${agent.role}`}
       onClick={onClick}
       className={cn(
         "group/card relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 transition-all duration-200 w-full min-h-[180px]",
@@ -100,6 +102,24 @@ export function AgentCard({ agent, status, displayName, onClick, className }: Ag
           {agent.description}
         </div>
       </div>
+
+      {/* Edit button - bottom-right */}
+      {onClick != null && status !== "disabled" && (
+        <button
+          type="button"
+          data-testid={`edit-agent-${agent.role}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick();
+          }}
+          className="absolute bottom-2 right-2 z-10 flex items-center justify-center rounded-md p-1 opacity-0 transition-all duration-200
+            group-hover/card:opacity-100 hover:scale-110"
+          style={{ color: agent.color }}
+          aria-label="编辑"
+        >
+          <Edit3 size={14} />
+        </button>
+      )}
 
       {/* Color strip at bottom */}
       <div
