@@ -114,7 +114,6 @@ export function RelationGraphPanel({ bookId }: RelationGraphPanelProps) {
   const refreshGraph = useGraphStore((s) => s.refreshGraph);
   const selectNode = useGraphStore((s) => s.selectNode);
   const updateNode = useGraphStore((s) => s.updateNode);
-  const refreshGraph = useGraphStore((s) => s.refreshGraph);
 
   const [simplified, setSimplified] = useState(false);
   const [selectedVolumeId, setSelectedVolumeId] = useState<string | null>(null);
