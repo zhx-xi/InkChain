@@ -707,7 +707,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4" style={{ backgroundColor: "#FDF6F0" }}>
+      <div data-testid="ag-state-empty" className="flex flex-col items-center justify-center min-h-[400px] gap-4" style={{ backgroundColor: "#FDF6F0" }}>
         <Loader2 size={24} className="animate-spin" style={{ color: "#8B3A3A" }} />
         <span className="text-sm" style={{ color: "#8a7a6a" }}>加载 Agent Team…</span>
       </div>
@@ -716,7 +716,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
 
   if (loadError) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4" style={{ backgroundColor: "#FDF6F0" }}>
+      <div data-testid="ag-state-error" className="flex flex-col items-center justify-center min-h-[400px] gap-4" style={{ backgroundColor: "#FDF6F0" }}>
         <span className="text-sm" style={{ color: "#dc2626" }}>加载失败：{loadError}</span>
         <button
           type="button"
@@ -752,6 +752,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
         <button
           type="button"
           onClick={() => setActiveTab("team")}
+          data-testid="ag-tab-team-config"
           className="px-5 py-2.5 text-sm font-medium transition-all relative"
           style={{
             color: activeTab === "team" ? "#8B3A3A" : "#8a7a6a",
@@ -768,6 +769,7 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
         <button
           type="button"
           onClick={() => setActiveTab("flow")}
+          data-testid="ag-tab-pipeline"
           className="px-5 py-2.5 text-sm font-medium transition-all relative"
           style={{
             color: activeTab === "flow" ? "#8B3A3A" : "#8a7a6a",
