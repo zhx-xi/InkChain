@@ -20,14 +20,14 @@ const API_BASE = "http://localhost:4581";
 test.describe("index-manager — transparent LRU cache for API reads", () => {
   test("normal: Worlds API returns correct data through cache", async ({ page }) => {
     // First read (cache miss — lazy load from disk)
-    const response1 = await page.request.get(`${API_BASE}/api/v1/worlds`);
+    const response1 = await page.request.get(`${API_BASE}/api/worlds`);
     expect(response1.ok()).toBe(true);
     const body1 = await response1.json();
     expect(body1).toHaveProperty("worlds");
     expect(Array.isArray(body1.worlds)).toBe(true);
 
     // Second read (cache hit — should return identical data)
-    const response2 = await page.request.get(`${API_BASE}/api/v1/worlds`);
+    const response2 = await page.request.get(`${API_BASE}/api/worlds`);
     expect(response2.ok()).toBe(true);
     const body2 = await response2.json();
 
@@ -36,7 +36,7 @@ test.describe("index-manager — transparent LRU cache for API reads", () => {
   });
 
   test("normal: Foreshadowing API works through cache", async ({ page }) => {
-    const response = await page.request.get(`${API_BASE}/api/v1/foreshadowing`);
+    const response = await page.request.get(`${API_BASE}/api/foreshadowing`);
     expect(response.ok()).toBe(true);
     const body = await response.json();
     expect(body).toBeDefined();
@@ -50,7 +50,7 @@ test.describe("index-manager — transparent LRU cache for API reads", () => {
   });
 
   test("normal: Personas API works through cache", async ({ page }) => {
-    const response = await page.request.get(`${API_BASE}/api/v1/personas`);
+    const response = await page.request.get(`${API_BASE}/api/v1/project/personas`);
     expect(response.ok()).toBe(true);
     const body = await response.json();
     expect(body).toBeDefined();
@@ -61,7 +61,7 @@ test.describe("index-manager — transparent LRU cache for API reads", () => {
     const results: string[] = [];
 
     for (let i = 0; i < 5; i++) {
-      const response = await page.request.get(`${API_BASE}/api/v1/worlds`);
+      const response = await page.request.get(`${API_BASE}/api/worlds`);
       expect(response.ok()).toBe(true);
       const body = await response.json();
       results.push(JSON.stringify(body));
@@ -75,13 +75,13 @@ test.describe("index-manager — transparent LRU cache for API reads", () => {
 
   test("edge: Multiple different endpoints all respond correctly (cache per namespace)", async ({ page }) => {
     const endpoints = [
-      `${API_BASE}/api/v1/worlds`,
-      `${API_BASE}/api/v1/foreshadowing`,
+      `${API_BASE}/api/worlds`,
+      `${API_BASE}/api/foreshadowing`,
       `${API_BASE}/api/v1/skills`,
-      `${API_BASE}/api/v1/personas`,
-      `${API_BASE}/api/v1/style-profiles`,
-      `${API_BASE}/api/v1/voice-profiles`,
-      `${API_BASE}/api/v1/agent-team`,
+      `${API_BASE}/api/v1/project/personas`,
+      `${API_BASE}/api/style-profiles`,
+      `${API_BASE}/api/v1/project/voice-profiles`,
+      `${API_BASE}/api/v1/project/agent-team`,
       `${API_BASE}/api/v1/agent-templates`,
     ];
 
