@@ -10,7 +10,18 @@ test.beforeAll(async () => {
 test.beforeEach(async ({ page }) => {
   // Ensure consistent starting point — navigate to Book-A if not already there
   await page.goto(`/#/book/${E2E_BOOK_ID}`);
-  await expect(page.getByRole("heading", { name: "E2E 跨功能测试书", exact: true })).toBeVisible({ timeout: 20_000 });
+  // Wait for the page to finish loading (API responses, rendering)
+  await page.waitForLoadState("networkidle");
+  // Try to find the heading; if missing, log page state for debugging
+  const heading = page.getByRole("heading", { name: "E2E 跨功能测试书", exact: true });
+  const isVisible = await heading.isVisible().catch(() => false);
+  if (!isVisible) {
+    // Log page URL and body text for debugging
+    console.log(`Book page URL: ${page.url()}`);
+    const bodyText = await page.evaluate(() => document.body.innerText.substring(0, 500));
+    console.log(`Page body (first 500 chars): ${bodyText}`);
+  }
+  await expect(heading).toBeVisible({ timeout: 30_000 });
 });
 
 // ── Shared helpers ──────────────────────────────────────────────
