@@ -1296,7 +1296,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
   if (loading) {
     return (
       <div data-testid="tl-state-loading tl-loading-spinner" className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
-        <div data-testid="tl-state-loading" className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center justify-center min-h-[400px]" data-testid="tl-state-loading">
           <div className="flex flex-col items-center gap-3">
             <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
             <p className="text-sm text-muted-foreground">加载时间线…</p>
@@ -1310,7 +1310,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
   if (error) {
     return (
       <div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
-        <div data-testid="tl-state-error" className="flex flex-col items-center justify-center min-h-[400px] gap-4">
+        <div className="flex flex-col items-center justify-center min-h-[400px] gap-4" data-testid="tl-state-error">
           <div className="rounded-full bg-destructive/10 p-3">
             <svg
               className="w-6 h-6 text-destructive"
@@ -1344,7 +1344,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
   if (events.length === 0) {
     return (
       <><div className="max-w-4xl mx-auto px-6 py-12 md:px-12 lg:py-16 fade-in">
-        <div data-testid="tl-state-empty" className="flex flex-col items-center justify-center min-h-[400px] gap-3">
+        <div className="flex flex-col items-center justify-center min-h-[400px] gap-3" data-testid="tl-state-empty">
           <svg
             className="w-12 h-12 text-muted-foreground/30"
             fill="none"
@@ -1490,7 +1490,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
   // ── Main timeline view ──
   return (
     <div className="flex h-full min-h-0">
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 relative">
         {/* Header with filters */}
         <div ref={headerRef} className="flex items-center justify-between px-6 py-3 shrink-0 border-b border-border/10 sticky top-0 z-10 bg-background">
           <div className="flex items-center gap-3">
@@ -1705,6 +1705,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
               <button
                 type="button"
                 onClick={loadMore}
+                data-testid="tl-indicator-load-more"
                 className="rounded-lg bg-card/60 border border-border/20 px-3 py-1 text-[11px] text-muted-foreground/70 hover:text-foreground hover:bg-card transition-colors"
               >
                 加载更多（+100）
