@@ -1,6 +1,10 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
+<<<<<<< HEAD
+import { dataPath } from "@inkchain/inkchain-core";
+=======
+>>>>>>> origin/main
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 export const E2E_ROOT = resolve(__dirname, "../../", "test-project");
@@ -9,12 +13,20 @@ export const E2E_TEAM_PROJECT = "e2e-agent-team";
 /**
  * Seeds agent team configuration data for E2E testing:
  *
+<<<<<<< HEAD
+ * - Writes `.inkchain/agent-team.json` with 7 agents, some enabled, some disabled
+=======
  * - Writes `.inkos/agent-team.json` with 7 agents, some enabled, some disabled
+>>>>>>> origin/main
  * - Writes a book project with a basic book.json
  * - Seeds an agent template for template-related tests
  */
 export async function seedAgentTeam(): Promise<void> {
+<<<<<<< HEAD
+  const dataDir = dataPath(E2E_ROOT);
+=======
   const inkosDir = join(E2E_ROOT, ".inkos");
+>>>>>>> origin/main
   await mkdir(inkosDir, { recursive: true });
 
   // ── Agent Team Config ──

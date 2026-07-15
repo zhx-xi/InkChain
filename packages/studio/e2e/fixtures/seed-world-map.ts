@@ -1,13 +1,21 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
+<<<<<<< HEAD
+import { dataPath } from "@inkchain/inkchain-core";
+=======
+>>>>>>> origin/main
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 export const E2E_ROOT = resolve(__dirname, "../../", "test-project");
 export const E2E_WORLD_ID = "e2e-world-map-test";
 
 export async function seedWorldMap(): Promise<void> {
+<<<<<<< HEAD
+  const worldsDir = dataPath(E2E_ROOT, "worlds");
+=======
   const worldsDir = join(E2E_ROOT, ".inkos", "worlds");
+>>>>>>> origin/main
   await mkdir(worldsDir, { recursive: true });
 
   const now = new Date("2026-07-04T00:00:00.000Z").toISOString();

@@ -2,6 +2,10 @@ import { execSync } from "child_process";
 import { fileURLToPath } from "url";
 import path from "path";
 import { mkdirSync, writeFileSync } from "fs";
+<<<<<<< HEAD
+import { dataPath } from "@inkchain/inkchain-core";
+=======
+>>>>>>> origin/main
 
 /**
  * Rebuild @inkchain/inkchain-core before E2E tests start.
@@ -57,7 +61,11 @@ export default function globalSetup(): void {
   );
 
   // ── 2. Skill library seed data (for skill-library.spec.ts / #589) ──
+<<<<<<< HEAD
+  const skillsDir = dataPath(testProjectDir, "skills");
+=======
   const skillsDir = path.join(testProjectDir, ".inkos", "skills");
+>>>>>>> origin/main
   mkdirSync(skillsDir, { recursive: true });
 
   // ⚠️ TriggerTypeEnum only accepts "manual" or "condition" — match the Zod schema exactly!
@@ -93,7 +101,11 @@ export default function globalSetup(): void {
   );
 
   // ── 3. Foreshadowing seed data (for foreshadowing-flow.spec.ts / #590) ──
+<<<<<<< HEAD
+  const foreshadowingDir = dataPath(testProjectDir, "foreshadowing");
+=======
   const foreshadowingDir = path.join(testProjectDir, ".inkos", "foreshadowing");
+>>>>>>> origin/main
   mkdirSync(foreshadowingDir, { recursive: true });
 
   const now = "2026-07-04T00:00:00.000Z";
@@ -179,7 +191,11 @@ export default function globalSetup(): void {
   );
 
   // ── 6. e2e-book-world-test world (for book-world-extract.spec.ts / #583) ──
+<<<<<<< HEAD
+  const worldsDir = dataPath(testProjectDir, "worlds");
+=======
   const worldsDir = path.join(testProjectDir, ".inkos", "worlds");
+>>>>>>> origin/main
   mkdirSync(worldsDir, { recursive: true });
   writeFileSync(
     path.join(worldsDir, "e2e-book-world-test.json"),
