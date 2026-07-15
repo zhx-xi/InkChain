@@ -2,18 +2,11 @@ import { test, expect } from "@playwright/test";
 import { seedChapterAudit, E2E_BOOK_ID, E2E_ROOT } from "./fixtures/seed-chapter-audit";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-<<<<<<< HEAD
 import { dataPath } from "@inkchain/inkchain-core";
 
 // Seed audit result data so chapters have issues visible in the audit page
 async function seedAuditData(): Promise<void> {
   const auditDir = dataPath(E2E_ROOT, "books", E2E_BOOK_ID, "audit");
-=======
-
-// Seed audit result data so chapters have issues visible in the audit page
-async function seedAuditData(): Promise<void> {
-  const auditDir = join(E2E_ROOT, ".inkos", "books", E2E_BOOK_ID, "audit");
->>>>>>> origin/main
   await mkdir(auditDir, { recursive: true });
 
   // Chapter 2: 2 issues (audit-failed)

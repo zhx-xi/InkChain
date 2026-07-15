@@ -17,13 +17,8 @@ describe("skill config loader (Issue #74)", () => {
   let builtinRoot: string;
 
   beforeEach(async () => {
-<<<<<<< HEAD
     projectRoot = await mkdtemp(join(tmpdir(), "inkchain-skill-proj-"));
     builtinRoot = await mkdtemp(join(tmpdir(), "inkchain-skill-builtin-"));
-=======
-    projectRoot = await mkdtemp(join(tmpdir(), "inkos-skill-proj-"));
-    builtinRoot = await mkdtemp(join(tmpdir(), "inkos-skill-builtin-"));
->>>>>>> origin/main
     await mkdir(join(builtinRoot, "skills"), { recursive: true });
     await mkdir(join(projectRoot, DATA_DIR_NAME, "skills"), { recursive: true });
   });

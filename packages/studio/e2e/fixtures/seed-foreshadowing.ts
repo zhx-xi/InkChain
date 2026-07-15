@@ -1,10 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
-<<<<<<< HEAD
 import { dataPath } from "@inkchain/inkchain-core";
-=======
->>>>>>> origin/main
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 
@@ -13,11 +10,7 @@ export const E2E_FORES_BOOK_ID = "e2e-volume-dnd";
 export const E2E_ROOT = resolve(__dirname, "../../", "test-project");
 
 export async function seedForeshadowing(): Promise<void> {
-<<<<<<< HEAD
   const foreshadowingDir = dataPath(E2E_ROOT, "foreshadowing");
-=======
-  const foreshadowingDir = join(E2E_ROOT, ".inkos", "foreshadowing");
->>>>>>> origin/main
   await mkdir(foreshadowingDir, { recursive: true });
 
   const now = new Date("2026-07-04T00:00:00.000Z").toISOString();
@@ -111,11 +104,7 @@ export async function seedForeshadowing(): Promise<void> {
 
 /** Delete all foreshadowing entries for the E2E book */
 export async function clearForeshadowing(): Promise<void> {
-<<<<<<< HEAD
   const foreshadowingDir = dataPath(E2E_ROOT, "foreshadowing");
-=======
-  const foreshadowingDir = join(E2E_ROOT, ".inkos", "foreshadowing");
->>>>>>> origin/main
   const { rm } = await import("node:fs/promises");
   await rm(foreshadowingDir, { recursive: true, force: true });
   await mkdir(foreshadowingDir, { recursive: true });

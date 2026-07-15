@@ -38,11 +38,7 @@ describe("loadProjectConfig local provider auth", () => {
   });
 
   it("allows missing API keys for localhost OpenAI-compatible endpoints", async () => {
-<<<<<<< HEAD
     root = await mkdtemp(join(tmpdir(), "inkchain-config-loader-local-"));
-=======
-    root = await mkdtemp(join(tmpdir(), "inkos-config-loader-local-"));
->>>>>>> origin/main
     for (const key of ENV_KEYS) {
       previousEnv.set(key, process.env[key]);
       process.env[key] = "";
@@ -67,11 +63,7 @@ describe("loadProjectConfig local provider auth", () => {
   });
 
   it("still requires API keys for remote hosted endpoints", async () => {
-<<<<<<< HEAD
     root = await mkdtemp(join(tmpdir(), "inkchain-config-loader-remote-"));
-=======
-    root = await mkdtemp(join(tmpdir(), "inkos-config-loader-remote-"));
->>>>>>> origin/main
     for (const key of ENV_KEYS) {
       previousEnv.set(key, process.env[key]);
       process.env[key] = "";
@@ -91,11 +83,7 @@ describe("loadProjectConfig local provider auth", () => {
   });
 
   it("loads service-based config using defaultModel and project secrets", async () => {
-<<<<<<< HEAD
     root = await mkdtemp(join(tmpdir(), "inkchain-config-loader-services-"));
-=======
-    root = await mkdtemp(join(tmpdir(), "inkos-config-loader-services-"));
->>>>>>> origin/main
     for (const key of ENV_KEYS) {
       previousEnv.set(key, process.env[key]);
       process.env[key] = "";
@@ -131,11 +119,7 @@ describe("loadProjectConfig local provider auth", () => {
   });
 
   it("derives provider/baseUrl from the MiniMax preset single source of truth", async () => {
-<<<<<<< HEAD
     root = await mkdtemp(join(tmpdir(), "inkchain-config-loader-minimax-"));
-=======
-    root = await mkdtemp(join(tmpdir(), "inkos-config-loader-minimax-"));
->>>>>>> origin/main
     for (const key of ENV_KEYS) {
       previousEnv.set(key, process.env[key]);
       process.env[key] = "";
@@ -170,11 +154,7 @@ describe("loadProjectConfig local provider auth", () => {
   });
 
   it("loads custom service config using custom secret key and entry baseUrl", async () => {
-<<<<<<< HEAD
     root = await mkdtemp(join(tmpdir(), "inkchain-config-loader-custom-"));
-=======
-    root = await mkdtemp(join(tmpdir(), "inkos-config-loader-custom-"));
->>>>>>> origin/main
     for (const key of ENV_KEYS) {
       previousEnv.set(key, process.env[key]);
       process.env[key] = "";
@@ -212,11 +192,7 @@ describe("loadProjectConfig local provider auth", () => {
   });
 
   it("keeps Studio config active when llm.configSource is studio", async () => {
-<<<<<<< HEAD
     root = await mkdtemp(join(tmpdir(), "inkchain-config-loader-studio-source-"));
-=======
-    root = await mkdtemp(join(tmpdir(), "inkos-config-loader-studio-source-"));
->>>>>>> origin/main
     for (const key of ENV_KEYS) {
       previousEnv.set(key, process.env[key]);
       process.env[key] = "";
@@ -258,11 +234,7 @@ describe("loadProjectConfig local provider auth", () => {
   });
 
   it("does not mix stale top-level env-era model/baseUrl with selected Studio service", async () => {
-<<<<<<< HEAD
     root = await mkdtemp(join(tmpdir(), "inkchain-config-loader-studio-stale-top-level-"));
-=======
-    root = await mkdtemp(join(tmpdir(), "inkos-config-loader-studio-stale-top-level-"));
->>>>>>> origin/main
     for (const key of ENV_KEYS) {
       previousEnv.set(key, process.env[key]);
       process.env[key] = "";
@@ -315,11 +287,7 @@ describe("loadProjectConfig local provider auth", () => {
   });
 
   it("falls back to env when Studio config is still the empty bootstrap state", async () => {
-<<<<<<< HEAD
     root = await mkdtemp(join(tmpdir(), "inkchain-config-loader-studio-bootstrap-"));
-=======
-    root = await mkdtemp(join(tmpdir(), "inkos-config-loader-studio-bootstrap-"));
->>>>>>> origin/main
     for (const key of ENV_KEYS) {
       previousEnv.set(key, process.env[key]);
       process.env[key] = "";

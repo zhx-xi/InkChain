@@ -1,10 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
-<<<<<<< HEAD
 import { dataPath } from "@inkchain/inkchain-core";
-=======
->>>>>>> origin/main
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 export const E2E_ROOT = resolve(__dirname, "../../", "test-project");
@@ -84,20 +81,12 @@ export async function seedCrossFeature(): Promise<void> {
   );
 
   // Foreshadowing
-<<<<<<< HEAD
   await mkdir(dataPath(E2E_ROOT, "foreshadowing"), { recursive: true });
-=======
-  await mkdir(join(E2E_ROOT, ".inkos", "foreshadowing"), { recursive: true });
->>>>>>> origin/main
   for (const fs of [
     { id: "cf-fs-1", bookId: E2E_BOOK_ID, title: "神秘戒指", description: "隐藏上古力量", type: "物品伏笔", status: "active", createdChapter: 1, lastMentionedChapter: 3, expectedPayoffChapter: 10, payoffChapter: null, notes: "", createdAt: now, updatedAt: now },
     { id: "cf-fs-2", bookId: E2E_BOOK_ID, title: "青云秘境", description: "秘境隐藏秘密", type: "设定伏笔", status: "active", createdChapter: 4, lastMentionedChapter: 4, expectedPayoffChapter: null, payoffChapter: null, notes: "", createdAt: now, updatedAt: now },
   ]) {
-<<<<<<< HEAD
     await writeFile(join(E2E_ROOT, ".inkchain", "foreshadowing", `${fs.id}.json`), JSON.stringify(fs, null, 2), "utf-8");
-=======
-    await writeFile(join(E2E_ROOT, ".inkos", "foreshadowing", `${fs.id}.json`), JSON.stringify(fs, null, 2), "utf-8");
->>>>>>> origin/main
   }
 
   // Timeline events

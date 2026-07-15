@@ -5,11 +5,7 @@ import { join } from "node:path";
 import { createStudioServer } from "../api/server.js";
 import { createAndPersistBookSession, loadStoryGraph } from "@inkchain/inkchain-core";
 
-<<<<<<< HEAD
 const INKCHAIN_CONFIG = JSON.stringify({
-=======
-const INKOS_CONFIG = JSON.stringify({
->>>>>>> origin/main
   name: "test-project",
   version: "0.1.0",
   language: "zh",
