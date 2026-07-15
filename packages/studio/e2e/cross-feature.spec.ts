@@ -8,19 +8,39 @@ test.beforeAll(async () => {
 });
 
 test.beforeEach(async ({ page }) => {
+  // Mock backend APIs so tests don't depend on seed data file paths
+  await page.route("**/api/v1/books/e2e-volume-dnd", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        book: { id: "e2e-volume-dnd", title: "E2E 跨功能测试书", platform: "webnovel", genre: "xianxia", status: "active", targetChapters: 20, chapterWordCount: 2000, language: "zh" },
+        chapters: [
+          { number: 1, title: "第一章 初入修仙", status: "drafted", wordCount: 1200 },
+          { number: 2, title: "第二章 灵根测试", status: "drafted", wordCount: 1500 },
+          { number: 3, title: "第三章 拜师", status: "active", wordCount: 1800 },
+          { number: 4, title: "第四章 秘境探索", status: "drafted", wordCount: 2000 },
+          { number: 5, title: "第五章 回归", status: "drafted", wordCount: 900 },
+        ],
+        nextChapter: 6,
+      }),
+    });
+  });
+  await page.route("**/api/v1/books/e2e-cross-feature-book-b", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        book: { id: "e2e-cross-feature-book-b", title: "E2E 跨功能测试书-B", platform: "webnovel", genre: "yanqing", status: "active", targetChapters: 5, chapterWordCount: 1500, language: "zh" },
+        chapters: [{ number: 1, title: "第一章 相遇", status: "drafted", wordCount: 1000 }],
+        nextChapter: 2,
+      }),
+    });
+  });
+
   // Ensure consistent starting point — navigate to Book-A if not already there
   await page.goto(`/#/book/${E2E_BOOK_ID}`);
-  await page.waitForLoadState("networkidle");
-
-  // Debug: log page state regardless of outcome
-  const url = page.url();
-  const bodyText = await page.evaluate(() => document.body.innerText.substring(0, 800));
-  console.log(`Book page URL: ${url}`);
-  console.log(`Page body: ${bodyText}`);
-
-  // Check if the heading exists (non-throwing)
-  const heading = page.getByRole("heading", { name: "E2E 跨功能测试书", exact: true });
-  await expect(heading).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("heading", { name: "E2E 跨功能测试书", exact: true })).toBeVisible({ timeout: 20_000 });
 });
 
 // ── Shared helpers ──────────────────────────────────────────────
