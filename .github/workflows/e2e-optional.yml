@@ -285,7 +285,7 @@ jobs:
     if: needs.changes.outputs.skill == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
-      spec: "skill-library skill-library-core builtin-skill-edit"
+      spec: "skill-library skill-library-core builtin-skill-edit skill-bind-api"
       group-name: "Skills"
 
   flow:
