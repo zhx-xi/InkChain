@@ -1142,9 +1142,6 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
     }
   }, [deleteConfirmEvent, bookId, refetch]);
 
-  // ── ReactFlow instance for custom controls ──
-  const reactFlowInstance = useReactFlow();
-
   // ── Refs for scroll/viewport preservation ──
   const headerRef = useRef<HTMLDivElement>(null);
   const savedScrollYRef = useRef(0);
@@ -1691,34 +1688,6 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
             />
             <TimelineZoomControls />
           </ReactFlow>
-        </div>
-
-        {/* Custom zoom controls */}
-        <div className="absolute bottom-16 right-4 flex gap-1 z-10">
-          <button
-            type="button"
-            data-testid="tl-btn-zoom-in"
-            className="rounded-lg bg-card border border-border/30 px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
-            onClick={() => reactFlowInstance.zoomIn()}
-          >
-            +
-          </button>
-          <button
-            type="button"
-            data-testid="tl-btn-zoom-out"
-            className="rounded-lg bg-card border border-border/30 px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
-            onClick={() => reactFlowInstance.zoomOut()}
-          >
-            −
-          </button>
-          <button
-            type="button"
-            data-testid="tl-btn-fit-view"
-            className="rounded-lg bg-card border border-border/30 px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
-            onClick={() => reactFlowInstance.fitView({ padding: 0.3 })}
-          >
-            ⊞
-          </button>
         </div>
 
         {/* Bottom bar: event count + load more */}
