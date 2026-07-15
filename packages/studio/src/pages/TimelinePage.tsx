@@ -32,7 +32,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../components/ui/select";
-import { PlusIcon, PencilIcon, Trash2Icon, XIcon, Bot, Loader2, X, Search } from "lucide-react";
+import { PlusIcon, PencilIcon, Trash2Icon, XIcon, Bot, Loader2, X, Search, ChevronDown, ChevronRight } from "lucide-react";
 import { useTimelineSegments, type TimelineEvent } from "../hooks/use-timeline-segments";
 
 // ── Types ──
@@ -689,6 +689,28 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
   const [checkedEvents, setCheckedEvents] = useState<Set<number>>(new Set());
   const [aiExtractSaving, setAiExtractSaving] = useState(false);
 
+  // ── Collapse/expand state for volume and chapter hierarchy ──
+  const [collapsedVolumes, setCollapsedVolumes] = useState<Set<string>>(new Set());
+  const [collapsedChapters, setCollapsedChapters] = useState<Set<number>>(new Set());
+
+  const toggleVolumeCollapse = useCallback((volumeId: string) => {
+    setCollapsedVolumes(prev => {
+      const next = new Set(prev);
+      if (next.has(volumeId)) next.delete(volumeId);
+      else next.add(volumeId);
+      return next;
+    });
+  }, []);
+
+  const toggleChapterCollapse = useCallback((chapterNum: number) => {
+    setCollapsedChapters(prev => {
+      const next = new Set(prev);
+      if (next.has(chapterNum)) next.delete(chapterNum);
+      else next.add(chapterNum);
+      return next;
+    });
+  }, []);
+
   // ── Parse chapter range "1-5" → [1,2,3,4,5], "1,2,3" → [1,2,3] ──
   const parseChapterRange = useCallback((input: string): number[] => {
     const trimmed = input.trim();
@@ -747,6 +769,15 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
   const initialNodes = useMemo<Node[]>(() => {
     const nodes: Node[] = [];
 
+    // Apply collapse/expand filtering
+    const isVolumeCollapsed = selectedVolumeId !== null && collapsedVolumes.has(selectedVolumeId);
+    const isAllCollapsed = selectedVolumeId === null && collapsedVolumes.has('__all__');
+    const visibleEvents = (isVolumeCollapsed || isAllCollapsed)
+      ? []
+      : collapsedChapters.size > 0
+        ? filteredEvents.filter(e => !collapsedChapters.has(e.chapter))
+        : filteredEvents;
+
     const chapterIndexMap = new Map<number, number>();
     uniqueChapters.forEach((ch, i) => chapterIndexMap.set(ch, i));
 
@@ -755,7 +786,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
 
     // First pass: count events per (chapter, character) cell (needed for gap computation)
     const cellCounts = new Map<string, number>();
-    for (const e of filteredEvents) {
+    for (const e of visibleEvents) {
       const chIdx = chapterIndexMap.get(e.chapter);
       if (chIdx === undefined) continue;
 
@@ -815,7 +846,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
 
     // Event nodes (second pass)
     const eventCellCounts = new Map<string, number>();
-    for (const e of filteredEvents) {
+    for (const e of visibleEvents) {
       const chIdx = chapterIndexMap.get(e.chapter);
       if (chIdx === undefined) continue;
 
@@ -950,7 +981,7 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
     }
 
     return nodes;
-  }, [filteredEvents, uniqueChapters, uniqueCharacters, isLightweightMode, expandedCells]);
+  }, [filteredEvents, uniqueChapters, uniqueCharacters, isLightweightMode, collapsedVolumes, collapsedChapters, selectedVolumeId]);
 
   // ── Build ReactFlow edges for cross-role connections ──
   const timelineEdges = useMemo(() => {
@@ -1490,6 +1521,23 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
               </select>
             )}
 
+            {/* Volume collapse/expand toggle */}
+            {volumes.length > 0 && (
+              <button
+                type="button"
+                onClick={() => toggleVolumeCollapse(selectedVolumeId ?? '__all__')}
+                data-testid="tl-btn-volume-collapse"
+                className="rounded-lg bg-card/60 border border-border/20 px-2 py-1 text-muted-foreground hover:text-foreground transition-colors"
+                title={collapsedVolumes.has(selectedVolumeId ?? '__all__') ? "展开卷" : "折叠卷"}
+              >
+                {collapsedVolumes.has(selectedVolumeId ?? '__all__') ? (
+                  <ChevronRight size={14} />
+                ) : (
+                  <ChevronDown size={14} />
+                )}
+              </button>
+            )}
+
             {/* Character filter */}
             <input
               data-testid="character-filter"
@@ -1511,6 +1559,53 @@ export function TimelinePage({ bookId }: TimelinePageProps) {
                 <option key={ch} value={ch}>第 {ch} 章</option>
               ))}
             </select>
+
+            {/* Chapter collapse/expand toggle */}
+            {uniqueChapters.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  const chapterNum = parseInt(chapterFilter, 10);
+                  if (!isNaN(chapterNum)) {
+                    toggleChapterCollapse(chapterNum);
+                  } else {
+                    // Toggle all chapters
+                    if (collapsedChapters.size > 0) {
+                      setCollapsedChapters(new Set());
+                    } else {
+                      setCollapsedChapters(new Set(uniqueChapters));
+                    }
+                  }
+                }}
+                data-testid="tl-btn-chapter-collapse"
+                className="rounded-lg bg-card/60 border border-border/20 px-2 py-1 text-muted-foreground hover:text-foreground transition-colors"
+                title={collapsedChapters.size > 0 ? "展开章节" : "折叠章节"}
+              >
+                {collapsedChapters.size > 0 ? (
+                  <ChevronRight size={14} />
+                ) : (
+                  <ChevronDown size={14} />
+                )}
+              </button>
+            )}
+
+            {/* Expand/Collapse All button */}
+            <button
+              type="button"
+              onClick={() => {
+                if (collapsedVolumes.size > 0 || collapsedChapters.size > 0) {
+                  setCollapsedVolumes(new Set());
+                  setCollapsedChapters(new Set());
+                } else {
+                  setCollapsedVolumes(new Set(['__all__']));
+                  setCollapsedChapters(new Set(uniqueChapters));
+                }
+              }}
+              data-testid="tl-btn-expand-all"
+              className="rounded-lg bg-card/60 border border-border/20 px-2.5 py-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {collapsedVolumes.size > 0 || collapsedChapters.size > 0 ? '全部展开' : '全部折叠'}
+            </button>
 
             {/* Legend */}
             <div className="flex items-center gap-2 rounded-lg bg-card/50 border border-border/20 px-2.5 py-1.5">

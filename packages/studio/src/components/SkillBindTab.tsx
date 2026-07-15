@@ -1,15 +1,28 @@
 // ── Skill Bind Tab (Tab 3) ──
 // Form for binding skills to a persona.
-// Shows available skills with checkboxes and a search filter.
+// Shows available skills from API with checkboxes and a search filter.
 
 import { useCallback, useMemo, useState } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Loader2 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { useApi } from "../hooks/use-api";
 import type { PersonaConfig } from "@inkchain/inkchain-core/models/persona-config.js";
+import type { SkillCategory } from "@inkchain/inkchain-core/models/skill-config.js";
+import type { SkillConfig } from "@inkchain/inkchain-core";
 
-// ── Mock Skill Data ──
-// In production, this would be fetched from the Skills API.
-// For now, we provide a representative set of built-in skills.
+// ── API Response Types ──
+
+interface ApiSkillResponse {
+  readonly config: SkillConfig;
+  readonly source: "project" | "builtin";
+  readonly path?: string;
+}
+
+interface SkillsListResponse {
+  readonly skills: ReadonlyArray<ApiSkillResponse>;
+}
+
+// ── Internal Skill Entry ──
 
 interface SkillEntry {
   readonly id: string;
@@ -18,32 +31,30 @@ interface SkillEntry {
   readonly category: string;
 }
 
-const AVAILABLE_SKILLS: ReadonlyArray<SkillEntry> = [
-  // Category: Writing Tools
-  { id: "write-next", name: "续写章节", description: "根据上下文续写下一章内容", category: "写作工具" },
-  { id: "write-chapter", name: "撰写章节", description: "从零开始撰写新章节", category: "写作工具" },
-  { id: "revise-chapter", name: "修订章节", description: "根据审计反馈修订已有章节", category: "写作工具" },
+// ── Built-in Skill Chinese Descriptions ──
+// Mirrors the mappings in SkillListPage.tsx
 
-  // Category: Planning & Structure
-  { id: "outline-generator", name: "大纲生成", description: "自动生成章节大纲和剧情弧线", category: "规划结构" },
-  { id: "beat-planner", name: "节拍规划", description: "规划每章的起承转合节奏", category: "规划结构" },
+const BUILTIN_ZH_DESCRIPTIONS: Record<string, string> = {
+  "writing-style-imitation": "学习并模仿指定作者的写作风格，统一全书文风",
+  "world-consistency-check": "检查新章节是否符合已设定的世界规则",
+  "character-voice": "确保每个角色的对话风格保持一致",
+  "plot-advancement": "分析当前情节状态，给出推进建议",
+  "dialogue-polish": "优化角色对话，使其更自然流畅",
+  "humanizer-zh-skill": "检测并消除文中的 AI 写作痕迹，使文本更自然",
+  "longform-writing-skill": "长篇小说创作：规划章节、选择故事上下文、写作并保持连续性",
+  "interactive-film-authoring-skill": "交互式剧本创作与编辑",
+  "open-world-play-skill": "开放世界自由游玩模式",
+};
 
-  // Category: Quality Control
-  { id: "continuity-check", name: "连贯性检查", description: "检查剧情、角色、设定的连贯性", category: "质量检查" },
-  { id: "style-consistency", name: "风格一致性", description: "确保内容风格与设定一致", category: "质量检查" },
-  { id: "content-audit", name: "内容审计", description: "全面审计章节质量", category: "质量检查" },
+// ── Category Mapping (SkillCategory enum → Chinese name) ──
 
-  // Category: Character & World
-  { id: "character-dev", name: "角色发展追踪", description: "追踪角色的成长曲线和变化", category: "角色世界" },
-  { id: "world-consistency", name: "世界观一致性", description: "检查设定和世界观的连贯性", category: "角色世界" },
-
-  // Category: Advanced
-  { id: "writers-block", name: "卡文突破", description: "分析上下文给出推进建议", category: "高级" },
-  { id: "foreshadow-track", name: "伏笔追踪", description: "追踪伏笔设置和回收情况", category: "高级" },
-  { id: "dialogue-polish", name: "对话润色", description: "优化对话的自然度和表现力", category: "高级" },
-];
-
-// ── Category colors ──
+const CATEGORY_LABELS: Record<SkillCategory, string> = {
+  writing: "写作工具",
+  analysis: "质量检查",
+  world: "角色世界",
+  character: "角色世界",
+  utility: "高级",
+};
 
 const CATEGORY_COLORS: Record<string, string> = {
   "写作工具": "#E88D3A",
@@ -52,6 +63,46 @@ const CATEGORY_COLORS: Record<string, string> = {
   "角色世界": "#22C55E",
   "高级": "#9CA3AF",
 };
+
+// ── Helpers ──
+
+function toDisplayName(skill: ApiSkillResponse): string {
+  const { config, source } = skill;
+  return config.id;
+}
+
+function toDisplayDescription(skill: ApiSkillResponse): string {
+  const { config, source } = skill;
+  const zhDesc = BUILTIN_ZH_DESCRIPTIONS[config.id];
+  if (zhDesc) return zhDesc;
+  return config.description || config.id;
+}
+
+function toDisplayCategory(skill: ApiSkillResponse): string {
+  const { config } = skill;
+  // Map SkillCategory enum to Chinese label
+  const label = CATEGORY_LABELS[config.category as SkillCategory];
+  return label || "高级";
+}
+
+function toSkillEntry(skill: ApiSkillResponse): SkillEntry {
+  return {
+    id: skill.config.id,
+    name: toDisplayName(skill),
+    description: toDisplayDescription(skill),
+    category: toDisplayCategory(skill),
+  };
+}
+
+function groupByCategory(skills: SkillEntry[]): Map<string, SkillEntry[]> {
+  const grouped = new Map<string, SkillEntry[]>();
+  for (const skill of skills) {
+    const list = grouped.get(skill.category) ?? [];
+    list.push(skill);
+    grouped.set(skill.category, list);
+  }
+  return grouped;
+}
 
 // ── Props ──
 
@@ -64,7 +115,15 @@ interface SkillBindTabProps {
 
 export function SkillBindTab({ config, onChange }: SkillBindTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const { data, loading, error } = useApi<SkillsListResponse>("/api/skills");
   const boundSkills = config.boundSkills ?? [];
+
+  // ── Compute skill entries from API data ──
+
+  const allSkills: SkillEntry[] = useMemo(() => {
+    if (!data?.skills) return [];
+    return data.skills.map(toSkillEntry);
+  }, [data]);
 
   // ── Handlers ──
 
@@ -86,9 +145,14 @@ export function SkillBindTab({ config, onChange }: SkillBindTabProps) {
     const bound: SkillEntry[] = [];
     const available: SkillEntry[] = [];
 
-    for (const skill of AVAILABLE_SKILLS) {
-      if (searchQuery && !skill.name.toLowerCase().includes(searchQuery.toLowerCase()) && !skill.description.toLowerCase().includes(searchQuery.toLowerCase())) {
-        continue;
+    for (const skill of allSkills) {
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const nameMatch = skill.name.toLowerCase().includes(q);
+        const descMatch = skill.description.toLowerCase().includes(q);
+        if (!nameMatch && !descMatch) {
+          continue;
+        }
       }
       if (boundSkills.includes(skill.id)) {
         bound.push(skill);
@@ -101,7 +165,45 @@ export function SkillBindTab({ config, onChange }: SkillBindTabProps) {
       boundEntries: groupByCategory(bound),
       availableEntries: groupByCategory(available),
     };
-  }, [boundSkills, searchQuery]);
+  }, [allSkills, boundSkills, searchQuery]);
+
+  // ── Loading State ──
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 size={20} className="animate-spin text-muted-foreground/40" />
+        <span className="ml-3 text-sm text-muted-foreground/60">加载 Skill 列表…</span>
+      </div>
+    );
+  }
+
+  // ── Error State ──
+
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" data-testid="sbt-state-error">
+          加载失败：{error}
+        </div>
+        <p className="text-xs text-muted-foreground/40 italic px-1">
+          Skill 绑定功能暂时不可用，请稍后再试
+        </p>
+      </div>
+    );
+  }
+
+  // ── Empty State ──
+
+  if (allSkills.length === 0) {
+    return (
+      <div className="py-8 text-center">
+        <p className="text-xs text-muted-foreground/40 italic px-1">
+          所有 Skill 已绑定
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -127,7 +229,7 @@ export function SkillBindTab({ config, onChange }: SkillBindTabProps) {
       </div>
 
       {/* Bound skills section */}
-      {boundEntries.length > 0 && (
+      {boundEntries.size > 0 && (
         <section className="space-y-2">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
             已绑定 ({boundSkills.length})
@@ -141,7 +243,7 @@ export function SkillBindTab({ config, onChange }: SkillBindTabProps) {
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70">
           可用 Skill
         </h3>
-        {availableEntries.length === 0 ? (
+        {availableEntries.size === 0 ? (
           <p className="text-xs text-muted-foreground/40 italic px-1">
             {searchQuery ? "未找到匹配的 Skill" : "所有 Skill 已绑定"}
           </p>
@@ -153,17 +255,7 @@ export function SkillBindTab({ config, onChange }: SkillBindTabProps) {
   );
 }
 
-// ── Helpers ──
-
-function groupByCategory(skills: SkillEntry[]): Map<string, SkillEntry[]> {
-  const grouped = new Map<string, SkillEntry[]>();
-  for (const skill of skills) {
-    const list = grouped.get(skill.category) ?? [];
-    list.push(skill);
-    grouped.set(skill.category, list);
-  }
-  return grouped;
-}
+// ── Render Helpers ──
 
 function renderSkillGroup(
   grouped: Map<string, SkillEntry[]>,

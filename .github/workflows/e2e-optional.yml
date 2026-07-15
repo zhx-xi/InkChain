@@ -35,7 +35,9 @@ jobs:
       film: ${{ steps.filter.outputs.film }}
       skill: ${{ steps.filter.outputs.skill }}
       flow: ${{ steps.filter.outputs.flow }}
-      misc: ${{ steps.filter.outputs.misc }}
+      misc-data: ${{ steps.filter.outputs.misc-data }}
+      misc-pages: ${{ steps.filter.outputs.misc-pages }}
+      misc-views: ${{ steps.filter.outputs.misc-views }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -77,6 +79,7 @@ jobs:
               - 'packages/studio/src/components/chapter/**'
               - 'packages/studio/e2e/chapter*'
               - 'packages/studio/e2e/edge-chapter*'
+              - '!packages/studio/e2e/chapter-baseline*'
             audit:
               - 'packages/core/**'
               - 'packages/studio/src/pages/Audit*'
@@ -99,6 +102,8 @@ jobs:
               - 'packages/studio/src/api/routes/foreshadowing*'
               - 'packages/studio/e2e/foreshadow*'
               - 'packages/studio/e2e/foresight*'
+              - '!packages/studio/e2e/foreshadowing-baseline*'
+              - '!packages/studio/e2e/foreshadowing-delete*'
             world:
               - 'packages/core/**'
               - 'packages/studio/src/pages/World*'
@@ -106,6 +111,8 @@ jobs:
               - 'packages/studio/src/api/routes/maps*'
               - 'packages/studio/src/components/world-editor/**'
               - 'packages/studio/e2e/world*'
+              - '!packages/studio/e2e/world-baseline*'
+              - '!packages/studio/e2e/world-create-validation*'
             style:
               - 'packages/core/**'
               - 'packages/studio/src/api/routes/style*'
@@ -132,28 +139,35 @@ jobs:
               - 'packages/studio/src/lib/story*'
               - 'packages/studio/e2e/flow*'
               - 'packages/studio/e2e/relation*'
-            misc:
+            misc-data:
               - 'packages/core/**'
               - 'packages/studio/src/api/routes/**'
               - 'packages/studio/e2e/analysis*'
               - 'packages/studio/e2e/export*'
               - 'packages/studio/e2e/import*'
               - 'packages/studio/e2e/index-manager*'
-              - 'packages/studio/e2e/log-viewer*'
+              - 'packages/studio/e2e/cross-feature*'
+              - 'packages/studio/e2e/build*'
+              - 'packages/studio/e2e/consistency-check*'
+            misc-pages:
+              - 'packages/core/**'
+              - 'packages/studio/src/api/routes/**'
               - 'packages/studio/e2e/player*'
               - 'packages/studio/e2e/service*'
               - 'packages/studio/e2e/session*'
               - 'packages/studio/e2e/genre*'
               - 'packages/studio/e2e/character*'
               - 'packages/studio/e2e/validation*'
-              - 'packages/studio/e2e/cross-feature*'
-              - 'packages/studio/e2e/radar*'
-              - 'packages/studio/e2e/truth*'
-              - 'packages/studio/e2e/volume*'
               - 'packages/studio/e2e/daemon*'
               - 'packages/studio/e2e/doctor*'
-              - 'packages/studio/e2e/build*'
               - 'packages/studio/e2e/project-settings*'
+              - 'packages/studio/e2e/truth*'
+              - 'packages/studio/e2e/volume*'
+            misc-views:
+              - 'packages/core/**'
+              - 'packages/studio/src/api/routes/**'
+              - 'packages/studio/e2e/log-viewer*'
+              - 'packages/studio/e2e/radar*'
               - 'packages/studio/e2e/issue*'
 
   # ── Build Core once, share across all E2E jobs ────────────────
@@ -271,7 +285,7 @@ jobs:
     if: needs.changes.outputs.skill == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
-      spec: "skill-library skill-library-core builtin-skill-edit"
+      spec: "skill-library skill-library-core builtin-skill-edit skill-bind-api"
       group-name: "Skills"
 
   flow:
@@ -282,10 +296,26 @@ jobs:
       spec: "flow flow-editor flow-screenshot relation-graph relation-graph-core"
       group-name: "Flow & Relations"
 
-  misc:
+  misc-data:
     needs: [changes, build-core]
-    if: needs.changes.outputs.misc == 'true' || github.event_name == 'push'
+    if: needs.changes.outputs.misc-data == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
-      spec: "analysis consistency-check-panel export import-manager index-manager log-viewer log-viewer-508 player service-list-page session-archive genre-manager character-tiering validation cross-feature radar-view radar-view-510 truth-files volume-dnd daemon-control doctor-view build-verification project-settings issue-394-world-association issue-406-timeline-filter issue-410-audit-cache issue-413-audit-context issue-421-builtin-skill-edit"
-      group-name: "Misc"
+      spec: "analysis consistency-check-panel export import-manager index-manager cross-feature build-verification"
+      group-name: "Misc — Data"
+
+  misc-pages:
+    needs: [changes, build-core]
+    if: needs.changes.outputs.misc-pages == 'true' || github.event_name == 'push'
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "player service-list-page session-archive genre-manager character-tiering validation daemon-control doctor-view project-settings truth-files volume-dnd"
+      group-name: "Misc — Pages"
+
+  misc-views:
+    needs: [changes, build-core]
+    if: needs.changes.outputs.misc-views == 'true' || github.event_name == 'push'
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "log-viewer log-viewer-508 radar-view radar-view-510 issue-394-world-association issue-406-timeline-filter issue-410-audit-cache issue-413-audit-context issue-421-builtin-skill-edit"
+      group-name: "Misc — Views"
