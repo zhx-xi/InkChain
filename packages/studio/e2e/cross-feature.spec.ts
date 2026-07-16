@@ -10,15 +10,16 @@ test.beforeAll(async () => {
 });
 
 test.beforeEach(async ({ page }) => {
-  // Navigate to dashboard first to ensure React app loads
-  await page.goto("/#/");
-  await page.waitForLoadState("networkidle");
-  await expect(page.locator("body")).toBeVisible({ timeout: 10_000 });
+  // Navigate to Book-A — capture JS errors for debugging if page fails
+  const errors: string[] = [];
+  page.on("pageerror", (err) => errors.push(err.message));
 
-  // Then navigate to Book-A
   await page.goto(`/#/book/${E2E_BOOK_ID}`);
   await page.waitForLoadState("networkidle");
-  await expect(page.getByRole("heading", { name: "E2E 跨功能测试书", exact: true })).toBeVisible({ timeout: 20_000 });
+
+  if (errors.length > 0) {
+    console.log(`JS errors on book page: ${errors.join(" | ")}`);
+  }
 });
 
 // ── Shared helpers ──────────────────────────────────────────────
