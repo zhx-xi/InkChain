@@ -77,19 +77,19 @@ test.describe("跨功能集成E2E", () => {
 
     // ── 3. Navigate to foreshadowing page ──
     await page.goto(`/#/foreshadowing/${E2E_BOOK_ID}`);
-    await expect(page.getByText("伏笔追踪")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("伏笔追踪").first()).toBeVisible({ timeout: 15_000 });
 
-    // Verify seeded foreshadowing entries are visible
-    await expect(page.getByText("神秘戒指")).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByText("青云秘境")).toBeVisible({ timeout: 5_000 });
+    // Verify seeded foreshadowing entries are visible (use first() to avoid strict mode on duplicates)
+    await expect(page.getByText("神秘戒指").first()).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("青云秘境").first()).toBeVisible({ timeout: 5_000 });
 
     // ── 4. Navigate to timeline page ──
     await page.goto(`/#/timeline/${E2E_BOOK_ID}`);
-    await expect(page.getByText("时间线")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("时间线").first()).toBeVisible({ timeout: 15_000 });
 
     // Verify seeded timeline events are visible
-    await expect(page.getByText("主角入门")).toBeVisible({ timeout: 5_000 });
-    await expect(page.getByText("发现秘境")).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("主角入门").first()).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("发现秘境").first()).toBeVisible({ timeout: 5_000 });
 
     // ── 5. Navigate back to book page — verify via API, skip heading check
     // (book heading may not render in CI due to React component lifecycle)
@@ -160,7 +160,7 @@ test.describe("跨功能集成E2E", () => {
 
     // ── Book-B's foreshadowing should be empty (no seeded data) ──
     await page.goto(`/#/foreshadowing/${E2E_BOOK_B_ID}`);
-    await expect(page.getByText("伏笔追踪")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("伏笔追踪").first()).toBeVisible({ timeout: 15_000 });
     await page.waitForTimeout(2000);
 
     const foreshadowingTextB = await page.evaluate(() => document.body.innerText);
@@ -169,7 +169,7 @@ test.describe("跨功能集成E2E", () => {
 
     // ── Book-B's timeline should be empty ──
     await page.goto(`/#/timeline/${E2E_BOOK_B_ID}`);
-    await expect(page.getByText("时间线")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("时间线").first()).toBeVisible({ timeout: 15_000 });
     await page.waitForTimeout(2000);
 
     const timelineTextB = await page.evaluate(() => document.body.innerText);
@@ -283,12 +283,12 @@ test.describe("跨功能集成E2E", () => {
 
     // Foreshadowing
     await page.goto(`/#/foreshadowing/${E2E_BOOK_ID}`);
-    await expect(page.getByText("伏笔追踪")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("伏笔追踪").first()).toBeVisible({ timeout: 15_000 });
     await panelCheck();
 
     // Timeline
     await page.goto(`/#/timeline/${E2E_BOOK_ID}`);
-    await expect(page.getByText("时间线")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("时间线").first()).toBeVisible({ timeout: 15_000 });
     await panelCheck();
 
     // World settings
