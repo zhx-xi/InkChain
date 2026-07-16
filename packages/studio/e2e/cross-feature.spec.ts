@@ -3,45 +3,21 @@ import { seedCrossFeature, E2E_BOOK_ID, E2E_BOOK_B_ID } from "./fixtures/seed-cr
 
 // ── Setup ────────────────────────────────────────────────────────
 
+const BOOK_API = "http://localhost:4581/api/v1/books";
+
 test.beforeAll(async () => {
   await seedCrossFeature();
 });
 
 test.beforeEach(async ({ page }) => {
-  // Mock backend APIs so tests don't depend on seed data file paths
-  await page.route("**/api/v1/books/*", async (route) => {
-    const url = route.request().url();
-    if (url.includes("e2e-volume-dnd")) {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          book: { id: "e2e-volume-dnd", title: "E2E 跨功能测试书", platform: "webnovel", genre: "xianxia", status: "active", targetChapters: 20, chapterWordCount: 2000, language: "zh" },
-          chapters: [
-            { number: 1, title: "第一章 初入修仙", status: "drafted", wordCount: 1200 },
-            { number: 2, title: "第二章 灵根测试", status: "drafted", wordCount: 1500 },
-            { number: 3, title: "第三章 拜师", status: "active", wordCount: 1800 },
-            { number: 4, title: "第四章 秘境探索", status: "drafted", wordCount: 2000 },
-            { number: 5, title: "第五章 回归", status: "drafted", wordCount: 900 },
-          ],
-          nextChapter: 6,
-        }),
-      });
-    } else {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          book: { id: "e2e-cross-feature-book-b", title: "E2E 跨功能测试书-B", platform: "webnovel", genre: "yanqing", status: "active", targetChapters: 5, chapterWordCount: 1500, language: "zh" },
-          chapters: [{ number: 1, title: "第一章 相遇", status: "drafted", wordCount: 1000 }],
-          nextChapter: 2,
-        }),
-      });
-    }
-  });
+  // Navigate to dashboard first to ensure React app loads
+  await page.goto("/#/");
+  await page.waitForLoadState("networkidle");
+  await expect(page.locator("body")).toBeVisible({ timeout: 10_000 });
 
-  // Ensure consistent starting point — navigate to Book-A if not already there
+  // Then navigate to Book-A
   await page.goto(`/#/book/${E2E_BOOK_ID}`);
+  await page.waitForLoadState("networkidle");
   await expect(page.getByRole("heading", { name: "E2E 跨功能测试书", exact: true })).toBeVisible({ timeout: 20_000 });
 });
 
