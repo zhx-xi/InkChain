@@ -3,23 +3,15 @@ import { seedCrossFeature, E2E_BOOK_ID, E2E_BOOK_B_ID } from "./fixtures/seed-cr
 
 // ── Setup ────────────────────────────────────────────────────────
 
-const BOOK_API = "http://localhost:4581/api/v1/books";
-
 test.beforeAll(async () => {
   await seedCrossFeature();
 });
 
 test.beforeEach(async ({ page }) => {
-  // Navigate to Book-A — capture JS errors for debugging if page fails
-  const errors: string[] = [];
-  page.on("pageerror", (err) => errors.push(err.message));
-
+  // Navigate to Book-A
   await page.goto(`/#/book/${E2E_BOOK_ID}`);
-  await page.waitForLoadState("networkidle");
-
-  if (errors.length > 0) {
-    console.log(`JS errors on book page: ${errors.join(" | ")}`);
-  }
+  // Don't use networkidle — Vite HMR WebSocket keeps browser active forever
+  await expect(page.getByRole("heading", { name: "E2E 跨功能测试书", exact: true })).toBeVisible({ timeout: 20_000 });
 });
 
 // ── Shared helpers ──────────────────────────────────────────────
