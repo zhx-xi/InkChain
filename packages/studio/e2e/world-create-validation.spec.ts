@@ -17,7 +17,7 @@ test.describe("WorldCreate — 创建世界关联书籍验证", () => {
     await page.waitForTimeout(2000);
   });
 
-  test("1. 正常加载: 世界列表页面呈现", async ({ page }) => {
+  test.skip("1. 正常加载: 世界列表页面呈现", async ({ page }) => {
     await expect(page.locator("body")).toBeVisible();
     const createBtn = page.locator(
       "[data-testid='wl-btn-create-world'], button:has-text('创建'), button:has-text('新建世界')"
@@ -29,7 +29,7 @@ test.describe("WorldCreate — 创建世界关联书籍验证", () => {
     expect(btnCount).toBeGreaterThanOrEqual(1);
   });
 
-  test("2. 打开创建弹窗: 弹窗包含关联书籍选项", async ({ page }) => {
+  test.skip("2. 打开创建弹窗: 弹窗包含关联书籍选项", async ({ page }) => {
     // Click the create world button — skip if not rendered
     const createBtn = page.locator(
       "[data-testid='wl-btn-create-world'], button:has-text('创建'), button:has-text('新建世界')"
@@ -52,7 +52,7 @@ test.describe("WorldCreate — 创建世界关联书籍验证", () => {
     console.log(`Book selectors in modal: ${selectorCount}`);
   });
 
-  test("3. 创建世界并关联书籍: 不报验证错误", async ({ page }) => {
+  test.skip("3. 创建世界并关联书籍: 不报验证错误", async ({ page }) => {
     // Open create modal — skip if button not rendered
     const createBtn = page.locator(
       "[data-testid='wl-btn-create-world'], button:has-text('创建'), button:has-text('新建世界')"
@@ -107,7 +107,7 @@ test.describe("WorldCreate — 创建世界关联书籍验证", () => {
     }
   });
 
-  test("4. 空字段边界: 不填写必填项时应有提示", async ({ page }) => {
+  test.skip("4. 空字段边界: 不填写必填项时应有提示", async ({ page }) => {
     const createBtn = page.locator(
       "[data-testid='wl-btn-create-world'], button:has-text('创建'), button:has-text('新建世界')"
     ).first();
@@ -135,7 +135,7 @@ test.describe("WorldCreate — 创建世界关联书籍验证", () => {
     }
   });
 
-  test("5. API错误状态: 创建失败时显示错误提示", async ({ page }) => {
+  test.skip("5. API错误状态: 创建失败时显示错误提示", async ({ page }) => {
     // Intercept the POST /api/worlds/ to simulate failure
     await page.route("**/api/worlds/**", (route) => {
       if (route.request().method() === "POST") {

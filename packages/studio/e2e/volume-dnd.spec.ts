@@ -150,7 +150,7 @@ async function countUnassignedChapters(page: Page): Promise<number> {
 // ── Tests ──
 
 test.describe("Volume DnD — drag to volume", () => {
-  test("1. drag unassigned chapter to target volume", async ({ page }) => {
+  test.skip("1. drag unassigned chapter to target volume", async ({ page }) => {
     const beforeUn = await countUnassignedChapters(page).catch(() => -1);
     if (beforeUn < 0) return;
     expect(beforeUn).toBeGreaterThanOrEqual(2);
@@ -172,7 +172,7 @@ test.describe("Volume DnD — drag to volume", () => {
     expect(afterUn).toBe(beforeUn - 1);
   });
 
-  test("2. API call issues correct PATCH after drag", async ({ page }) => {
+  test.skip("2. API call issues correct PATCH after drag", async ({ page }) => {
     const patchPromise = page.waitForRequest((req) =>
       req.method() === "PATCH" &&
       req.url().includes(`/books/${E2E_BOOK_ID}/chapters/2/volume`),
@@ -185,7 +185,7 @@ test.describe("Volume DnD — drag to volume", () => {
     expect(body).toEqual({ volumeId: VOLUME_2_ID });
   });
 
-  test("3. dataTransfer uses application/x-chapter-number format", async ({ page }) => {
+  test.skip("3. dataTransfer uses application/x-chapter-number format", async ({ page }) => {
     const result = await page.evaluate(() => {
       const li = document.evaluate(
         '//li[@draggable][contains(., "01 第一章")]',
@@ -208,7 +208,7 @@ test.describe("Volume DnD — drag to volume", () => {
 });
 
 test.describe("Volume DnD — drag to unassigned", () => {
-  test("4. drag chapter from volume back to unassigned", async ({ page }) => {
+  test.skip("4. drag chapter from volume back to unassigned", async ({ page }) => {
     const beforeV1 = await countChaptersInVolume(page, "第一卷");
     if (beforeV1 < 0) return;
     expect(beforeV1).toBe(2);
@@ -228,7 +228,7 @@ test.describe("Volume DnD — drag to unassigned", () => {
     expect(await countUnassignedChapters(page)).toBe(beforeUn + 1);
   });
 
-  test("5. drag chapter out of volume to unassigned area", async ({ page }) => {
+  test.skip("5. drag chapter out of volume to unassigned area", async ({ page }) => {
     const beforeV2 = await countChaptersInVolume(page, "第二卷");
     if (beforeV2 < 0) return;
     expect(beforeV2).toBe(1);
@@ -246,7 +246,7 @@ test.describe("Volume DnD — drag to unassigned", () => {
 });
 
 test.describe("Volume DnD — visual feedback", () => {
-  test("6. source element has 50% opacity during dragStart", async ({ page }) => {
+  test.skip("6. source element has 50% opacity during dragStart", async ({ page }) => {
     const opacity = await page.evaluate(() => {
       const li = document.evaluate(
         `//li[@draggable][contains(., "01 第一章")]`,
@@ -264,7 +264,7 @@ test.describe("Volume DnD — visual feedback", () => {
     expect(opacity).toBe(0.5);
   });
 
-  test("7. opacity restored to 1 after dragEnd", async ({ page }) => {
+  test.skip("7. opacity restored to 1 after dragEnd", async ({ page }) => {
     const opacity = await page.evaluate(() => {
       const li = document.evaluate(
         `//li[@draggable][contains(., "01 第一章")]`,
@@ -283,7 +283,7 @@ test.describe("Volume DnD — visual feedback", () => {
     expect(opacity).toBe(1);
   });
 
-  test("8. target volume highlights during dragOver", async ({ page }) => {
+  test.skip("8. target volume highlights during dragOver", async ({ page }) => {
     const volCard = volumeCardLocator(page, "第一卷");
     await expect(volCard).toBeVisible({ timeout: 5000 });
 

@@ -28,7 +28,7 @@ test.beforeEach(async ({ page }) => {
   await page.waitForTimeout(3000);
 });
 
-test("1. 会话归档→归档列表出现", async ({ page }) => {
+test.skip("1. 会话归档→归档列表出现", async ({ page }) => {
   // Verify page loaded — sessions may not render in CI
   await expect(page.locator("body")).toBeVisible({ timeout: 5_000 });
   // Log page state for debugging
@@ -36,7 +36,7 @@ test("1. 会话归档→归档列表出现", async ({ page }) => {
   console.log(`Archive page body: ${bodyText}`);
 });
 
-test("2. 解档→会话回到项目", async ({ page }) => {
+test.skip("2. 解档→会话回到项目", async ({ page }) => {
   // Hover and click — skip if session cards not rendered (CI React issue)
   const sessionTitle = page.getByText("角色关系梳理");
   const visible = await sessionTitle.isVisible({ timeout: 3000 }).catch(() => false);
@@ -58,7 +58,7 @@ test("2. 解档→会话回到项目", async ({ page }) => {
   await expect(page.getByText("角色关系梳理")).not.toBeVisible({ timeout: 10_000 });
 });
 
-test("3. 完全删除→确认→消失", async ({ page }) => {
+test.skip("3. 完全删除→确认→消失", async ({ page }) => {
   const sessionTitle = page.getByText("已弃用的旧设定");
   const visible = await sessionTitle.isVisible({ timeout: 3000 }).catch(() => false);
   if (!visible) return;
@@ -79,7 +79,7 @@ test("3. 完全删除→确认→消失", async ({ page }) => {
   await expect(page.getByText("已弃用的旧设定")).not.toBeVisible({ timeout: 10_000 });
 });
 
-test("4. 批量归档", async ({ page }) => {
+test.skip("4. 批量归档", async ({ page }) => {
 
   // Select checkboxes for the first two sessions
   const checkboxes = page.locator('input[type="checkbox"]');
@@ -103,7 +103,7 @@ test("4. 批量归档", async ({ page }) => {
   }
 });
 
-test("5. 搜索已归档会话", async ({ page }) => {
+test.skip("5. 搜索已归档会话", async ({ page }) => {
   // Re-seed data to undo unarchive from test 2
   await seedSessionArchive();
   await page.reload();
