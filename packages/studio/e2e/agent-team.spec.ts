@@ -5,7 +5,54 @@ test.beforeAll(async () => {
   await seedAgentTeam();
 });
 
-test.fixme("1. 加载Agent Team→7个Agent卡片显示", async ({ page }) => {
+test.beforeEach(async ({ page }) => {
+  // Mock agent-team API to return seed data
+  await page.route("**/project/agent-team", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        config: {
+          schemaVersion: "1",
+          agents: [
+            { role: "writer", enabled: true },
+            { role: "architect", enabled: true },
+            { role: "planner", enabled: true },
+            { role: "editor", enabled: false },
+            { role: "auditor", enabled: true },
+            { role: "observer", enabled: false },
+            { role: "reviser", enabled: true },
+          ],
+          defaultModel: "gpt-4o",
+          collaborationMode: "sequential",
+        },
+      }),
+    });
+  });
+  await page.route("**/agent-templates", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ templates: [] }),
+    });
+  });
+  await page.route("**/custom-agents", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ agents: [] }),
+    });
+  });
+  await page.route("**/agent-order", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ order: [] }),
+    });
+  });
+});
+
+test("1. 加载Agent Team→7个Agent卡片显示", async ({ page }) => {
   await page.goto("/#/agents");
 
   // Wait for the team panel to render and finish loading
@@ -15,7 +62,7 @@ test.fixme("1. 加载Agent Team→7个Agent卡片显示", async ({ page }) => {
   // Should see the status legend — indicates team config loaded
   await expect(page.getByText("状态图例")).toBeVisible();
   await expect(page.getByText("就绪").first()).toBeVisible();
-  await expect(page.getByText("禁用")).toBeVisible();
+  await expect(page.getByText("禁用").first()).toBeVisible();
 
   // Agent cards: at least writer, architect, planner are shown
   for (const name of ["执笔者", "架构师", "规划师", "审核者", "修订者"]) {
@@ -23,7 +70,7 @@ test.fixme("1. 加载Agent Team→7个Agent卡片显示", async ({ page }) => {
   }
 });
 
-test.fixme("2. 团队配置Tab: 切换agent开关", async ({ page }) => {
+test("2. 团队配置Tab: 切换agent开关", async ({ page }) => {
   await page.goto("/#/agents");
   await expect(page.getByRole("heading", { name: "Agent Team", exact: true })).toBeVisible({ timeout: 15_000 });
 
@@ -37,8 +84,8 @@ test.fixme("2. 团队配置Tab: 切换agent开关", async ({ page }) => {
   await page.getByText("默认预设").first().click();
   // A preset menu item should appear
   await expect(page.getByText("热血玄幻").first()).toBeVisible();
-  await expect(page.getByText("言情")).toBeVisible();
-  await expect(page.getByText("悬疑推理")).toBeVisible();
+  await expect(page.getByText("言情").first()).toBeVisible();
+  await expect(page.getByText("悬疑推理").first()).toBeVisible();
 });
 
 test.fixme("3. 流程编辑Tab: ReactFlow图渲染", async ({ page }) => {
