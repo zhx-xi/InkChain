@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
-import path from "path";
-import { fileURLToPath } from "url";
+import {
+  seedRelationGraph,
+  E2E_BOOK_ID,
+} from "./fixtures/seed-relation-graph";
 
 /**
  * E2E test for GraphEdgeData chapter range (validFromChapter/validUntilChapter).
@@ -15,12 +17,14 @@ import { fileURLToPath } from "url";
  * - Edge:    single-chapter range (validFrom == validUntil)
  */
 
-const thisFile = fileURLToPath(import.meta.url);
+test.beforeAll(async () => {
+  await seedRelationGraph();
+});
 
 test.beforeEach(async ({ page }) => {
   // Navigate to the relation graph page
-  await page.goto("/#/relation-graph");
-  await expect(page.getByText("关系图").or(page.getByText("Relationship Graph"))).toBeVisible({ timeout: 15_000 });
+  await page.goto(`/#/relations/${E2E_BOOK_ID}`);
+  await expect(page.getByText("角色关系图谱")).toBeVisible({ timeout: 15_000 });
 });
 
 test.fixme("1. 关系图加载后显示带章节范围的边或空状态", async ({ page }) => {
