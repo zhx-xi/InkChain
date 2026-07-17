@@ -1,7 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { dataPath } from "@inkchain/inkchain-core";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 export const E2E_ROOT = resolve(__dirname, "../../", "test-project");
@@ -11,8 +10,7 @@ export const E2E_ARCHIVE_BOOK_ID = "e2e-session-archive";
  * Seeds archived and active book sessions for session-archive E2E testing.
  *
  * Uses the same file-based storage that the BookSessionStore reads from.
- * Sessions are written to <root>/.inkchain/sessions/ which is what
- * sessionsDir(projectRoot) resolves to.
+ * Creates sessions under `books/<bookId>/story/sessions/`.
  *
  * Sessions:
  * - session-arch-001: Archived, "修仙世界设定讨论" (has tags)
@@ -23,7 +21,7 @@ export const E2E_ARCHIVE_BOOK_ID = "e2e-session-archive";
  */
 export async function seedSessionArchive(): Promise<void> {
   const bookDir = join(E2E_ROOT, "books", E2E_ARCHIVE_BOOK_ID);
-  const sessionsDir = dataPath(E2E_ROOT, "sessions");
+  const sessionsDir = join(bookDir, "story", "sessions");
   const chaptersDir = join(bookDir, "story", "chapters");
   const stateDir = join(bookDir, "story", "state");
   const chaptersContentDir = join(bookDir, "chapters");
