@@ -24,11 +24,11 @@ test.beforeEach(async ({ page }) => {
       body: JSON.stringify({
         book: { id: E2E_BOOK_ID, title: "E2E 分卷拖拽测试", platform: "webnovel", genre: "xianxia", status: "active", targetChapters: 10, chapterWordCount: 2000, language: "zh", createdAt: "2026-07-04T00:00:00.000Z", updatedAt: "2026-07-04T00:00:00.000Z" },
         chapters: [
-          { number: 1, title: "第一章", status: "drafted", wordCount: 1000 },
-          { number: 2, title: "第二章", status: "drafted", wordCount: 1000 },
-          { number: 3, title: "第三章", status: "drafted", wordCount: 1000, volumeId: "vol-2-id" },
-          { number: 4, title: "第四章", status: "drafted", wordCount: 1000, volumeId: "vol-1-id" },
-          { number: 5, title: "第五章", status: "drafted", wordCount: 1000, volumeId: "vol-1-id" },
+          { number: 1, title: "第一�?, status: "drafted", wordCount: 1000 },
+          { number: 2, title: "第二�?, status: "drafted", wordCount: 1000 },
+          { number: 3, title: "第三�?, status: "drafted", wordCount: 1000, volumeId: "vol-2-id" },
+          { number: 4, title: "第四�?, status: "drafted", wordCount: 1000, volumeId: "vol-1-id" },
+          { number: 5, title: "第五�?, status: "drafted", wordCount: 1000, volumeId: "vol-1-id" },
         ],
         nextChapter: 6,
       }),
@@ -47,7 +47,7 @@ function volumeCardLocator(page: Page, titlePart: string): Locator {
   );
 }
 function unassignedDropZone(page: Page): Locator {
-  return page.locator("xpath=//*[contains(text(),'未分配章节')]/..");
+  return page.locator("xpath=//*[contains(text(),'未分配章�?)]/..");
 }
 
 /**
@@ -56,7 +56,7 @@ function unassignedDropZone(page: Page): Locator {
  * Strategy:
  * - Source: find a <li draggable=true> element whose descendant text contains
  *   sourceText.  The <li> in ChaptersSection has onDragStart/onDragEnd.
- * - Target: if targetText is "未分配章节", find the drop-zone <div> that is
+ * - Target: if targetText is "未分配章�?, find the drop-zone <div> that is
  *   the parent of the element containing that text.  Otherwise treat
  *   targetText as a volume title and find the VolumeCard's outermost <div>
  *   (with class "rounded-lg") that contains that title.
@@ -86,8 +86,8 @@ async function simulateDragDrop(
 
       // Target
       let tgtEl: HTMLElement | null;
-      if (tgt === "未分配章节") {
-        // Unassigned drop zone: the <div> whose text contains "未分配章节"
+      if (tgt === "未分配章�?) {
+        // Unassigned drop zone: the <div> whose text contains "未分配章�?
         const textParent = document.evaluate(
           `//*[contains(text(), '${esc(tgt)}')]`,
           document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null,
@@ -141,7 +141,7 @@ async function countChaptersInVolume(page: Page, volumeTitle: string): Promise<n
 }
 
 async function countUnassignedChapters(page: Page): Promise<number> {
-  const text = await page.getByText(/未分配章节/).textContent();
+  const text = await page.getByText(/未分配章�?).textContent();
   if (!text) return 0;
   const m = text.match(/(\d+)/);
   return m ? parseInt(m[1], 10) : 0;
@@ -149,46 +149,46 @@ async function countUnassignedChapters(page: Page): Promise<number> {
 
 // ── Tests ──
 
-test.describe("Volume DnD — drag to volume", () => {
-  test.skip("1. drag unassigned chapter to target volume", async ({ page }) => {
+test.describe("Volume DnD �?drag to volume", () => {
+  test.fixme("1. drag unassigned chapter to target volume", async ({ page }) => {
     const beforeUn = await countUnassignedChapters(page).catch(() => -1);
     if (beforeUn < 0) return;
     expect(beforeUn).toBeGreaterThanOrEqual(2);
 
-    const beforeV1 = await countChaptersInVolume(page, "第一卷");
+    const beforeV1 = await countChaptersInVolume(page, "第一�?);
     if (beforeV1 < 0) return;
     expect(beforeV1).toBe(2);
 
     // Skip if DnD source not found
-    const srcExists = await page.evaluate(() => document.evaluate('//li[@draggable][contains(., "01 第一章")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue !== null).catch(() => false);
+    const srcExists = await page.evaluate(() => document.evaluate('//li[@draggable][contains(., "01 第一�?)]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue !== null).catch(() => false);
     if (!srcExists) return;
-    await simulateDragDrop(page, "01 第一章", "第一卷 · 筑基篇", 1);
+    await simulateDragDrop(page, "01 第一�?, "第一�?· 筑基�?, 1);
 
     await page.waitForTimeout(1000);
-    const afterV1 = await countChaptersInVolume(page, "第一卷");
+    const afterV1 = await countChaptersInVolume(page, "第一�?);
     expect(afterV1).toBe(3);
 
     const afterUn = await countUnassignedChapters(page);
     expect(afterUn).toBe(beforeUn - 1);
   });
 
-  test.skip("2. API call issues correct PATCH after drag", async ({ page }) => {
+  test.fixme("2. API call issues correct PATCH after drag", async ({ page }) => {
     const patchPromise = page.waitForRequest((req) =>
       req.method() === "PATCH" &&
       req.url().includes(`/books/${E2E_BOOK_ID}/chapters/2/volume`),
     );
 
-    await simulateDragDrop(page, "02 第二章", "第二卷 · 历练篇", 2);
+    await simulateDragDrop(page, "02 第二�?, "第二�?· 历练�?, 2);
 
     const req = await patchPromise;
     const body = JSON.parse(req.postData() ?? "{}");
     expect(body).toEqual({ volumeId: VOLUME_2_ID });
   });
 
-  test.skip("3. dataTransfer uses application/x-chapter-number format", async ({ page }) => {
+  test.fixme("3. dataTransfer uses application/x-chapter-number format", async ({ page }) => {
     const result = await page.evaluate(() => {
       const li = document.evaluate(
-        '//li[@draggable][contains(., "01 第一章")]',
+        '//li[@draggable][contains(., "01 第一�?)]',
         document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null,
       ).singleNodeValue as HTMLElement | null;
       if (!li) return null;
@@ -207,49 +207,49 @@ test.describe("Volume DnD — drag to volume", () => {
   });
 });
 
-test.describe("Volume DnD — drag to unassigned", () => {
-  test.skip("4. drag chapter from volume back to unassigned", async ({ page }) => {
-    const beforeV1 = await countChaptersInVolume(page, "第一卷");
+test.describe("Volume DnD �?drag to unassigned", () => {
+  test.fixme("4. drag chapter from volume back to unassigned", async ({ page }) => {
+    const beforeV1 = await countChaptersInVolume(page, "第一�?);
     if (beforeV1 < 0) return;
     expect(beforeV1).toBe(2);
     const beforeUn = await countUnassignedChapters(page);
 
     // Verify source and target exist before dragging
-    const srcVisible = await page.locator("xpath=//li[@draggable][contains(.,'04 第四章')]").isVisible({ timeout: 2000 }).catch(() => false);
+    const srcVisible = await page.locator("xpath=//li[@draggable][contains(.,'04 第四�?)]").isVisible({ timeout: 2000 }).catch(() => false);
     if (!srcVisible) return;
-    await expect(page.getByText(/未分配章节/)).toBeVisible({ timeout: 3000 });
+    await expect(page.getByText(/未分配章�?)).toBeVisible({ timeout: 3000 });
 
-    await simulateDragDrop(page, "04 第四章", "未分配章节", 4);
+    await simulateDragDrop(page, "04 第四�?, "未分配章�?, 4);
 
     // Wait for the volume card to show only 1 chapter li
     await expect(async () => {
-      expect(await countChaptersInVolume(page, "第一卷")).toBe(1);
+      expect(await countChaptersInVolume(page, "第一�?)).toBe(1);
     }).toPass({ timeout: 5_000 });
     expect(await countUnassignedChapters(page)).toBe(beforeUn + 1);
   });
 
-  test.skip("5. drag chapter out of volume to unassigned area", async ({ page }) => {
-    const beforeV2 = await countChaptersInVolume(page, "第二卷");
+  test.fixme("5. drag chapter out of volume to unassigned area", async ({ page }) => {
+    const beforeV2 = await countChaptersInVolume(page, "第二�?);
     if (beforeV2 < 0) return;
     expect(beforeV2).toBe(1);
     const beforeUn = await countUnassignedChapters(page);
 
-    const srcExists = await page.evaluate(() => document.evaluate('//li[@draggable][contains(., "03 第三章")]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue !== null).catch(() => false);
+    const srcExists = await page.evaluate(() => document.evaluate('//li[@draggable][contains(., "03 第三�?)]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue !== null).catch(() => false);
     if (!srcExists) return;
-    await simulateDragDrop(page, "03 第三章", "未分配章节", 3);
+    await simulateDragDrop(page, "03 第三�?, "未分配章�?, 3);
 
     await expect(async () => {
-      expect(await countChaptersInVolume(page, "第二卷")).toBe(0);
+      expect(await countChaptersInVolume(page, "第二�?)).toBe(0);
     }).toPass({ timeout: 5_000, intervals: [500] });
     expect(await countUnassignedChapters(page)).toBe(beforeUn + 1);
   });
 });
 
-test.describe("Volume DnD — visual feedback", () => {
-  test.skip("6. source element has 50% opacity during dragStart", async ({ page }) => {
+test.describe("Volume DnD �?visual feedback", () => {
+  test.fixme("6. source element has 50% opacity during dragStart", async ({ page }) => {
     const opacity = await page.evaluate(() => {
       const li = document.evaluate(
-        `//li[@draggable][contains(., "01 第一章")]`,
+        `//li[@draggable][contains(., "01 第一�?)]`,
         document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null,
       ).singleNodeValue as HTMLElement | null;
       if (!li) return null;
@@ -264,10 +264,10 @@ test.describe("Volume DnD — visual feedback", () => {
     expect(opacity).toBe(0.5);
   });
 
-  test.skip("7. opacity restored to 1 after dragEnd", async ({ page }) => {
+  test.fixme("7. opacity restored to 1 after dragEnd", async ({ page }) => {
     const opacity = await page.evaluate(() => {
       const li = document.evaluate(
-        `//li[@draggable][contains(., "01 第一章")]`,
+        `//li[@draggable][contains(., "01 第一�?)]`,
         document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null,
       ).singleNodeValue as HTMLElement | null;
       if (!li) return null;
@@ -283,18 +283,18 @@ test.describe("Volume DnD — visual feedback", () => {
     expect(opacity).toBe(1);
   });
 
-  test.skip("8. target volume highlights during dragOver", async ({ page }) => {
-    const volCard = volumeCardLocator(page, "第一卷");
+  test.fixme("8. target volume highlights during dragOver", async ({ page }) => {
+    const volCard = volumeCardLocator(page, "第一�?);
     await expect(volCard).toBeVisible({ timeout: 5000 });
 
     // Dispatch drag events inside the browser context
     await page.evaluate(() => {
       const srcEl = document.evaluate(
-        '//li[@draggable][contains(., "01 第一章")]',
+        '//li[@draggable][contains(., "01 第一�?)]',
         document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null,
       ).singleNodeValue as HTMLElement | null;
       const card = document.evaluate(
-        '//*[contains(text(),"第一卷")]/ancestor::div[contains(@class,"rounded-lg")]',
+        '//*[contains(text(),"第一�?)]/ancestor::div[contains(@class,"rounded-lg")]',
         document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null,
       ).singleNodeValue as HTMLElement | null;
       if (!srcEl || !card) return;
