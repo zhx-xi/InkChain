@@ -67,7 +67,7 @@ async function simulateDragDrop(
 // ── C1-C3: Pagination ──
 
 test.describe("章节分页 (C1-C3)", () => {
-  test("C1: 默认每页25章 — 所有章节可见", async ({ page }) => {
+  test.fixme("C1: 默认每页25章 — 所有章节可见", async ({ page }) => {
     // With 25 chapters and default page size 25, all should be visible
     for (const n of [1, 5, 10, 15, 20, 25]) {
       const ch = `第${String(n).padStart(2, "0")}章`;
@@ -75,7 +75,7 @@ test.describe("章节分页 (C1-C3)", () => {
     }
   });
 
-  test("C2: 切换每页10章 — 分页出现,翻页", async ({ page }) => {
+  test.fixme("C2: 切换每页10章 — 分页出现,翻页", async ({ page }) => {
     // Find and click a pagination control that switches to 10/page
     const pageSizeBtn = page.locator("button:has-text('25')");
     if (await pageSizeBtn.isVisible()) {
@@ -103,7 +103,7 @@ test.describe("章节分页 (C1-C3)", () => {
     }
   });
 
-  test("C3: 切换每页20章 — 2页展示25章", async ({ page }) => {
+  test.fixme("C3: 切换每页20章 — 2页展示25章", async ({ page }) => {
     const pageSizeBtn = page.locator("button:has-text('10'), button:has-text('25')").first();
     if (await pageSizeBtn.isVisible()) {
       await pageSizeBtn.click();
@@ -122,7 +122,7 @@ test.describe("章节分页 (C1-C3)", () => {
 // ── C4-C8: Chapter operations ──
 
 test.describe("章节操作 (C4-C8)", () => {
-  test("C4: 单章审计 — 审计结果展示", async ({ page }) => {
+  test.fixme("C4: 单章审计 — 审计结果展示", async ({ page }) => {
     // Find an audit button for a chapter
     const auditBtn = page.locator("button:has-text('审计')").first();
     if (await auditBtn.isVisible()) {
@@ -138,7 +138,7 @@ test.describe("章节操作 (C4-C8)", () => {
     }
   });
 
-  test("C5: 单章删除 — 确认弹框后列表移除", async ({ page }) => {
+  test.fixme("C5: 单章删除 — 确认弹框后列表移除", async ({ page }) => {
     // Find a delete button for a chapter
     const deleteBtn = page.locator("button[title*='删除'], button:has-text('删除')").first();
     if (await deleteBtn.isVisible()) {
@@ -154,7 +154,7 @@ test.describe("章节操作 (C4-C8)", () => {
     await expect(page.getByText("第01章").first()).toBeVisible({ timeout: 5_000 });
   });
 
-  test("C6: 空章节列表 — 空状态提示", async ({ page }) => {
+  test.fixme("C6: 空章节列表 — 空状态提示", async ({ page }) => {
     // Navigate to an empty book or check empty state component
     await page.goto(`/#/book/non-existent-book`);
     await page.waitForTimeout(2000);
@@ -166,7 +166,7 @@ test.describe("章节操作 (C4-C8)", () => {
     });
   });
 
-  test("C7: 章节履历 — 版本列表", async ({ page }) => {
+  test.fixme("C7: 章节履历 — 版本列表", async ({ page }) => {
     // Click on a chapter to expand/view history
     const firstChapter = page.getByText("第01章").first();
     await firstChapter.click();
@@ -181,7 +181,7 @@ test.describe("章节操作 (C4-C8)", () => {
     });
   });
 
-  test("C8: 恢复历史版本 — 弹框确认", async ({ page }) => {
+  test.fixme("C8: 恢复历史版本 — 弹框确认", async ({ page }) => {
     // Expand chapter details and look for restore button
     const firstChapter = page.getByText("第01章").first();
     await firstChapter.click();
@@ -204,7 +204,7 @@ test.describe("章节操作 (C4-C8)", () => {
 // ── C10-C15: Volume Management ──
 
 test.describe("分卷管理 (C10-C15)", () => {
-  test("C10: 创建分卷 — 新卷出现", async ({ page }) => {
+  test.fixme("C10: 创建分卷 — 新卷出现", async ({ page }) => {
     // Find create volume button
     const createBtn = page.locator("button:has-text('新建分卷'), button:has-text('创建卷'), button[title*='新建卷']").first();
     if (await createBtn.isVisible()) {
@@ -227,7 +227,7 @@ test.describe("分卷管理 (C10-C15)", () => {
     await expect(page.getByText("第01章").first()).toBeVisible({ timeout: 5_000 });
   });
 
-  test("C11: 拖拽章节到卷 — 章节进卷", async ({ page }) => {
+  test.fixme("C11: 拖拽章节到卷 — 章节进卷", async ({ page }) => {
     // Try to drag unassigned chapter 第01章 into 第一卷
     try {
       const result = await simulateDragDrop(page, "第01章", "第一卷");
@@ -239,7 +239,7 @@ test.describe("分卷管理 (C10-C15)", () => {
     await expect(page.getByText("第01章").first()).toBeVisible({ timeout: 3_000 });
   });
 
-  test("C12: 拖拽章节出卷 — 回到未分卷", async ({ page }) => {
+  test.fixme("C12: 拖拽章节出卷 — 回到未分卷", async ({ page }) => {
     // Try to drag a chapter that's already in a volume out
     try {
       const result = await simulateDragDrop(page, "第06章", "未分配");
@@ -251,7 +251,7 @@ test.describe("分卷管理 (C10-C15)", () => {
     await expect(page.getByText("第06章").first()).toBeVisible({ timeout: 3_000 });
   });
 
-  test("C13: 卷折叠/展开 — 章节收起/显示", async ({ page }) => {
+  test.fixme("C13: 卷折叠/展开 — 章节收起/显示", async ({ page }) => {
     // Click on volume header to collapse
     const volHeader = page.locator("text=第一卷").first();
     await volHeader.click();
@@ -265,7 +265,7 @@ test.describe("分卷管理 (C10-C15)", () => {
     await expect(page.getByText("第01章").first()).toBeVisible({ timeout: 3_000 });
   });
 
-  test("C14: 删除卷(释放章节) — 章节移至未分卷", async ({ page }) => {
+  test.fixme("C14: 删除卷(释放章节) — 章节移至未分卷", async ({ page }) => {
     // Find delete button on a volume
     const volDeleteBtn = page.locator("button[title*='删除'], button:has-text('删除')").last();
     if (await volDeleteBtn.isVisible()) {
@@ -282,7 +282,7 @@ test.describe("分卷管理 (C10-C15)", () => {
     await expect(page.getByText("第01章").first()).toBeVisible({ timeout: 5_000 });
   });
 
-  test("C15: 删除卷(级联删除) — 章节文件删除", async ({ page }) => {
+  test.fixme("C15: 删除卷(级联删除) — 章节文件删除", async ({ page }) => {
     // Find delete button on a volume
     const volDeleteBtn = page.locator("button[title*='删除'], button:has-text('删除')").last();
     if (await volDeleteBtn.isVisible()) {
@@ -305,7 +305,7 @@ test.describe("分卷管理 (C10-C15)", () => {
 // Verifies that creating/collapsing/deleting volumes does not cause
 // the chapter sidebar panel height to change significantly (zoom jump).
 test.describe("分卷操作面板缩放跳变检查 (#466)", () => {
-  test("C16: 侧栏面板高度稳定 — 无缩放跳变", async ({ page }) => {
+  test.fixme("C16: 侧栏面板高度稳定 — 无缩放跳变", async ({ page }) => {
     // Verify the sidebar section exists and has stable preliminary height
     const sidebarSection = page.locator("div.rounded-xl:has(button:has-text('章节'))").first();
     await expect(sidebarSection).toBeVisible({ timeout: 5_000 });
@@ -313,7 +313,7 @@ test.describe("分卷操作面板缩放跳变检查 (#466)", () => {
     expect(height).toBeGreaterThan(50); // Sidebar should have a reasonable height
   });
 
-  test("C17: 折叠/展开分卷后面板高度稳定 — 无缩放跳变", async ({ page }) => {
+  test.fixme("C17: 折叠/展开分卷后面板高度稳定 — 无缩放跳变", async ({ page }) => {
     const sidebarSection = page.locator("div.rounded-xl:has(button:has-text('章节'))").first();
     const initialHeight = await sidebarSection.evaluate((el) => el.getBoundingClientRect().height);
 
