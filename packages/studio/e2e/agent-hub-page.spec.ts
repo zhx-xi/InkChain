@@ -5,6 +5,53 @@ test.beforeAll(async () => {
   await seedAgentTeam();
 });
 
+test.beforeEach(async ({ page }) => {
+  // Mock agent-team API to return seed data
+  await page.route("**/project/agent-team", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        config: {
+          schemaVersion: "1",
+          agents: [
+            { role: "writer", enabled: true },
+            { role: "architect", enabled: true },
+            { role: "planner", enabled: true },
+            { role: "editor", enabled: false },
+            { role: "auditor", enabled: true },
+            { role: "observer", enabled: false },
+            { role: "reviser", enabled: true },
+          ],
+          defaultModel: "gpt-4o",
+          collaborationMode: "sequential",
+        },
+      }),
+    });
+  });
+  await page.route("**/agent-templates", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ templates: [] }),
+    });
+  });
+  await page.route("**/custom-agents", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ agents: [] }),
+    });
+  });
+  await page.route("**/agent-order", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ order: [] }),
+    });
+  });
+});
+
 test.describe("AgentHubPage — 补充场景", () => {
   test.fixme("1. 协作模式选择器可见且可切换", async ({ page }) => {
     await page.goto("/#/agents");
