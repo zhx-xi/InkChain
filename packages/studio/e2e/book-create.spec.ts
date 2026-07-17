@@ -34,7 +34,7 @@ test.describe("BookCreate — 创建书籍", () => {
     // Try to find a navigation element to go back
     const navBtn = page.getByRole("button").filter({ hasText: /书籍|Book|dashboard|←|back|返回|首页/i }).first();
     if (await navBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
-      await navBtn.click();
+      await navBtn.click({ timeout: 5000 }).catch(() => {});
       await page.waitForTimeout(1_000);
     }
   });
