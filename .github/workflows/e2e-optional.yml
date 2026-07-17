@@ -147,6 +147,7 @@ jobs:
               - 'packages/studio/e2e/import*'
               - 'packages/studio/e2e/index-manager*'
               - 'packages/studio/e2e/cross-feature*'
+              - 'packages/studio/e2e/api-path*'
               - 'packages/studio/e2e/build*'
               - 'packages/studio/e2e/consistency-check*'
             misc-pages:
@@ -197,7 +198,7 @@ jobs:
     if: needs.changes.outputs.agent == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
-      spec: "agent-team agent-team-core agent-hub-page agent-pipeline-view"
+      spec: "agent-team agent-team-core agent-hub-page agent-pipeline-view agent-edit-functionality"
       group-name: "Agent Team"
 
   dashboard:
@@ -205,7 +206,7 @@ jobs:
     if: needs.changes.outputs.dashboard == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
-      spec: "dashboard project-root sidebar-navigation sidebar-link-navigation edit-dashboard"
+      spec: "dashboard project-root sidebar-navigation sidebar-link-navigation edit-dashboard dashboard-collapse-resize"
       group-name: "Dashboard"
 
   book:
@@ -253,7 +254,7 @@ jobs:
     if: needs.changes.outputs.foreshadowing == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
-      spec: "foreshadow-payoff foreshadowing-dynamic-chapters foreshadowing-flow foreshadowing-page-core foresight-pagination foresight-table"
+      spec: "foreshadow-payoff foreshadowing-dynamic-chapters foreshadowing-flow foreshadowing-page-core foreshadowing-data-integrity foresight-pagination foresight-table"
       group-name: "Foreshadowing"
 
   world:
@@ -261,7 +262,7 @@ jobs:
     if: needs.changes.outputs.world == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
-      spec: "world-association world-extract-llm world-inheritance-page world-list-core world-map-core world-map"
+      spec: "world-association world-extract-llm world-extract-book-error world-inheritance-page world-list-core world-map-core world-map"
       group-name: "World"
 
   style:
@@ -301,7 +302,7 @@ jobs:
     if: needs.changes.outputs.misc-data == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
-      spec: "analysis consistency-check-panel export import-manager index-manager cross-feature build-verification"
+      spec: "analysis consistency-check-panel export import-manager index-manager cross-feature build-verification api-path-smoke"
       group-name: "Misc — Data"
 
   misc-pages:
