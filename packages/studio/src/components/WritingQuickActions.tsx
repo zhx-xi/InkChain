@@ -106,7 +106,7 @@ export function WritingQuickActions({
       <div className="flex flex-wrap gap-1.5">
         {actions.map((action) => (
           <Tooltip key={action.label}>
-            <TooltipTrigger asChild>
+            <TooltipTrigger>
               <button
                 type="button"
                 onClick={action.onClick}
