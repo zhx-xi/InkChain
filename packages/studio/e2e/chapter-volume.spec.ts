@@ -19,6 +19,8 @@ test.beforeAll(async () => {
 test.beforeEach(async ({ page }) => {
   await seedChapterVolume();
   await page.goto(`/#/book/${E2E_BOOK_ID}`);
+  // Override pointer-events-none on App wrapper to enable click/hover in CI
+  await page.addStyleTag({ content: ".pointer-events-none { pointer-events: auto !important; }" });
   await expect(page.getByText("第01章")).toBeVisible({ timeout: 15_000 });
 });
 
