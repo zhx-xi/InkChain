@@ -52,7 +52,7 @@ test("2. 分析→差异报告显示", async ({ page }) => {
   );
 
   // Click analyze button
-  await page.getByText("Analyze").click();
+  await page.getByRole("button", { name: /分析|Analyze/i }).first().click();
 
   // Should show analysis results (the profile will appear after the POST /style/analyze call)
   // Wait for either the results section or a status message
@@ -77,7 +77,7 @@ test("3. 异常段落高亮", async ({ page }) => {
   );
 
   // Click analyze
-  await page.getByText("Analyze").click();
+  await page.getByRole("button", { name: /分析|Analyze/i }).first().click();
 
   // Wait for analysis to complete
   await page.waitForTimeout(2_000);
@@ -98,12 +98,12 @@ test("4. 空检测结果处理", async ({ page }) => {
   await expect(emptyHint.first()).toBeVisible({ timeout: 5_000 });
 
   // Try to analyze empty text (button should be disabled)
-  const analyzeBtn = page.getByText("Analyze").or(page.getByText("分析"));
+  const analyzeBtn = page.getByRole("button", { name: /分析|Analyze/i }).first();
   // The button should be disabled when textarea is empty
-  const isDisabled = await analyzeBtn.isDisabled();
+  const isDisabled = await analyzeBtn.isDisabled().catch(() => true);
   if (isDisabled) {
     // Good — button is disabled as expected
-    await expect(analyzeBtn).toBeDisabled();
+    if (isDisabled) { await expect(analyzeBtn).toBeDisabled(); }
   } else {
     // If not disabled with empty text, the API should return an error message
     await analyzeBtn.click();
@@ -126,7 +126,7 @@ test("5. 导出报告到项目", async ({ page }) => {
   const textarea = page.locator("textarea").first();
   await textarea.fill("测试导出功能的文本内容。文风分析。");
 
-  await page.getByText("Analyze").click();
+  await page.getByRole("button", { name: /分析|Analyze/i }).first().click();
   await page.waitForTimeout(2_000);
 
   // If analysis succeeded, we should see an import/book section

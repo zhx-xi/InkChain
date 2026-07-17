@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "http://localhost:4580";
+const E2E_BOOK_ID = "e2e-style-detection";
 
 /**
  * Baseline E2E for StyleManager (#569 - 核心创作功能全页面覆盖)
@@ -11,7 +11,7 @@ const BASE_URL = "http://localhost:4580";
 
 test.describe("StyleManager — 核心创作功能基线", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_URL}/book/test-project-123/book-style`);
+    await page.goto(`/#/book/${E2E_BOOK_ID}/style`);
   });
 
   test("1. 正常加载: 页面显示", async ({ page }) => {
@@ -58,7 +58,7 @@ test.describe("StyleManager — 核心创作功能基线", () => {
   test("6. 空状态: 无数据", async ({ page }) => {
     await page.waitForTimeout(2000);
     const emptyState = page.locator(
-      "[data-testid*='empty'], text=暂无, text=无数据"
+      "[data-testid*='empty']"
     );
     const hasEmpty = (await emptyState.count()) > 0;
     console.log(`Empty state: ${hasEmpty}`);

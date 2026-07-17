@@ -1,7 +1,5 @@
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "http://localhost:4580";
-
 /**
  * E2E for #617 — 时间线：缺少时间轴基础视图
  *
@@ -14,9 +12,11 @@ const BASE_URL = "http://localhost:4580";
  * Given-When-Then format
  */
 
+const E2E_BOOK_ID = "e2e-timeline-test";
+
 test.describe("TimelinePage — 时间轴基础视图 (#617)", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_URL}/book/test-project-123/timeline`);
+    await page.goto(`/#/timeline/${E2E_BOOK_ID}`);
   });
 
   // ── Normal state ──
@@ -132,7 +132,7 @@ test.describe("TimelinePage — 时间轴基础视图 (#617)", () => {
   // ── Loading state ──
 
   test("7. Given 时间线页面初次加载, When 数据获取中, Then 显示加载指示器", async ({ page }) => {
-    await page.goto(`${BASE_URL}/book/test-project-123/timeline`);
+    await page.goto(`/#/timeline/${E2E_BOOK_ID}`);
     const spinner = page.locator(
       '[data-testid="tl-loading-spinner"], [data-testid="tl-state-loading"], [class*="spinner"]'
     );
