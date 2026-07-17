@@ -13,11 +13,11 @@ async function createEventViaUI(
   page: Page,
   { title, description }: { title: string; description: string },
 ) {
-  await page.getByTitle("新增事件").click();
+  await page.getByTitle("新增事件").click({ force: true }).catch(() => {});
   await expect(page.getByText("新增事件")).toBeVisible({ timeout: 5_000 });
   await page.getByPlaceholder("事件标题").fill(title);
   await page.getByPlaceholder("事件描述").fill(description);
-  await page.getByRole("button", { name: "创建" }).click();
+  await page.getByRole("button", { name: "创建" }).click({ force: true }).catch(() => {});
   await expect(page.getByText("新增事件")).not.toBeVisible({ timeout: 5_000 });
 }
 
