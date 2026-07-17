@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
-
-const BASE_URL = "http://localhost:4580";
+const E2E_BOOK_ID = "e2e-foreshadowing-detection";
 
 /**
  * Baseline E2E for ForeshadowingPage (#569 - 核心创作功能全页面覆盖)
@@ -16,7 +15,7 @@ const BASE_URL = "http://localhost:4580";
 test.describe("ForeshadowingPage — 核心创作功能基线", () => {
   test.beforeEach(async ({ page }) => {
     // Navigate to a book's foreshadowing page
-    await page.goto(`${BASE_URL}/book/test-project-123/foreshadowing`);
+    await page.goto(`/#/foreshadowing/${E2E_BOOK_ID}`);
   });
 
   test("1. 正常加载: 页面显示标题和主要按钮", async ({ page }) => {
@@ -76,7 +75,7 @@ test.describe("ForeshadowingPage — 核心创作功能基线", () => {
 
   test("7. 加载中状态: 页面有加载指示器或内容", async ({ page }) => {
     // Navigate fresh to check loading state
-    await page.goto(`${BASE_URL}/book/test-project-123/foreshadowing`);
+    await page.goto(`/#/foreshadowing/${E2E_BOOK_ID}`);
     // Check for loading indicator or immediate content
     const spinner = page.locator("[data-testid='fs-loading-spinner'], [data-testid='fs-state-loading'], [class*='spinner'], [class*='loading']");
     const hasSpinner = (await spinner.count()) > 0;

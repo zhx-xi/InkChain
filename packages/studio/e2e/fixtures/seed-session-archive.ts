@@ -10,8 +10,7 @@ export const E2E_ARCHIVE_BOOK_ID = "e2e-session-archive";
  * Seeds archived and active book sessions for session-archive E2E testing.
  *
  * Uses the same file-based storage that the BookSessionStore reads from.
- * Creates sessions under `books/<bookId>/story/sessions/` and
- * `books/<bookId>/story/session-index.json`.
+ * Creates sessions under `books/<bookId>/story/sessions/`.
  *
  * Sessions:
  * - session-arch-001: Archived, "修仙世界设定讨论" (has tags)

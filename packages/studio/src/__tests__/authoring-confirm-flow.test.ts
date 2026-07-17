@@ -23,7 +23,7 @@ describe("interactive-film-authoring confirm flow (stubbed LLM)", () => {
   });
   beforeEach(async () => {
     root = await mkdtemp(join(tmpdir(), "if-confirm-"));
-    await writeFile(join(root, "inkchain.json"), INKOS_CONFIG, "utf-8");
+    await writeFile(join(root, "inkchain.json"), INKCHAIN_CONFIG, "utf-8");
     await mkdir(join(root, "interactive-films", "p"), { recursive: true });
   });
   afterEach(async () => { await rm(root, { recursive: true, force: true }); });
