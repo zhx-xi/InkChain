@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+const E2E_BOOK_ID = "e2e-foreshadowing-detection";
 
 /**
  * E2E: 伏笔线索 — 关系图视图 (#620)
@@ -9,11 +10,9 @@ import { test, expect } from "@playwright/test";
  * Given-When-Then + 4 态覆盖
  */
 
-const BASE_URL = "http://localhost:4580";
-
 test.describe("Foreshadowing — 关系图视图 (#620)", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_URL}/book/test-project-123/foreshadowing`);
+    await page.goto(`/#/foreshadowing/${E2E_BOOK_ID}`);
   });
 
   // ── Normal: 切换到关系图视图 ──

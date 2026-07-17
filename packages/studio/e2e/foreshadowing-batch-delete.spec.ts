@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
-
-const BASE_URL = "http://localhost:4580";
+const E2E_BOOK_ID = "e2e-foreshadowing-detection";
 
 /**
  * E2E for #619 — 伏笔线索：不能批量删除
@@ -16,7 +15,7 @@ const BASE_URL = "http://localhost:4580";
 
 test.describe("ForeshadowingPage — 批量删除 (#619)", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_URL}/book/test-project-123/foreshadowing`);
+    await page.goto(`/#/foreshadowing/${E2E_BOOK_ID}`);
   });
 
   // ── Normal state — multi-select ──
@@ -123,7 +122,7 @@ test.describe("ForeshadowingPage — 批量删除 (#619)", () => {
   // ── Loading state ──
 
   test("5. Given 页面初次加载, When 伏笔数据获取中, Then 显示加载指示器", async ({ page }) => {
-    await page.goto(`${BASE_URL}/book/test-project-123/foreshadowing`);
+    await page.goto(`/#/foreshadowing/${E2E_BOOK_ID}`);
     const spinner = page.locator(
       '[data-testid="fs-loading-spinner"], [data-testid="fs-state-loading"], [class*="spinner"], [class*="loading"]'
     );

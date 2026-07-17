@@ -5,7 +5,8 @@ import { test, expect, Page } from "@playwright/test";
 /** Navigate to doctor page via sidebar */
 async function navigateToDoctor(page: Page) {
   await page.goto("/#/");
-  await page.waitForLoadState("networkidle");
+  // Don't use networkidle — Vite HMR WebSocket keeps browser active forever
+  await page.waitForTimeout(3000);
 
   // Try clicking tools section
   const toolsSection = page.getByText("工具箱", { exact: false }).first();

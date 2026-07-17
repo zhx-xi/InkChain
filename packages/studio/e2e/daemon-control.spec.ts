@@ -7,7 +7,8 @@ async function navigateToDaemon(page: Page) {
   // The daemon page is under "System" section in sidebar
   // Navigate to dashboard first, then click sidebar link
   await page.goto("/#/");
-  await page.waitForLoadState("networkidle");
+  // Don't use networkidle — Vite HMR WebSocket keeps browser active forever
+  await page.waitForTimeout(3000);
 
   // Try clicking sidebar section first to expand it
   const systemSection = page.getByText("系统", { exact: false }).first();
