@@ -62,7 +62,7 @@ test("1. 加载Agent Team→7个Agent卡片显示", async ({ page }) => {
   // Should see the status legend — indicates team config loaded
   await expect(page.getByText("状态图例")).toBeVisible();
   await expect(page.getByText("就绪").first()).toBeVisible();
-  await expect(page.getByText("禁用")).toBeVisible();
+  await expect(page.getByText("禁用").first()).toBeVisible();
 
   // Agent cards: at least writer, architect, planner are shown
   for (const name of ["执笔者", "架构师", "规划师", "审核者", "修订者"]) {
@@ -84,8 +84,8 @@ test("2. 团队配置Tab: 切换agent开关", async ({ page }) => {
   await page.getByText("默认预设").first().click();
   // A preset menu item should appear
   await expect(page.getByText("热血玄幻").first()).toBeVisible();
-  await expect(page.getByText("言情")).toBeVisible();
-  await expect(page.getByText("悬疑推理")).toBeVisible();
+  await expect(page.getByText("言情").first()).toBeVisible();
+  await expect(page.getByText("悬疑推理").first()).toBeVisible();
 });
 
 test.fixme("3. 流程编辑Tab: ReactFlow图渲染", async ({ page }) => {
