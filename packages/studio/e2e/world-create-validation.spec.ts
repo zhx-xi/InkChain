@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 const TEST_BOOK_ID = "test-project-123";
 
 /**
- * E2E for #601: World creation with book association �?World validation failed
+ * E2E for #601: World creation with book association — World validation failed
  *
  * Bug: Creating a world with associated book errors "World validation failed"
  * Fix: Ensure world creation flow completes without validation errors
@@ -11,9 +11,9 @@ const TEST_BOOK_ID = "test-project-123";
  * States: loading, normal (create success), error (validation failure), edge (missing fields)
  */
 
-test.describe("WorldCreate �?创建世界关联书籍验证", () => {
+test.describe("WorldCreate — 创建世界关联书籍验证", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`/#/worlds`);
+    await page.goto(`/#/book-worlds/${TEST_BOOK_ID}`);
     await page.waitForTimeout(2000);
   });
 
@@ -24,18 +24,15 @@ test.describe("WorldCreate �?创建世界关联书籍验证", () => {
     );
     const btnCount = await createBtn.count();
     console.log(`Create world buttons in list page: ${btnCount}`);
-    // May be 0 if world page renders without create button in CI �?skip assertion
-    if (btnCount === 0) return;
     expect(btnCount).toBeGreaterThanOrEqual(1);
   });
 
   test.fixme("2. 打开创建弹窗: 弹窗包含关联书籍选项", async ({ page }) => {
-    // Click the create world button �?skip if not rendered
+    // Click the create world button
     const createBtn = page.locator(
       "[data-testid='wl-btn-create-world'], button:has-text('创建'), button:has-text('新建世界')"
     ).first();
-    const btnVisible = await createBtn.isVisible({ timeout: 3000 }).catch(() => false);
-    if (!btnVisible) return;
+    await createBtn.click();
     await page.waitForTimeout(1000);
 
     // Check for create modal
@@ -52,13 +49,12 @@ test.describe("WorldCreate �?创建世界关联书籍验证", () => {
     console.log(`Book selectors in modal: ${selectorCount}`);
   });
 
-  test.fixme("3. 创建世界并关联书�? 不报验证错误", async ({ page }) => {
-    // Open create modal �?skip if button not rendered
+  test.fixme("3. 创建世界并关联书籍: 不报验证错误", async ({ page }) => {
+    // Open create modal
     const createBtn = page.locator(
       "[data-testid='wl-btn-create-world'], button:has-text('创建'), button:has-text('新建世界')"
     ).first();
-    const btnVisible = await createBtn.isVisible({ timeout: 3000 }).catch(() => false);
-    if (!btnVisible) return;
+    await createBtn.click();
     await page.waitForTimeout(1000);
 
     // Fill world name
@@ -92,7 +88,7 @@ test.describe("WorldCreate �?创建世界关联书籍验证", () => {
       await submitBtn.click();
       await page.waitForTimeout(2000);
 
-      // The bug fix means this should succeed �?no validation error
+      // The bug fix means this should succeed — no validation error
       expect(validationError).toBe(false);
 
       // Check for error message
@@ -103,16 +99,15 @@ test.describe("WorldCreate �?创建世界关联书籍验证", () => {
       expect(hasError).toBe(false);
       console.log(`Validation error present: ${hasError} (should be false)`);
     } else {
-      console.log("Submit button not found �?modal may have different structure");
+      console.log("Submit button not found — modal may have different structure");
     }
   });
 
-  test.fixme("4. 空字段边�? 不填写必填项时应有提�?, async ({ page }) => {
+  test.fixme("4. 空字段边界: 不填写必填项时应有提示", async ({ page }) => {
     const createBtn = page.locator(
       "[data-testid='wl-btn-create-world'], button:has-text('创建'), button:has-text('新建世界')"
     ).first();
-    const btnVisible = await createBtn.isVisible({ timeout: 3000 }).catch(() => false);
-    if (!btnVisible) return;
+    await createBtn.click();
     await page.waitForTimeout(1000);
 
     // Try submitting without filling name
@@ -135,7 +130,7 @@ test.describe("WorldCreate �?创建世界关联书籍验证", () => {
     }
   });
 
-  test.fixme("5. API错误状�? 创建失败时显示错误提�?, async ({ page }) => {
+  test.fixme("5. API错误状态: 创建失败时显示错误提示", async ({ page }) => {
     // Intercept the POST /api/worlds/ to simulate failure
     await page.route("**/api/worlds/**", (route) => {
       if (route.request().method() === "POST") {
@@ -152,8 +147,7 @@ test.describe("WorldCreate �?创建世界关联书籍验证", () => {
     const createBtn = page.locator(
       "[data-testid='wl-btn-create-world'], button:has-text('创建'), button:has-text('新建世界')"
     ).first();
-    const btnVisible = await createBtn.isVisible({ timeout: 3000 }).catch(() => false);
-    if (!btnVisible) return;
+    await createBtn.click();
     await page.waitForTimeout(1000);
 
     const submitBtn = page.locator(
