@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { E2E_BOOK_ID } from "./fixtures/e2e-utils";
+const E2E_BOOK_ID = "e2e-foreshadowing-detection";
 
 /**
  * E2E for #619 — 伏笔线索：不能批量删除

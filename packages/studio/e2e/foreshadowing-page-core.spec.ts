@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { E2E_BOOK_ID } from "./fixtures/e2e-utils";
+const E2E_BOOK_ID = "e2e-foreshadowing-detection";
 
 /**
  * Baseline E2E for ForeshadowingPage (#569 - 核心创作功能全页面覆盖)
