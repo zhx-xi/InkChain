@@ -9,11 +9,9 @@ import { test, expect } from "@playwright/test";
  * Given-When-Then + 4 态覆盖
  */
 
-const BASE_URL = "http://localhost:4580";
-
 test.describe("Audit — 批准后状态更新 (#621)", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_URL}/book/test-project-123/audit`);
+    await page.goto("/#/audit/e2e-audit-test");
   });
 
   // ── Normal: 批准审计项后状态更新 ──

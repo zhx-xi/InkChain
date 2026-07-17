@@ -16,7 +16,7 @@ export const E2E_TEAM_PROJECT = "e2e-agent-team";
  */
 export async function seedAgentTeam(): Promise<void> {
   const dataDir = dataPath(E2E_ROOT);
-  await mkdir(inkosDir, { recursive: true });
+  await mkdir(dataDir, { recursive: true });
 
   // ── Agent Team Config ──
   const agentTeamConfig = {
@@ -35,7 +35,7 @@ export async function seedAgentTeam(): Promise<void> {
   };
 
   await writeFile(
-    join(inkosDir, "agent-team.json"),
+    join(dataDir, "agent-team.json"),
     JSON.stringify(agentTeamConfig, null, 2),
     "utf-8",
   );
@@ -86,7 +86,7 @@ export async function seedAgentTeam(): Promise<void> {
   ];
 
   await writeFile(
-    join(inkosDir, "agent-templates.json"),
+    join(dataDir, "agent-templates.json"),
     JSON.stringify(templates, null, 2),
     "utf-8",
   );

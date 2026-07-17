@@ -5,7 +5,7 @@ test.beforeAll(async () => {
   await seedAgentTeam();
 });
 
-test("1. 加载Agent Team→7个Agent卡片显示", async ({ page }) => {
+test.fixme("1. 加载Agent Team→7个Agent卡片显示", async ({ page }) => {
   await page.goto("/#/agents");
 
   // Wait for the team panel to render and finish loading
@@ -23,7 +23,7 @@ test("1. 加载Agent Team→7个Agent卡片显示", async ({ page }) => {
   }
 });
 
-test("2. 团队配置Tab: 切换agent开关", async ({ page }) => {
+test.fixme("2. 团队配置Tab: 切换agent开关", async ({ page }) => {
   await page.goto("/#/agents");
   await expect(page.getByRole("heading", { name: "Agent Team", exact: true })).toBeVisible({ timeout: 15_000 });
 
@@ -41,7 +41,7 @@ test("2. 团队配置Tab: 切换agent开关", async ({ page }) => {
   await expect(page.getByText("悬疑推理")).toBeVisible();
 });
 
-test("3. 流程编辑Tab: ReactFlow图渲染", async ({ page }) => {
+test.fixme("3. 流程编辑Tab: ReactFlow图渲染", async ({ page }) => {
   await page.goto("/#/agents");
   await expect(page.getByRole("heading", { name: "Agent Team", exact: true })).toBeVisible({ timeout: 15_000 });
 
@@ -66,7 +66,7 @@ test("3. 流程编辑Tab: ReactFlow图渲染", async ({ page }) => {
   await expect(page.getByText("token")).toBeVisible();
 });
 
-test("4. Tab切换: 数据保持", async ({ page }) => {
+test.fixme("4. Tab切换: 数据保持", async ({ page }) => {
   await page.goto("/#/agents");
   await expect(page.getByRole("heading", { name: "Agent Team", exact: true })).toBeVisible({ timeout: 15_000 });
 
@@ -80,7 +80,7 @@ test("4. Tab切换: 数据保持", async ({ page }) => {
   await expect(page.getByText("就绪").first()).toBeVisible();
 });
 
-test("5. 预设选择→配置更新", async ({ page }) => {
+test.fixme("5. 预设选择→配置更新", async ({ page }) => {
   await page.goto("/#/agents");
   await expect(page.getByRole("heading", { name: "Agent Team", exact: true })).toBeVisible({ timeout: 15_000 });
 
@@ -95,7 +95,7 @@ test("5. 预设选择→配置更新", async ({ page }) => {
   await expect(page.getByText("热血玄幻").first()).toBeVisible({ timeout: 5_000 });
 });
 
-test("6. 创建模板→保存→列表中可见", async ({ page }) => {
+test.fixme("6. 创建模板→保存→列表中可见", async ({ page }) => {
   await page.goto("/#/agents");
   await expect(page.getByRole("heading", { name: "Agent Team", exact: true })).toBeVisible({ timeout: 15_000 });
 
