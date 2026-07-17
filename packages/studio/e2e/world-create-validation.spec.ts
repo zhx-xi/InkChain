@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "http://localhost:4580";
 const TEST_BOOK_ID = "test-project-123";
 
 /**
@@ -14,7 +13,7 @@ const TEST_BOOK_ID = "test-project-123";
 
 test.describe("WorldCreate — 创建世界关联书籍验证", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_URL}/book/${TEST_BOOK_ID}/book-worlds`);
+    await page.goto(`/#/book-worlds/${TEST_BOOK_ID}`);
     await page.waitForTimeout(2000);
   });
 

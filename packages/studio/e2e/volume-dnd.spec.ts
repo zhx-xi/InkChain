@@ -15,9 +15,27 @@ test.beforeAll(async () => {
 test.beforeEach(async ({ page }) => {
   // Re-seed data to reset any modifications from previous tests
   await seedVolumeDnd();
+
+  // Mock the book API so the page renders reliably in CI
+  await page.route(`**/api/v1/books/${E2E_BOOK_ID}`, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        book: { id: E2E_BOOK_ID, title: "E2E 分卷拖拽测试", platform: "webnovel", genre: "xianxia", status: "active", targetChapters: 10, chapterWordCount: 2000, language: "zh", createdAt: "2026-07-04T00:00:00.000Z", updatedAt: "2026-07-04T00:00:00.000Z" },
+        chapters: [
+          { number: 1, title: "第一章", status: "drafted", wordCount: 1000 },
+          { number: 2, title: "第二章", status: "drafted", wordCount: 1000 },
+          { number: 3, title: "第三章", status: "drafted", wordCount: 1000, volumeId: "vol-2-id" },
+          { number: 4, title: "第四章", status: "drafted", wordCount: 1000, volumeId: "vol-1-id" },
+          { number: 5, title: "第五章", status: "drafted", wordCount: 1000, volumeId: "vol-1-id" },
+        ],
+        nextChapter: 6,
+      }),
+    });
+  });
+
   await page.goto(`/#/book/${E2E_BOOK_ID}`);
-  // Wait for page to load — don't assert on element visibility (book page may
-  // not render chapters in CI); individual tests will handle their assertions.
   await page.waitForTimeout(3000);
 });
 

@@ -9,15 +9,13 @@ test("1. 会话归档→归档列表出现", async ({ page }) => {
   await page.goto("/#/archive");
   await page.waitForTimeout(3000);
 
-  // Verify via API (if data path matches, otherwise skip)
+  // Verify via API
   const archiveApi = await page.request.get("/api/v1/sessions?status=archived").catch(() => null);
   if (archiveApi?.ok()) {
     const data = await archiveApi.json();
     const sessions = data.sessions ?? data;
-    // If no sessions found, it's a seed data path mismatch — skip assertion
-    if (Array.isArray(sessions) && sessions.length > 0) {
-      expect(sessions.length).toBeGreaterThan(0);
-    }
+    expect(Array.isArray(sessions)).toBe(true);
+    expect(sessions.length).toBeGreaterThan(0);
   }
 });
 
