@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { createStudioServer } from "../api/server.js";
 import { createAndPersistBookSession, loadStoryGraph } from "@inkchain/inkchain-core";
 
-const INKOS_CONFIG = JSON.stringify({
+const INKCHAIN_CONFIG = JSON.stringify({
   name: "test-project",
   version: "0.1.0",
   language: "zh",
@@ -23,7 +23,7 @@ describe("interactive-film-authoring confirm flow (stubbed LLM)", () => {
   });
   beforeEach(async () => {
     root = await mkdtemp(join(tmpdir(), "if-confirm-"));
-    await writeFile(join(root, "inkchain.json"), INKOS_CONFIG, "utf-8");
+    await writeFile(join(root, "inkchain.json"), INKCHAIN_CONFIG, "utf-8");
     await mkdir(join(root, "interactive-films", "p"), { recursive: true });
   });
   afterEach(async () => { await rm(root, { recursive: true, force: true }); });

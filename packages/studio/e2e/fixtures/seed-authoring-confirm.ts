@@ -7,6 +7,7 @@ import {
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { readdir, rm } from "node:fs/promises";
+import { dataPath } from "@inkchain/inkchain-core";
 
 const dir = fileURLToPath(new URL(".", import.meta.url));
 const E2E_ROOT = resolve(dir, "../../", "test-project");
@@ -19,7 +20,7 @@ export const E2E_AUTHOR_ID = "e2e-authoring-confirm";
  * We create:
  *  - test-project/interactive-films/<E2E_AUTHOR_ID>/story-graph.json
  *    (minimal graph so StoryGraphTree renders and shows the open-authoring button)
- *  - test-project/.inkos/secrets.json
+ *  - test-project/.inkchain/secrets.json
  *    (a fake DeepSeek API key so the UI's model picker goes to "ready" state
  *     and ChatPage auto-selects a model, allowing sendMessage to proceed past
  *     the "请先选择一个模型" guard)
@@ -35,7 +36,7 @@ export async function seedAuthoringConfirm(): Promise<void> {
   // Delete all stale sessions for this project from previous test runs.
   // ChatPage picks the most-recently-updated session (ids[0] from listBookSessions);
   // stale sessions with old message history can confuse the test.
-  const sessionsDir = resolve(E2E_ROOT, ".inkos", "sessions");
+  const sessionsDir = dataPath(E2E_ROOT, "sessions");
   try {
     const files = await readdir(sessionsDir);
     await Promise.all(

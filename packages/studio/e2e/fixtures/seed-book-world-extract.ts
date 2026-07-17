@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { dataPath } from "@inkchain/inkchain-core";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 export const E2E_ROOT = resolve(__dirname, "../../", "test-project");
@@ -9,7 +10,7 @@ export const E2E_WORLD_ID = "e2e-book-world-test";
 
 export async function seedBookWorldExtract(): Promise<void> {
   // Seed a world linked to the book
-  const worldsDir = join(E2E_ROOT, ".inkchain", "worlds");
+  const worldsDir = dataPath(E2E_ROOT, "worlds");
   await mkdir(worldsDir, { recursive: true });
 
   const now = new Date("2026-07-04T00:00:00.000Z").toISOString();

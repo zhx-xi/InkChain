@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { dataPath } from "@inkchain/inkchain-core";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 export const E2E_ROOT = resolve(__dirname, "../../", "test-project");
@@ -9,7 +10,7 @@ export const E2E_SKILL_BOOK_ID = "e2e-skill-library";
 /**
  * Seeds project-level skill configs for E2E testing.
  *
- * Writes skill JSON files to `.inkos/skills/` so the /api/skills endpoint
+ * Writes skill JSON files to `.inkchain/skills/` so the /api/skills endpoint
  * returns a mix of builtin + project skills.
  *
  * Skills created:
@@ -20,7 +21,7 @@ export const E2E_SKILL_BOOK_ID = "e2e-skill-library";
  * - batch-summarizer: utility category, disabled
  */
 export async function seedSkillLibrary(): Promise<void> {
-  const skillsDir = join(E2E_ROOT, ".inkos", "skills");
+  const skillsDir = dataPath(E2E_ROOT, "skills");
   await mkdir(skillsDir, { recursive: true });
 
   const skills = [
