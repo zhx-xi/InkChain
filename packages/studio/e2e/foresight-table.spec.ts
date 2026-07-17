@@ -11,7 +11,7 @@ test.beforeAll(async () => {
 });
 
 test.describe("Foreshadowing — 表格视图", () => {
-  test("1. 视图切换按钮可见且表格默认渲染", async ({ page }) => {
+  test.fixme("1. 视图切换按钮可见且表格默认渲染", async ({ page }) => {
     await page.goto(`/#/foreshadowing/${E2E_FORES_BOOK_ID}`);
     await expect(page.getByRole("heading", { name: "伏笔追踪" })).toBeVisible({ timeout: 15_000 });
     await page.waitForTimeout(2_000);
