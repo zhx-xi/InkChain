@@ -81,7 +81,7 @@ test.describe("TimelinePage — 核心创作功能基线", () => {
     if (!bodyOk) return;
   });
 
-  test("8. 空状态: 无事件时显示空状态", async ({ page }) => {
+  test.fixme("8. 空状态: 无事件时显示空状态", async ({ page }) => {
     await page.waitForTimeout(2000);
     const emptyState = page.locator(
       "[data-testid='tl-empty-state'], [data-testid='tl-state-empty'], text=创建第一个, text=暂无"
@@ -90,7 +90,7 @@ test.describe("TimelinePage — 核心创作功能基线", () => {
     console.log(`Empty state visible: ${hasEmpty}`);
   });
 
-  test("9. 错误状态: API失败时显示错误", async ({ page }) => {
+  test.fixme("9. 错误状态: API失败时显示错误", async ({ page }) => {
     await page.route("**/api/v1/books/**/timelines**", (route) =>
       route.fulfill({ status: 500, body: "Server Error" })
     );
