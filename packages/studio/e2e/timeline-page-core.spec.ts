@@ -70,7 +70,7 @@ test.describe("TimelinePage — 核心创作功能基线", () => {
   });
 
   test("7. 加载中状态: 页面有加载指示器", async ({ page }) => {
-    await page.goto(`${BASE_URL}/book/test-project-123/timeline`);
+    await page.goto(`/#/timeline/${E2E_BOOK_ID}`);
     const spinner = page.locator(
       "[data-testid='tl-loading-spinner'], [data-testid='tl-state-loading'], [class*='spinner'], [class*='loading']"
     );
