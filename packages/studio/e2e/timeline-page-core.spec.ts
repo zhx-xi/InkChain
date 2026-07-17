@@ -11,7 +11,7 @@ import { test, expect } from "@playwright/test";
  *  - Edge state: filter results, lite mode
  */
 
-const E2E_BOOK_ID = "e2e-timeline-test";
+const E2E_BOOK_ID = "e2e-timeline";
 
 test.describe("TimelinePage — 核心创作功能基线", () => {
   test.beforeEach(async ({ page }) => {
