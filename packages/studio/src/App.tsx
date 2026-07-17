@@ -273,7 +273,7 @@ export function App() {
             </div>
           )}
           {isBookCreateChatRoute(route) && (
-            <div className="absolute inset-0 flex min-w-0 pointer-events-none">
+            <div className="absolute inset-0 flex min-w-0">
               <ChatPage
                 mode="book-create"
                 nav={nav}
@@ -284,7 +284,7 @@ export function App() {
             </div>
           )}
           {route.page === "chat" && (
-            <div className="absolute inset-0 flex min-w-0 pointer-events-none">
+            <div className="absolute inset-0 flex min-w-0">
               <ChatPage
                 mode="project-chat"
                 nav={nav}
@@ -295,7 +295,7 @@ export function App() {
             </div>
           )}
           {route.page === "book" && (
-            <div className="absolute inset-0 flex min-w-0 pointer-events-none">
+            <div className="absolute inset-0 flex min-w-0">
               <ChatPage
                 activeBookId={route.bookId}
                 mode="book"
@@ -400,7 +400,7 @@ export function App() {
             </div>
           )}
           {route.page === "film-author" && (
-            <div className="absolute inset-0 flex min-w-0 pointer-events-none">
+            <div className="absolute inset-0 flex min-w-0">
               <ChatPage
                 activeBookId={route.projectId}
                 mode="interactive-film-authoring"
