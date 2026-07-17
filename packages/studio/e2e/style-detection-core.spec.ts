@@ -58,7 +58,7 @@ test.describe("StyleManager — 核心创作功能基线", () => {
   test("6. 空状态: 无数据", async ({ page }) => {
     await page.waitForTimeout(2000);
     const emptyState = page.locator(
-      "[data-testid*='empty'], text=暂无, text=无数据"
+      "[data-testid*='empty']"
     );
     const hasEmpty = (await emptyState.count()) > 0;
     console.log(`Empty state: ${hasEmpty}`);
