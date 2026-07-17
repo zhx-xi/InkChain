@@ -1,9 +1,8 @@
 import { test, expect } from "@playwright/test";
 
-const BASE_URL = "http://localhost:4580";
-
 /**
  * Baseline E2E for SkillListPage (#569 - 核心创作功能全页面覆盖)
+ * Trigger: skill job CI
  *
  * Covers: create, search, edit, toggle, pagination, detail panel, builtin badge
  * States: loading, empty, normal, disabled, error, reverted, no-versions
@@ -11,7 +10,7 @@ const BASE_URL = "http://localhost:4580";
 
 test.describe("SkillListPage — 核心创作功能基线", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_URL}/skills`);
+    await page.goto("/#/skills");
   });
 
   test("1. 正常加载: 页面显示", async ({ page }) => {

@@ -317,5 +317,5 @@ jobs:
     if: needs.changes.outputs.misc-views == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
-      spec: "log-viewer log-viewer-508 radar-view radar-view-510 issue-394-world-association issue-406-timeline-filter issue-410-audit-cache issue-413-audit-context issue-421-builtin-skill-edit"
+      spec: "log-viewer log-viewer-508 radar-view radar-view-510 world-association timeline-filter audit-cache audit-context builtin-skill-edit"
       group-name: "Misc — Views"
