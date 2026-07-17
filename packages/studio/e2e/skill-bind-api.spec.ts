@@ -176,7 +176,7 @@ test.describe("SkillBindTab — API 接入 (Issue #721)", () => {
     );
 
     if ((await createSkillBtn.count()) > 0) {
-      await createSkillBtn.first().click().catch(() => {});
+      await createSkillBtn.first().click({ timeout: 5000 }).catch(() => {});
       if (!(await page.locator('input[placeholder*="名称"], input[data-testid*="name"]').first().isVisible({ timeout: 2000 }).catch(() => false))) return;
 
       // Fill in skill name
