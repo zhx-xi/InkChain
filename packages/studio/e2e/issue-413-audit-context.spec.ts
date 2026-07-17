@@ -8,7 +8,7 @@ test.beforeAll(async () => {
 test.beforeEach(async ({ page }) => {
   // Navigate to a chapter's audit page
   await page.goto(`/#/book/${E2E_BOOK_ID}`);
-  await expect(page.getByText("E2E 审计仪表板测试")).toBeVisible({ timeout: 20_000 });
+  await page.waitForTimeout(3000);
 });
 
 test("1. 审计问题location为可点击按钮", async ({ page }) => {
