@@ -9,11 +9,9 @@ import { test, expect } from "@playwright/test";
  * Given-When-Then + 4 态覆盖
  */
 
-const BASE_URL = "http://localhost:4580";
-
 test.describe("Skill 库 — 内置 Skill 编辑按钮 (#622)", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_URL}/skills`);
+    await page.goto("/#/skills");
   });
 
   // ── Normal: 内置 Skill 不显示编辑按钮 ──
