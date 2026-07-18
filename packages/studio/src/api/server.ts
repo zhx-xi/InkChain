@@ -2116,6 +2116,20 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
 
   app.use("/*", cors());
 
+  // Backward compatibility: redirect /api/* → /api/v1/*
+  // All routes are now defined at /api/v1/*. Legacy consumers (e.g. E2E tests,
+  // bookmarks, scripts) that call the old /api/ prefix are transparently
+  // redirected with 308 (Permanent Redirect), which preserves the HTTP method.
+  // Playwright / fetch automatically follow the redirect.
+  app.use("/api/*", async (c, next) => {
+    const path = c.req.path;
+    if (!path.startsWith("/api/v1/")) {
+      const newPath = `/api/v1${path.slice(4)}`;
+      return c.redirect(newPath, 308);
+    }
+    await next();
+  });
+
   // Structured error handler — ApiError returns typed JSON, others return 500
   app.onError((error, c) => {
     if (error instanceof ApiError) {

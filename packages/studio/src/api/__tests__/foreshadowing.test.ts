@@ -30,62 +30,63 @@ describe("Foreshadowing CRUD API (Issue #84)", () => {
     await rm(root, { recursive: true, force: true });
   });
 
-  it("GET /api/foreshadowing returns empty list", async () => {
+  it("GET /api/v1/foreshadowing returns empty list", async () => {
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/foreshadowing");
+    const res = await app.request("/api/v1/foreshadowing");
     expect(res.status).toBe(200);
     const json = await res.json() as { foreshadowing: unknown[]; total: number };
     expect(json.foreshadowing).toEqual([]);
     expect(json.total).toBe(0);
   });
 
-  it("GET /api/foreshadowing lists project foreshadowing", async () => {
-    await writeForeshadowing(root, { id: "f-001", title: "神秘戒指", createdChapter: 1 });
-    await writeForeshadowing(root, { id: "f-002", title: "钥匙之谜", createdChapter: 2 });
+  it("GET /api/v1/foreshadowing lists project foreshadowing", async () => {
+    await writeForeshadowing(root, { id: "f-001", bookId: "test", title: "神秘戒指", createdChapter: 1 });
+    await writeForeshadowing(root, { id: "f-002", bookId: "test", title: "钥匙之谜", createdChapter: 2 });
 
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/foreshadowing");
+    const res = await app.request("/api/v1/foreshadowing");
     expect(res.status).toBe(200);
     const json = await res.json() as { foreshadowing: Array<{ id: string; title: string }> };
     expect(json.foreshadowing).toHaveLength(2);
     expect(json.foreshadowing.map((f) => f.id)).toEqual(["f-001", "f-002"]);
   });
 
-  it("GET /api/foreshadowing filters by status", async () => {
-    await writeForeshadowing(root, { id: "f1", title: "Active", status: "active" });
-    await writeForeshadowing(root, { id: "f2", title: "Paid", status: "paid_off" });
+  it("GET /api/v1/foreshadowing filters by status", async () => {
+    await writeForeshadowing(root, { id: "f1", bookId: "test", title: "Active", status: "active" });
+    await writeForeshadowing(root, { id: "f2", bookId: "test", title: "Paid", status: "paid_off" });
 
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/foreshadowing?status=active");
+    const res = await app.request("/api/v1/foreshadowing?status=active");
     const json = await res.json() as { foreshadowing: Array<{ id: string }> };
     expect(json.foreshadowing).toHaveLength(1);
     expect(json.foreshadowing[0].id).toBe("f1");
   });
 
-  it("GET /api/foreshadowing/:id returns a single entry", async () => {
-    await writeForeshadowing(root, { id: "f-001", title: "神秘戒指" });
+  it("GET /api/v1/foreshadowing/:id returns a single entry", async () => {
+    await writeForeshadowing(root, { id: "f-001", bookId: "test", title: "神秘戒指" });
 
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/foreshadowing/f-001");
+    const res = await app.request("/api/v1/foreshadowing/f-001");
     expect(res.status).toBe(200);
     const json = await res.json() as { foreshadowing: { id: string; title: string } };
     expect(json.foreshadowing.id).toBe("f-001");
     expect(json.foreshadowing.title).toBe("神秘戒指");
   });
 
-  it("GET /api/foreshadowing/:id returns 404 for unknown", async () => {
+  it("GET /api/v1/foreshadowing/:id returns 404 for unknown", async () => {
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/foreshadowing/unknown");
+    const res = await app.request("/api/v1/foreshadowing/unknown");
     expect(res.status).toBe(404);
   });
 
-  it("POST /api/foreshadowing creates a new entry", async () => {
+  it("POST /api/v1/foreshadowing creates a new entry", async () => {
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/foreshadowing", {
+    const res = await app.request("/api/v1/foreshadowing", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id: "f-new",
+        bookId: "test",
         title: "新伏笔",
         type: "角色伏笔",
         createdChapter: 3,
@@ -97,23 +98,23 @@ describe("Foreshadowing CRUD API (Issue #84)", () => {
     expect(json.foreshadowing.title).toBe("新伏笔");
   });
 
-  it("POST /api/foreshadowing rejects duplicate id", async () => {
-    await writeForeshadowing(root, { id: "dup", title: "Existing" });
+  it("POST /api/v1/foreshadowing rejects duplicate id", async () => {
+    await writeForeshadowing(root, { id: "dup", bookId: "test", title: "Existing" });
 
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/foreshadowing", {
+    const res = await app.request("/api/v1/foreshadowing", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: "dup", title: "Duplicate" }),
+      body: JSON.stringify({ id: "dup", bookId: "test", title: "Duplicate" }),
     });
     expect(res.status).toBe(409);
   });
 
-  it("PUT /api/foreshadowing/:id updates an entry", async () => {
-    await writeForeshadowing(root, { id: "f-upd", title: "Before", status: "active" });
+  it("PUT /api/v1/foreshadowing/:id updates an entry", async () => {
+    await writeForeshadowing(root, { id: "f-upd", bookId: "test", title: "Before", status: "active" });
 
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/foreshadowing/f-upd", {
+    const res = await app.request("/api/v1/foreshadowing/f-upd", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: "After", description: "Updated" }),
@@ -124,11 +125,11 @@ describe("Foreshadowing CRUD API (Issue #84)", () => {
     expect(json.foreshadowing.description).toBe("Updated");
   });
 
-  it("POST /api/foreshadowing/:id/payoff marks paid off", async () => {
-    await writeForeshadowing(root, { id: "f-po", title: "Payoff", status: "active" });
+  it("POST /api/v1/foreshadowing/:id/payoff marks paid off", async () => {
+    await writeForeshadowing(root, { id: "f-po", bookId: "test", title: "Payoff", status: "active" });
 
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/foreshadowing/f-po/payoff", {
+    const res = await app.request("/api/v1/foreshadowing/f-po/payoff", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ payoffChapter: 10 }),
@@ -139,27 +140,27 @@ describe("Foreshadowing CRUD API (Issue #84)", () => {
     expect(json.foreshadowing.payoffChapter).toBe(10);
   });
 
-  it("DELETE /api/foreshadowing/:id deletes an entry", async () => {
-    await writeForeshadowing(root, { id: "f-del", title: "Delete me" });
+  it("DELETE /api/v1/foreshadowing/:id deletes an entry", async () => {
+    await writeForeshadowing(root, { id: "f-del", bookId: "test", title: "Delete me" });
 
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/foreshadowing/f-del", { method: "DELETE" });
+    const res = await app.request("/api/v1/foreshadowing/f-del", { method: "DELETE" });
     expect(res.status).toBe(200);
     const json = await res.json() as { ok: boolean; id: string };
     expect(json.ok).toBe(true);
 
     // Verify deletion
-    const getRes = await app.request("/api/foreshadowing/f-del");
+    const getRes = await app.request("/api/v1/foreshadowing/f-del");
     expect(getRes.status).toBe(404);
   });
 
-  it("DELETE /api/foreshadowing/batch deletes multiple entries", async () => {
-    await writeForeshadowing(root, { id: "f-b1", title: "Batch 1" });
-    await writeForeshadowing(root, { id: "f-b2", title: "Batch 2" });
-    await writeForeshadowing(root, { id: "f-b3", title: "Keep me" });
+  it("DELETE /api/v1/foreshadowing/batch deletes multiple entries", async () => {
+    await writeForeshadowing(root, { id: "f-b1", bookId: "test", title: "Batch 1" });
+    await writeForeshadowing(root, { id: "f-b2", bookId: "test", title: "Batch 2" });
+    await writeForeshadowing(root, { id: "f-b3", bookId: "test", title: "Keep me" });
 
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/foreshadowing/batch", {
+    const res = await app.request("/api/v1/foreshadowing/batch", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids: ["f-b1", "f-b2"] }),
@@ -171,18 +172,18 @@ describe("Foreshadowing CRUD API (Issue #84)", () => {
     expect(json.ids).toEqual(["f-b1", "f-b2"]);
 
     // Verify deletions
-    const get1 = await app.request("/api/foreshadowing/f-b1");
+    const get1 = await app.request("/api/v1/foreshadowing/f-b1");
     expect(get1.status).toBe(404);
-    const get2 = await app.request("/api/foreshadowing/f-b2");
+    const get2 = await app.request("/api/v1/foreshadowing/f-b2");
     expect(get2.status).toBe(404);
     // Verify kept
-    const get3 = await app.request("/api/foreshadowing/f-b3");
+    const get3 = await app.request("/api/v1/foreshadowing/f-b3");
     expect(get3.status).toBe(200);
   });
 
-  it("DELETE /api/foreshadowing/batch rejects empty ids", async () => {
+  it("DELETE /api/v1/foreshadowing/batch rejects empty ids", async () => {
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/foreshadowing/batch", {
+    const res = await app.request("/api/v1/foreshadowing/batch", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ids: [] }),
@@ -190,9 +191,9 @@ describe("Foreshadowing CRUD API (Issue #84)", () => {
     expect(res.status).toBe(400);
   });
 
-  it("DELETE /api/foreshadowing/batch rejects invalid body", async () => {
+  it("DELETE /api/v1/foreshadowing/batch rejects invalid body", async () => {
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/foreshadowing/batch", {
+    const res = await app.request("/api/v1/foreshadowing/batch", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({}),
