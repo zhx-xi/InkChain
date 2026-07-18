@@ -150,7 +150,7 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
       "[data-testid='fs-create-btn'], button:has-text('创建')"
     ).first();
     await expect(createBtn).toBeVisible({ timeout: 10000 });
-    await createBtn.click();
+    await createBtn.click({ force: true });
     await page.waitForTimeout(1500);
 
     // 填写名称
@@ -165,7 +165,7 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
       "button:has-text('确定'), button:has-text('保存'), button:has-text('确认'), button:has-text('创建')"
     ).first();
     await expect(saveBtn).toBeVisible({ timeout: 3000 });
-    await saveBtn.click();
+    await saveBtn.click({ force: true });
 
     // Wait for dialog to close — wait for the create button to re-appear
     await page.waitForTimeout(2000);

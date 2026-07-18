@@ -1,9 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { seedSkillLibrary } from "./fixtures/seed-skill-library";
 
-test.beforeAll(async () => {
-  await seedSkillLibrary();
-});
+// Skills are pre-seeded by global-setup.ts — no need for seedSkillLibrary here.
 
 test("1. 加载Skill库→分页显示", async ({ page }) => {
   await page.goto("/#/skills");
