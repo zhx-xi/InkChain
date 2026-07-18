@@ -196,7 +196,7 @@ export function SkillListPage() {
         </div>
         <button
           type="button"
-          data-testid="sk-create-btn"
+          data-testid="sk-btn-create-skill"
           onClick={() => setShowCreateDialog(true)}
           className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
         >
@@ -286,7 +286,7 @@ export function SkillListPage() {
 
       {/* Grid */}
       {!loading && filteredSkills.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-4" data-testid="sk-state-normal">
           {/* Total count */}
           <div className="text-xs text-muted-foreground/60">
             共 {filteredSkills.length} 个 Skill
@@ -303,6 +303,7 @@ export function SkillListPage() {
                 <div key={config.id} className="space-y-0">
                   {/* Card */}
                   <div
+                    data-testid={`sk-card-${config.id}`}
                     className={cn(
                       "rounded-xl border border-border/40 bg-card p-4 transition-all cursor-pointer hover:border-border/70",
                       !config.enabled && "opacity-60",

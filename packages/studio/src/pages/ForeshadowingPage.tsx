@@ -909,7 +909,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
             type="button"
             onClick={() => { setAiExtractResult(null); setAiExtractError(null); setShowAiExtract(true); }}
             className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary shadow-sm transition hover:bg-primary/10"
-            data-testid="fs-btn-ai-extract"
+            data-testid="fs-extract-btn"
           >
             <Bot size={15} />
             AI 提取
@@ -945,7 +945,7 @@ export function ForeshadowingPage({ bookId }: { bookId: string }) {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="搜索伏笔名称或描述…"
             className="w-full pl-9 pr-8 py-2 rounded-lg border border-border/40 bg-background text-sm text-foreground placeholder:text-muted-foreground/40 outline-none focus:border-primary/50 transition-colors"
-            data-testid="fs-input-search"
+            data-testid="fs-search-input"
           />
           {query && (
             <button
