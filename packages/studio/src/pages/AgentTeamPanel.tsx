@@ -202,9 +202,11 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [editingAgent, setEditingAgent] = useState<string | null>(null);
 
-  // Flow state
-  const [agentOrder, setAgentOrder] = useState<ReadonlyArray<string>>([]);
-  const [collaborationMode, setCollaborationMode] = useState<"sequential" | "parallel" | "hybrid">("sequential");
+  // Flow state — initialize from default preset so agentOrder is never empty
+  // on first render, preventing the flow tab from showing a blank state.
+  const DEFAULT_PRESET_FLOW = getDefaultFlowConfig("default");
+  const [agentOrder, setAgentOrder] = useState<ReadonlyArray<string>>(DEFAULT_PRESET_FLOW.agentOrder);
+  const [collaborationMode, setCollaborationMode] = useState<"sequential" | "parallel" | "hybrid">(DEFAULT_PRESET_FLOW.collaborationMode);
   const [flowLoadError, setFlowLoadError] = useState<string | null>(null);
   const [isLoadingFlow, setIsLoadingFlow] = useState(false);
   const [flowRetryCount, setFlowRetryCount] = useState(0);
@@ -753,7 +755,6 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
           type="button"
           data-testid="ag-config-tab"
           onClick={() => setActiveTab("team")}
-          data-testid="ag-tab-team-config"
           className="px-5 py-2.5 text-sm font-medium transition-all relative"
           style={{
             color: activeTab === "team" ? "#8B3A3A" : "#8a7a6a",
@@ -771,7 +772,6 @@ export function AgentTeamPanel({ nav }: AgentTeamPanelProps) {
           type="button"
           data-testid="ag-flow-tab"
           onClick={() => setActiveTab("flow")}
-          data-testid="ag-tab-pipeline"
           className="px-5 py-2.5 text-sm font-medium transition-all relative"
           style={{
             color: activeTab === "flow" ? "#8B3A3A" : "#8a7a6a",
