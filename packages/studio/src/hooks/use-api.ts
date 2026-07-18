@@ -14,9 +14,9 @@ export function buildApiUrl(path: string): string | null {
   if (normalized.startsWith(`${BASE}/`) || normalized === BASE) {
     return normalized;
   }
-  // Allow full paths for non-v1 routes (e.g. /api/skills from Issue #76).
-  if (normalized.startsWith("/api/")) {
-    return normalized;
+  // Normalize /api/ paths to /api/v1/ — all backend routes now use /api/v1/ prefix
+  if (normalized.startsWith("/api/") && !normalized.startsWith("/api/v1/")) {
+    return `/api/v1${normalized.slice(4)}`;
   }
   return normalized.startsWith("/") ? `${BASE}${normalized}` : `${BASE}/${normalized}`;
 }

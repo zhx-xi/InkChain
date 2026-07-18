@@ -2116,6 +2116,30 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
 
   app.use("/*", cors());
 
+  // Backward compatibility: redirect /api/* → /api/v1/*
+  // All routes are now defined at /api/v1/*. Legacy consumers (e.g. E2E tests,
+  // bookmarks, scripts) that call the old /api/ prefix are transparently
+  // redirected with 308 (Permanent Redirect), which preserves the HTTP method.
+  // Playwright / fetch automatically follow the redirect.
+
+  // Specific: the old /api/extract was restructured to /api/v1/books/extract
+  // (prefix change + structural), so a plain prefix rewrite doesn't work.
+  app.use("/api/extract", async (c) => {
+    const url = new URL(c.req.url);
+    return c.redirect(`/api/v1/books/extract${url.search}`, 308);
+  });
+
+  // General: rewrite /api/* → /api/v1/* for all other paths
+  app.use("/api/*", async (c, next) => {
+    const url = new URL(c.req.url);
+    const path = url.pathname;
+    if (!path.startsWith("/api/v1/")) {
+      const newPath = `/api/v1${path.slice(4)}${url.search}`;
+      return c.redirect(newPath, 308);
+    }
+    await next();
+  });
+
   // Structured error handler — ApiError returns typed JSON, others return 500
   app.onError((error, c) => {
     if (error instanceof ApiError) {
@@ -5795,17 +5819,17 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   const searchRouter = createSearchRouter(() => root);
   app.route("/api/v1/books", searchRouter);
 
-  app.route("/api/skills", createSkillsRouter(root));
-  app.route("/api/worlds", createWorldsRouter(root));
-  app.route("/api/worlds", createWorldsAIGenRouter(root));
-  app.route("/api/worlds", createMapsAIGenRouter(root));
-  app.route("/api/books", createBookWorldsRouter(root));
-  app.route("/api/books", createAuditRouter(root));
-  app.route("/api/foreshadowing", createForeshadowingRouter(root));
-  app.route("/api/publish", createPublishRouter(root));
-  app.route("/api/style-profiles", createStyleProfilesRouter(root));
-  app.route("/api/consistency", createConsistencyRouter(root));
-  app.route("/api/style-consistency", createStyleConsistencyRouter(root));
+  app.route("/api/v1/skills", createSkillsRouter(root));
+  app.route("/api/v1/worlds", createWorldsRouter(root));
+  app.route("/api/v1/worlds", createWorldsAIGenRouter(root));
+  app.route("/api/v1/worlds", createMapsAIGenRouter(root));
+  app.route("/api/v1/books", createBookWorldsRouter(root));
+  app.route("/api/v1/books", createAuditRouter(root));
+  app.route("/api/v1/foreshadowing", createForeshadowingRouter(root));
+  app.route("/api/v1/publish", createPublishRouter(root));
+  app.route("/api/v1/style-profiles", createStyleProfilesRouter(root));
+  app.route("/api/v1/consistency", createConsistencyRouter(root));
+  app.route("/api/v1/style-consistency", createStyleConsistencyRouter(root));
   app.route("/api/v1/writing", createWritingContinueRouter(root));
   app.route("/api/v1/project/agent-team", createAgentTeamRouter(root));
   app.route("/api/v1/agent-templates", createAgentTemplatesRouter(root));
@@ -5819,8 +5843,8 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     (id: string) => state.bookDir(id),
     () => root,
   );
-  app.route("/api/extract", extractRouter);
-  app.route("/api/foreshadowing/extract", extractRouter);
+  app.route("/api/v1/books/extract", extractRouter);
+  app.route("/api/v1/foreshadowing/extract", extractRouter);
 
   // ── Writer's Block Breakthrough (E4 simplified) ──
   // GET  /api/v1/books/:id/writers-block — analyze context and return 3-5 advancement suggestions

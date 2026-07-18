@@ -48,7 +48,7 @@ async function writeBook(
   await writeFile(join(bookDir, "book.json"), JSON.stringify(book), "utf-8");
 }
 
-describe("Book Worlds API (Issue #195 — GET /api/books/:bookId/worlds)", () => {
+describe("Book Worlds API (Issue #195 — GET /api/v1/books/:bookId/worlds)", () => {
   let root: string;
 
   beforeEach(async () => {
@@ -65,7 +65,7 @@ describe("Book Worlds API (Issue #195 — GET /api/books/:bookId/worlds)", () =>
     await writeBook(root, "test-book", ["alpha", "beta"]);
 
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/books/test-book/worlds");
+    const res = await app.request("/api/v1/books/test-book/worlds");
     expect(res.status).toBe(200);
     const json = await res.json() as { worlds: Array<{ id: string; name: string }> };
     expect(json.worlds).toHaveLength(2);
@@ -76,7 +76,7 @@ describe("Book Worlds API (Issue #195 — GET /api/books/:bookId/worlds)", () =>
     await writeBook(root, "empty-book", []);
 
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/books/empty-book/worlds");
+    const res = await app.request("/api/v1/books/empty-book/worlds");
     expect(res.status).toBe(200);
     const json = await res.json() as { worlds: unknown[] };
     expect(json.worlds).toEqual([]);
@@ -92,7 +92,7 @@ describe("Book Worlds API (Issue #195 — GET /api/books/:bookId/worlds)", () =>
     );
 
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/books/no-worlds/worlds");
+    const res = await app.request("/api/v1/books/no-worlds/worlds");
     expect(res.status).toBe(200);
     const json = await res.json() as { worlds: unknown[] };
     expect(json.worlds).toEqual([]);
@@ -100,7 +100,7 @@ describe("Book Worlds API (Issue #195 — GET /api/books/:bookId/worlds)", () =>
 
   it("GET /:bookId/worlds returns 404 when book is not found", async () => {
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/books/unknown-book/worlds");
+    const res = await app.request("/api/v1/books/unknown-book/worlds");
     expect(res.status).toBe(404);
     const json = await res.json() as { error: { code: string } };
     expect(json.error.code).toBe("BOOK_NOT_FOUND");
@@ -110,7 +110,7 @@ describe("Book Worlds API (Issue #195 — GET /api/books/:bookId/worlds)", () =>
     const app = createStudioServer({} as never, root);
     // `../` in the path gets normalized by Hono before route matching,
     // so use a URL-encoded unsafe char (colon) that passes Hono but fails isSafeBookId.
-    const res = await app.request("/api/books/evil%3Abook/worlds");
+    const res = await app.request("/api/v1/books/evil%3Abook/worlds");
     expect(res.status).toBe(400);
     const json = await res.json() as { error: { code: string } };
     expect(json.error.code).toBe("INVALID_BOOK_ID");
@@ -122,7 +122,7 @@ describe("Book Worlds API (Issue #195 — GET /api/books/:bookId/worlds)", () =>
     await writeBook(root, "dedup-book", ["alpha", "alpha"]);
 
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/books/dedup-book/worlds");
+    const res = await app.request("/api/v1/books/dedup-book/worlds");
     expect(res.status).toBe(200);
     const json = await res.json() as { worlds: Array<{ id: string }> };
     expect(json.worlds).toHaveLength(1);
@@ -135,7 +135,7 @@ describe("Book Worlds API (Issue #195 — GET /api/books/:bookId/worlds)", () =>
     await writeBook(root, "partial-book", ["alpha", "beta"]);
 
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/books/partial-book/worlds");
+    const res = await app.request("/api/v1/books/partial-book/worlds");
     expect(res.status).toBe(200);
     const json = await res.json() as { worlds: Array<{ id: string }> };
     expect(json.worlds).toHaveLength(1);
@@ -148,7 +148,7 @@ describe("Book Worlds API (Issue #195 — GET /api/books/:bookId/worlds)", () =>
 
     const app = createStudioServer({} as never, root);
     const encodedId = encodeURIComponent("中文书籍");
-    const res = await app.request(`/api/books/${encodedId}/worlds`);
+    const res = await app.request(`/api/v1/books/${encodedId}/worlds`);
     expect(res.status).toBe(200);
     const json = await res.json() as { worlds: Array<{ id: string }> };
     expect(json.worlds).toHaveLength(1);
@@ -158,7 +158,7 @@ describe("Book Worlds API (Issue #195 — GET /api/books/:bookId/worlds)", () =>
   it("GET /:bookId/worlds returns 400 for encoded bookId that fails isSafeBookId", async () => {
     const app = createStudioServer({} as never, root);
     const encodedId = encodeURIComponent("../malicious");
-    const res = await app.request(`/api/books/${encodedId}/worlds`);
+    const res = await app.request(`/api/v1/books/${encodedId}/worlds`);
     expect(res.status).toBe(400);
     const json = await res.json() as { error: { code: string } };
     expect(json.error.code).toBe("INVALID_BOOK_ID");

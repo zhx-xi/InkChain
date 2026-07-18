@@ -39,35 +39,35 @@ describe("World CRUD API (Issue #77)", () => {
     await rm(root, { recursive: true, force: true });
   });
 
-  it("GET /api/worlds lists worlds", async () => {
+  it("GET /api/v1/worlds lists worlds", async () => {
     await writeWorld(root, "alpha");
     await writeWorld(root, "beta");
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/worlds");
+    const res = await app.request("/api/v1/worlds");
     expect(res.status).toBe(200);
     const json = await res.json() as { worlds: Array<{ id: string; name: string }> };
     expect(json.worlds).toHaveLength(2);
     expect(json.worlds.map((w) => w.id).sort()).toEqual(["alpha", "beta"]);
   });
 
-  it("GET /api/worlds/:id returns world details", async () => {
+  it("GET /api/v1/worlds/:id returns world details", async () => {
     await writeWorld(root, "alpha");
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/worlds/alpha");
+    const res = await app.request("/api/v1/worlds/alpha");
     expect(res.status).toBe(200);
     const json = await res.json() as { world: { id: string; name: string } };
     expect(json.world.id).toBe("alpha");
   });
 
-  it("GET /api/worlds/:id returns 404 for unknown world", async () => {
+  it("GET /api/v1/worlds/:id returns 404 for unknown world", async () => {
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/worlds/unknown");
+    const res = await app.request("/api/v1/worlds/unknown");
     expect(res.status).toBe(404);
   });
 
-  it("POST /api/worlds creates a world", async () => {
+  it("POST /api/v1/worlds creates a world", async () => {
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/worlds", {
+    const res = await app.request("/api/v1/worlds", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(sampleWorld("new-world")),
@@ -77,10 +77,10 @@ describe("World CRUD API (Issue #77)", () => {
     expect(json.world.id).toBe("new-world");
   });
 
-  it("POST /api/worlds rejects duplicate id", async () => {
+  it("POST /api/v1/worlds rejects duplicate id", async () => {
     await writeWorld(root, "alpha");
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/worlds", {
+    const res = await app.request("/api/v1/worlds", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(sampleWorld("alpha")),
@@ -88,10 +88,10 @@ describe("World CRUD API (Issue #77)", () => {
     expect(res.status).toBe(409);
   });
 
-  it("PUT /api/worlds/:id updates a world", async () => {
+  it("PUT /api/v1/worlds/:id updates a world", async () => {
     await writeWorld(root, "alpha");
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/worlds/alpha", {
+    const res = await app.request("/api/v1/worlds/alpha", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: "Updated Name" }),
@@ -101,12 +101,12 @@ describe("World CRUD API (Issue #77)", () => {
     expect(json.world.name).toBe("Updated Name");
   });
 
-  it("DELETE /api/worlds/:id removes a world", async () => {
+  it("DELETE /api/v1/worlds/:id removes a world", async () => {
     await writeWorld(root, "alpha");
     const app = createStudioServer({} as never, root);
-    const res = await app.request("/api/worlds/alpha", { method: "DELETE" });
+    const res = await app.request("/api/v1/worlds/alpha", { method: "DELETE" });
     expect(res.status).toBe(200);
-    const list = await app.request("/api/worlds");
+    const list = await app.request("/api/v1/worlds");
     const json = await list.json() as { worlds: Array<{ id: string }> };
     expect(json.worlds.map((w) => w.id)).not.toContain("alpha");
   });
