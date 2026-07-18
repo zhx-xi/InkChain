@@ -10,14 +10,23 @@ test("1. 加载Skill库→分页显示", async ({ page }) => {
 
   // Wait for the SkillListPage to fully render (sk-btn-create-skill is unconditional)
   await page.waitForSelector("[data-testid='sk-btn-create-skill']", { timeout: 30_000 });
-  await page.waitForTimeout(500);
 
-  // Debug: check h1 presence via DOM query
-  const h1Text = await page.evaluate(() => {
+  // Debug: check current URL and h1 presence
+  const url = page.url();
+  const bodyInfo = await page.evaluate(() => {
     const h1 = document.querySelector("h1");
-    return h1 ? h1.textContent : "NO H1 FOUND";
+    return {
+      h1Text: h1 ? h1.textContent : "NO H1",
+      h1Count: document.querySelectorAll("h1").length,
+      bodyChildren: document.body.children.length,
+      url: window.location.href,
+      hash: window.location.hash,
+      rootChildren: document.getElementById("root")?.children.length ?? -1
+    };
   });
-  console.log("H1 text:", h1Text);
+  console.log("URL:", url, "Body:", JSON.stringify(bodyInfo));
+
+  await page.waitForTimeout(500);
   await expect(page.locator("h1").filter({ hasText: "Skill" }).first()).toBeAttached({ timeout: 3_000 });
   await expect(page.getByText("管理项目级与内置 Skill，控制启用状态与分类")).toBeVisible();
 
