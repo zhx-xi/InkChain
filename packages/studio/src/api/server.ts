@@ -5795,17 +5795,17 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   const searchRouter = createSearchRouter(() => root);
   app.route("/api/v1/books", searchRouter);
 
-  app.route("/api/skills", createSkillsRouter(root));
-  app.route("/api/worlds", createWorldsRouter(root));
-  app.route("/api/worlds", createWorldsAIGenRouter(root));
-  app.route("/api/worlds", createMapsAIGenRouter(root));
-  app.route("/api/books", createBookWorldsRouter(root));
-  app.route("/api/books", createAuditRouter(root));
-  app.route("/api/foreshadowing", createForeshadowingRouter(root));
-  app.route("/api/publish", createPublishRouter(root));
-  app.route("/api/style-profiles", createStyleProfilesRouter(root));
-  app.route("/api/consistency", createConsistencyRouter(root));
-  app.route("/api/style-consistency", createStyleConsistencyRouter(root));
+  app.route("/api/v1/skills", createSkillsRouter(root));
+  app.route("/api/v1/worlds", createWorldsRouter(root));
+  app.route("/api/v1/worlds", createWorldsAIGenRouter(root));
+  app.route("/api/v1/worlds", createMapsAIGenRouter(root));
+  app.route("/api/v1/books", createBookWorldsRouter(root));
+  app.route("/api/v1/books", createAuditRouter(root));
+  app.route("/api/v1/foreshadowing", createForeshadowingRouter(root));
+  app.route("/api/v1/publish", createPublishRouter(root));
+  app.route("/api/v1/style-profiles", createStyleProfilesRouter(root));
+  app.route("/api/v1/consistency", createConsistencyRouter(root));
+  app.route("/api/v1/style-consistency", createStyleConsistencyRouter(root));
   app.route("/api/v1/writing", createWritingContinueRouter(root));
   app.route("/api/v1/project/agent-team", createAgentTeamRouter(root));
   app.route("/api/v1/agent-templates", createAgentTemplatesRouter(root));
@@ -5819,8 +5819,8 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     (id: string) => state.bookDir(id),
     () => root,
   );
-  app.route("/api/extract", extractRouter);
-  app.route("/api/foreshadowing/extract", extractRouter);
+  app.route("/api/v1/books/extract", extractRouter);
+  app.route("/api/v1/foreshadowing/extract", extractRouter);
 
   // ── Writer's Block Breakthrough (E4 simplified) ──
   // GET  /api/v1/books/:id/writers-block — analyze context and return 3-5 advancement suggestions
