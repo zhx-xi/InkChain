@@ -13,9 +13,9 @@ describe("buildApiUrl", () => {
     expect(buildApiUrl("/api/v1/books")).toBe("/api/v1/books");
   });
 
-  it("preserves full /api/ paths for non-v1 routes", () => {
-    expect(buildApiUrl("/api/skills")).toBe("/api/skills");
-    expect(buildApiUrl("/api/skills/style-imitation/toggle")).toBe("/api/skills/style-imitation/toggle");
+  it("normalizes /api/ paths to /api/v1/ prefix", () => {
+    expect(buildApiUrl("/api/skills")).toBe("/api/v1/skills");
+    expect(buildApiUrl("/api/skills/style-imitation/toggle")).toBe("/api/v1/skills/style-imitation/toggle");
   });
 });
 

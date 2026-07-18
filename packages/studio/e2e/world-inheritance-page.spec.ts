@@ -10,7 +10,7 @@ async function navigateToWorldInheritance(page: Page, worldId: string = "e2e-tes
 
 /** Mock /api/worlds/:worldId to return a world with entities */
 function mockWorldData(page: Page, worldData: Record<string, unknown>) {
-  return page.route("**/api/worlds/**", async (route) => {
+  return page.route("**/api/v1/worlds/**", async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",
@@ -21,7 +21,7 @@ function mockWorldData(page: Page, worldData: Record<string, unknown>) {
 
 /** Mock /api/worlds/:worldId to return error */
 function mockWorldError(page: Page) {
-  return page.route("**/api/worlds/**", async (route) => {
+  return page.route("**/api/v1/worlds/**", async (route) => {
     await route.fulfill({
       status: 500,
       contentType: "application/json",

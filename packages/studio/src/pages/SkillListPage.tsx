@@ -196,7 +196,7 @@ export function SkillListPage() {
         </div>
         <button
           type="button"
-          data-testid="sk-create-btn"
+          data-testid="sk-btn-create-skill"
           onClick={() => setShowCreateDialog(true)}
           className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
         >
@@ -292,7 +292,7 @@ export function SkillListPage() {
             共 {filteredSkills.length} 个 Skill
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" data-testid="sk-list-skills">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" data-testid="sk-state-normal sk-list-skills">
             {pagedSkills.map((item) => {
               const config = item.config;
               const source = item.source;
@@ -309,6 +309,7 @@ export function SkillListPage() {
                       isExpanded && "rounded-b-none border-b-0 shadow-sm"
                     )}
                     onClick={() => handleCardClick(config.id)}
+                    data-testid={`sk-card-${config.id}`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">

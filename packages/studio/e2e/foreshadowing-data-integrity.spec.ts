@@ -1,62 +1,56 @@
-// ── Foreshadowing — 伏笔数据完整性 E2E (Issue #732) ──
-// Bug: 更新后所有伏笔线索数据消失 — API 路由/数据格式变更导致无法加载
-// 强断言版: 功能未实现 → 测试应全红 (E2E Required ✅ + 功能 E2E ❌)
+﻿// 鈹€鈹€ Foreshadowing 鈥?浼忕瑪鏁版嵁瀹屾暣鎬?E2E (Issue #732) 鈹€鈹€
+// Bug: 鏇存柊鍚庢墍鏈変紡绗旂嚎绱㈡暟鎹秷澶?鈥?API 璺敱/鏁版嵁鏍煎紡鍙樻洿瀵艰嚧鏃犳硶鍔犺浇
+// 寮烘柇瑷€鐗? 鍔熻兘鏈疄鐜?鈫?娴嬭瘯搴斿叏绾?(E2E Required 鉁?+ 鍔熻兘 E2E 鉂?
 // 4-state coverage: normal / error / empty / edge
 
 import { test, expect } from "@playwright/test";
 
 const BASE_URL = "http://localhost:4580";
 
-test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
+test.describe("Foreshadowing 鈥?浼忕瑪鏁版嵁瀹屾暣鎬?(寮烘柇瑷€)", () => {
 
-  // ═══ N1: 页面加载 + 核心 UI 元素 ═══
-  test("N1: 伏笔页面加载 — 页头和创建按钮可见", async ({ page }) => {
-    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+  // 鈺愨晲鈺?N1: 椤甸潰鍔犺浇 + 鏍稿績 UI 鍏冪礌 鈺愨晲鈺?  test("N1: 浼忕瑪椤甸潰鍔犺浇 鈥?椤靛ご鍜屽垱寤烘寜閽彲瑙?, async ({ page }) => {
+    await page.goto(`${BASE_URL}/#/foreshadowing/test-project-123`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
-    // 页头应可见 (h1 heading)
+    // 椤靛ご搴斿彲瑙?(h1 heading)
     const heading = page.getByRole("heading", { level: 1 }).first();
     await expect(heading).toBeVisible({ timeout: 10000 });
 
-    // 创建按钮应可见 — 核心功能入口
+    // 鍒涘缓鎸夐挳搴斿彲瑙?鈥?鏍稿績鍔熻兘鍏ュ彛
     const createBtn = page.locator(
-      "[data-testid='fs-create-btn'], button:has-text('创建')"
+      "[data-testid='fs-create-btn'], button:has-text('鍒涘缓')"
     ).first();
     await expect(createBtn).toBeVisible({ timeout: 10000 });
 
-    // AI 提取按钮应可见
-    const aiBtn = page.locator(
+    // AI 鎻愬彇鎸夐挳搴斿彲瑙?    const aiBtn = page.locator(
       "[data-testid='fs-extract-btn'], button:has-text('AI')"
     ).first();
     await expect(aiBtn).toBeVisible({ timeout: 10000 });
   });
 
-  // ═══ N2: 数据列表有内容 ═══
-  test("N2: 伏笔列表渲染 — 展示数据项或列表容器", async ({ page }) => {
-    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+  // 鈺愨晲鈺?N2: 鏁版嵁鍒楄〃鏈夊唴瀹?鈺愨晲鈺?  test("N2: 浼忕瑪鍒楄〃娓叉煋 鈥?灞曠ず鏁版嵁椤规垨鍒楄〃瀹瑰櫒", async ({ page }) => {
+    await page.goto(`${BASE_URL}/#/foreshadowing/test-project-123`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(4000);
 
-    // 查找伏笔数据项 (data-testid fs-item-*) 或列表容器
-    const listOrItems = page.locator(
+    // 鏌ユ壘浼忕瑪鏁版嵁椤?(data-testid fs-item-*) 鎴栧垪琛ㄥ鍣?    const listOrItems = page.locator(
       "[data-testid^='fs-item'], [data-testid^='fs-list'], " +
       "[data-testid^='fs-table'], table tbody tr"
     ).first();
     await expect(listOrItems).toBeVisible({ timeout: 8000 });
 
-    // 无崩溃
-    await expect(page.getByText(/Cannot read|undefined is not/)).toHaveCount(0);
+    // 鏃犲穿婧?    await expect(page.getByText(/Cannot read|undefined is not/)).toHaveCount(0);
   });
 
-  // ═══ N3: 搜索可交互 ═══
-  test("N3: 搜索框可输入关键词", async ({ page }) => {
-    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+  // 鈺愨晲鈺?N3: 鎼滅储鍙氦浜?鈺愨晲鈺?  test("N3: 鎼滅储妗嗗彲杈撳叆鍏抽敭璇?, async ({ page }) => {
+    await page.goto(`${BASE_URL}/#/foreshadowing/test-project-123`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
     const searchInput = page.locator(
-      "[data-testid='fs-search-input'], input[placeholder*='搜索'], input[placeholder*='search']"
+      "[data-testid='fs-search-input'], input[placeholder*='鎼滅储'], input[placeholder*='search']"
     ).first();
     await expect(searchInput).toBeVisible({ timeout: 10000 });
 
@@ -64,15 +58,14 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
     await expect(searchInput).toHaveValue("test-clue");
   });
 
-  // ═══ D1: 无 API 404 ═══
-  test("D1: API 不返回 404", async ({ page }) => {
+  // 鈺愨晲鈺?D1: 鏃?API 404 鈺愨晲鈺?  test("D1: API 涓嶈繑鍥?404", async ({ page }) => {
     let has404 = false;
     page.on("response", (r) => {
       if (r.url().includes("/api/") && r.status() === 404) has404 = true;
     });
 
-    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.goto(`${BASE_URL}/#/foreshadowing/test-project-123`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(4000);
 
     expect(has404).toBe(false);
@@ -81,41 +74,38 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
     await expect(main).toBeVisible({ timeout: 5000 });
   });
 
-  // ═══ C1: 创建弹窗 ═══
-  test("C1: 创建伏笔 — 弹窗包含表单字段", async ({ page }) => {
-    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+  // 鈺愨晲鈺?C1: 鍒涘缓寮圭獥 鈺愨晲鈺?  test("C1: 鍒涘缓浼忕瑪 鈥?寮圭獥鍖呭惈琛ㄥ崟瀛楁", async ({ page }) => {
+    await page.goto(`${BASE_URL}/#/foreshadowing/test-project-123`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
     const createBtn = page.locator(
-      "[data-testid='fs-create-btn'], button:has-text('创建')"
+      "[data-testid='fs-create-btn'], button:has-text('鍒涘缓')"
     ).first();
     await expect(createBtn).toBeVisible({ timeout: 10000 });
     await createBtn.click({ force: true });
     await page.waitForTimeout(1500);
 
-    // 弹窗应出现
-    const dialog = page.locator(
+    // 寮圭獥搴斿嚭鐜?    const dialog = page.locator(
       "[data-testid*='create'], [data-testid*='modal'], " +
       "[role='dialog'], [class*='Modal'], [class*='Dialog'], [class*='Sheet']"
     ).first();
     await expect(dialog).toBeVisible({ timeout: 5000 });
 
-    // 弹窗内应有确认/取消按钮
+    // 寮圭獥鍐呭簲鏈夌‘璁?鍙栨秷鎸夐挳
     const actionBtns = page.locator(
-      "button:has-text('确定'), button:has-text('保存'), " +
-      "button:has-text('确认'), button:has-text('创建'), button:has-text('取消')"
+      "button:has-text('纭畾'), button:has-text('淇濆瓨'), " +
+      "button:has-text('纭'), button:has-text('鍒涘缓'), button:has-text('鍙栨秷')"
     ).first();
     await expect(actionBtns).toBeVisible({ timeout: 3000 });
   });
 
-  // ═══ E1: 空状态 ═══
-  test("E1: 空状态 — 无数据时有提示", async ({ page }) => {
-    await page.goto(`${BASE_URL}/#/book/new-empty-book-999/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+  // 鈺愨晲鈺?E1: 绌虹姸鎬?鈺愨晲鈺?  test("E1: 绌虹姸鎬?鈥?鏃犳暟鎹椂鏈夋彁绀?, async ({ page }) => {
+    await page.goto(`${BASE_URL}/#/foreshadowing/new-empty-book-999`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
-    // 空状态应显示提示或至少页面有结构
+    // 绌虹姸鎬佸簲鏄剧ず鎻愮ず鎴栬嚦灏戦〉闈㈡湁缁撴瀯
     const emptyOrContainer = page.locator(
       "[data-testid='fs-empty'], [class*='empty'], [role='main'], main"
     ).first();
@@ -124,14 +114,12 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
     await expect(page.getByText(/Cannot read|undefined is not/)).toHaveCount(0);
   });
 
-  // ═══ E2: 错误状态 ═══
-  test("E2: 错误状态 — 无效 bookId 不白屏", async ({ page }) => {
-    await page.goto(`${BASE_URL}/#/book/__invalid__/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+  // 鈺愨晲鈺?E2: 閿欒鐘舵€?鈺愨晲鈺?  test("E2: 閿欒鐘舵€?鈥?鏃犳晥 bookId 涓嶇櫧灞?, async ({ page }) => {
+    await page.goto(`${BASE_URL}/#/foreshadowing/__invalid__`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(4000);
 
-    // 应有错误提示或页面结构
-    const content = page.locator(
+    // 搴旀湁閿欒鎻愮ず鎴栭〉闈㈢粨鏋?    const content = page.locator(
       "main, [role='main'], #root > *, [class*='error'], [class*='toast']"
     ).first();
     await expect(content).toBeVisible({ timeout: 8000 });
@@ -139,57 +127,54 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
     await expect(page.getByText(/Cannot read|undefined is not/)).toHaveCount(0);
   });
 
-  // ═══ C2: 保存并验证 ═══
-  test("C2: 创建伏笔 — 保存后卡片出现在列表中", async ({ page }) => {
-    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+  // 鈺愨晲鈺?C2: 淇濆瓨骞堕獙璇?鈺愨晲鈺?  test("C2: 鍒涘缓浼忕瑪 鈥?淇濆瓨鍚庡崱鐗囧嚭鐜板湪鍒楄〃涓?, async ({ page }) => {
+    await page.goto(`${BASE_URL}/#/foreshadowing/test-project-123`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
-    // 打开创建弹窗
+    // 鎵撳紑鍒涘缓寮圭獥
     const createBtn = page.locator(
-      "[data-testid='fs-create-btn'], button:has-text('创建')"
+      "[data-testid='fs-create-btn'], button:has-text('鍒涘缓')"
     ).first();
     await expect(createBtn).toBeVisible({ timeout: 10000 });
     await createBtn.click({ force: true });
     await page.waitForTimeout(1500);
 
-    // 填写名称
+    // 濉啓鍚嶇О
     const nameInput = page.locator(
-      "[data-testid*='name'], input[placeholder*='名称'], input[placeholder*='伏笔']"
+      "[data-testid*='name'], input[placeholder*='鍚嶇О'], input[placeholder*='浼忕瑪']"
     ).first();
     await expect(nameInput).toBeVisible({ timeout: 5000 });
     await nameInput.fill("E2E-Test-Foreshadow");
 
-    // 点击保存
+    // 鐐瑰嚮淇濆瓨
     const saveBtn = page.locator(
-      "button:has-text('确定'), button:has-text('保存'), button:has-text('确认'), button:has-text('创建')"
+      "button:has-text('纭畾'), button:has-text('淇濆瓨'), button:has-text('纭'), button:has-text('鍒涘缓')"
     ).first();
     await expect(saveBtn).toBeVisible({ timeout: 3000 });
     await saveBtn.click({ force: true });
     await page.waitForTimeout(2000);
 
-    // 新卡片应出现在列表中（带 data-testid fs-item-*）
-    const newItem = page.locator("[data-testid^='fs-item-']").first();
+    // 鏂板崱鐗囧簲鍑虹幇鍦ㄥ垪琛ㄤ腑锛堝甫 data-testid fs-item-*锛?    const newItem = page.locator("[data-testid^='fs-item-']").first();
     await expect(newItem).toBeVisible({ timeout: 8000 });
   });
 
-  // ═══ E3: 持久化 ═══
-  test("E3: 刷新后页面结构保持", async ({ page }) => {
-    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+  // 鈺愨晲鈺?E3: 鎸佷箙鍖?鈺愨晲鈺?  test("E3: 鍒锋柊鍚庨〉闈㈢粨鏋勪繚鎸?, async ({ page }) => {
+    await page.goto(`${BASE_URL}/#/foreshadowing/test-project-123`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
-    // 页头应可见
-    const heading = page.getByRole("heading", { level: 1 }).first();
+    // 椤靛ご搴斿彲瑙?    const heading = page.getByRole("heading", { level: 1 }).first();
     await expect(heading).toBeVisible({ timeout: 10000 });
 
     await page.reload({ waitUntil: "load" });
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
-    // 刷新后页头仍可见
+    // 鍒锋柊鍚庨〉澶翠粛鍙
     await expect(heading).toBeVisible({ timeout: 10000 });
 
     await expect(page.getByText(/Cannot read|undefined is not/)).toHaveCount(0);
   });
 });
+

@@ -300,7 +300,7 @@ test.describe("SkillBindTab — API 接入 (Issue #721)", () => {
 
       // Check for error indicators
       const errorIndicator = page.locator(
-        '[data-testid*="error"], text="错误", text="Error", text="失败", text="Failed", [role="alert"]'
+        '[data-testid*="error"], :has-text("错误"), :has-text("Error"), :has-text("失败"), :has-text("Failed"), [role="alert"]'
       );
       const hasErrorIndicator = (await errorIndicator.count()) > 0;
       console.log(`Error indicator after API 500: ${hasErrorIndicator}`);
