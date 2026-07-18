@@ -136,7 +136,7 @@ test.describe("ForeshadowingPage — 批量删除 (#619)", () => {
 
   test("6. Given 批量删除API请求失败, When 尝试批量删除, Then 显示错误提示", async ({ page }) => {
     await page.waitForTimeout(2000);
-    await page.route("**/api/foreshadowing/**", (route) => {
+    await page.route("**/api/v1/foreshadowing/**", (route) => {
       if (route.request().method() === "DELETE") {
         return route.fulfill({ status: 500, body: "Internal Server Error" });
       }

@@ -20,7 +20,7 @@ test.describe('Foreshadowing - 单独删除伏笔', () => {
     const firstItem = page.locator('[data-testid^="fs-item-"]').first();
     await expect(firstItem).toBeVisible();
     const itemId = await firstItem.getAttribute('data-testid');
-    await page.route('**/api/foreshadowing/**', route => {
+    await page.route('**/api/v1/foreshadowing/**', route => {
       if (route.request().method() === 'DELETE') route.fulfill({ status: 500 });
       else route.continue();
     });
@@ -30,7 +30,7 @@ test.describe('Foreshadowing - 单独删除伏笔', () => {
   });
 
   test('Empty: 全部删除后显示空状态', async ({ page }) => {
-    await page.route('**/api/foreshadowing/?', route => {
+    await page.route('**/api/v1/foreshadowing/?', route => {
       route.fulfill({ status: 200, body: JSON.stringify({ foreshadowings: [], total: 0 }) });
     });
     await page.locator('[data-testid="fs-btn-refresh"]').click();

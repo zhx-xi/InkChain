@@ -16,8 +16,13 @@ test.describe("SkillListPage — 核心创作功能基线", () => {
   });
 
   test("1. 正常加载: 页面显示", async ({ page }) => {
-    await page.waitForTimeout(5000);
-    await expect(page.locator("body")).toBeVisible({ timeout: 10_000 });
+    // Wait for React to mount — #root becomes non-empty after createRoot completes.
+    // Do not check body visibility (flaky in CI — body reports hidden during SPA init).
+    await page.waitForFunction(() => {
+      const root = document.getElementById("root");
+      return root && root.children.length > 0;
+    }, { timeout: 15_000 });
+    await page.waitForTimeout(1000);
   });
 
   test("2. 创建Skill按钮存在", async ({ page }) => {
