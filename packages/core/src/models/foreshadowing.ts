@@ -56,9 +56,23 @@ export const ForeshadowingSchema = z.object({
 export type Foreshadowing = z.infer<typeof ForeshadowingSchema>;
 
 // ── Update Schema (omits id, which is immutable) ──
+// ⚠️ CRITICAL: Do NOT use ForeshadowingSchema.partial() here!
+// .partial() preserves .default() from the parent schema, causing data loss:
+// when a field is not sent by the client, .default() overrides existing data.
+// Use explicit optional fields instead.
 
-export const ForeshadowingUpdateSchema = ForeshadowingSchema.partial().omit({
-  id: true,
+export const ForeshadowingUpdateSchema = z.object({
+  bookId: z.string().min(1).optional(),
+  title: z.string().min(1).optional(),
+  description: z.string().optional(),
+  type: ForeshadowingTypeEnum.optional(),
+  createdChapter: z.number().int().min(0).optional(),
+  expectedPayoffChapter: z.number().int().min(0).nullable().optional(),
+  status: ForeshadowingStatusEnum.optional(),
+  payoffChapter: z.number().int().min(0).nullable().optional(),
+  lastMentionedChapter: z.number().int().min(0).optional(),
+  relatedElements: z.array(z.string()).optional(),
+  notes: z.string().optional(),
 });
 export type ForeshadowingUpdate = z.infer<typeof ForeshadowingUpdateSchema>;
 
