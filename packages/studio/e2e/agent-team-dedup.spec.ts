@@ -20,7 +20,7 @@ test.describe("Agent Team — 协作模式与流程编辑 (#623)", () => {
 
     // Team config tab should exist
     const teamConfigTab = page.locator(
-      '[data-testid="ag-tab-team-config"], button:has-text("Team"), button:has-text("团队"), button:has-text("协作")'
+      '[data-testid="ag-config-tab"], button:has-text("Team"), button:has-text("团队"), button:has-text("协作")'
     ).first();
 
     if (await teamConfigTab.isVisible({ timeout: 5000 }).catch(() => false)) {
@@ -38,7 +38,7 @@ test.describe("Agent Team — 协作模式与流程编辑 (#623)", () => {
 
     // Pipeline/flow tab should exist
     const pipelineTab = page.locator(
-      '[data-testid="ag-tab-pipeline"], button:has-text("流程"), button:has-text("流水线"), button:has-text("Pipeline"), button:has-text("Flow")'
+      '[data-testid="ag-flow-tab"], button:has-text("流程"), button:has-text("流水线"), button:has-text("Pipeline"), button:has-text("Flow")'
     ).first();
 
     if (await pipelineTab.isVisible({ timeout: 5000 }).catch(() => false)) {

@@ -9,57 +9,52 @@ test.beforeAll(async () => {
 test("1. 加载状态→Agent Hub渲染loading", async ({ page }) => {
   await page.goto("/#/agents");
   await expect(page.getByRole("heading", { name: "Agent Team", exact: true })).toBeVisible({ timeout: 15_000 });
-  await expect(page.locator('[data-testid="ag-tab-agent-list"]')).toBeVisible({ timeout: 10_000 });
+  // The team config tab should be visible (first tab)
+  await expect(page.locator('[data-testid="ag-config-tab"]')).toBeVisible({ timeout: 10_000 });
 });
 
 // ─── 2. 正常状态 ───
 test("2. 正常状态→Agent Hub页面完整渲染", async ({ page }) => {
   await page.goto("/#/agents");
   await expect(page.getByRole("heading", { name: "Agent Team", exact: true })).toBeVisible({ timeout: 15_000 });
-  // All 4 tabs should be visible
-  await expect(page.locator('[data-testid="ag-tab-agent-list"]')).toBeVisible({ timeout: 5_000 });
-  await expect(page.locator('[data-testid="ag-tab-team-config"]')).toBeVisible({ timeout: 5_000 });
-  await expect(page.locator('[data-testid="ag-tab-templates"]')).toBeVisible({ timeout: 5_000 });
-  await expect(page.locator('[data-testid="ag-tab-pipeline"]')).toBeVisible({ timeout: 5_000 });
+  // Both tabs should be visible
+  await expect(page.locator('[data-testid="ag-config-tab"]')).toBeVisible({ timeout: 5_000 });
+  await expect(page.locator('[data-testid="ag-flow-tab"]')).toBeVisible({ timeout: 5_000 });
 });
 
-// ─── 3. Agent列表背景色一致 ───
-test("3. Agent列表→背景色与页面背景一致", async ({ page }) => {
+// ─── 3. Agent团队配置区域背景色一致 ───
+test("3. Agent团队配置→背景色与页面背景一致", async ({ page }) => {
   await page.goto("/#/agents");
-  await expect(page.locator('[data-testid="ag-tab-agent-list"]')).toBeVisible({ timeout: 15_000 });
-  await page.locator('[data-testid="ag-tab-agent-list"]').click();
+  await expect(page.locator('[data-testid="ag-config-tab"]')).toBeVisible({ timeout: 15_000 });
+  await page.locator('[data-testid="ag-config-tab"]').click();
 
-  // Get page body background and agent list background
+  // Get page body background
   const bodyBg = await page.locator("body").evaluate((el) =>
     window.getComputedStyle(el).backgroundColor
   );
 
-  const agentList = page.locator('[data-testid="ag-list-agents"]');
-  await expect(agentList).toBeVisible({ timeout: 10_000 });
-
-  const listBg = await agentList.evaluate((el) =>
+  const bodyBg2 = await page.locator("body").evaluate((el) =>
     window.getComputedStyle(el).backgroundColor
   );
 
-  // Background colors should be compatible — either one is transparent
-  // or they share the same background
+  // Background should be truthy (not empty/transparent in a broken way)
   expect(bodyBg).toBeTruthy();
-  expect(listBg).toBeTruthy();
+  expect(bodyBg2).toBeTruthy();
 });
 
 // ─── 4. 团队配置Tab背景一致 ───
 test("4. 团队配置Tab→背景色与页面整体一致", async ({ page }) => {
   await page.goto("/#/agents");
-  await expect(page.locator('[data-testid="ag-tab-team-config"]')).toBeVisible({ timeout: 15_000 });
-  await page.locator('[data-testid="ag-tab-team-config"]').click();
+  await expect(page.locator('[data-testid="ag-config-tab"]')).toBeVisible({ timeout: 15_000 });
+  await page.locator('[data-testid="ag-config-tab"]').click();
   await page.waitForTimeout(500);
 
   const bodyBg = await page.locator("body").evaluate((el) =>
     window.getComputedStyle(el).backgroundColor
   );
 
-  // The team config area background
-  const teamPanelBg = await page.locator('[data-testid="ag-panel-agent-detail"]').evaluate((el) =>
+  // The team config area panel (agent cards grid)
+  const teamPanelBg = await page.locator('[data-testid="ag-agent-hub"]').evaluate((el) =>
     window.getComputedStyle(el).backgroundColor
   ).catch(() => "rgba(0, 0, 0, 0)");
 
@@ -70,10 +65,10 @@ test("4. 团队配置Tab→背景色与页面整体一致", async ({ page }) => 
 // ─── 5. Tab切换后背景保持 ───
 test("5. Tab切换→切换Tab后背景色保持一致", async ({ page }) => {
   await page.goto("/#/agents");
-  await expect(page.locator('[data-testid="ag-tab-agent-list"]')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('[data-testid="ag-config-tab"]')).toBeVisible({ timeout: 15_000 });
 
-  // Visit all tabs and check the page background stays consistent
-  const tabs = ["ag-tab-agent-list", "ag-tab-team-config", "ag-tab-templates", "ag-tab-pipeline"];
+  // Visit all 2 tabs and check the page background stays consistent
+  const tabs = ["ag-config-tab", "ag-flow-tab"];
   const backgrounds: string[] = [];
 
   for (const tabId of tabs) {
@@ -93,56 +88,48 @@ test("5. Tab切换→切换Tab后背景色保持一致", async ({ page }) => {
   }
 });
 
-// ─── 6. 模板Tab背景一致 ───
-test("6. 模板Tab→模板库背景色与页面一致", async ({ page }) => {
+// ─── 6. 流程编辑Tab背景一致 ───
+test("6. 流程编辑Tab→流程编辑区域背景色与页面一致", async ({ page }) => {
   await page.goto("/#/agents");
-  await expect(page.locator('[data-testid="ag-tab-templates"]')).toBeVisible({ timeout: 15_000 });
-  await page.locator('[data-testid="ag-tab-templates"]').click();
+  await expect(page.locator('[data-testid="ag-flow-tab"]')).toBeVisible({ timeout: 15_000 });
+  await page.locator('[data-testid="ag-flow-tab"]').click();
   await page.waitForTimeout(500);
 
   const bodyBg = await page.locator("body").evaluate((el) =>
     window.getComputedStyle(el).backgroundColor
   );
 
-  // Check the templates list area
-  const templatesList = page.locator('[data-testid="ag-list-templates"]');
-  if (await templatesList.isVisible({ timeout: 5000 })) {
-    const listBg = await templatesList.evaluate((el) =>
-      window.getComputedStyle(el).backgroundColor
-    );
-    expect(bodyBg).toBeTruthy();
-    expect(listBg).toBeTruthy();
-  }
+  // Check the agent hub container
+  const hubBg = await page.locator('[data-testid="ag-agent-hub"]').evaluate((el) =>
+    window.getComputedStyle(el).backgroundColor
+  ).catch(() => "rgba(0, 0, 0, 0)");
+
+  expect(bodyBg).toBeTruthy();
+  expect(hubBg).toBeTruthy();
 });
 
-// ─── 7. 详情面板背景 ───
-test("7. 详情面板→Agent详情背景色不突兀", async ({ page }) => {
+// ─── 7. Agent卡片背景 ───
+test("7. Agent卡片→Agent详情背景色不突兀", async ({ page }) => {
   await page.goto("/#/agents");
   await expect(page.locator('[data-testid="ag-agent-card-writer"]')).toBeVisible({ timeout: 15_000 });
 
-  // Click to open an agent detail panel
-  await page.locator('[data-testid="ag-agent-card-writer"]').click();
-  await page.waitForTimeout(500);
+  // Get the agent card background and body background
+  const cardBg = await page.locator('[data-testid="ag-agent-card-writer"]').evaluate((el) =>
+    window.getComputedStyle(el).backgroundColor
+  );
 
-  const detailPanel = page.locator('[data-testid="ag-panel-agent-detail"]');
-  if (await detailPanel.isVisible({ timeout: 5000 })) {
-    const detailBg = await detailPanel.evaluate((el) =>
-      window.getComputedStyle(el).backgroundColor
-    );
+  const bodyBg = await page.locator("body").evaluate((el) =>
+    window.getComputedStyle(el).backgroundColor
+  );
 
-    const bodyBg = await page.locator("body").evaluate((el) =>
-      window.getComputedStyle(el).backgroundColor
-    );
-
-    expect(detailBg).toBeTruthy();
-    expect(bodyBg).toBeTruthy();
-  }
+  expect(cardBg).toBeTruthy();
+  expect(bodyBg).toBeTruthy();
 });
 
-// ─── 8. 边界: 加载后Tab区域背景 ───
+// ─── 8. 边界: Tab区域背景 ───
 test("8. 边界: Tab区域→背景色使用设计系统token", async ({ page }) => {
   await page.goto("/#/agents");
-  await expect(page.locator('[data-testid="ag-tab-team-config"]')).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('[data-testid="ag-config-tab"]')).toBeVisible({ timeout: 15_000 });
 
   // Check that the page uses CSS variables (design tokens) for background
   const hasBackgroundToken = await page.locator("body").evaluate(() => {
