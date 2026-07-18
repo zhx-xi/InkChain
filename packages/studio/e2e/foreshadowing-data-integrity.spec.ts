@@ -139,22 +139,56 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
     await expect(page.getByText(/Cannot read|undefined is not/)).toHaveCount(0);
   });
 
+  // ═══ C2: 保存并验证 ═══
+  test("C2: 创建伏笔 — 保存后卡片出现在列表中", async ({ page }) => {
+    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
+    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.waitForTimeout(3000);
+
+    // 打开创建弹窗
+    const createBtn = page.locator(
+      "[data-testid='fs-create-btn'], button:has-text('创建')"
+    ).first();
+    await expect(createBtn).toBeVisible({ timeout: 10000 });
+    await createBtn.click({ force: true });
+    await page.waitForTimeout(1500);
+
+    // 填写名称
+    const nameInput = page.locator(
+      "[data-testid*='name'], input[placeholder*='名称'], input[placeholder*='伏笔']"
+    ).first();
+    await expect(nameInput).toBeVisible({ timeout: 5000 });
+    await nameInput.fill("E2E-Test-Foreshadow");
+
+    // 点击保存
+    const saveBtn = page.locator(
+      "button:has-text('确定'), button:has-text('保存'), button:has-text('确认'), button:has-text('创建')"
+    ).first();
+    await expect(saveBtn).toBeVisible({ timeout: 3000 });
+    await saveBtn.click({ force: true });
+    await page.waitForTimeout(2000);
+
+    // 新卡片应出现在列表中（带 data-testid fs-item-*）
+    const newItem = page.locator("[data-testid^='fs-item-']").first();
+    await expect(newItem).toBeVisible({ timeout: 8000 });
+  });
+
   // ═══ E3: 持久化 ═══
   test("E3: 刷新后页面结构保持", async ({ page }) => {
     await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
     await page.waitForURL(/#\/book\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
-    // 记录初始 heading
-    const h1 = await page.getByRole("heading", { level: 1 }).first().textContent().catch(() => "");
-    expect(h1.length).toBeGreaterThan(0);
+    // 页头应可见
+    const heading = page.getByRole("heading", { level: 1 }).first();
+    await expect(heading).toBeVisible({ timeout: 10000 });
 
     await page.reload({ waitUntil: "load" });
     await page.waitForURL(/#\/book\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
-    const h1After = await page.getByRole("heading", { level: 1 }).first().textContent().catch(() => "");
-    expect(h1After.length).toBeGreaterThan(0);
+    // 刷新后页头仍可见
+    await expect(heading).toBeVisible({ timeout: 10000 });
 
     await expect(page.getByText(/Cannot read|undefined is not/)).toHaveCount(0);
   });
