@@ -219,7 +219,7 @@ h3 { font-size: 1.25rem; }
 
 /* ── Animation Classes ── */
 .fade-in {
-  animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .stagger-1 { animation-delay: 0.05s; opacity: 0; }
