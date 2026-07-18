@@ -43,6 +43,7 @@ import {
   Pencil,
   Trash2,
   GitBranch,
+  House,
   Clapperboard,
   Rows3,
   Film,
@@ -56,6 +57,7 @@ import {
   Upload,
   BarChart3,
   ClipboardCheck,
+  PanelLeftClose,
   PenLine,
 } from "lucide-react";
 import { InkChainLogo } from "./InkChainLogo";
@@ -142,6 +144,40 @@ export function Sidebar({ nav, activePage, sse, t }: {
   const [projectChatExpanded, setProjectChatExpanded] = useState(true);
   const [myBooksExpanded, setMyBooksExpanded] = useState(true);
   const [filmsExpanded, setFilmsExpanded] = useState(true);
+
+  // ── Sidebar collapse/resize ──
+  const SIDEBAR_STORAGE_KEY = "inkchain-sidebar-collapsed";
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true"; } catch { return false; }
+  });
+  const [sidebarWidth, setSidebarWidth] = useState(260);
+
+  const toggleSidebarCollapse = () => {
+    const next = !sidebarCollapsed;
+    setSidebarCollapsed(next);
+    try { localStorage.setItem(SIDEBAR_STORAGE_KEY, String(next)); } catch { /* ignore */ }
+  };
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = sidebarWidth;
+    const onMouseMove = (moveEvent: MouseEvent) => {
+      const delta = moveEvent.clientX - startX;
+      const newWidth = Math.max(60, Math.min(500, startWidth + delta));
+      setSidebarWidth(newWidth);
+    };
+    const onMouseUp = () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    };
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  };
 
   const books = data?.books ?? [];
   const films = filmsData?.films ?? [];
@@ -309,22 +345,72 @@ export function Sidebar({ nav, activePage, sse, t }: {
   };
 
   return (
-    <aside className="w-[260px] shrink-0 border-r border-border bg-background/80 backdrop-blur-md flex flex-col h-full overflow-hidden select-none">
-      {/* Logo Area */}
-      <div className="px-6 py-8">
+    <aside
+      className="shrink-0 border-r border-border bg-background/80 backdrop-blur-md flex flex-col h-full overflow-hidden select-none relative group/sidebar"
+      style={{ width: sidebarCollapsed ? 60 : sidebarWidth }}
+    >
+      {/* Resize Handle — right edge, only visible when expanded */}
+      {!sidebarCollapsed && (
+        <div
+          className="absolute right-0 top-0 bottom-0 w-1.5 cursor-col-resize hover:bg-primary/30 active:bg-primary/50 transition-colors z-10"
+          onMouseDown={handleResizeStart}
+          data-testid="sidebar-resize-handle"
+        />
+      )}
+
+      {/* Logo Area — show compact logo when collapsed */}
+      <div className={sidebarCollapsed ? "px-3 py-4 flex justify-center" : "px-6 py-8"}>
         <button
           onClick={nav.toDashboard}
           className="group flex items-center gap-3 hover:opacity-80 transition-all duration-300"
         >
-          <InkChainLogo className="w-11 h-11 shrink-0 group-hover:scale-105 transition-transform" />
-          <div className="flex flex-col">
-            <span className="font-serif text-[27px] leading-none italic font-medium">InkChain</span>
-            <span className="text-[13px] uppercase tracking-[0.22em] text-muted-foreground font-bold mt-1.5">Studio</span>
-          </div>
+          <InkChainLogo className={sidebarCollapsed ? "w-8 h-8 shrink-0" : "w-11 h-11 shrink-0 group-hover:scale-105 transition-transform"} />
+          {!sidebarCollapsed && (
+            <div className="flex flex-col">
+              <span className="font-serif text-[27px] leading-none italic font-medium">InkChain</span>
+              <span className="text-[13px] uppercase tracking-[0.22em] text-muted-foreground font-bold mt-1.5">Studio</span>
+            </div>
+          )}
+        </button>
+        {/* Collapse toggle button */}
+        <button
+          type="button"
+          onClick={toggleSidebarCollapse}
+          className={sidebarCollapsed
+            ? "mt-4 flex items-center justify-center w-8 h-8 rounded-md text-muted-foreground hover:bg-secondary/30 hover:text-foreground transition-colors mx-auto"
+            : "absolute top-4 right-2 flex items-center justify-center w-6 h-6 rounded-md text-muted-foreground/40 hover:text-foreground hover:bg-secondary/30 transition-colors opacity-0 group-hover/sidebar:opacity-100"
+          }
+          data-testid="sidebar-collapse-toggle"
+          aria-label={sidebarCollapsed ? "展开侧边栏" : "收起侧边栏"}
+        >
+          <PanelLeftClose size={sidebarCollapsed ? 16 : 14} />
         </button>
       </div>
 
-      {/* Main Navigation */}
+      {/* Main Navigation — hide dense content when collapsed */}
+      {sidebarCollapsed ? (
+        <div className="flex-1 flex flex-col items-center gap-2 px-2 py-2">
+          {/* Quick nav icons when collapsed */}
+          <button type="button" onClick={nav.toDashboard} className="w-10 h-10 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary/30 hover:text-foreground transition-colors" title="首页">
+            <House size={18} />
+          </button>
+          <button type="button" onClick={nav.toAgents} className="w-10 h-10 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary/30 hover:text-foreground transition-colors" title="Agent Team">
+            <Users size={18} />
+          </button>
+          <button type="button" onClick={nav.toWorlds} className="w-10 h-10 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary/30 hover:text-foreground transition-colors" title="世界设定">
+            <Globe size={18} />
+          </button>
+          <button type="button" onClick={nav.toSkills} className="w-10 h-10 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary/30 hover:text-foreground transition-colors" title="技能">
+            <Sparkles size={18} />
+          </button>
+          <button type="button" onClick={nav.toGenres} className="w-10 h-10 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary/30 hover:text-foreground transition-colors" title="体裁">
+            <Boxes size={18} />
+          </button>
+          <button type="button" onClick={nav.toServices} className="w-10 h-10 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-secondary/30 hover:text-foreground transition-colors" title="设置">
+            <Settings size={18} />
+          </button>
+        </div>
+      ) : (
       <div className="flex-1 overflow-y-auto px-4 py-2 space-y-6">
         {/* InkChain Create Section — always visible, two columns. */}
         <div>
@@ -757,6 +843,7 @@ export function Sidebar({ nav, activePage, sse, t }: {
           </div>
         </div>
       </div>
+      )}
 
       {/* Footer / Status Area — only show when agent is online */}
       {daemon?.running && (
