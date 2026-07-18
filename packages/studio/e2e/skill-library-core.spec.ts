@@ -8,14 +8,16 @@ import { test, expect } from "@playwright/test";
  * States: loading, empty, normal, disabled, error, reverted, no-versions
  */
 
+const NAV_TIMEOUT = 10_000;
+
 test.describe("SkillListPage — 核心创作功能基线", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/#/skills");
+    await page.goto("/#/skills", { timeout: NAV_TIMEOUT });
   });
 
   test("1. 正常加载: 页面显示", async ({ page }) => {
-    await page.waitForTimeout(3000);
-    await expect(page.locator("body")).toBeVisible();
+    await page.waitForTimeout(5000);
+    await expect(page.locator("body")).toBeVisible({ timeout: 10_000 });
   });
 
   test("2. 创建Skill按钮存在", async ({ page }) => {
