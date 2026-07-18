@@ -14,11 +14,18 @@ test("1. 加载Skill库→分页显示", async ({ page }) => {
     return root && root.children.length > 0;
   }, { timeout: 30_000 });
 
-  // Wait for fade-in CSS animation to complete (500ms) + reactivity settling
-  await page.waitForTimeout(2000);
+  // Wait for fade-in CSS animation + StrictMode double-render settling
+  await page.waitForTimeout(1000);
 
-  // Verify heading exists
-  await expect(page.getByRole("heading", { name: "Skill 库" }).first()).toBeVisible({ timeout: 10_000 });
+  // Retry heading presence — StrictMode double-render may briefly unmount
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const h1 = page.getByRole("heading", { name: "Skill 库" });
+    if (await h1.first().isVisible().catch(() => false)) break;
+    await page.waitForTimeout(2000);
+  }
+
+  const h1 = page.getByRole("heading", { name: "Skill 库" });
+  await expect(h1.first()).toBeVisible({ timeout: 10_000 });
 
   // Should show skill count
   await expect(page.getByText(/共 \d+ 个 Skill/)).toBeVisible({ timeout: 10_000 });
