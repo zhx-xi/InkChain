@@ -378,7 +378,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
         className="absolute inset-0 cursor-default"
         onClick={handleClose}
       />
-      <aside className="relative flex h-full w-[min(680px,calc(100vw-24px))] flex-col border-l border-border/55 bg-background shadow-2xl pt-[72px]">
+      <aside data-testid="sk-modal-skill-editor" className="relative flex h-full w-[min(680px,calc(100vw-24px))] flex-col border-l border-border/55 bg-background shadow-2xl pt-[72px]">
         <header className="flex items-start justify-between gap-4 border-b border-border/45 px-6 py-5">
           <div className="min-w-0">
             <h3 className="text-[13px] font-medium uppercase tracking-[0.18em] text-muted-foreground/65">
@@ -416,6 +416,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
             )}
             <button
               type="button"
+              data-testid="cancel-btn"
               onClick={handleClose}
               className="rounded-lg border border-border/50 p-2 text-muted-foreground transition hover:bg-secondary/60 hover:text-foreground"
               aria-label="关闭"
@@ -541,7 +542,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
                   <label className="text-[13px] font-medium text-foreground">Skill ID</label>
                   <input
                     type="text"
-                    data-testid="name-input"
+                    data-testid="sk-input-skill-name"
                     value={draft.id}
                     onChange={(e) => setDraft({ ...draft, id: e.target.value })}
                     placeholder="skill-id (kebab-case)"
