@@ -2121,10 +2121,20 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
   // bookmarks, scripts) that call the old /api/ prefix are transparently
   // redirected with 308 (Permanent Redirect), which preserves the HTTP method.
   // Playwright / fetch automatically follow the redirect.
+
+  // Specific: the old /api/extract was restructured to /api/v1/books/extract
+  // (prefix change + structural), so a plain prefix rewrite doesn't work.
+  app.use("/api/extract", async (c) => {
+    const url = new URL(c.req.url);
+    return c.redirect(`/api/v1/books/extract${url.search}`, 308);
+  });
+
+  // General: rewrite /api/* → /api/v1/* for all other paths
   app.use("/api/*", async (c, next) => {
-    const path = c.req.path;
+    const url = new URL(c.req.url);
+    const path = url.pathname;
     if (!path.startsWith("/api/v1/")) {
-      const newPath = `/api/v1${path.slice(4)}`;
+      const newPath = `/api/v1${path.slice(4)}${url.search}`;
       return c.redirect(newPath, 308);
     }
     await next();
