@@ -294,7 +294,7 @@ jobs:
     if: needs.changes.outputs.flow == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
-      spec: "flow flow-editor flow-screenshot relation-graph relation-graph-core"
+      spec: "flow flow-editor flow-screenshot relation-graph relation-graph-core relation-graph-enhancements"
       group-name: "Flow & Relations"
 
   misc-data:
