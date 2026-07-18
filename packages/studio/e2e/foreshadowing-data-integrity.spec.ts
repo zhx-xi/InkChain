@@ -150,7 +150,7 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
       "[data-testid='fs-create-btn'], button:has-text('创建')"
     ).first();
     await expect(createBtn).toBeVisible({ timeout: 10000 });
-    await createBtn.click({ force: true });
+    await createBtn.click();
     await page.waitForTimeout(1500);
 
     // 填写名称
@@ -165,14 +165,11 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
       "button:has-text('确定'), button:has-text('保存'), button:has-text('确认'), button:has-text('创建')"
     ).first();
     await expect(saveBtn).toBeVisible({ timeout: 3000 });
-    await saveBtn.click({ force: true });
+    await saveBtn.click();
 
-    // Wait for dialog to close (save success) or error to appear
-    await page.waitForTimeout(3000);
-    const hasError = await page.getByText(/不能为空|error|失败/).first().isVisible().catch(() => false);
-    if (hasError) {
-      console.log("Save error detected, page body:", await page.locator("body").innerText().catch(() => ""));
-    }
+    // Wait for dialog to close — wait for the create button to re-appear
+    await page.waitForTimeout(2000);
+    await expect(createBtn).toBeVisible({ timeout: 10_000 });
 
     // 新卡片应出现在列表中（带 data-testid fs-item-*）
     const newItem = page.locator("[data-testid^='fs-item-']").first();
