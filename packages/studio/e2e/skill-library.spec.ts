@@ -8,12 +8,12 @@ test("1. 加载Skill库→分页显示", async ({ page }) => {
     page.goto("/#/skills", { waitUntil: "domcontentloaded" })
   );
 
-  // Wait for the sk-list-skills or sk-state-* testid to appear
-  await page.waitForSelector("[data-testid^='sk-']", { timeout: 30_000 });
-  await page.waitForTimeout(1000);
+  // Wait for the SkillListPage to fully render (sk-btn-create-skill is unconditional)
+  await page.waitForSelector("[data-testid='sk-btn-create-skill']", { timeout: 30_000 });
+  await page.waitForTimeout(500);
 
-  // Verify heading is visible
-  await expect(page.getByRole('heading', { name: 'Skill 库' })).toBeVisible({ timeout: 5_000 });
+  // Verify heading using plain text selector (more reliable than getByRole in CI)
+  await expect(page.locator("h1").filter({ hasText: "Skill 库" }).first()).toBeVisible({ timeout: 5_000 });
   await expect(page.getByText("管理项目级与内置 Skill，控制启用状态与分类")).toBeVisible();
 
   // Should show skill count
