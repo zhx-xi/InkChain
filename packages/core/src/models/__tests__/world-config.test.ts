@@ -126,6 +126,17 @@ describe("WorldConfig schemas (Issue #77)", () => {
     expect(parsed).toEqual({ name: "Updated" });
   });
 
+  it("update schema does NOT inject defaults for missing fields (#731 fix)", () => {
+    // Regression: .partial() preserved .default() causing data loss.
+    // Only explicitly provided fields should appear in the result.
+    const parsed = WorldConfigUpdateSchema.parse({ name: "Updated" });
+    expect(parsed.name).toBe("Updated");
+    expect(parsed).not.toHaveProperty("description");
+    expect(parsed).not.toHaveProperty("settings");
+    expect(parsed).not.toHaveProperty("roles");
+    expect(parsed).not.toHaveProperty("bookIds");
+  });
+
   it("parses world with references (Wrld-5)", () => {
     const parsed = WorldConfigSchema.parse({
       ...minimalWorld(),

@@ -195,7 +195,20 @@ export const WorldConfigSchema = z.object({
 });
 export type WorldConfig = z.infer<typeof WorldConfigSchema>;
 
-export const WorldConfigUpdateSchema = WorldConfigSchema.partial().omit({ id: true, createdAt: true });
+export const WorldConfigUpdateSchema = z.object({
+  name: z.string().min(1).optional(),
+  description: z.string().optional(),
+  updatedAt: z.string().min(1).optional(),
+  settings: z.array(WorldSettingEntrySchema).optional(),
+  roles: z.array(WorldRoleSchema).optional(),
+  relations: z.array(WorldRelationSchema).optional(),
+  regions: z.array(WorldRegionSchema).optional(),
+  institutions: z.array(WorldInstitutionSchema).optional(),
+  history: z.array(WorldHistoryEventSchema).optional(),
+  rules: z.array(WorldRuleSchema).optional(),
+  references: z.array(WorldReferenceSchema).optional(),
+  bookIds: z.array(z.string()).optional(),
+});
 export type WorldConfigUpdate = z.infer<typeof WorldConfigUpdateSchema>;
 
 export const WORLD_DIMENSION_KEYS = [
