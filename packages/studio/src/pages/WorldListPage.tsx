@@ -171,7 +171,6 @@ export function WorldListPage({ nav, bookId }: {
                 window.location.hash = bookId ? `#/worlds/new/${encodeURIComponent(bookId)}` : "#/worlds/new";
               }
             }}
-            data-testid="wl-btn-create-world"
             className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
           >
             <Plus size={16} />

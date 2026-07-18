@@ -149,7 +149,7 @@ export function Dashboard({ nav, sse, theme, t }: { nav: Nav; sse: { messages: R
   }, [refetch, sse.messages]);
 
   if (loading) return (
-    <div data-testid="dash-state-loading" className="flex flex-col items-center justify-center py-32 space-y-4">
+    <div className="flex flex-col items-center justify-center py-32 space-y-4">
       <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
       <span className="text-sm text-muted-foreground animate-pulse">Gathering manuscripts...</span>
     </div>
