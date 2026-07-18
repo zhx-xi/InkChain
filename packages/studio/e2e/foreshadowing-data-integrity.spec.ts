@@ -167,9 +167,14 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
     await expect(saveBtn).toBeVisible({ timeout: 3000 });
     await saveBtn.click({ force: true });
 
-    // Wait for dialog to close — wait for the create button to re-appear
+    // Wait for dialog to close (dialog disappears → create button re-appears)
     await page.waitForTimeout(2000);
     await expect(createBtn).toBeVisible({ timeout: 10_000 });
+
+    // Reload to verify the entry was persisted to disk
+    await page.reload();
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
+    await page.waitForTimeout(2000);
 
     // 新卡片应出现在列表中（带 data-testid fs-item-*）
     const newItem = page.locator("[data-testid^='fs-item-']").first();
