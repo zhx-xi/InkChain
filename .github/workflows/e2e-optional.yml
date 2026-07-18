@@ -230,7 +230,7 @@ jobs:
     if: needs.changes.outputs.audit == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
-      spec: "audit-context-popup audit-fix-button audit-page-core audit-volumes"
+      spec: "audit-context-popup audit-fix-button audit-page-core audit-volumes audit-entry-refactor"
       group-name: "Audit"
 
   authoring:
