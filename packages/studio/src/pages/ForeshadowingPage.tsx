@@ -127,7 +127,7 @@ function CreateForeshadowingModal({
           notes,
         }),
       });
-      onSaved();
+      await onSaved();
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -311,7 +311,7 @@ function EditForeshadowingModal({
           notes: draft.notes,
         }),
       });
-      onSaved();
+      await onSaved();
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -330,7 +330,7 @@ function EditForeshadowingModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ payoffChapter: currentChapter }),
       });
-      onSaved();
+      await onSaved();
       onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
