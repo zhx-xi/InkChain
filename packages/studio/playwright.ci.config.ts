@@ -10,7 +10,7 @@ export default defineConfig({
   globalSetup: "./e2e/global-setup.ts",
   timeout: 60_000,
   retries: 2,  // Flaky test retry (cold-start issues on CI runners)
-  workers: 1,  // Sequential execution avoids Vite parallel-compile conflicts
+  workers: 4,  // CI runner 2-core → 2-4x speedup per group
   use: {
     baseURL: "http://localhost:4580",
     headless: true,
