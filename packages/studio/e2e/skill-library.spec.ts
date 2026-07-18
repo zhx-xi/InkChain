@@ -3,29 +3,17 @@ import { test, expect } from "@playwright/test";
 // Skills are pre-seeded by global-setup.ts — no need for seedSkillLibrary here.
 
 test("1. 加载Skill库→分页显示", async ({ page }) => {
-  // Cold-start: retry navigation
+  // Cold-start: retry navigation with explicit hash
   await page.goto("/#/skills", { waitUntil: "load", timeout: 30_000 }).catch(() =>
     page.goto("/#/skills", { waitUntil: "domcontentloaded" })
   );
 
-  // Wait for React to mount — root div must have children
-  await page.waitForFunction(() => {
-    const root = document.getElementById("root");
-    return root && root.children.length > 0;
-  }, { timeout: 30_000 });
+  // Wait for the SkillListPage to fully render by checking for its testid
+  await page.waitForSelector("[data-testid='sk-btn-create-skill']", { timeout: 30_000 });
+  await page.waitForTimeout(500);
 
-  // Wait for fade-in CSS animation + StrictMode double-render settling
-  await page.waitForTimeout(1000);
-
-  // Retry heading presence — StrictMode double-render may briefly unmount
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const h1 = page.getByRole("heading", { name: "Skill 库" });
-    if (await h1.first().isVisible().catch(() => false)) break;
-    await page.waitForTimeout(2000);
-  }
-
-  const h1 = page.getByRole("heading", { name: "Skill 库" });
-  await expect(h1.first()).toBeVisible({ timeout: 10_000 });
+  // Verify heading exists
+  await expect(page.getByRole("heading", { name: "Skill 库" }).first()).toBeVisible({ timeout: 10_000 });
 
   // Should show skill count
   await expect(page.getByText(/共 \d+ 个 Skill/)).toBeVisible({ timeout: 10_000 });
