@@ -3,20 +3,17 @@ import { test, expect } from "@playwright/test";
 // Skills are pre-seeded by global-setup.ts — no need for seedSkillLibrary here.
 
 test("1. 加载Skill库→分页显示", async ({ page }) => {
-  // Cold-start: use load (not networkidle — Vite HMR WS keeps network busy)
-  await page.goto("/#/skills", { waitUntil: "load", timeout: 20_000 }).catch(() =>
-    page.goto("/#/skills", { waitUntil: "load" })
+  // Cold-start: retry navigation + wait for React + explicit h1 check
+  await page.goto("/#/skills", { waitUntil: "load", timeout: 30_000 }).catch(() =>
+    page.goto("/#/skills", { waitUntil: "domcontentloaded" })
   );
 
-  // Wait for React mount (same pattern as skill-library-core which passes)
-  await page.waitForFunction(() => {
-    const root = document.getElementById("root");
-    return root && root.children.length > 0;
-  }, { timeout: 15_000 });
+  // Wait for the sk-list-skills or sk-state-* testid to appear
+  await page.waitForSelector("[data-testid^='sk-']", { timeout: 30_000 });
   await page.waitForTimeout(1000);
 
-  // Wait for the skill list to render
-  await expect(page.getByRole('heading', { name: 'Skill 库' })).toBeVisible({ timeout: 15_000 });
+  // Verify heading is visible
+  await expect(page.getByRole('heading', { name: 'Skill 库' })).toBeVisible({ timeout: 5_000 });
   await expect(page.getByText("管理项目级与内置 Skill，控制启用状态与分类")).toBeVisible();
 
   // Should show skill count
