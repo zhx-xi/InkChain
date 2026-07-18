@@ -657,7 +657,72 @@ describe("Sidebar — Tools Area", () => {
     setupDefaultMockData();
   });
 
-  it("12. Tools section contains Agent Team / 世界设定 / 会话归档 / Skill 库 entries", async () => {
+  it("12. Sidebar collapse toggle button exists and has data-testid", async () => {
+    const { Sidebar } = await import("../Sidebar");
+    const { container, cleanup } = renderIntoContainer(
+      <Sidebar
+        nav={mockNav as unknown as import("../Sidebar").Nav}
+        activePage="chat"
+        sse={{ messages: [] }}
+        t={(key: string) => key}
+      />,
+    );
+
+    const collapseBtn = container.querySelector('[data-testid="sidebar-collapse-toggle"]');
+    expect(collapseBtn).toBeTruthy();
+    expect(collapseBtn?.getAttribute("aria-label")).toBe("收起侧边栏");
+
+    cleanup();
+  });
+
+  it("13. Click collapse toggle changes sidebar width", async () => {
+    const { Sidebar } = await import("../Sidebar");
+    const { container, cleanup, queryByText } = renderIntoContainer(
+      <Sidebar
+        nav={mockNav as unknown as import("../Sidebar").Nav}
+        activePage="chat"
+        sse={{ messages: [] }}
+        t={(key: string) => key}
+      />,
+    );
+
+    // Initially expanded — contains section labels
+    const aside = container.querySelector("aside");
+    expect(aside).toBeTruthy();
+
+    const collapseBtn = container.querySelector('[data-testid="sidebar-collapse-toggle"]') as HTMLButtonElement;
+    expect(collapseBtn).toBeTruthy();
+
+    // Click to collapse
+    act(() => { collapseBtn.click(); });
+    expect(collapseBtn.getAttribute("aria-label")).toBe("展开侧边栏");
+
+    // Click to expand back
+    act(() => { collapseBtn.click(); });
+    expect(collapseBtn.getAttribute("aria-label")).toBe("收起侧边栏");
+
+    cleanup();
+  });
+
+  it("14. Resize handle exists when sidebar is expanded", async () => {
+    const { Sidebar } = await import("../Sidebar");
+    const { container, cleanup } = renderIntoContainer(
+      <Sidebar
+        nav={mockNav as unknown as import("../Sidebar").Nav}
+        activePage="chat"
+        sse={{ messages: [] }}
+        t={(key: string) => key}
+      />,
+    );
+
+    const resizeHandle = container.querySelector('[data-testid="sidebar-resize-handle"]');
+    expect(resizeHandle).toBeTruthy();
+    expect(resizeHandle?.textContent).toBe("");
+
+    cleanup();
+  });
+
+  it("15. Tools section contains Agent Team / 世界设定 / 会话归档 / Skill 库 entries", async () => {
     const { Sidebar } = await import("../Sidebar");
     const { container, cleanup } = renderIntoContainer(
       <Sidebar
