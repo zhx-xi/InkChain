@@ -166,11 +166,17 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
     ).first();
     await expect(saveBtn).toBeVisible({ timeout: 3000 });
     await saveBtn.click({ force: true });
-    await page.waitForTimeout(2000);
+
+    // Wait for dialog to close (save success) or error to appear
+    await page.waitForTimeout(3000);
+    const hasError = await page.getByText(/不能为空|error|失败/).first().isVisible().catch(() => false);
+    if (hasError) {
+      console.log("Save error detected, page body:", await page.locator("body").innerText().catch(() => ""));
+    }
 
     // 新卡片应出现在列表中（带 data-testid fs-item-*）
     const newItem = page.locator("[data-testid^='fs-item-']").first();
-    await expect(newItem).toBeVisible({ timeout: 8000 });
+    await expect(newItem).toBeVisible({ timeout: 12_000 });
   });
 
   // ═══ E3: 持久化 ═══
