@@ -1,170 +1,161 @@
 // ── Foreshadowing — 伏笔数据完整性 E2E (Issue #732) ──
-// Bug: 更新后所有伏笔线索数据消失
-// 4-state coverage: normal/empty/error/edge
-// Verifies API route format + data persistence + CRUD operations
+// Bug: 更新后所有伏笔线索数据消失 — API 路由/数据格式变更导致无法加载
+// 强断言版: 功能未实现 → 测试应全红 (E2E Required ✅ + 功能 E2E ❌)
+// 4-state coverage: normal / error / empty / edge
 
 import { test, expect } from "@playwright/test";
 
 const BASE_URL = "http://localhost:4580";
 
-test.describe("Foreshadowing — 伏笔数据完整性", () => {
-  test.beforeEach(async ({ page }) => {
-    // Navigate to foreshadowing page for a test book
-    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`, {
-      waitUntil: "load",
-    });
+test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
+
+  // ═══ N1: 页面加载 + 核心 UI 元素 ═══
+  test("N1: 伏笔页面加载 — 页头和创建按钮可见", async ({ page }) => {
+    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
+    await page.waitForURL(/#\/book\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
-  });
 
-  // ─── Normal state: data loads ───
+    // 页头应可见 (h1 heading)
+    const heading = page.getByRole("heading", { level: 1 }).first();
+    await expect(heading).toBeVisible({ timeout: 10000 });
 
-  test("N1: 伏笔页面加载 — 显示标题或内容", async ({ page }) => {
-    await page.waitForURL(/#\/book\//, { timeout: 10000 });
-
-    const bodyText = await page.locator("body").innerText();
-    expect(bodyText.length).toBeGreaterThan(10);
-
-    // Page should show foreshadowing-related content or at minimum not be blank
-    const hasContent =
-      (await page.getByText(/伏笔|foreshadow|clue|线索/i).first().isVisible({ timeout: 5000 }).catch(() => false)) ||
-      bodyText.length > 20;
-    expect(hasContent).toBeTruthy();
-  });
-
-  test("N2: 关键功能按钮存在", async ({ page }) => {
-    await page.waitForTimeout(2000);
-
-    // Create button
+    // 创建按钮应可见 — 核心功能入口
     const createBtn = page.locator(
-      "[data-testid='fs-create-btn'], [data-testid='fs-btn-create-foreshadowing'], button:has-text('创建')"
+      "[data-testid='fs-create-btn'], button:has-text('创建')"
     ).first();
-    const createVisible = await createBtn.isVisible({ timeout: 5000 }).catch(() => false);
-    console.log(`Create button visible: ${createVisible}`);
+    await expect(createBtn).toBeVisible({ timeout: 10000 });
 
-    // AI extract button
+    // AI 提取按钮应可见
     const aiBtn = page.locator(
-      "[data-testid='fs-extract-btn'], [data-testid='fs-btn-ai-extract'], button:has-text('AI')"
+      "[data-testid='fs-extract-btn'], button:has-text('AI')"
     ).first();
-    const aiVisible = await aiBtn.isVisible({ timeout: 5000 }).catch(() => false);
-    console.log(`AI extract button visible: ${aiVisible}`);
-
-    // At least one functional button should be present
-    expect(createVisible || aiVisible).toBeTruthy();
+    await expect(aiBtn).toBeVisible({ timeout: 10000 });
   });
 
-  test("N3: 搜索输入框存在 — 可输入搜索关键词", async ({ page }) => {
-    await page.waitForTimeout(2000);
+  // ═══ N2: 数据列表有内容 ═══
+  test("N2: 伏笔列表渲染 — 展示数据项或列表容器", async ({ page }) => {
+    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
+    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.waitForTimeout(4000);
+
+    // 查找伏笔数据项 (data-testid fs-item-*) 或列表容器
+    const listOrItems = page.locator(
+      "[data-testid^='fs-item'], [data-testid^='fs-list'], " +
+      "[data-testid^='fs-table'], table tbody tr"
+    ).first();
+    await expect(listOrItems).toBeVisible({ timeout: 8000 });
+
+    // 无崩溃
+    await expect(page.getByText(/Cannot read|undefined is not/)).toHaveCount(0);
+  });
+
+  // ═══ N3: 搜索可交互 ═══
+  test("N3: 搜索框可输入关键词", async ({ page }) => {
+    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
+    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.waitForTimeout(3000);
 
     const searchInput = page.locator(
-      "[data-testid='fs-search-input'], [data-testid='fs-input-search'], " +
-      "input[placeholder*='搜索'], input[placeholder*='search'], input[type='text']"
+      "[data-testid='fs-search-input'], input[placeholder*='搜索'], input[placeholder*='search']"
     ).first();
+    await expect(searchInput).toBeVisible({ timeout: 10000 });
 
-    const inputVisible = await searchInput.isVisible({ timeout: 5000 }).catch(() => false);
-    if (inputVisible) {
-      await searchInput.fill("test");
-      const value = await searchInput.inputValue();
-      expect(value).toBe("test");
-    } else {
-      // Page loaded OK — search may be in a collapsed panel
-      const bodyText = await page.locator("body").innerText();
-      expect(bodyText.length).toBeGreaterThan(10);
-    }
+    await searchInput.fill("test-clue");
+    await expect(searchInput).toHaveValue("test-clue");
   });
 
-  // ─── Data integrity: verify existing data is preserved ───
+  // ═══ D1: 无 API 404 ═══
+  test("D1: API 不返回 404", async ({ page }) => {
+    let has404 = false;
+    page.on("response", (r) => {
+      if (r.url().includes("/api/") && r.status() === 404) has404 = true;
+    });
 
-  test("D1: 页面不显示 404 或错误状态", async ({ page }) => {
+    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
+    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.waitForTimeout(4000);
+
+    expect(has404).toBe(false);
+
+    const main = page.locator("main, [role='main'], #root > *").first();
+    await expect(main).toBeVisible({ timeout: 5000 });
+  });
+
+  // ═══ C1: 创建弹窗 ═══
+  test("C1: 创建伏笔 — 弹窗包含表单字段", async ({ page }) => {
+    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
+    await page.waitForURL(/#\/book\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
-
-    // Check for error indicators
-    const errorText = await page.getByText(/404|not found|错误|error|失败/i).first().isVisible({ timeout: 3000 }).catch(() => false);
-    console.log(`404/error text visible: ${errorText}`);
-
-    // Page should not show obvious error states
-    // (unless backend returns data correctly)
-    const bodyText = await page.locator("body").innerText();
-    const hasCrashSigns = /(Cannot read|undefined is not|Unexpected token|Failed to fetch)/.test(bodyText);
-    expect(hasCrashSigns).toBeFalsy();
-  });
-
-  test("D2: 视图切换功能正常 — 列表/卡片/关系图切换", async ({ page }) => {
-    await page.waitForTimeout(2000);
-
-    const viewBtns = page.locator(
-      "[data-testid*='view-list'], [data-testid*='view-card'], [data-testid*='view-graph'], " +
-      "button:has-text('列表'), button:has-text('卡片'), button:has-text('关系')"
-    );
-
-    const viewCount = await viewBtns.count();
-    console.log(`View toggle buttons: ${viewCount}`);
-
-    if (viewCount > 0) {
-      // Click each view toggle and verify no crash
-      for (let i = 0; i < Math.min(viewCount, 2); i++) {
-        const btn = viewBtns.nth(i);
-        const visible = await btn.isVisible({ timeout: 3000 }).catch(() => false);
-        if (visible) {
-          await btn.click({ force: true });
-          await page.waitForTimeout(1000);
-          const bodyText = await page.locator("body").innerText();
-          expect(bodyText.length).toBeGreaterThan(5);
-        }
-      }
-    }
-  });
-
-  // ─── CRUD: create foreshadowing ───
-
-  test("C1: 创建伏笔 — 打开创建弹窗", async ({ page }) => {
-    await page.waitForTimeout(2000);
 
     const createBtn = page.locator(
-      "[data-testid='fs-create-btn'], [data-testid='fs-btn-create-foreshadowing'], button:has-text('创建')"
+      "[data-testid='fs-create-btn'], button:has-text('创建')"
     ).first();
-
-    const btnVisible = await createBtn.isVisible({ timeout: 5000 }).catch(() => false);
-    if (!btnVisible) {
-      console.log("Create button not found, skipping create test");
-      return;
-    }
-
+    await expect(createBtn).toBeVisible({ timeout: 10000 });
     await createBtn.click({ force: true });
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(1500);
 
-    // A modal or form should appear
-    const modal = page.locator(
-      "[data-testid*='create'], [data-testid*='modal'], [role='dialog'], [class*='Modal'], [class*='Dialog']"
+    // 弹窗应出现
+    const dialog = page.locator(
+      "[data-testid*='create'], [data-testid*='modal'], " +
+      "[role='dialog'], [class*='Modal'], [class*='Dialog'], [class*='Sheet']"
     ).first();
+    await expect(dialog).toBeVisible({ timeout: 5000 });
 
-    const modalVisible = await modal.isVisible({ timeout: 3000 }).catch(() => false);
-    console.log(`Create modal visible: ${modalVisible}`);
-    expect(modalVisible).toBeTruthy();
+    // 弹窗内应有确认/取消按钮
+    const actionBtns = page.locator(
+      "button:has-text('确定'), button:has-text('保存'), " +
+      "button:has-text('确认'), button:has-text('创建'), button:has-text('取消')"
+    ).first();
+    await expect(actionBtns).toBeVisible({ timeout: 3000 });
   });
 
-  // ─── Empty state ───
-
-  test("E1: 空状态 — 无数据时不崩溃", async ({ page }) => {
-    // Navigate to a book that may have no foreshadowing data
-    await page.goto(`${BASE_URL}/#/book/new-empty-book-999/foreshadowing`, {
-      waitUntil: "load",
-    });
+  // ═══ E1: 空状态 ═══
+  test("E1: 空状态 — 无数据时有提示", async ({ page }) => {
+    await page.goto(`${BASE_URL}/#/book/new-empty-book-999/foreshadowing`);
+    await page.waitForURL(/#\/book\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
-    const bodyText = await page.locator("body").innerText();
-    expect(bodyText.length).toBeGreaterThan(0);
+    // 空状态应显示提示或至少页面有结构
+    const emptyOrContainer = page.locator(
+      "[data-testid='fs-empty'], [class*='empty'], [role='main'], main"
+    ).first();
+    await expect(emptyOrContainer).toBeVisible({ timeout: 8000 });
+
+    await expect(page.getByText(/Cannot read|undefined is not/)).toHaveCount(0);
   });
 
-  // ─── Error state ───
-
+  // ═══ E2: 错误状态 ═══
   test("E2: 错误状态 — 无效 bookId 不白屏", async ({ page }) => {
-    await page.goto(`${BASE_URL}/#/book/__invalid__/foreshadowing`, {
-      waitUntil: "load",
-    });
+    await page.goto(`${BASE_URL}/#/book/__invalid__/foreshadowing`);
+    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.waitForTimeout(4000);
+
+    // 应有错误提示或页面结构
+    const content = page.locator(
+      "main, [role='main'], #root > *, [class*='error'], [class*='toast']"
+    ).first();
+    await expect(content).toBeVisible({ timeout: 8000 });
+
+    await expect(page.getByText(/Cannot read|undefined is not/)).toHaveCount(0);
+  });
+
+  // ═══ E3: 持久化 ═══
+  test("E3: 刷新后页面结构保持", async ({ page }) => {
+    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
+    await page.waitForURL(/#\/book\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
-    const bodyText = await page.locator("body").innerText();
-    // Page should render something, even if error
-    expect(bodyText.length).toBeGreaterThan(0);
+    // 记录初始 heading
+    const h1 = await page.getByRole("heading", { level: 1 }).first().textContent().catch(() => "");
+    expect(h1.length).toBeGreaterThan(0);
+
+    await page.reload({ waitUntil: "load" });
+    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.waitForTimeout(3000);
+
+    const h1After = await page.getByRole("heading", { level: 1 }).first().textContent().catch(() => "");
+    expect(h1After.length).toBeGreaterThan(0);
+
+    await expect(page.getByText(/Cannot read|undefined is not/)).toHaveCount(0);
   });
 });
