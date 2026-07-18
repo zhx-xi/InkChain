@@ -3,30 +3,21 @@ import { test, expect } from "@playwright/test";
 // Skills are pre-seeded by global-setup.ts — no need for seedSkillLibrary here.
 
 test("1. 加载Skill库→分页显示", async ({ page }) => {
-  // Cold-start: retry navigation + wait for React + explicit h1 check
+  // Cold-start: retry navigation
   await page.goto("/#/skills", { waitUntil: "load", timeout: 30_000 }).catch(() =>
     page.goto("/#/skills", { waitUntil: "domcontentloaded" })
   );
 
-  // Wait for the SkillListPage to fully render (sk-btn-create-skill is unconditional)
-  await page.waitForSelector("[data-testid='sk-btn-create-skill']", { timeout: 30_000 });
-
-  // Debug: check current URL and h1 presence
-  const url = page.url();
-  const bodyInfo = await page.evaluate(() => {
-    const h1 = document.querySelector("h1");
-    return {
-      h1Text: h1 ? h1.textContent : "NO H1",
-      h1Count: document.querySelectorAll("h1").length,
-      bodyChildren: document.body.children.length,
-      url: window.location.href,
-      hash: window.location.hash,
-      rootChildren: document.getElementById("root")?.children.length ?? -1
-    };
-  });
-  console.log("URL:", url, "Body:", JSON.stringify(bodyInfo));
+  // Wait for React to mount — root div must have children
+  await page.waitForFunction(() => {
+    const root = document.getElementById("root");
+    return root && root.children.length > 0;
+  }, { timeout: 30_000 });
 
   await page.waitForTimeout(500);
+
+  // Verify heading exists
+  await expect(page.locator("h1").filter({ hasText: "Skill 库" }).first()).toBeVisible({ timeout: 5_000 });
   await expect(page.locator("h1").filter({ hasText: "Skill" }).first()).toBeAttached({ timeout: 3_000 });
   await expect(page.getByText("管理项目级与内置 Skill，控制启用状态与分类")).toBeVisible();
 
