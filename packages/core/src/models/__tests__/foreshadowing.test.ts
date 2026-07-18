@@ -116,6 +116,23 @@ describe("ForeshadowingSchema (Issue #84)", () => {
       expect(parsed.status).toBe("paid_off");
       expect(parsed.payoffChapter).toBe(10);
     });
+
+    it("ForeshadowingUpdateSchema does NOT inject default values for missing fields (#732 fix)", () => {
+      // Regression test for the .partial() + .default() data loss bug.
+      // When only a subset of fields is sent (e.g. only `status`), the parse
+      // result must NOT contain default values for unprovided fields.
+      const parsed = ForeshadowingUpdateSchema.parse({ status: "paid_off" });
+      expect(parsed.status).toBe("paid_off");
+      // Fields with .default() in the parent schema should NOT appear
+      expect(parsed).not.toHaveProperty("description");
+      expect(parsed).not.toHaveProperty("type");
+      expect(parsed).not.toHaveProperty("createdChapter");
+      expect(parsed).not.toHaveProperty("relatedElements");
+      expect(parsed).not.toHaveProperty("notes");
+      expect(parsed).not.toHaveProperty("lastMentionedChapter");
+      expect(parsed.expectedPayoffChapter).toBeUndefined();
+      expect(parsed.payoffChapter).toBeUndefined();
+    });
   });
 
   describe("ForeshadowingTypeEnum", () => {
