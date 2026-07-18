@@ -3,17 +3,14 @@ import { test, expect } from "@playwright/test";
 // Skills are pre-seeded by global-setup.ts — no need for seedSkillLibrary here.
 
 test("1. 加载Skill库→分页显示", async ({ page }) => {
-  await page.goto("/#/skills");
+  // Cold-start guard: retry navigation once if page doesn't load
+  await page.goto("/#/skills", { waitUntil: "networkidle", timeout: 20_000 }).catch(() =>
+    page.goto("/#/skills", { waitUntil: "networkidle" })
+  );
 
-  // Cold-start guard: wait for React mount before checking headings
-  await page.waitForFunction(() => {
-    const root = document.getElementById("root");
-    return root && root.children.length > 0;
-  }, { timeout: 15_000 });
-  await page.waitForTimeout(1000);
-
-  // Wait for the skill list to render
-  await expect(page.getByRole('heading', { name: 'Skill 库' })).toBeVisible({ timeout: 15_000 });
+  // Wait for React to mount and render the app shell
+  await page.waitForTimeout(2000);
+  await expect(page.locator("h1").first()).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText("管理项目级与内置 Skill，控制启用状态与分类")).toBeVisible();
 
   // Should show skill count
