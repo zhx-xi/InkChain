@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Skill - 创建流程', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/skills');
+    await page.goto('/#/skills');
     await expect(page.locator('[data-testid="sk-state-normal"]')).toBeVisible({ timeout: 10000 });
   });
   test('Normal: 完整创建Skill流程', async ({ page }) => {
