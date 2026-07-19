@@ -567,7 +567,7 @@ export function SkillListPage() {
       <SkillCreateDialog
         isOpen={showCreateDialog}
         onClose={() => { setShowCreateDialog(false); }}
-        onSelectBlank={() => { setCreateMode("blank"); }}
+        onSelectBlank={() => { setShowCreateDialog(false); setCreateMode("blank"); }}
         onSelectTemplate={(template) => { setCreateMode("template"); setAiDraft(template); }}
         onAiGenerate={(config) => { setCreateMode("ai"); setAiDraft(config); }}
       />
