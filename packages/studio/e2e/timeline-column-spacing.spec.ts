@@ -9,9 +9,7 @@ import {
 
 /** Navigate to the timeline page for the E2E test book */
 async function gotoTimeline(page: Page) {
-  await page.goto(`/#/timeline/${E2E_TIMELINE_BOOK_ID}`, { waitUntil: "load", timeout: 30_000 }).catch(() =>
-    page.goto(`/#/timeline/${E2E_TIMELINE_BOOK_ID}`, { waitUntil: "domcontentloaded" })
-  );
+  await page.goto(`/#/timeline/${E2E_TIMELINE_BOOK_ID}`);
   // Wait for React to mount before proceeding
   await page.waitForFunction(() => {
     const root = document.getElementById("root");
