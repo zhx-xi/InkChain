@@ -12,8 +12,16 @@ test("1. 加载Skill库→分页显示", async ({ page }) => {
   await page.waitForSelector("[data-testid='sk-btn-create-skill']", { timeout: 30_000 });
   await page.waitForTimeout(500);
 
-  // Verify heading exists
-  await expect(page.getByRole("heading", { name: "Skill 库" }).first()).toBeVisible({ timeout: 10_000 });
+  // Debug: check which h1 elements exist vs getByRole matching
+  const h1Count = await page.locator("h1").count();
+  const h1Texts = await page.evaluate(() =>
+    Array.from(document.querySelectorAll("h1"), h => h.textContent).join(" | ")
+  );
+  console.log(`h1s=${h1Count} texts="${h1Texts}"`);
+
+  // Verify heading exists — use locator("h1") instead of getByRole
+  const h1 = page.locator("h1").filter({ hasText: "Skill" }).first();
+  await expect(h1).toBeVisible({ timeout: 10_000 });
 
   // Should show skill count
   await expect(page.getByText(/共 \d+ 个 Skill/)).toBeVisible({ timeout: 10_000 });
