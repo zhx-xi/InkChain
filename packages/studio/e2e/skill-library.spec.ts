@@ -3,42 +3,8 @@ import { test, expect } from "@playwright/test";
 // Skills are pre-seeded by global-setup.ts — no need for seedSkillLibrary here.
 
 test("1. 加载Skill库→分页显示", async ({ page }) => {
-  // Cold-start: retry navigation with explicit hash
-  await page.goto("/#/skills", { waitUntil: "load", timeout: 30_000 }).catch(() =>
-    page.goto("/#/skills", { waitUntil: "domcontentloaded" })
-  );
-
-  // Wait for the SkillListPage to fully render — account for StrictMode
-  // double-mount: check that elements persist for 3 consecutive polls
-  let stable = false;
-  for (let i = 0; i < 60; i++) {
-    const hasBoth = await page.evaluate(() => {
-      const btn = document.querySelector("[data-testid='sk-btn-create-skill']");
-      const h1 = document.querySelector("h1");
-      return !!(btn && h1 && h1.textContent?.includes("Skill"));
-    });
-    if (hasBoth) {
-      // After finding both, wait 300ms and re-check to avoid StrictMode false positive
-      await page.waitForTimeout(300);
-      const stillHas = await page.evaluate(() => {
-        const btn = document.querySelector("[data-testid='sk-btn-create-skill']");
-        const h1 = document.querySelector("h1");
-        return !!(btn && h1 && h1.textContent?.includes("Skill"));
-      });
-      if (stillHas) {
-        stable = true;
-        break;
-      }
-    }
-    await page.waitForTimeout(500);
-  }
-  if (!stable) {
-    // Fallback: last resort — force wait for React root to have stable children
-    await page.waitForTimeout(3000);
-  }
-
-  // Verify heading exists
-  await expect(page.locator("h1").filter({ hasText: "Skill" }).first()).toBeVisible({ timeout: 15_000 });
+  await page.goto("/#/skills");
+  await expect(page.getByRole('heading', { name: 'Skill 库' })).toBeVisible({ timeout: 15_000 });
 
   // Should show skill count
   await expect(page.getByText(/共 \d+ 个 Skill/)).toBeVisible({ timeout: 10_000 });
