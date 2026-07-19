@@ -94,6 +94,9 @@ test("5. 创建新Skill→保存→列表中出现", async ({ page }) => {
   // Save the skill
   await page.getByText("保存", { exact: true }).click();
 
+  // Wait for the editor modal to close, then the list refreshes
+  await expect(page.locator('[data-testid="sk-modal-skill-editor"]')).not.toBeVisible({ timeout: 10_000 });
+
   // The new skill should appear in the list
   await expect(page.getByText("e2e-created-skill")).toBeVisible({ timeout: 10_000 });
 });
