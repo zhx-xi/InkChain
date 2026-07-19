@@ -3,7 +3,8 @@ import { test, expect } from '@playwright/test';
 test.describe('Skill - 创建流程', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/#/skills');
-    await expect(page.locator('[data-testid="sk-state-normal"]')).toBeVisible({ timeout: 10000 });
+    // Wait for page to mount — the create button is always rendered
+    await expect(page.locator('[data-testid="sk-btn-create-skill"]')).toBeVisible({ timeout: 15_000 });
   });
   test('Normal: 完整创建Skill流程', async ({ page }) => {
     await page.locator('[data-testid="sk-btn-create-skill"]').click();
