@@ -16,39 +16,35 @@ describe("Studio skill endpoints", () => {
     await rm(root, { recursive: true, force: true });
   });
 
-  it("lists built-in skills and project-local skills", async () => {
-    await mkdir(join(root, DATA_DIR_NAME, "skills", "detective-play"), { recursive: true });
+  it("lists project skills as JSON files", async () => {
+    await mkdir(join(root, DATA_DIR_NAME, "skills"), { recursive: true });
     await writeFile(
-      join(root, DATA_DIR_NAME, "skills", "detective-play", "SKILL.md"),
-      [
-        "---",
-        "id: detective-play",
-        "name: Detective Play",
-        "description: Evidence-chain play skill.",
-        "whenToUse: Use for detective play.",
-        "triggers: [detective]",
-        "sessionKinds: [play]",
-        "---",
-        "Track evidence before twists.",
-      ].join("\n"),
-      { flag: "w" },
+      join(root, DATA_DIR_NAME, "skills", "detective-play.json"),
+      JSON.stringify({
+        id: "detective-play",
+        category: "utility",
+        description: "Evidence-chain play skill.",
+        triggers: [{ type: "condition", condition: "true" }],
+        injection: { mode: "append", target: "system_prompt", priority: 50 },
+        params: {},
+        enabled: true,
+        prompt: "Track evidence before twists.",
+      }),
     );
 
     const app = createStudioServer({} as never, root);
     const res = await app.request("/api/v1/skills");
-    const json = await res.json() as { skills: Array<{ id: string; source: string; editable: boolean; body?: string }> };
+    const json = await res.json() as { skills: Array<{ config: { id: string }; source: string }> };
 
     expect(res.status).toBe(200);
-    expect(json.skills.map((skill) => skill.id)).toContain("open-world-play");
+    expect(json.skills.map((skill) => skill.config.id)).toContainEqual("detective-play");
     expect(json.skills).toContainEqual(expect.objectContaining({
-      id: "detective-play",
+      config: expect.objectContaining({ id: "detective-play" }),
       source: "project",
-      editable: true,
-      body: "Track evidence before twists.",
     }));
   });
 
-  it("creates, updates, and deletes project skills as SKILL.md files", async () => {
+  it("creates, updates, and deletes project skills as JSON files", async () => {
     const app = createStudioServer({} as never, root);
 
     const createRes = await app.request("/api/v1/skills", {
@@ -56,44 +52,47 @@ describe("Studio skill endpoints", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id: "romance-play",
-        name: "Romance Play",
+        category: "writing",
         description: "Relationship-focused play skill.",
-        whenToUse: "Use for romance interactions.",
-        triggers: ["romance"],
-        sessionKinds: ["play"],
-        body: "Keep emotional continuity visible.",
+        triggers: [{ type: "condition", condition: "true" }],
+        injection: { mode: "append", target: "system_prompt", priority: 50 },
+        params: {},
+        enabled: true,
+        prompt: "Keep emotional continuity visible.",
       }),
     });
-    expect(createRes.status).toBe(200);
-    const created = await createRes.json() as { skill: { id: string; editable: boolean } };
-    expect(created.skill).toMatchObject({ id: "romance-play", editable: true });
-    expect(await readFile(join(root, DATA_DIR_NAME, "skills", "romance-play", "SKILL.md"), "utf-8"))
-      .toContain("Keep emotional continuity visible.");
+    expect(createRes.status).toBe(201);
+    const created = await createRes.json() as { skill: { config: { id: string }; source: string } };
+    expect(created.skill.config.id).toBe("romance-play");
+    expect(created.skill.source).toBe("project");
+    const filePath = join(root, DATA_DIR_NAME, "skills", "romance-play.json");
+    const fileContent = await readFile(filePath, "utf-8");
+    expect(fileContent).toContain("Keep emotional continuity visible.");
 
     const updateRes = await app.request("/api/v1/skills/romance-play", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        name: "Romance Play",
-        description: "Relationship-focused play skill.",
-        whenToUse: "Use for romance interactions.",
-        triggers: ["romance", "date"],
-        sessionKinds: ["play"],
-        body: "Track longing, avoidance, and revealed care.",
+        id: "romance-play",
+        category: "writing",
+        description: "Updated description",
+        triggers: [{ type: "condition", condition: "true" }],
+        injection: { mode: "append", target: "system_prompt", priority: 50 },
+        params: {},
+        enabled: true,
+        prompt: "Track longing, avoidance, and revealed care.",
       }),
     });
     expect(updateRes.status).toBe(200);
-    expect(await readFile(join(root, DATA_DIR_NAME, "skills", "romance-play", "SKILL.md"), "utf-8"))
-      .toContain("Track longing, avoidance, and revealed care.");
+    expect(await readFile(filePath, "utf-8")).toContain("Track longing, avoidance, and revealed care.");
 
     const deleteRes = await app.request("/api/v1/skills/romance-play", { method: "DELETE" });
     expect(deleteRes.status).toBe(200);
-    expect((await app.request("/api/v1/skills")).status).toBe(200);
-    const list = await (await app.request("/api/v1/skills")).json() as { skills: Array<{ id: string }> };
-    expect(list.skills.map((skill) => skill.id)).not.toContain("romance-play");
+    const list = await (await app.request("/api/v1/skills")).json() as { skills: Array<{ config: { id: string } }> };
+    expect(list.skills.map((skill) => skill.config.id)).not.toContain("romance-play");
   });
 
-  it("defaults optional project skill text fields when the Studio quick form leaves them blank", async () => {
+  it("defaults optional skill config fields when omitted", async () => {
     const app = createStudioServer({} as never, root);
 
     const res = await app.request("/api/v1/skills", {
@@ -101,20 +100,17 @@ describe("Studio skill endpoints", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id: "quick-skill",
-        name: "",
-        description: "",
-        whenToUse: "",
-        body: "Use the quick skill.",
+        category: "utility",
       }),
     });
 
-    expect(res.status).toBe(200);
-    const json = await res.json() as { skill: { id: string; name: string; description: string; whenToUse: string } };
-    expect(json.skill).toMatchObject({
+    expect(res.status).toBe(201);
+    const json = await res.json() as { skill: { config: { id: string; description: string; enabled: boolean; prompt: string } } };
+    expect(json.skill.config).toMatchObject({
       id: "quick-skill",
-      name: "quick-skill",
-      description: "Project runtime skill.",
-      whenToUse: "Use when explicitly selected by the user.",
+      description: "",
+      enabled: true,
+      prompt: "",
     });
   });
 });

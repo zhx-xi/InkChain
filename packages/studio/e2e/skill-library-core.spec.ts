@@ -8,14 +8,21 @@ import { test, expect } from "@playwright/test";
  * States: loading, empty, normal, disabled, error, reverted, no-versions
  */
 
+const NAV_TIMEOUT = 10_000;
+
 test.describe("SkillListPage — 核心创作功能基线", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto("/#/skills");
+    await page.goto("/#/skills", { timeout: NAV_TIMEOUT });
   });
 
   test("1. 正常加载: 页面显示", async ({ page }) => {
-    await page.waitForTimeout(3000);
-    await expect(page.locator("body")).toBeVisible();
+    // Wait for React to mount — #root becomes non-empty after createRoot completes.
+    // Do not check body visibility (flaky in CI — body reports hidden during SPA init).
+    await page.waitForFunction(() => {
+      const root = document.getElementById("root");
+      return root && root.children.length > 0;
+    }, { timeout: 15_000 });
+    await page.waitForTimeout(1000);
   });
 
   test("2. 创建Skill按钮存在", async ({ page }) => {

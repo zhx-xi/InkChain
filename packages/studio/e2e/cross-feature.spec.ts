@@ -30,7 +30,7 @@ function mockAiRelationExtract(page: Page, data: Array<Record<string, unknown>>)
 
 /** Mock the AI foreshadowing extraction endpoint */
 function mockAiForeshadowExtract(page: Page, data: Array<Record<string, unknown>>) {
-  return page.route("**/api/foreshadowing/extract*", async (route) => {
+  return page.route("**/api/v1/foreshadowing/extract*", async (route) => {
     await route.fulfill({
       status: 200,
       contentType: "application/json",

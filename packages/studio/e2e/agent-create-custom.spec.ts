@@ -123,7 +123,7 @@ test.describe("Agent Team — 自定义 Agent 创建", () => {
 
     // Assert: error is shown gracefully
     const errorVisible = await page.locator(
-      '[data-testid*="error"], text=错误, text=Error, text=失败'
+      '[data-testid*="error"], :has-text("错误"), :has-text("Error"), :has-text("失败")'
     ).first().isVisible({ timeout: 3000 }).catch(() => false);
     console.log(`Error displayed on API failure: ${errorVisible}`);
 

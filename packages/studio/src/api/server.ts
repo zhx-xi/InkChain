@@ -66,13 +66,18 @@ import {
   normalizeRequestedIntent as normalizeCoreRequestedIntent,
   normalizeSkillIdList as normalizeCoreSkillIdList,
   inferLanguage,
-  createSkillRegistry,
-  loadConfiguredCapabilitySkills,
-  CapabilitySkillManifestSchema,
+  //
+  // Old SKILL.md‑based skill system (replaced by JSON‑based createSkillsRouter).
+  // These imports are kept for reference but the handler (lines 3325‑3360) was
+  // removed in PR #753 — the new router uses loadMergedSkills instead.
+  // Uncomment if the SKILL.md format is ever re‑adopted.
+  //
+  // createSkillRegistry,
+  // loadConfiguredCapabilitySkills,
+  // CapabilitySkillManifestSchema,
+  // type CapabilitySkillManifest,
   type ActionPayload,
   type ActionSource,
-  type CapabilitySkillManifest,
-  createGenerateCoverTool,
   createInteractiveFilmCreationTool,
   createPlayStartTool,
   createScriptCreationTool,
@@ -524,126 +529,151 @@ function normalizeStudioSkillId(value: unknown, field = "skillId"): string {
   return id;
 }
 
-function projectSkillsDir(root: string): string {
-  return join(root, DATA_DIR_NAME, "skills");
-}
-
-function projectSkillDir(root: string, id: string): string {
-  return join(projectSkillsDir(root), id);
-}
-
-function projectSkillPath(root: string, id: string): string {
-  return join(projectSkillDir(root, id), "SKILL.md");
-}
-
-function toStudioSkill(skill: CapabilitySkillManifest, root: string, projectSkillIds: ReadonlySet<string>) {
-  const projectPath = projectSkillPath(root, skill.id);
-  const isProjectFile = projectSkillIds.has(skill.id);
-  return {
-    id: skill.id,
-    name: skill.name,
-    description: skill.description,
-    whenToUse: skill.whenToUse,
-    triggers: skill.triggers,
-    sessionKinds: skill.sessionKinds,
-    promptPacks: skill.promptPacks,
-    toolHints: skill.toolHints,
-    contextNeeds: skill.contextNeeds,
-    body: skill.body,
-    source: isProjectFile ? "project" : skill.source,
-    editable: isProjectFile,
-    path: isProjectFile ? relative(root, projectPath) : undefined,
-  };
-}
-
-function normalizeSkillPayload(value: unknown, idOverride?: string): CapabilitySkillManifest {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    throw new ApiError(400, "INVALID_SKILL_PAYLOAD", "Skill payload must be an object");
-  }
-  const data = value as Record<string, unknown>;
-  const id = normalizeStudioSkillId(idOverride ?? data.id, "id");
-  const textOr = (field: string, fallback: string): string => {
-    const raw = data[field];
-    return typeof raw === "string" && raw.trim() ? raw.trim() : fallback;
-  };
-  const stringList = (field: string): string[] => (
-    Array.isArray(data[field])
-      ? data[field]
-          .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
-          .map((item) => item.trim())
-      : []
-  );
-  try {
-    return CapabilitySkillManifestSchema.parse({
-      id,
-      name: textOr("name", id),
-      description: textOr("description", "Project runtime skill."),
-      whenToUse: textOr("whenToUse", "Use when explicitly selected by the user."),
-      triggers: stringList("triggers"),
-      sessionKinds: stringList("sessionKinds"),
-      promptPacks: stringList("promptPacks"),
-      toolHints: stringList("toolHints"),
-      contextNeeds: Array.isArray(data.contextNeeds) ? data.contextNeeds : [],
-      body: typeof data.body === "string" ? data.body : "",
-      source: "project",
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    throw new ApiError(400, "INVALID_SKILL_PAYLOAD", message);
-  }
-}
-
-function serializeProjectSkill(skill: CapabilitySkillManifest): string {
-  const frontmatter = {
-    id: skill.id,
-    name: skill.name,
-    description: skill.description,
-    whenToUse: skill.whenToUse,
-    triggers: skill.triggers,
-    sessionKinds: skill.sessionKinds,
-    promptPacks: skill.promptPacks,
-    toolHints: skill.toolHints,
-    contextNeeds: skill.contextNeeds,
-  };
-  return [
-    "---",
-    ...Object.entries(frontmatter).map(([key, value]) => `${key}: ${JSON.stringify(value)}`),
-    "---",
-    skill.body.trim(),
-    "",
-  ].join("\n");
-}
-
-async function loadStudioSkills(root: string) {
-  const configured = await loadConfiguredCapabilitySkills({ projectRoot: root });
-  const projectSkillIds = await listProjectSkillIds(root);
-  const registry = createSkillRegistry({ skills: configured.skills });
-  return {
-    skills: registry.listSkills().map((skill) => toStudioSkill(skill, root, projectSkillIds)),
-    diagnostics: configured.diagnostics,
-  };
-}
-
-async function listProjectSkillIds(root: string): Promise<Set<string>> {
-  try {
-    const entries = await readdir(projectSkillsDir(root), { withFileTypes: true });
-    const ids = new Set<string>();
-    for (const entry of entries) {
-      if (!entry.isDirectory()) continue;
-      const id = normalizeStudioSkillId(entry.name, "skillId");
-      try {
-        const info = await stat(projectSkillPath(root, id));
-        if (info.isFile()) ids.add(id);
-      } catch {
-        // Ignore incomplete project skill directories.
-      }
-    }
-    return ids;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") return new Set();
-    throw error;
-  }
-}
+// ═══════════════════════════════════════════════════════════════════════════════
+//  Old SKILL.md‑based skill system (removed)
+//
+//  These functions served the old inline handlers at /api/v1/skills (lines
+//  3325‑3360, removed in PR #753). They managed skills as SKILL.md files in
+//  <root>/.inkchain/skills/<id>/SKILL.md — a directory‑per‑skill format used by
+//  CapabilitySkillManifest (rich format with name, body, promptPacks, etc.).
+//
+//  The replacement is createSkillsRouter (routes/skills.ts), which uses:
+//    • JSON files: <root>/.inkchain/skills/<id>.json
+//    • SkillConfigSchema (Zod‑validated, simpler format)
+//    • loadMergedSkills() from skill‑config‑loader.ts
+//    • IndexManager cache + version history
+//
+//  The Agent system (core/src/agent/agent‑session.ts) still uses
+//  loadConfiguredCapabilitySkills directly for its own SKILL.md loading — this
+//  removal only affects the HTTP handler layer in server.ts.
+//
+//  ⚠️  If the SKILL.md format is ever re‑adopted for UI‑managed skills:
+//      1. Uncomment these functions
+//      2. Uncomment the imports above
+//      3. Re‑add the inline handlers at the old location (around line 3325)
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// function projectSkillsDir(root: string): string {
+//   return join(root, DATA_DIR_NAME, "skills");
+// }
+//
+// function projectSkillDir(root: string, id: string): string {
+//   return join(projectSkillsDir(root), id);
+// }
+//
+// function projectSkillPath(root: string, id: string): string {
+//   return join(projectSkillDir(root, id), "SKILL.md");
+// }
+//
+// function toStudioSkill(skill: CapabilitySkillManifest, root: string, projectSkillIds: ReadonlySet<string>) {
+//   const projectPath = projectSkillPath(root, skill.id);
+//   const isProjectFile = projectSkillIds.has(skill.id);
+//   return {
+//     id: skill.id,
+//     name: skill.name,
+//     description: skill.description,
+//     whenToUse: skill.whenToUse,
+//     triggers: skill.triggers,
+//     sessionKinds: skill.sessionKinds,
+//     promptPacks: skill.promptPacks,
+//     toolHints: skill.toolHints,
+//     contextNeeds: skill.contextNeeds,
+//     body: skill.body,
+//     source: isProjectFile ? "project" : skill.source,
+//     editable: isProjectFile,
+//     path: isProjectFile ? relative(root, projectPath) : undefined,
+//   };
+// }
+//
+// function normalizeSkillPayload(value: unknown, idOverride?: string): CapabilitySkillManifest {
+//   if (!value || typeof value !== "object" || Array.isArray(value)) {
+//     throw new ApiError(400, "INVALID_SKILL_PAYLOAD", "Skill payload must be an object");
+//   }
+//   const data = value as Record<string, unknown>;
+//   const id = normalizeStudioSkillId(idOverride ?? data.id, "id");
+//   const textOr = (field: string, fallback: string): string => {
+//     const raw = data[field];
+//     return typeof raw === "string" && raw.trim() ? raw.trim() : fallback;
+//   };
+//   const stringList = (field: string): string[] => (
+//     Array.isArray(data[field])
+//       ? data[field]
+//           .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
+//           .map((item) => item.trim())
+//       : []
+//   );
+//   try {
+//     return CapabilitySkillManifestSchema.parse({
+//       id,
+//       name: textOr("name", id),
+//       description: textOr("description", "Project runtime skill."),
+//       whenToUse: textOr("whenToUse", "Use when explicitly selected by the user."),
+//       triggers: stringList("triggers"),
+//       sessionKinds: stringList("sessionKinds"),
+//       promptPacks: stringList("promptPacks"),
+//       toolHints: stringList("toolHints"),
+//       contextNeeds: Array.isArray(data.contextNeeds) ? data.contextNeeds : [],
+//       body: typeof data.body === "string" ? data.body : "",
+//       source: "project",
+//     });
+//   } catch (error) {
+//     const message = error instanceof Error ? error.message : String(error);
+//     throw new ApiError(400, "INVALID_SKILL_PAYLOAD", message);
+//   }
+// }
+//
+// function serializeProjectSkill(skill: CapabilitySkillManifest): string {
+//   const frontmatter = {
+//     id: skill.id,
+//     name: skill.name,
+//     description: skill.description,
+//     whenToUse: skill.whenToUse,
+//     triggers: skill.triggers,
+//     sessionKinds: skill.sessionKinds,
+//     promptPacks: skill.promptPacks,
+//     toolHints: skill.toolHints,
+//     contextNeeds: skill.contextNeeds,
+//   };
+//   return [
+//     "---",
+//     ...Object.entries(frontmatter).map(([key, value]) => `${key}: ${JSON.stringify(value)}`),
+//     "---",
+//     skill.body.trim(),
+//     "",
+//   ].join("\n");
+// }
+//
+// async function loadStudioSkills(root: string) {
+//   const configured = await loadConfiguredCapabilitySkills({ projectRoot: root });
+//   const projectSkillIds = await listProjectSkillIds(root);
+//   const registry = createSkillRegistry({ skills: configured.skills });
+//   return {
+//     skills: registry.listSkills().map((skill) => toStudioSkill(skill, root, projectSkillIds)),
+//     diagnostics: configured.diagnostics,
+//   };
+// }
+//
+// async function listProjectSkillIds(root: string): Promise<Set<string>> {
+//   try {
+//     const entries = await readdir(projectSkillsDir(root), { withFileTypes: true });
+//     const ids = new Set<string>();
+//     for (const entry of entries) {
+//       if (!entry.isDirectory()) continue;
+//       const id = normalizeStudioSkillId(entry.name, "skillId");
+//       try {
+//         const info = await stat(projectSkillPath(root, id));
+//         if (info.isFile()) ids.add(id);
+//       } catch {
+//         // Ignore incomplete project skill directories.
+//       }
+//     }
+//     return ids;
+//   } catch (error) {
+//     if ((error as NodeJS.ErrnoException).code === "ENOENT") return new Set();
+//     throw error;
+//   }
+// }
+// ═══════════════════════════════════════════════════════════════════════════════
 
 function normalizeStudioPlayMode(value: unknown): PlayMode | undefined {
   try {
@@ -3322,42 +3352,9 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     });
   });
 
-  app.get("/api/v1/skills", async (c) => {
-    const result = await loadStudioSkills(root);
-    return c.json(result);
-  });
-
-  app.post("/api/v1/skills", async (c) => {
-    const payload = await c.req.json().catch(() => {
-      throw new ApiError(400, "INVALID_SKILL_PAYLOAD", "Skill payload must be JSON");
-    });
-    const skill = normalizeSkillPayload(payload);
-    await mkdir(projectSkillDir(root, skill.id), { recursive: true });
-    await writeFile(projectSkillPath(root, skill.id), serializeProjectSkill(skill), "utf-8");
-    return c.json({ skill: toStudioSkill(skill, root, new Set([skill.id])) });
-  });
-
-  app.put("/api/v1/skills/:skillId", async (c) => {
-    const id = normalizeStudioSkillId(c.req.param("skillId"), "skillId");
-    const payload = await c.req.json().catch(() => {
-      throw new ApiError(400, "INVALID_SKILL_PAYLOAD", "Skill payload must be JSON");
-    });
-    const skill = normalizeSkillPayload(payload, id);
-    await mkdir(projectSkillDir(root, skill.id), { recursive: true });
-    await writeFile(projectSkillPath(root, skill.id), serializeProjectSkill(skill), "utf-8");
-    return c.json({ skill: toStudioSkill(skill, root, new Set([skill.id])) });
-  });
-
-  app.delete("/api/v1/skills/:skillId", async (c) => {
-    const id = normalizeStudioSkillId(c.req.param("skillId"), "skillId");
-    try {
-      await access(projectSkillPath(root, id));
-    } catch {
-      throw new ApiError(404, "SKILL_NOT_FOUND", `Project skill not found: ${id}`);
-    }
-    await rm(projectSkillDir(root, id), { recursive: true, force: true });
-    return c.json({ ok: true });
-  });
+  // Skills are handled by the createSkillsRouter below.
+  // Old inline GET/POST/PUT/DELETE handlers removed — the router
+  // supports full CRUD with JSON file persistence.
 
   app.get("/api/v1/project/files/:file{.+}", async (c) => {
     const file = resolveProjectImageFile(root, c.req.param("file"));

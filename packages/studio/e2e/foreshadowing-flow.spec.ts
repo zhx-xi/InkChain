@@ -24,7 +24,7 @@ async function createForeshadowingViaUI(
 /** Mock the AI extraction endpoint to return given entries */
 function mockAiExtract(page: Page, entries: Array<Record<string, unknown>>) {
   conditionalMock(() => {
-    page.route("**/api/foreshadowing/extract*", async (route) => {
+    page.route("**/api/v1/foreshadowing/extract*", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -37,7 +37,7 @@ function mockAiExtract(page: Page, entries: Array<Record<string, unknown>>) {
 /** Mock the AI extraction endpoint to simulate progress events */
 function mockAiExtractWithProgress(page: Page) {
   conditionalMock(() => {
-    page.route("**/api/foreshadowing/extract*", async (route) => {
+    page.route("**/api/v1/foreshadowing/extract*", async (route) => {
     // Simulate a streaming response with progress chunks
     await route.fulfill({
       status: 200,
@@ -96,7 +96,7 @@ test.describe("Foreshadowing — 核心创作流E2E", () => {
   test("1. 页面加载显示空状态", async ({ page }) => {
     // Clear all seeded entries via the API
     for (const id of ["fs-e2e-1", "fs-e2e-2", "fs-e2e-3", "fs-e2e-4", "fs-e2e-5"]) {
-      await page.request.delete(`/api/foreshadowing/${id}`);
+      await page.request.delete(`/api/v1/foreshadowing/${id}`);
     }
     await page.reload();
     await expect(page.getByText("伏笔追踪")).toBeVisible({ timeout: 15_000 });
@@ -277,7 +277,7 @@ test.describe("Foreshadowing — 核心创作流E2E", () => {
       await page.getByRole("button", { name: "确认" }).click();
     } else {
       // Fallback: use API if no UI delete button
-      const deleteRes = await page.request.delete("/api/foreshadowing/fs-e2e-2");
+      const deleteRes = await page.request.delete("/api/v1/foreshadowing/fs-e2e-2");
       expect(deleteRes.status()).toBe(200);
       await page.reload();
       await expect(page.getByText("伏笔追踪")).toBeVisible({ timeout: 15_000 });
@@ -377,7 +377,7 @@ test.describe("Foreshadowing — 核心创作流E2E", () => {
 
   test("10. 错误状态: API失败显示错误", async ({ page }) => {
     // Mock the foreshadowing list API to return a 500 error
-    await page.route("**/api/foreshadowing*", async (route) => {
+    await page.route("**/api/v1/foreshadowing*", async (route) => {
       // Only block GET requests (list/fetch), let DELETE pass through for cleanup
       if (route.request().method() === "GET") {
         await route.fulfill({

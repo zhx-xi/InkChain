@@ -95,7 +95,7 @@ test.describe("Agent Team — Agent 编辑", () => {
 
       // Assert: error state shows (either error message or graceful degradation)
       const errorEl = page.locator(
-        '[data-testid*="error"], text=错误, text=Error, text=失败'
+        '[data-testid*="error"], :has-text("错误"), :has-text("Error"), :has-text("失败")'
       );
       const hasError = (await errorEl.count()) > 0;
       console.log(`Error state on API failure: ${hasError}`);

@@ -33,6 +33,10 @@ export async function seedTimeline(): Promise<void> {
         language: "zh",
         createdAt: now,
         updatedAt: now,
+        volumes: [
+          { id: "tl-vol-1", title: "第一卷 · 入门", description: "主角拜入宗门", status: "active", order: 0, createdAt: now, updatedAt: now },
+          { id: "tl-vol-2", title: "第二卷 · 成长", description: "主角历练成长", status: "active", order: 1, createdAt: now, updatedAt: now },
+        ],
       },
       null,
       2,

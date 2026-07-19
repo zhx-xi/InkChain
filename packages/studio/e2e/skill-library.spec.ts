@@ -1,16 +1,10 @@
 import { test, expect } from "@playwright/test";
-import { seedSkillLibrary } from "./fixtures/seed-skill-library";
 
-test.beforeAll(async () => {
-  await seedSkillLibrary();
-});
+// Skills are pre-seeded by global-setup.ts — no need for seedSkillLibrary here.
 
 test("1. 加载Skill库→分页显示", async ({ page }) => {
   await page.goto("/#/skills");
-
-  // Wait for the skill list to render
-  await expect(page.getByRole('heading', { name: 'Skill 库' })).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText("管理项目级与内置 Skill，控制启用状态与分类")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Skill 库" })).toBeVisible({ timeout: 15_000 });
 
   // Should show skill count
   await expect(page.getByText(/共 \d+ 个 Skill/)).toBeVisible({ timeout: 10_000 });

@@ -371,7 +371,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[80] flex justify-end bg-background/35 backdrop-blur-[2px]">
+    <div className="fixed inset-0 z-[80] flex justify-end bg-background/35 backdrop-blur-[2px]" data-testid="sk-modal-skill-editor">
       <button
         type="button"
         aria-label="关闭 Skill 编辑面板"
@@ -419,6 +419,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
               onClick={handleClose}
               className="rounded-lg border border-border/50 p-2 text-muted-foreground transition hover:bg-secondary/60 hover:text-foreground"
               aria-label="关闭"
+              data-testid="cancel-btn"
             >
               <X size={18} />
             </button>
@@ -541,7 +542,7 @@ export function SkillEditSheet({ skillId, isOpen, onClose, onSaved, createDraft,
                   <label className="text-[13px] font-medium text-foreground">Skill ID</label>
                   <input
                     type="text"
-                    data-testid="name-input"
+                    data-testid="sk-input-skill-name"
                     value={draft.id}
                     onChange={(e) => setDraft({ ...draft, id: e.target.value })}
                     placeholder="skill-id (kebab-case)"

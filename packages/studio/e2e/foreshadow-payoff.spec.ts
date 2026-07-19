@@ -8,7 +8,7 @@ import {
 // ── Helpers ───────────────────────────────────────────────────────
 
 function mockAiExtract(page: Page, entries: Array<Record<string, unknown>>) {
-  page.route("**/api/foreshadowing/extract*", async (route) => {
+  page.route("**/api/v1/foreshadowing/extract*", async (route) => {
     if (route.request().method() === "POST") {
       await route.fulfill({
         status: 200,
@@ -81,7 +81,7 @@ test.describe("伏笔提取 — lastMentionedChapter 与 大纲未指定", () =>
 
   test("2. 已有伏笔列表中 expectedPayoffChapter=null 显示「大纲未指定」", async ({ page }) => {
     // Create a foreshadowing entry with null expectedPayoffChapter via API
-    const createRes = await page.request.post("/api/foreshadowing", {
+    const createRes = await page.request.post("/api/v1/foreshadowing", {
       data: {
         id: "fs-e2e-existing-null",
         bookId: E2E_FORES_BOOK_ID,

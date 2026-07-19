@@ -36,7 +36,7 @@ test.describe("index-manager — transparent LRU cache for API reads", () => {
   });
 
   test("normal: Foreshadowing API works through cache", async ({ page }) => {
-    const response = await page.request.get(`${API_BASE}/api/foreshadowing`);
+    const response = await page.request.get(`${API_BASE}/api/v1/foreshadowing`);
     expect(response.ok()).toBe(true);
     const body = await response.json();
     expect(body).toBeDefined();
@@ -76,7 +76,7 @@ test.describe("index-manager — transparent LRU cache for API reads", () => {
   test("edge: Multiple different endpoints all respond correctly (cache per namespace)", async ({ page }) => {
     const endpoints = [
       `${API_BASE}/api/worlds`,
-      `${API_BASE}/api/foreshadowing`,
+      `${API_BASE}/api/v1/foreshadowing`,
       `${API_BASE}/api/v1/skills`,
       `${API_BASE}/api/v1/project/personas`,
       `${API_BASE}/api/style-profiles`,

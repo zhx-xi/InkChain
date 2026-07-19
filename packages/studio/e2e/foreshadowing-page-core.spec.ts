@@ -96,7 +96,7 @@ test.describe("ForeshadowingPage — 核心创作功能基线", () => {
 
   test("9. 错误状态: API失败时页面显示错误提示", async ({ page }) => {
     // Mock API failure by intercepting
-    await page.route("**/api/foreshadowing/**", (route) => {
+    await page.route("**/api/v1/foreshadowing/**", (route) => {
       route.fulfill({ status: 500, body: "Server Error" });
     });
     await page.reload();

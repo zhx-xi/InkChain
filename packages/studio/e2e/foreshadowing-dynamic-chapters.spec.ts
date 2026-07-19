@@ -72,7 +72,7 @@ test("3. Foreshadowing API 使用动态章节数而非 999", async ({ page }) =>
   // Intercept the foreshadowing GET (list) request and capture the URL.
   let capturedUrl: string | null = null;
   const responsePromise = page.waitForResponse(
-    (resp) => resp.url().includes("/api/foreshadowing") && resp.request().method() === "GET",
+    (resp) => resp.url().includes("/api/v1/foreshadowing") && resp.request().method() === "GET",
   );
 
   // Reload to trigger the foreshadowing list fetch

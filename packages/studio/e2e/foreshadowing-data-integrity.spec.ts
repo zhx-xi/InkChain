@@ -11,8 +11,8 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
 
   // ═══ N1: 页面加载 + 核心 UI 元素 ═══
   test("N1: 伏笔页面加载 — 页头和创建按钮可见", async ({ page }) => {
-    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.goto(`${BASE_URL}/#/foreshadowing/e2e-volume-dnd`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
     // 页头应可见 (h1 heading)
@@ -34,8 +34,8 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
 
   // ═══ N2: 数据列表有内容 ═══
   test("N2: 伏笔列表渲染 — 展示数据项或列表容器", async ({ page }) => {
-    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.goto(`${BASE_URL}/#/foreshadowing/e2e-volume-dnd`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(4000);
 
     // 查找伏笔数据项 (data-testid fs-item-*) 或列表容器
@@ -51,8 +51,8 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
 
   // ═══ N3: 搜索可交互 ═══
   test("N3: 搜索框可输入关键词", async ({ page }) => {
-    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.goto(`${BASE_URL}/#/foreshadowing/e2e-volume-dnd`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
     const searchInput = page.locator(
@@ -71,8 +71,8 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
       if (r.url().includes("/api/") && r.status() === 404) has404 = true;
     });
 
-    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.goto(`${BASE_URL}/#/foreshadowing/e2e-volume-dnd`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(4000);
 
     expect(has404).toBe(false);
@@ -83,8 +83,8 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
 
   // ═══ C1: 创建弹窗 ═══
   test("C1: 创建伏笔 — 弹窗包含表单字段", async ({ page }) => {
-    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.goto(`${BASE_URL}/#/foreshadowing/e2e-volume-dnd`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
     const createBtn = page.locator(
@@ -111,8 +111,8 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
 
   // ═══ E1: 空状态 ═══
   test("E1: 空状态 — 无数据时有提示", async ({ page }) => {
-    await page.goto(`${BASE_URL}/#/book/new-empty-book-999/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.goto(`${BASE_URL}/#/foreshadowing/new-empty-book-999`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
     // 空状态应显示提示或至少页面有结构
@@ -126,8 +126,8 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
 
   // ═══ E2: 错误状态 ═══
   test("E2: 错误状态 — 无效 bookId 不白屏", async ({ page }) => {
-    await page.goto(`${BASE_URL}/#/book/__invalid__/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.goto(`${BASE_URL}/#/foreshadowing/__invalid__`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(4000);
 
     // 应有错误提示或页面结构
@@ -141,8 +141,8 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
 
   // ═══ C2: 保存并验证 ═══
   test("C2: 创建伏笔 — 保存后卡片出现在列表中", async ({ page }) => {
-    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.goto(`${BASE_URL}/#/foreshadowing/e2e-volume-dnd`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
     // 打开创建弹窗
@@ -166,17 +166,25 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
     ).first();
     await expect(saveBtn).toBeVisible({ timeout: 3000 });
     await saveBtn.click({ force: true });
+
+    // Wait for dialog to close (dialog disappears → create button re-appears)
+    await page.waitForTimeout(2000);
+    await expect(createBtn).toBeVisible({ timeout: 10_000 });
+
+    // Reload to verify the entry was persisted to disk
+    await page.reload();
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(2000);
 
     // 新卡片应出现在列表中（带 data-testid fs-item-*）
     const newItem = page.locator("[data-testid^='fs-item-']").first();
-    await expect(newItem).toBeVisible({ timeout: 8000 });
+    await expect(newItem).toBeVisible({ timeout: 12_000 });
   });
 
   // ═══ E3: 持久化 ═══
   test("E3: 刷新后页面结构保持", async ({ page }) => {
-    await page.goto(`${BASE_URL}/#/book/test-project-123/foreshadowing`);
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.goto(`${BASE_URL}/#/foreshadowing/e2e-volume-dnd`);
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
     // 页头应可见
@@ -184,7 +192,7 @@ test.describe("Foreshadowing — 伏笔数据完整性 (强断言)", () => {
     await expect(heading).toBeVisible({ timeout: 10000 });
 
     await page.reload({ waitUntil: "load" });
-    await page.waitForURL(/#\/book\//, { timeout: 15000 });
+    await page.waitForURL(/#\/foreshadowing\//, { timeout: 15000 });
     await page.waitForTimeout(3000);
 
     // 刷新后页头仍可见
