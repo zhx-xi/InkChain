@@ -3322,42 +3322,9 @@ export function createStudioServer(initialConfig: ProjectConfig, root: string, o
     });
   });
 
-  app.get("/api/v1/skills", async (c) => {
-    const result = await loadStudioSkills(root);
-    return c.json(result);
-  });
-
-  app.post("/api/v1/skills", async (c) => {
-    const payload = await c.req.json().catch(() => {
-      throw new ApiError(400, "INVALID_SKILL_PAYLOAD", "Skill payload must be JSON");
-    });
-    const skill = normalizeSkillPayload(payload);
-    await mkdir(projectSkillDir(root, skill.id), { recursive: true });
-    await writeFile(projectSkillPath(root, skill.id), serializeProjectSkill(skill), "utf-8");
-    return c.json({ skill: toStudioSkill(skill, root, new Set([skill.id])) });
-  });
-
-  app.put("/api/v1/skills/:skillId", async (c) => {
-    const id = normalizeStudioSkillId(c.req.param("skillId"), "skillId");
-    const payload = await c.req.json().catch(() => {
-      throw new ApiError(400, "INVALID_SKILL_PAYLOAD", "Skill payload must be JSON");
-    });
-    const skill = normalizeSkillPayload(payload, id);
-    await mkdir(projectSkillDir(root, skill.id), { recursive: true });
-    await writeFile(projectSkillPath(root, skill.id), serializeProjectSkill(skill), "utf-8");
-    return c.json({ skill: toStudioSkill(skill, root, new Set([skill.id])) });
-  });
-
-  app.delete("/api/v1/skills/:skillId", async (c) => {
-    const id = normalizeStudioSkillId(c.req.param("skillId"), "skillId");
-    try {
-      await access(projectSkillPath(root, id));
-    } catch {
-      throw new ApiError(404, "SKILL_NOT_FOUND", `Project skill not found: ${id}`);
-    }
-    await rm(projectSkillDir(root, id), { recursive: true, force: true });
-    return c.json({ ok: true });
-  });
+  // Skills are handled by the createSkillsRouter below.
+  // Old inline GET/POST/PUT/DELETE handlers removed — the router
+  // supports full CRUD with JSON file persistence.
 
   app.get("/api/v1/project/files/:file{.+}", async (c) => {
     const file = resolveProjectImageFile(root, c.req.param("file"));

@@ -119,9 +119,13 @@ jobs:
             "prompt": "请将以下内容压缩为简洁的摘要。"
           }
           SKILL_EOF
+          # Verify seed files were created
+          echo "=== Skills seed files ==="
+          ls -la test-project/.inkchain/skills/
           # Also create in .inkos/ for API artifact compatibility
           mkdir -p test-project/.inkos/skills
           cp test-project/.inkchain/skills/*.json test-project/.inkos/skills/
+          ls -la test-project/.inkos/skills/
       - name: Start API server
         working-directory: packages/studio
         env:
