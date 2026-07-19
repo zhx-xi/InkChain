@@ -281,13 +281,37 @@ jobs:
       spec: "film-image film-list film-wizard"
       group-name: "Interactive Film"
 
-  skill:
+  skill-library:
     needs: [changes, build-core]
     if: needs.changes.outputs.skill == 'true' || github.event_name == 'push'
     uses: ./.github/workflows/e2e-spec.yml
     with:
-      spec: "skill-library skill-library-core builtin-skill-edit skill-bind-api"
-      group-name: "Skills"
+      spec: "skill-library"
+      group-name: "Skill Library"
+
+  skill-library-core:
+    needs: [changes, build-core]
+    if: needs.changes.outputs.skill == 'true' || github.event_name == 'push'
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "skill-library-core"
+      group-name: "Skill Core"
+
+  builtin-skill-edit:
+    needs: [changes, build-core]
+    if: needs.changes.outputs.skill == 'true' || github.event_name == 'push'
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "builtin-skill-edit"
+      group-name: "Builtin Skill Edit"
+
+  skill-bind-api:
+    needs: [changes, build-core]
+    if: needs.changes.outputs.skill == 'true' || github.event_name == 'push'
+    uses: ./.github/workflows/e2e-spec.yml
+    with:
+      spec: "skill-bind-api"
+      group-name: "Skill Bind API"
 
   flow:
     needs: [changes, build-core]

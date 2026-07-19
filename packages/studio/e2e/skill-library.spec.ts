@@ -3,8 +3,6 @@ import { test, expect } from "@playwright/test";
 // Skills are pre-seeded by global-setup.ts — no need for seedSkillLibrary here.
 
 test("1. 加载Skill库→分页显示", async ({ page }) => {
-  // Force full page reload to clear any residual SPA state from prior spec files
-  await page.goto("about:blank");
   await page.goto("/#/skills");
   await expect(page.getByRole("heading", { name: "Skill 库" })).toBeVisible({ timeout: 15_000 });
 
