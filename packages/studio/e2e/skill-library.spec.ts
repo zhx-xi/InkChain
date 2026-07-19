@@ -3,7 +3,10 @@ import { test, expect } from "@playwright/test";
 // Skills are pre-seeded by global-setup.ts — no need for seedSkillLibrary here.
 
 test("1. 加载Skill库→分页显示", async ({ page }) => {
-  await page.goto("/#/skills");
+  await page.goto("/#/skills", { timeout: 30_000 });
+  // Cold-start: reload once to ensure Vite module graph is settled
+  await page.waitForTimeout(1000);
+  await page.reload().catch(() => {});
   await expect(page.getByRole('heading', { name: 'Skill 库' })).toBeVisible({ timeout: 15_000 });
 
   // Should show skill count
