@@ -81,6 +81,8 @@ test.describe("伏笔提取 — lastMentionedChapter 与 大纲未指定", () =>
 
   test("2. 已有伏笔列表中 expectedPayoffChapter=null 显示「大纲未指定」", async ({ page }) => {
     // Create a foreshadowing entry with null expectedPayoffChapter via API
+    // Note: Omit expectedPayoffChapter to let Zod .default(null) handle it,
+    // which avoids potential edge cases with explicit null in nullable() chains.
     const createRes = await page.request.post("/api/v1/foreshadowing", {
       data: {
         id: "fs-e2e-existing-null",
@@ -89,12 +91,12 @@ test.describe("伏笔提取 — lastMentionedChapter 与 大纲未指定", () =>
         description: "一封没有署名的神秘信件",
         type: "情节伏笔",
         status: "active",
-        chapter: 3,
+        createdChapter: 3,
         lastMentionedChapter: 5,
-        expectedPayoffChapter: null,
       },
     });
-    expect([200, 201]).toContain(createRes.status());
+    const status = createRes.status();
+    expect([200, 201]).toContain(status);
 
     await page.reload();
     await expect(page.getByRole("heading", { name: "伏笔追踪" })).toBeVisible({ timeout: 15_000 });
