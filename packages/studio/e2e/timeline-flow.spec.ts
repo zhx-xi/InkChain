@@ -42,9 +42,15 @@ test.beforeAll(async () => {
 
 test.beforeEach(async ({ page }) => {
   await seedTimeline();
-  await page.goto(`/#/timeline/${E2E_TIMELINE_BOOK_ID}`);
-  // Don't block on heading visibility — React may not render timeline in CI
-  await page.waitForTimeout(3000);
+  await page.goto(`/#/timeline/${E2E_TIMELINE_BOOK_ID}`, { waitUntil: "load", timeout: 30_000 }).catch(() =>
+    page.goto(`/#/timeline/${E2E_TIMELINE_BOOK_ID}`, { waitUntil: "domcontentloaded" })
+  );
+  // Wait for React to mount
+  await page.waitForFunction(() => {
+    const root = document.getElementById("root");
+    return root && root.children.length > 0;
+  }, { timeout: 15_000 });
+  await page.waitForTimeout(2000);
 });
 
 // ── Tests ────────────────────────────────────────────────────────

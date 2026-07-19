@@ -11,7 +11,15 @@ test.beforeAll(async () => {
 
 test.beforeEach(async ({ page }) => {
   await seedTimeline();
-  await page.goto(`/#/timeline/${E2E_TIMELINE_BOOK_ID}`);
+  await page.goto(`/#/timeline/${E2E_TIMELINE_BOOK_ID}`, { waitUntil: "load", timeout: 30_000 }).catch(() =>
+    page.goto(`/#/timeline/${E2E_TIMELINE_BOOK_ID}`, { waitUntil: "domcontentloaded" })
+  );
+  // Wait for React to mount
+  await page.waitForFunction(() => {
+    const root = document.getElementById("root");
+    return root && root.children.length > 0;
+  }, { timeout: 15_000 });
+  await page.waitForTimeout(2000);
   await expect(page.getByRole("heading", { name: "时间线" })).toBeVisible({ timeout: 15_000 });
 });
 
