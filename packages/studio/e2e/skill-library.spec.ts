@@ -86,7 +86,7 @@ test("5. 创建新Skill→保存→列表中出现", async ({ page }) => {
   await expect(page.locator("h3").filter({ hasText: /创建 Skill|编辑 Skill/ })).toBeVisible({ timeout: 5_000 });
 
   // Fill in basic fields
-  const idInput = page.getByLabel("Skill ID").or(page.getByPlaceholder(/skill.*id/i));
+  const idInput = page.locator('[data-testid="sk-input-skill-name"]');
   if (await idInput.isVisible()) {
     await idInput.fill("e2e-created-skill");
   }
