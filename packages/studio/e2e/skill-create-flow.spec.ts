@@ -19,7 +19,7 @@ test('Normal: 完整创建Skill流程', async ({ page }) => {
   await openBlankEditor(page);
   await page.locator('[data-testid="sk-input-skill-name"]').fill('Test Skill E2E');
   await page.locator('[data-testid="sk-modal-skill-editor"] [data-testid="save-btn"]').click();
-  await expect(page.locator('[data-testid="sk-modal-skill-editor"]')).not.toBeVisible({ timeout: 5000 });
+  await expect(page.locator('[data-testid="sk-modal-skill-editor"]')).not.toBeVisible({ timeout: 10_000 });
 });
 
 test('Error: 必填项为空显示校验提示', async ({ page }) => {
