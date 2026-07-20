@@ -86,13 +86,16 @@ test("5. 创建新Skill→保存→列表中出现", async ({ page }) => {
   await expect(page.locator("h3").filter({ hasText: /创建 Skill|编辑 Skill/ })).toBeVisible({ timeout: 5_000 });
 
   // Fill in basic fields
-  const idInput = page.getByLabel("Skill ID").or(page.getByPlaceholder(/skill.*id/i));
+  const idInput = page.locator('[data-testid="sk-input-skill-name"]');
   if (await idInput.isVisible()) {
     await idInput.fill("e2e-created-skill");
   }
 
   // Save the skill
   await page.getByText("保存", { exact: true }).click();
+
+  // Wait for the editor modal to close, then the list refreshes
+  await expect(page.locator('[data-testid="sk-modal-skill-editor"]')).not.toBeVisible({ timeout: 10_000 });
 
   // The new skill should appear in the list
   await expect(page.getByText("e2e-created-skill")).toBeVisible({ timeout: 10_000 });
