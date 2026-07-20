@@ -102,10 +102,23 @@ export async function seedForeshadowing(): Promise<void> {
   }
 }
 
-/** Delete all foreshadowing entries for the E2E book */
+/** Delete all foreshadowing entries for the E2E book, retrying on ENOTEMPTY */
 export async function clearForeshadowing(): Promise<void> {
   const foreshadowingDir = dataPath(E2E_ROOT, "foreshadowing");
   const { rm } = await import("node:fs/promises");
-  await rm(foreshadowingDir, { recursive: true, force: true });
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      await rm(foreshadowingDir, { recursive: true, force: true });
+      break;
+    } catch (err: unknown) {
+      const nodeErr = err as NodeJS.ErrnoException;
+      // ENOTEMPTY: another process may be writing; retry after a short wait
+      if (nodeErr.code === "ENOTEMPTY" && attempt < 4) {
+        await new Promise((r) => setTimeout(r, 200));
+        continue;
+      }
+      throw err;
+    }
+  }
   await mkdir(foreshadowingDir, { recursive: true });
 }

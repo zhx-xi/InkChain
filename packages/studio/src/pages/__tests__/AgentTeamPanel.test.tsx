@@ -15,7 +15,7 @@ import { fetchJson } from "../../hooks/use-api";
 // ── Mock dependencies ──
 
 vi.mock("../../hooks/use-api", () => ({
-  fetchJson: vi.fn(),
+  fetchJson: vi.fn(() => Promise.resolve({} as never)),
 }));
 
 vi.mock("../../components/AgentCard", () => ({

@@ -17,7 +17,7 @@ async function openBlankEditor(page: import('@playwright/test').Page) {
 test('Normal: 完整创建Skill流程', async ({ page }) => {
   await navigateSkills(page);
   await openBlankEditor(page);
-  await page.locator('[data-testid="sk-input-skill-name"]').fill('Test Skill E2E');
+  await page.locator('[data-testid="sk-input-skill-name"]').fill('test-skill-e2e');
   await page.locator('[data-testid="sk-modal-skill-editor"] [data-testid="save-btn"]').click();
   await expect(page.locator('[data-testid="sk-modal-skill-editor"]')).not.toBeVisible({ timeout: 10_000 });
 });
@@ -33,7 +33,7 @@ test('Empty: 创建后列表更新', async ({ page }) => {
   await navigateSkills(page);
   const initial = await page.locator('[data-testid^="sk-card-"]').count();
   await openBlankEditor(page);
-  await page.locator('[data-testid="sk-input-skill-name"]').fill('New E2E');
+  await page.locator('[data-testid="sk-input-skill-name"]').fill('new-e2e');
   await page.locator('[data-testid="sk-modal-skill-editor"] [data-testid="save-btn"]').click();
   await page.waitForTimeout(1000);
   const current = await page.locator('[data-testid^="sk-card-"]').count();
