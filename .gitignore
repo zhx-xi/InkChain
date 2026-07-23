@@ -33,3 +33,4 @@ CLAUDE.md
 # Test output artifacts
 packages/studio/*test-output*
 packages/studio/vitest-output.json
+specs/*.report.md
