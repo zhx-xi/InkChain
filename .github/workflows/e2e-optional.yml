@@ -170,6 +170,10 @@ jobs:
               - 'packages/studio/e2e/log-viewer*'
               - 'packages/studio/e2e/radar*'
               - 'packages/studio/e2e/issue*'
+            # Spec changes — not yet bound to E2E groups, reserved for future use
+            specs:
+              - 'specs/**'
+              - 'scripts/sdd/**'
 
   # ── Build Core once, share across all E2E jobs ────────────────
   build-core:
