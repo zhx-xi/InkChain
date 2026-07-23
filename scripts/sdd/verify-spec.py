@@ -191,9 +191,32 @@ def verify_spec(spec_path: str) -> str:
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python verify-spec.py <spec-file>")
+        print("Usage: python verify-spec.py <spec-file> | --all")
         print("Example: python verify-spec.py specs/relations.md")
+        print("         python verify-spec.py --all")
         sys.exit(1)
+    
+    if sys.argv[1] == "--all":
+        specs_dir = INKCHAIN_ROOT / "specs"
+        all_reports = []
+        for spec_file in sorted(specs_dir.glob("*.md")):
+            if spec_file.stem in ("TEMPLATE", "INDEX", "COMPARISON") or spec_file.name.endswith(".report.md"):
+                continue
+            try:
+                report = verify_spec(str(spec_file))
+                output = spec_file.with_suffix(".report.md")
+                output.write_text(report, encoding="utf-8")
+                all_reports.append(spec_file.stem)
+                # Extract compliance from report
+                compliance = "N/A"
+                for line in report.split("\n"):
+                    if "符合度" in line:
+                        compliance = line.split("=")[-1].strip() if "=" in line else line.split(":")[-1].strip()
+                print(f"  {compliance:>6s}  {spec_file.stem}")
+            except Exception as e:
+                print(f"  💥 ERROR  {spec_file.stem}: {e}")
+        print(f"\n总计: {len(all_reports)} 模块已验证")
+        sys.exit(0)
     
     report = verify_spec(sys.argv[1])
     output = Path(sys.argv[1]).with_suffix(".report.md")

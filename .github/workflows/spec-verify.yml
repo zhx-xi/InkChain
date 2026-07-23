@@ -1,0 +1,72 @@
+name: Spec Verification
+
+# Phase 0 gate: every PR that touches specs/ or scripts/sdd/
+# runs verify-spec.py. Always reports status (green on skip)
+# so it can be a required check without blocking non-spec PRs.
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: spec-verify-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  detect:
+    name: Detect spec changes
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
+      contents: read
+    outputs:
+      specs: ${{ steps.filter.outputs.specs }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            specs:
+              - 'specs/**'
+              - 'scripts/sdd/**'
+
+  verify:
+    name: Verify specs
+    needs: [detect]
+    runs-on: ubuntu-latest
+    if: always()  # always report status for required check
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run spec verification
+        if: needs.detect.outputs.specs == 'true'
+        env:
+          INKCHAIN_ROOT: ${{ github.workspace }}
+        run: |
+          echo "=== SDD Spec Verification ==="
+          FAILED=0
+          for spec in specs/*.md; do
+            base=$(basename "$spec")
+            case "$base" in
+              TEMPLATE.md|INDEX.md|COMPARISON.md|*.report.md) continue ;;
+            esac
+            echo "--- $base ---"
+            python scripts/sdd/verify-spec.py "$spec" || FAILED=1
+            echo ""
+          done
+          if [ "$FAILED" -ne 0 ]; then
+            echo "❌ One or more specs failed verification"
+            exit 1
+          fi
+          echo "✅ All specs verified"
+
+      - name: No spec changes — skip
+        if: needs.detect.outputs.specs != 'true'
+        run: echo "No spec changes detected. Verification skipped."
