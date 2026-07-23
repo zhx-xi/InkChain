@@ -12,7 +12,10 @@ import re, json, os, sys
 from pathlib import Path
 from typing import Optional
 
-INKCHAIN_ROOT = Path(os.environ.get("INKCHAIN_ROOT", "C:/Users/zhx-xi/WorkBuddy/inkos/InkChain"))
+INKCHAIN_ROOT = Path(os.environ.get(
+    "INKCHAIN_ROOT",
+    os.environ.get("GITHUB_WORKSPACE", str(Path(__file__).resolve().parent.parent.parent))
+))
 
 def parse_spec(spec_path: Path) -> dict:
     """解析 spec.md 成为结构化数据。"""
@@ -175,10 +178,14 @@ def verify_spec(spec_path: str) -> str:
     total_checks = api_ok + api_fail + schema_ok + schema_fail + tid_ok + tid_fail
     total_ok = api_ok + schema_ok + tid_ok
     lines.append(f"\n---\n## 5. 总评\n")
-    lines.append(f"**符合度**: {total_ok}/{total_checks} = {total_ok/total_checks*100:.0f}%")
     
-    level = "🔴 严重不符" if total_ok/total_checks < 0.5 else "🟡 部分符合" if total_ok/total_checks < 0.8 else "🟢 大部分符合"
-    lines.append(f"**等级**: {level}")
+    if total_checks == 0:
+        lines.append("**符合度**: N/A（无 API/无 Schema/纯 UI 模块）")
+        lines.append("**等级**: ⚪ 不适用（需手动审查 UI 组件存在性）")
+    else:
+        lines.append(f"**符合度**: {total_ok}/{total_checks} = {total_ok/total_checks*100:.0f}%")
+        level = "🔴 严重不符" if total_ok/total_checks < 0.5 else "🟡 部分符合" if total_ok/total_checks < 0.8 else "🟢 大部分符合"
+        lines.append(f"**等级**: {level}")
     
     return "\n".join(lines)
 
