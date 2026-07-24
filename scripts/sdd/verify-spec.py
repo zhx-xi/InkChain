@@ -99,6 +99,27 @@ def check_testid_exists(testid: str) -> tuple[bool, str]:
             return True, f"Found in {ts_file.relative_to(INKCHAIN_ROOT)}"
     return False, "Not found"
 
+def check_page_component_exists(page_name: str) -> tuple[bool, str]:
+    """检查 Page 组件文件是否存在。"""
+    pages_dir = INKCHAIN_ROOT / "packages/studio/src/pages"
+    # Try exact match first
+    exact = pages_dir / f"{page_name}.tsx"
+    if exact.exists():
+        return True, f"Found {page_name}.tsx"
+    # Try glob
+    matches = list(pages_dir.glob(f"*{page_name}*.tsx"))
+    if matches:
+        return True, f"Found {matches[0].name}"
+    return False, "No matching page component"
+
+def check_e2e_file_exists(module: str) -> tuple[bool, str]:
+    """检查 E2E 测试文件是否存在。"""
+    e2e_dir = INKCHAIN_ROOT / "packages/studio/e2e"
+    matches = list(e2e_dir.glob(f"{module}*.spec.ts"))
+    if matches:
+        return True, f"Found {len(matches)} E2E file(s)"
+    return False, "No E2E test files"
+
 def check_e2e_coverage(spec: dict) -> tuple[int, int, list[str]]:
     """检查 E2E 测试覆盖情况。"""
     e2e_dir = INKCHAIN_ROOT / "packages/studio/e2e"
@@ -138,12 +159,17 @@ def verify_spec(spec_path: str) -> str:
     # 1. API 验证
     lines.append("## 1. API 接口验证\n")
     api_ok = api_fail = 0
+    is_ui_only = True  # Will be set to False if any API found
     for api in spec["apis"]:
         ok, detail = check_api_exists(api)
         if ok: api_ok += 1
         else: api_fail += 1
+        is_ui_only = False
         lines.append(f"| {api['method']} `{api['path']}` | {'✅' if ok else '❌'} | {detail} |")
-    lines.append(f"\n**结果**: {api_ok}/{api_ok+api_fail} 通过\n")
+    if spec["apis"]:
+        lines.append(f"\n**结果**: {api_ok}/{api_ok+api_fail} 通过\n")
+    else:
+        lines.append("无 API 接口（纯 UI 模块）\n")
     
     # 2. Schema 验证
     lines.append("## 2. 数据模型验证\n")
@@ -174,17 +200,66 @@ def verify_spec(spec_path: str) -> str:
         for g in gaps[:5]:
             lines.append(f"- {g}")
     
+    # 4a. UI supplement check (always run when pages are listed in spec)
+    ui_page_ok = ui_e2e_ok = ui_tid_ok = 0
+    ui_page_fail = ui_e2e_fail = ui_tid_fail = 0
+    
+    if spec["pages"]:
+        lines.append("\n---\n## 4a. 纯 UI 模块验证（组件 + E2E + TestID）\n")
+        
+        # Check page components
+        lines.append("\n### 页面组件\n")
+        for p in spec["pages"][:5]:
+            ok, detail = check_page_component_exists(p)
+            if ok: ui_page_ok += 1
+            else: ui_page_fail += 1
+            lines.append(f"| `{p}` | {'✅' if ok else '❌'} | {detail} |")
+        lines.append(f"\n**结果**: {ui_page_ok}/{ui_page_ok+ui_page_fail} 组件存在\n")
+        
+        # Check E2E files
+        lines.append("\n### E2E 测试文件\n")
+        ok, detail = check_e2e_file_exists(spec["module"])
+        if ok: ui_e2e_ok = 1
+        else: ui_e2e_fail = 1
+        lines.append(f"| `{spec['module']}*.spec.ts` | {'✅' if ok else '❌'} | {detail} |")
+        lines.append(f"\n**结果**: {ui_e2e_ok}/{ui_e2e_ok+ui_e2e_fail} 测试文件存在\n")
+        
+        # Check data-testids against E2E files
+        lines.append("\n### E2E 测试中的 data-testid\n")
+        e2e_dir = INKCHAIN_ROOT / "packages/studio/e2e"
+        e2e_files = list(e2e_dir.glob(f"{spec['module']}*.spec.ts"))
+        all_testids = set()
+        for ef in e2e_files[:3]:
+            content = ef.read_text(encoding="utf-8")
+            found = re.findall(r"data-testid='([^']+)'|data-testid=\"([^\"]+)\"|getByTestId\('([^']+)'", content)
+            for t in found:
+                tid = t[0] or t[1] or t[2]
+                if tid: all_testids.add(tid)
+        for tid in sorted(all_testids)[:10]:
+            ok, detail = check_testid_exists(tid)
+            if ok: ui_tid_ok += 1
+            else: ui_tid_fail += 1
+            lines.append(f"| `{tid}` | {'✅' if ok else '❌'} | {detail} |")
+        lines.append(f"\n**结果**: {ui_tid_ok}/{ui_tid_ok+ui_tid_fail} testid 在组件中使用\n")
+    
     # 5. 总评
     total_checks = api_ok + api_fail + schema_ok + schema_fail + tid_ok + tid_fail
     total_ok = api_ok + schema_ok + tid_ok
-    lines.append(f"\n---\n## 5. 总评\n")
     
+    # Merge UI supplement checks if available
+    if ui_page_ok + ui_page_fail > 0:
+        total_checks += ui_page_ok + ui_page_fail + ui_e2e_ok + ui_e2e_fail + ui_tid_ok + ui_tid_fail
+        total_ok += ui_page_ok + ui_e2e_ok + ui_tid_ok
+    
+    lines.append(f"\n---\n## 5. 总评\n")
     if total_checks == 0:
-        lines.append("**符合度**: N/A（无 API/无 Schema/纯 UI 模块）")
-        lines.append("**等级**: ⚪ 不适用（需手动审查 UI 组件存在性）")
+        lines.append("**符合度**: N/A（所有检查项为空）")
+        lines.append("**等级**: ⚪ 未验证")
     else:
-        lines.append(f"**符合度**: {total_ok}/{total_checks} = {total_ok/total_checks*100:.0f}%")
-        level = "🔴 严重不符" if total_ok/total_checks < 0.5 else "🟡 部分符合" if total_ok/total_checks < 0.8 else "🟢 大部分符合"
+        pct = total_ok / total_checks
+        label = "（API + Schema + TestID + UI 组件）" if ui_page_ok + ui_page_fail > 0 else ""
+        lines.append(f"**符合度**: {total_ok}/{total_checks} = {pct*100:.0f}%{label}")
+        level = "🔴 严重不符" if pct < 0.5 else "🟡 部分符合" if pct < 0.8 else "🟢 大部分符合"
         lines.append(f"**等级**: {level}")
     
     return "\n".join(lines)
