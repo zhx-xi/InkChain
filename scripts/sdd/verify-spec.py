@@ -4,8 +4,11 @@ SDD 验证器 — 对照 spec.md 检查代码实现是否符合规格。
 输出符合度报告：已完成 / 部分 / 未完成 / 无。
 
 用法:
-  python verify-spec.py <spec-file>
-  python verify-spec.py specs/relations.md
+  python verify-spec.py <spec-file> [--threshold <pct>]
+  python verify-spec.py specs/relations.md --threshold 80
+  python verify-spec.py --all [--threshold <pct>]
+
+--threshold: 合规度低于此百分比时 exit 1（默认 0 = 不检查）
 """
 
 import re, json, os, sys
@@ -264,16 +267,43 @@ def verify_spec(spec_path: str) -> str:
     
     return "\n".join(lines)
 
+def extract_compliance_pct(report: str) -> Optional[float]:
+    """从报告中提取合规度百分比。返回 None 表示无法解析（如 N/A）。"""
+    for line in report.split("\n"):
+        if "符合度" in line and "=" in line:
+            # 格式: **符合度**: 8/12 = 67%（...）
+            m = re.search(r"=\s*([\d.]+)%", line)
+            if m:
+                return float(m.group(1))
+    return None
+
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python verify-spec.py <spec-file> | --all")
-        print("Example: python verify-spec.py specs/relations.md")
-        print("         python verify-spec.py --all")
+    # 解析 --threshold 参数
+    threshold = 0.0
+    args = [a for a in sys.argv[1:] if not a.startswith("--threshold")]
+    if "--threshold" in sys.argv:
+        idx = sys.argv.index("--threshold")
+        if idx + 1 < len(sys.argv):
+            try:
+                threshold = float(sys.argv[idx + 1])
+            except ValueError:
+                print(f"Error: --threshold value must be a number, got '{sys.argv[idx + 1]}'")
+                sys.exit(2)
+            args = [a for a in args if a != sys.argv[idx + 1]]
+        else:
+            print("Error: --threshold requires a value")
+            sys.exit(2)
+
+    if not args:
+        print("Usage: python verify-spec.py <spec-file> | --all [--threshold <pct>]")
+        print("Example: python verify-spec.py specs/relations.md --threshold 80")
+        print("         python verify-spec.py --all --threshold 50")
         sys.exit(1)
-    
-    if sys.argv[1] == "--all":
+
+    if args[0] == "--all":
         specs_dir = INKCHAIN_ROOT / "specs"
         all_reports = []
+        failed_modules = []
         for spec_file in sorted(specs_dir.glob("*.md")):
             if spec_file.stem in ("TEMPLATE", "INDEX", "COMPARISON") or spec_file.name.endswith(".report.md"):
                 continue
@@ -282,26 +312,45 @@ def main():
                 output = spec_file.with_suffix(".report.md")
                 output.write_text(report, encoding="utf-8")
                 all_reports.append(spec_file.stem)
-                # Extract compliance from report
-                compliance = "N/A"
-                for line in report.split("\n"):
-                    if "符合度" in line:
-                        compliance = line.split("=")[-1].strip() if "=" in line else line.split(":")[-1].strip()
-                print(f"  {compliance:>6s}  {spec_file.stem}")
+                pct = extract_compliance_pct(report)
+                if pct is not None:
+                    compliance_str = f"{pct:.0f}%"
+                    if threshold > 0 and pct < threshold:
+                        failed_modules.append((spec_file.stem, pct))
+                else:
+                    compliance_str = "N/A"
+                print(f"  {compliance_str:>6s}  {spec_file.stem}")
             except Exception as e:
                 print(f"  💥 ERROR  {spec_file.stem}: {e}")
+                failed_modules.append((spec_file.stem, -1))
         print(f"\n总计: {len(all_reports)} 模块已验证")
+
+        if threshold > 0 and failed_modules:
+            print(f"\n❌ {len(failed_modules)} 模块低于阈值 {threshold:.0f}%:")
+            for name, pct in failed_modules:
+                if pct < 0:
+                    print(f"   💥 {name}: ERROR")
+                else:
+                    print(f"   🔴 {name}: {pct:.0f}%")
+            sys.exit(1)
+        elif threshold > 0:
+            print(f"\n✅ 所有模块均达到阈值 {threshold:.0f}%")
         sys.exit(0)
-    
-    report = verify_spec(sys.argv[1])
-    output = Path(sys.argv[1]).with_suffix(".report.md")
+
+    spec_path = args[0]
+    report = verify_spec(spec_path)
+    output = Path(spec_path).with_suffix(".report.md")
     output.write_text(report, encoding="utf-8")
     print(f"✅ Report saved: {output}")
     print()
-    # Also print summary
+    pct = extract_compliance_pct(report)
     for line in report.split("\n"):
         if "符合度" in line or "等级" in line:
             print(line)
+
+    if threshold > 0 and pct is not None and pct < threshold:
+        print(f"\n❌ 合规度 {pct:.0f}% 低于阈值 {threshold:.0f}%")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
