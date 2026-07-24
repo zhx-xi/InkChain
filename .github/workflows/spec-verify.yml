@@ -1,8 +1,14 @@
 name: Spec Verification
 
 # Phase 0 gate: every PR/push that touches specs/ or scripts/sdd/
-# runs verify-spec.py with --threshold. Always reports status (green on skip)
+# runs verify-spec.py. Always reports status (green on skip)
 # so it can be a required check without blocking non-spec PRs.
+#
+# Threshold logic:
+#   - If spec CONTENT changed (specs/*.md, not scripts/sdd/*):
+#     Run --all --threshold 50 → blocks merge if any module < 50%
+#   - If only scripts/sdd/* changed (infra PRs):
+#     Run --all without threshold → reports compliance but doesn't block
 
 on:
   push:
@@ -23,6 +29,7 @@ jobs:
       contents: read
     outputs:
       specs: ${{ steps.filter.outputs.specs }}
+      spec-content: ${{ steps.filter.outputs.spec-content }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,6 +41,8 @@ jobs:
             specs:
               - 'specs/**'
               - 'scripts/sdd/**'
+            spec-content:
+              - 'specs/*.md'
 
   verify:
     name: Verify specs
@@ -47,14 +56,23 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run spec verification
-        if: needs.detect.outputs.specs == 'true'
+      - name: Run spec verification (with threshold)
+        if: needs.detect.outputs.specs == 'true' && needs.detect.outputs.spec-content == 'true'
         env:
           INKCHAIN_ROOT: ${{ github.workspace }}
         run: |
-          echo "=== SDD Spec Verification ==="
+          echo "=== SDD Spec Verification (threshold: 50%) ==="
           python scripts/sdd/verify-spec.py --all --threshold 50
           echo "✅ All specs verified (threshold: 50%)"
+
+      - name: Run spec verification (no threshold)
+        if: needs.detect.outputs.specs == 'true' && needs.detect.outputs.spec-content != 'true'
+        env:
+          INKCHAIN_ROOT: ${{ github.workspace }}
+        run: |
+          echo "=== SDD Spec Verification (infra-only, no threshold) ==="
+          python scripts/sdd/verify-spec.py --all
+          echo "✅ Spec verification completed (infra changes only, no threshold enforced)"
 
       - name: No spec changes — skip
         if: needs.detect.outputs.specs != 'true'
