@@ -7,8 +7,13 @@ SDD 验证器 — 对照 spec.md 检查代码实现是否符合规格。
   python verify-spec.py <spec-file> [--threshold <pct>]
   python verify-spec.py specs/relations.md --threshold 80
   python verify-spec.py --all [--threshold <pct>]
+  python verify-spec.py specs/daemon.md specs/flow.md --threshold 50
 
 --threshold: 合规度低于此百分比时 exit 1（默认 0 = 不检查）
+
+模式:
+  --all            全量检查 specs/*.md
+  <file> [<file>…]  只检查指定的 spec 文件（CI 用此模式只验证 PR 中变更的文件）
 """
 
 import re, json, os, sys
@@ -277,6 +282,48 @@ def extract_compliance_pct(report: str) -> Optional[float]:
                 return float(m.group(1))
     return None
 
+def verify_files(spec_paths: list, threshold: float) -> int:
+    """验证多个 spec 文件，返回 exit code。"""
+    all_reports = []
+    failed_modules = []
+    for spec_path in spec_paths:
+        sp = Path(spec_path)
+        if not sp.exists():
+            print(f"  💥 ERROR  {sp.stem}: file not found")
+            failed_modules.append((sp.stem, -1))
+            continue
+        if sp.stem in ("TEMPLATE", "INDEX", "COMPARISON") or sp.name.endswith(".report.md"):
+            continue
+        try:
+            report = verify_spec(str(sp))
+            output = sp.with_suffix(".report.md")
+            output.write_text(report, encoding="utf-8")
+            all_reports.append(sp.stem)
+            pct = extract_compliance_pct(report)
+            if pct is not None:
+                compliance_str = f"{pct:.0f}%"
+                if threshold > 0 and pct < threshold:
+                    failed_modules.append((sp.stem, pct))
+            else:
+                compliance_str = "N/A"
+            print(f"  {compliance_str:>6s}  {sp.stem}")
+        except Exception as e:
+            print(f"  💥 ERROR  {sp.stem}: {e}")
+            failed_modules.append((sp.stem, -1))
+    print(f"\n总计: {len(all_reports)} 模块已验证")
+
+    if threshold > 0 and failed_modules:
+        print(f"\n❌ {len(failed_modules)} 模块低于阈值 {threshold:.0f}%:")
+        for name, pct in failed_modules:
+            if pct < 0:
+                print(f"   💥 {name}: ERROR")
+            else:
+                print(f"   🔴 {name}: {pct:.0f}%")
+        return 1
+    elif threshold > 0:
+        print(f"\n✅ 所有模块均达到阈值 {threshold:.0f}%")
+    return 0
+
 def main():
     # 解析 --threshold 参数
     threshold = 0.0
@@ -295,62 +342,28 @@ def main():
             sys.exit(2)
 
     if not args:
-        print("Usage: python verify-spec.py <spec-file> | --all [--threshold <pct>]")
+        print("Usage: python verify-spec.py <spec-file>... | --all [--threshold <pct>]")
         print("Example: python verify-spec.py specs/relations.md --threshold 80")
         print("         python verify-spec.py --all --threshold 50")
+        print("         python verify-spec.py specs/daemon.md specs/flow.md --threshold 50")
         sys.exit(1)
 
     if args[0] == "--all":
         specs_dir = INKCHAIN_ROOT / "specs"
-        all_reports = []
-        failed_modules = []
-        for spec_file in sorted(specs_dir.glob("*.md")):
-            if spec_file.stem in ("TEMPLATE", "INDEX", "COMPARISON") or spec_file.name.endswith(".report.md"):
-                continue
-            try:
-                report = verify_spec(str(spec_file))
-                output = spec_file.with_suffix(".report.md")
-                output.write_text(report, encoding="utf-8")
-                all_reports.append(spec_file.stem)
-                pct = extract_compliance_pct(report)
-                if pct is not None:
-                    compliance_str = f"{pct:.0f}%"
-                    if threshold > 0 and pct < threshold:
-                        failed_modules.append((spec_file.stem, pct))
-                else:
-                    compliance_str = "N/A"
-                print(f"  {compliance_str:>6s}  {spec_file.stem}")
-            except Exception as e:
-                print(f"  💥 ERROR  {spec_file.stem}: {e}")
-                failed_modules.append((spec_file.stem, -1))
-        print(f"\n总计: {len(all_reports)} 模块已验证")
+        all_spec_files = [
+            str(f) for f in sorted(specs_dir.glob("*.md"))
+            if f.stem not in ("TEMPLATE", "INDEX", "COMPARISON") and not f.name.endswith(".report.md")
+        ]
+        sys.exit(verify_files(all_spec_files, threshold))
 
-        if threshold > 0 and failed_modules:
-            print(f"\n❌ {len(failed_modules)} 模块低于阈值 {threshold:.0f}%:")
-            for name, pct in failed_modules:
-                if pct < 0:
-                    print(f"   💥 {name}: ERROR")
-                else:
-                    print(f"   🔴 {name}: {pct:.0f}%")
-            sys.exit(1)
-        elif threshold > 0:
-            print(f"\n✅ 所有模块均达到阈值 {threshold:.0f}%")
-        sys.exit(0)
-
-    spec_path = args[0]
-    report = verify_spec(spec_path)
-    output = Path(spec_path).with_suffix(".report.md")
-    output.write_text(report, encoding="utf-8")
-    print(f"✅ Report saved: {output}")
-    print()
-    pct = extract_compliance_pct(report)
-    for line in report.split("\n"):
-        if "符合度" in line or "等级" in line:
-            print(line)
-
-    if threshold > 0 and pct is not None and pct < threshold:
-        print(f"\n❌ 合规度 {pct:.0f}% 低于阈值 {threshold:.0f}%")
+    # 多文件模式: verify-spec.py specs/a.md specs/b.md [--threshold N]
+    spec_paths = args
+    # 过滤掉非 .md 文件
+    valid_paths = [p for p in spec_paths if p.endswith(".md")]
+    if not valid_paths:
+        print("Error: no .md spec files provided")
         sys.exit(1)
+    sys.exit(verify_files(valid_paths, threshold))
 
 if __name__ == "__main__":
     main()
