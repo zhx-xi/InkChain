@@ -70,7 +70,7 @@ jobs:
               - 'specs/world.md'
 
   verify:
-    name: Verify specs
+    name: verify
     needs: [detect]
     runs-on: ubuntu-latest
     if: always()  # always report status for required check
