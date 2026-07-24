@@ -10,7 +10,10 @@ SDD Spec 生成器 — 从代码自动提取行为合约、状态矩阵、API �
 import re, json, os, sys
 from pathlib import Path
 
-INKCHAIN_ROOT = Path(os.environ.get("INKCHAIN_ROOT", "C:/Users/zhx-xi/WorkBuddy/inkos/InkChain"))
+INKCHAIN_ROOT = Path(os.environ.get(
+    "INKCHAIN_ROOT",
+    os.environ.get("GITHUB_WORKSPACE", str(Path(__file__).resolve().parent.parent.parent))
+))
 SPECS_DIR = INKCHAIN_ROOT / "specs"
 
 def extract_zod_schemas(filepath: Path) -> list[dict]:

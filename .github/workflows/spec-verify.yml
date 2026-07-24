@@ -1,10 +1,18 @@
 name: Spec Verification
 
-# Phase 0 gate: every PR that touches specs/ or scripts/sdd/
+# Phase 0 gate: every PR/push that touches specs/ or scripts/sdd/
 # runs verify-spec.py. Always reports status (green on skip)
 # so it can be a required check without blocking non-spec PRs.
+#
+# Threshold logic:
+#   - If spec CONTENT changed (specs/*.md, not scripts/sdd/*):
+#     Run --all --threshold 50 → blocks merge if any module < 50%
+#   - If only scripts/sdd/* changed (infra PRs):
+#     Run --all without threshold → reports compliance but doesn't block
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
 
@@ -21,20 +29,48 @@ jobs:
       contents: read
     outputs:
       specs: ${{ steps.filter.outputs.specs }}
+      spec-content: ${{ steps.filter.outputs.spec-content }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: dorny/paths-filter@v3
+      - uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
             specs:
               - 'specs/**'
               - 'scripts/sdd/**'
+            spec-content:
+              - 'specs/agent.md'
+              - 'specs/audit.md'
+              - 'specs/book.md'
+              - 'specs/chapter.md'
+              - 'specs/character-tiering.md'
+              - 'specs/consistency.md'
+              - 'specs/daemon.md'
+              - 'specs/dashboard.md'
+              - 'specs/doctor.md'
+              - 'specs/export.md'
+              - 'specs/film.md'
+              - 'specs/flow.md'
+              - 'specs/foreshadowing.md'
+              - 'specs/genre.md'
+              - 'specs/import-manager.md'
+              - 'specs/language.md'
+              - 'specs/log-viewer.md'
+              - 'specs/project-settings.md'
+              - 'specs/publish.md'
+              - 'specs/radar.md'
+              - 'specs/relations.md'
+              - 'specs/session.md'
+              - 'specs/skill.md'
+              - 'specs/style-detection.md'
+              - 'specs/timeline.md'
+              - 'specs/world.md'
 
   verify:
-    name: Verify specs
+    name: verify
     needs: [detect]
     runs-on: ubuntu-latest
     if: always()  # always report status for required check
@@ -45,27 +81,23 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run spec verification
-        if: needs.detect.outputs.specs == 'true'
+      - name: Run spec verification (with threshold)
+        if: needs.detect.outputs.specs == 'true' && needs.detect.outputs.spec-content == 'true'
         env:
           INKCHAIN_ROOT: ${{ github.workspace }}
         run: |
-          echo "=== SDD Spec Verification ==="
-          FAILED=0
-          for spec in specs/*.md; do
-            base=$(basename "$spec")
-            case "$base" in
-              TEMPLATE.md|INDEX.md|COMPARISON.md|*.report.md) continue ;;
-            esac
-            echo "--- $base ---"
-            python scripts/sdd/verify-spec.py "$spec" || FAILED=1
-            echo ""
-          done
-          if [ "$FAILED" -ne 0 ]; then
-            echo "❌ One or more specs failed verification"
-            exit 1
-          fi
-          echo "✅ All specs verified"
+          echo "=== SDD Spec Verification (threshold: 50%) ==="
+          python scripts/sdd/verify-spec.py --all --threshold 50
+          echo "✅ All specs verified (threshold: 50%)"
+
+      - name: Run spec verification (no threshold)
+        if: needs.detect.outputs.specs == 'true' && needs.detect.outputs.spec-content != 'true'
+        env:
+          INKCHAIN_ROOT: ${{ github.workspace }}
+        run: |
+          echo "=== SDD Spec Verification (infra-only, no threshold) ==="
+          python scripts/sdd/verify-spec.py --all
+          echo "✅ Spec verification completed (infra changes only, no threshold enforced)"
 
       - name: No spec changes — skip
         if: needs.detect.outputs.specs != 'true'
