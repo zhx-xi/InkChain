@@ -4,9 +4,10 @@ name: Spec Verification
 # runs verify-spec.py. Always reports status (green on skip)
 # so it can be a required check without blocking non-spec PRs.
 #
-# Threshold logic:
-#   - If spec CONTENT changed (specs/*.md, not scripts/sdd/*):
-#     Run --all --threshold 50 → blocks merge if any module < 50%
+# Threshold logic (incremental mode):
+#   - Detects which specs/*.md files changed in this PR/push
+#   - Only verifies THOSE files with --threshold 50
+#   - Unchanged modules don't block the PR
 #   - If only scripts/sdd/* changed (infra PRs):
 #     Run --all without threshold → reports compliance but doesn't block
 
@@ -30,6 +31,7 @@ jobs:
     outputs:
       specs: ${{ steps.filter.outputs.specs }}
       spec-content: ${{ steps.filter.outputs.spec-content }}
+      changed-specs: ${{ steps.changed.outputs.files }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -42,32 +44,30 @@ jobs:
               - 'specs/**'
               - 'scripts/sdd/**'
             spec-content:
-              - 'specs/agent.md'
-              - 'specs/audit.md'
-              - 'specs/book.md'
-              - 'specs/chapter.md'
-              - 'specs/character-tiering.md'
-              - 'specs/consistency.md'
-              - 'specs/daemon.md'
-              - 'specs/dashboard.md'
-              - 'specs/doctor.md'
-              - 'specs/export.md'
-              - 'specs/film.md'
-              - 'specs/flow.md'
-              - 'specs/foreshadowing.md'
-              - 'specs/genre.md'
-              - 'specs/import-manager.md'
-              - 'specs/language.md'
-              - 'specs/log-viewer.md'
-              - 'specs/project-settings.md'
-              - 'specs/publish.md'
-              - 'specs/radar.md'
-              - 'specs/relations.md'
-              - 'specs/session.md'
-              - 'specs/skill.md'
-              - 'specs/style-detection.md'
-              - 'specs/timeline.md'
-              - 'specs/world.md'
+              - 'specs/*.md'
+      - name: Get changed spec files
+        id: changed
+        if: steps.filter.outputs.spec-content == 'true'
+        run: |
+          # Get the base SHA for comparison
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+            HEAD_SHA="${{ github.sha }}"
+          fi
+
+          # Get changed .md files in specs/ (excluding .report.md and non-spec files)
+          CHANGED=$(git diff --name-only --diff-filter=AM "$BASE_SHA" "$HEAD_SHA" -- 'specs/*.md' | \
+            grep -v '.report.md' | \
+            grep -v 'TEMPLATE.md' | \
+            grep -v 'INDEX.md' | \
+            grep -v 'COMPARISON.md' | \
+            tr '\n' ' ')
+
+          echo "files=$CHANGED" >> "$GITHUB_OUTPUT"
+          echo "Changed spec files: $CHANGED"
 
   verify:
     name: verify
@@ -81,16 +81,18 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run spec verification (with threshold)
-        if: needs.detect.outputs.specs == 'true' && needs.detect.outputs.spec-content == 'true'
+      - name: Run spec verification (incremental, with threshold)
+        if: needs.detect.outputs.specs == 'true' && needs.detect.outputs.spec-content == 'true' && needs.detect.outputs.changed-specs != ''
         env:
           INKCHAIN_ROOT: ${{ github.workspace }}
         run: |
-          echo "=== SDD Spec Verification (threshold: 50%) ==="
-          python scripts/sdd/verify-spec.py --all --threshold 50
-          echo "✅ All specs verified (threshold: 50%)"
+          CHANGED="${{ needs.detect.outputs.changed-specs }}"
+          echo "=== SDD Spec Verification (incremental, threshold: 50%) ==="
+          echo "Files to verify: $CHANGED"
+          python scripts/sdd/verify-spec.py $CHANGED --threshold 50
+          echo "✅ All changed specs verified (threshold: 50%)"
 
-      - name: Run spec verification (no threshold)
+      - name: Run spec verification (no spec content changed)
         if: needs.detect.outputs.specs == 'true' && needs.detect.outputs.spec-content != 'true'
         env:
           INKCHAIN_ROOT: ${{ github.workspace }}
@@ -102,3 +104,12 @@ jobs:
       - name: No spec changes — skip
         if: needs.detect.outputs.specs != 'true'
         run: echo "No spec changes detected. Verification skipped."
+
+      - name: Spec content changed but no files detected — fallback to --all
+        if: needs.detect.outputs.specs == 'true' && needs.detect.outputs.spec-content == 'true' && needs.detect.outputs.changed-specs == ''
+        env:
+          INKCHAIN_ROOT: ${{ github.workspace }}
+        run: |
+          echo "=== SDD Spec Verification (fallback: --all, threshold: 50%) ==="
+          echo "Warning: could not detect changed spec files, running full check."
+          python scripts/sdd/verify-spec.py --all --threshold 50
