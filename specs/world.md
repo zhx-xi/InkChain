@@ -44,12 +44,14 @@
 | POST | `/api/worlds` | `WorldConfigSchema` body | `{ world: WorldConfig }` (201) | 创建世界观 |
 | PUT | `/api/worlds/:id` | `WorldConfigUpdateSchema` body | `{ world: WorldConfig }` | 更新世界观（partial update） |
 | DELETE | `/api/worlds/:id` | — | `{ ok: true, id }` | 删除世界观 |
-| GET | `/api/worlds/:id/search?q=&dimension=` | query q, dimension(可选) | `{ results: WorldSearchResult[] }` | 在单个世界观内搜索 |
+| GET | `/api/worlds/:id/search` | query q, dimension(可选) | `{ results: WorldSearchResult[] }` | 在世界观内搜索 |
 | POST | `/api/worlds/:id/references` | `WorldReferenceCreateSchema` body | `{ world: WorldConfig }` (201) | 添加跨维度引用 |
 | DELETE | `/api/worlds/:id/references/:refId` | — | `{ world: WorldConfig }` | 删除引用 |
-| POST | `/api/worlds/:id/inherit` | `{ newId?, newTitle? }` | `{ world, message }` | 继承创建新世界观 |
 | GET | `/api/books/:bookId/worlds` | — | `{ worlds: WorldConfig[] }` | 列出书籍关联的世界观 |
-| POST | `/api/books/:bookId/worlds-associate` | `{ worldId }` | `{ ok: true, worldIds }` | 关联世界观到书籍 |
+
+**附加端点**（使用相对路径注册，通过 `createBookWorldsRouter` 挂载于 `/api/v1/books`）:
+- `POST /:bookId/worlds-associate` — 关联世界观到书籍，接收 `{ worldId }`，返回 `{ ok: true, worldIds }`
+- `POST /api/v1/worlds/:id/inherit` — 继承创建新世界观，接收 `{ newId?, newTitle? }`，返回 `{ world, message }`
 
 **请求/响应示例**:
 ```json
@@ -62,26 +64,21 @@
 
 // Error → 409 Conflict
 { "error": { "code": "WORLD_ALREADY_EXISTS", ... } }
-
-// POST /api/worlds/my-world/inherit → Request
-{ "newId": "my-world-2", "newTitle": "中土大陆 (同人)" }
-// → 200
-{ "world": { ...继承的世界观 }, "message": "已从「中土大陆」继承创建新世界观" }
 ```
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `WorldConfigSchema` | object | id, name, description, createdAt, updatedAt | settings[], roles[], relations[], regions[], institutions[], history[], rules[], references[], bookIds[] | 所有数组默认[]; id 为字母数字/下划线 |
-| `WorldSettingEntrySchema` | object | id, name, type(物理规则/魔法体系/科技水平/社会结构/文化习俗) | description, constraints[], sortIndex | sortIndex 默认 0; description 默认 "" |
-| `WorldRoleSchema` | object | id, name, role(主角/配角/反派/中立) | description, significance(1-5), sortIndex, institutionIds[], regionIds[], currentRegionId | significance 默认 3; sortIndex 默认 0 |
-| `WorldRegionSchema` | object | id, name, parentId, type(大陆/国家/城市/地点) | description, sortIndex, x(0-100), y(0-100), coordinates, regionType | parentId 默认 null; x/y 默认 null |
-| `WorldInstitutionSchema` | object | id, name, type(宗门/国家/组织/家族) | leaderId, members[], description, sortIndex, regionId | leaderId 默认 null; members 默认 [] |
-| `WorldHistoryEventSchema` | object | id, title, timestamp | description, affectedRegions[], significance(1-5), sortIndex | significance 默认 3; sortIndex 默认 0 |
-| `WorldRuleSchema` | object | id, name, type(物理/魔法/社会/叙事) | description, constraints[], sortIndex | sortIndex 默认 0; description 默认 "" |
-| `WorldReferenceSchema` | object | id, sourceDimension, sourceId, targetDimension, targetId | label | label 默认 "" |
-| `WorldReferenceCreateSchema` | object | sourceDimension, sourceId, targetDimension, targetId | label | label 默认 "" |
+| Schema | 定义 |
+|--------|------|
+| `WorldConfigSchema` | object — 必填: id, name, description, createdAt, updatedAt; 可选: settings[], roles[], relations[], regions[], institutions[], history[], rules[], references[], bookIds[]. 所有数组默认[] |
+| `WorldSettingEntrySchema` | object — 必填: id, name, type(物理规则/魔法体系/科技水平/社会结构/文化习俗); 可选: description(默认""), constraints[], sortIndex(默认0) |
+| `WorldRoleSchema` | object — 必填: id, name, role(主角/配角/反派/中立); 可选: description, significance(1-5, 默认3), sortIndex(默认0), institutionIds[], regionIds[], currentRegionId |
+| `WorldRegionSchema` | object — 必填: id, name, parentId, type(大陆/国家/城市/地点); 可选: description, sortIndex(默认0), x(0-100), y(0-100), coordinates, regionType |
+| `WorldInstitutionSchema` | object — 必填: id, name, type(宗门/国家/组织/家族); 可选: leaderId(默认null), members[](默认[]), description, sortIndex(默认0), regionId |
+| `WorldHistoryEventSchema` | object — 必填: id, title, timestamp; 可选: description, affectedRegions[], significance(1-5, 默认3), sortIndex(默认0) |
+| `WorldRuleSchema` | object — 必填: id, name, type(物理/魔法/社会/叙事); 可选: description(默认""), constraints[], sortIndex(默认0) |
+| `WorldReferenceSchema` | object — 必填: id, sourceDimension, sourceId, targetDimension, targetId; 可选: label(默认"") |
+| `WorldReferenceCreateSchema` | object — 必填: sourceDimension, sourceId, targetDimension, targetId; 可选: label(默认"") |
 
 ### 2.3 状态转换
 
@@ -149,10 +146,7 @@ idle ──→ loading ──→ rendered                                   │
 | 页面组件 | 路由 | data-testid 前缀 | 说明 |
 |----------|------|------------------|------|
 | `WorldMapPage` | `/#/worlds/:worldId/map` | `wm-` | 世界地图页面，含 ReactFlow 地图 + 面包屑 + 工具栏 |
-| `WorldListPage` | `/#/worlds` | — | 世界观列表页面 |
-| `WorldCreatePage` | `/#/worlds/new` | — | 创建世界观表单 |
-| `WorldDetailPanel` | 内嵌 | `wm-detail-panel` | 地图节点详情面板 |
-| `WorldInheritancePage` | `/#/worlds/:id/inherit` | — | 世界观继承页面 |
+| `WorldListPage` | `/#/worlds` | `wl-` | 世界观列表页面，含创建/关联操作 |
 
 ### 4.2 交互流程
 
@@ -175,11 +169,16 @@ idle ──→ loading ──→ rendered                                   │
 
 | 元素 | data-testid | 用途 |
 |------|-------------|------|
-| 地图画布 | `wm-canvas-map` | 世界地图渲染区域 |
-| 详情面板 | `wm-detail-panel` | 节点详情 |
-| 面包屑导航 | `wm-breadcrumb` | 层级面包屑 |
-| 工具栏 | `wm-toolbar` | 工具栏 |
-| 缩放按钮 | `wm-zoom-in` / `wm-zoom-out` | 缩放控制 |
+| 创建世界观按钮 | `wl-btn-create-world` | 创建世界观入口 |
+| 错误状态 | `wl-state-error` | 世界观列表错误提示 |
+| 加载状态 | `wl-state-loading` | 世界观列表加载 |
+| 空状态 | `wl-state-empty` | 无世界观时的空提示 |
+| 地图面包屑 | `wm-breadcrumb` | 层级面包屑导航 |
+| 地图工具栏 | `wm-toolbar` | 缩放/导出工具栏 |
+| 地图画布 | `wm-state-loading` | 世界地图加载状态 |
+| 地图空状态 | `wm-state-empty` | 世界地图空数据 |
+| 地图错误 | `wm-state-error` | 世界地图错误提示 |
+| 地图详情面板 | `wm-detail-panel` | 节点详情侧边面板 |
 
 ---
 
