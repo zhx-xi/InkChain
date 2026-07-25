@@ -41,8 +41,8 @@ Dashboard 是 InkChain 的入口首页，负责展示所有作品卡片列表。
 
 | 方法 | 路径 | 输入 | 输出 | 说明 |
 |------|------|------|------|------|
-| GET | `/:id/search?q=query` | query `q` (必填)、`scope` (可选) | `{ results: SearchResult[] }` | 在书籍内全文本搜索 Session |
-| GET | `/:id/search?q=query&scope=session` | query `scope=session` | `{ results: SearchResult[] }` | 限定 scope 搜索 |
+| GET | `/:id/search` | query `q` (必填)、`scope` (可选) | `{ results: SearchResult[] }` | 在书籍内全文本搜索 Session |
+| GET | `/:id/search` | query `scope=session` | `{ results: SearchResult[] }` | 限定 scope 搜索 |
 
 **请求/响应示例**:
 ```json
@@ -66,7 +66,6 @@ Dashboard 是 InkChain 的入口首页，负责展示所有作品卡片列表。
 |------|------|------|------|------|
 | GET | `/books` | — | `{ books: BookSummary[] }` | 列出所有作品概要 |
 | DELETE | `/books/:id` | — | 204 No Content | 删除指定作品（含确认弹窗） |
-| POST | `/books/:id/write-next` | — | 异步触发写入 | 触发下一章生成 |
 
 **BookSummary 结构**:
 ```ts
@@ -75,17 +74,23 @@ Dashboard 是 InkChain 的入口首页，负责展示所有作品卡片列表。
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `LLMConfigSchema` | object | provider, baseUrl, model | proxyUrl, services, headers, extra, defaultModel, cover, temperature (0-2), thinkingBudget (≥0), apiFormat, stream | stream=true, temperature=0.7, thinkingBudget=0, apiFormat="chat", configSource="env", service="custom" |
-| `DetectionConfigSchema` | object | provider, apiUrl, apiKeyEnv | threshold (0-1), enabled, autoRewrite, maxRetries (1-10) | threshold=0.5, enabled=false, autoRewrite=false, maxRetries=3, provider="custom" |
-| `WritingConfigSchema` | object | — | reviewRetries (0-10), reviewMode | reviewRetries=1, reviewMode="auto" |
-| `FoundationConfigSchema` | object | — | reviewRetries (0-10) | reviewRetries=2 |
-| `QualityGatesSchema` | object | — | maxAuditRetries, pauseAfterConsecutiveFailures, retryTemperatureStep | maxAuditRetries=2, pauseAfterConsecutiveFailures=3, retryTemperatureStep=0.1 |
-| `ProjectConfigSchema` | object | name, version:"0.1.0" | language, llm, notify, detection, foundation, writing, modelOverrides, inputGovernanceMode, chapterVersioning, daemon | language="zh", inputGovernanceMode="v2", chapterVersioning="snapshot" |
-| `NotifyChannelSchema` | discriminatedUnion | type (telegram\|wechat-work\|feishu\|webhook) | 各类型特有字段 | — |
-| `InputGovernanceModeSchema` | enum | — | — | "legacy" \| "v2" |
-| `ChapterVersioningModeSchema` | enum | — | — | "git" \| "snapshot" \| "off" |
+**LLMConfigSchema** (object): `provider`, `baseUrl`, `model` 必填; `proxyUrl`, `services`, `headers`, `extra`, `defaultModel`, `cover`, `temperature` (0-2), `thinkingBudget` (≥0), `apiFormat`, `stream`, `configSource`, `service` 可选. stream=true, temperature=0.7, thinkingBudget=0, apiFormat="chat", configSource="env", service="custom".
+
+**DetectionConfigSchema** (object): `provider`, `apiUrl`, `apiKeyEnv` 必填; `threshold` (0-1), `enabled`, `autoRewrite`, `maxRetries` (1-10) 可选. threshold=0.5, enabled=false, autoRewrite=false, maxRetries=3, provider="custom".
+
+**WritingConfigSchema** (object): `reviewRetries` (0-10), `reviewMode` 可选. reviewRetries=1, reviewMode="auto".
+
+**FoundationConfigSchema** (object): `reviewRetries` (0-10) 可选. reviewRetries=2.
+
+**QualityGatesSchema** (object): `maxAuditRetries`, `pauseAfterConsecutiveFailures`, `retryTemperatureStep` 可选. maxAuditRetries=2, pauseAfterConsecutiveFailures=3, retryTemperatureStep=0.1.
+
+**ProjectConfigSchema** (object): `name`, `version:"0.1.0"` 必填; `language`, `llm`, `notify`, `detection`, `foundation`, `writing`, `modelOverrides`, `inputGovernanceMode`, `chapterVersioning`, `daemon` 可选. language="zh", inputGovernanceMode="v2", chapterVersioning="snapshot".
+
+**NotifyChannelSchema** (discriminatedUnion): type (telegram|wechat-work|feishu|webhook) + 各类型特有字段.
+
+**InputGovernanceModeSchema** (enum): "legacy" | "v2".
+
+**ChapterVersioningModeSchema** (enum): "git" | "snapshot" | "off".
 
 ### 2.3 状态转换
 
@@ -163,17 +168,9 @@ idle ──→ loading ──→ rendered                                │
 
 ### 4.1 页面 / 面板
 
-| 页面组件 | 路由 | data-testid 前缀 | 说明 |
-|----------|------|------------------|------|
-| `Dashboard` | `/#/` | `dash-` | 项目首页，书籍卡片列表 + SSE 写作日志面板 |
-| `EditDashboard` | `/#/edit-dashboard/:id` | — | 基于书籍的 Widget 面板 |
-| `BookMenu` | (内嵌在 Dashboard) | — | 右键菜单：设置/导出/删除 |
-| `ConfirmDialog` | (弹窗) | — | 通用确认/取消弹窗 |
-| `ProgressWidget` | (内嵌在 EditDashboard) | — | 写作进度 Widget |
-| `CharacterWidget` | (内嵌在 EditDashboard) | — | 角色总览 Widget |
-| `RelationWidget` | (内嵌在 EditDashboard) | — | 关系图谱 Widget |
-| `TimelineWidget` | (内嵌在 EditDashboard) | — | 时间线 Widget |
-| `WorldWidget` | (内嵌在 EditDashboard) | — | 世界观 Widget |
+**Dashboard** (`/#/`): 项目首页，书籍卡片列表 + SSE 写作日志面板，含 BookMenu 右键菜单。代码: `packages/studio/src/pages/Dashboard.tsx`。
+
+**EditDashboard** (`/#/edit-dashboard/:id`): 基于书籍的 Widget 面板，集成 ProgressWidget / CharacterWidget / RelationWidget / TimelineWidget / WorldWidget 五大组件。代码: `packages/studio/src/pages/EditDashboard.tsx`。
 
 ### 4.2 交互流程
 
@@ -203,18 +200,13 @@ idle ──→ loading ──→ rendered                                │
 
 ### 4.3 关键 data-testid
 
-| 元素 | data-testid | 用途 |
-|------|-------------|------|
-| 加载状态 | `dash-state-loading` | 加载中 spinner 定位 |
-| 侧边栏开关 | `sidebar-toggle` or `[class*='sidebar']` | 侧边栏收缩/展开 |
-| 面包屑首页 | `breadcrumb-home` | 面包屑导航 |
-| 项目卡片 | `[class*='project-card']` or `[class*='book-card']` | 卡片交互点击 |
-| 收缩按钮 | `[data-testid*='collapse']` | 侧边栏收缩 |
-| 拖拽手柄 | `[data-testid*='resize']` or `[data-testid*='divider']` | 边界拖拽 |
-| 加载 Spinner | `[class*='spinner']` or `[class*='skeleton']` | 加载状态断言 |
-| 空状态 | `rg-empty-state` (通用模式) | 空数据断言 |
-| 创建按钮 | `button:has-text('创建')` | 新建项目入口 |
-| AI 配置引导 | `button:has-text('去配置')` | 无 AI 服务时引导 |
+Sidebar 组件（共用）:
+- **sidebar-collapse-toggle**: 侧边栏收缩/展开按钮（`packages/studio/src/components/Sidebar.tsx`）
+- **sidebar-resize-handle**: 侧边栏边界拖拽手柄（同上）
+
+Dashboard 页面:
+- **dash-state-loading**: 加载中状态容器（`packages/studio/src/pages/Dashboard.tsx`）
+
 
 ---
 
