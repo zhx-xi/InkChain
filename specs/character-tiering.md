@@ -40,7 +40,7 @@ Character Tiering 是 InkChain 中管理角色出场层级（protagonist / suppo
 
 | 方法 | 路径 | 输入 | 输出 | 说明 |
 |------|------|------|------|------|
-| GET | `/:id/scene-roles?chapter=N` | query `chapter` (可选) | `{ sceneRoles: SceneRole[] }` | 列出所有场景角色，可选按章节过滤 |
+| GET | `/:id/scene-roles` | query `chapter` (可选) | `{ sceneRoles: SceneRole[] }` | 列出所有场景角色，可选按章节过滤 |
 | POST | `/:id/scene-roles` | `CreateSceneRole` body | `{ sceneRole }` (201) | 创建场景角色；name 唯一（409 冲突） |
 | PUT | `/:id/scene-roles/:name` | `UpdateSceneRole` body (partial) | `{ sceneRole }` | 更新指定角色（merge existing + partial） |
 | DELETE | `/:id/scene-roles/:name` | — | `{ ok: true }` | 删除指定角色 |
@@ -76,16 +76,16 @@ Character Tiering 是 InkChain 中管理角色出场层级（protagonist / suppo
 
 | 方法 | 路径 | 输入 | 输出 | 说明 |
 |------|------|------|------|------|
-| GET | `/books/:id/characters` | — | `{ characters: {name: string, tier: string}[] }` | 列出角色名与层级标签 |
+| GET | `/:id/characters` | — | `{ characters: {name: string, tier: string}[] }` | 列出角色名与层级标签 |
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `SceneRoleSchema` | object | name (string, min 1), createdAt, updatedAt (datetime) | description (默认 ""), relatedChapters (number[] 默认 []) | name 作为文件名 `roles/scene/<name>.md` |
-| `CreateSceneRoleSchema` | object | name, description?, relatedChapters? | — | 同 SceneRole 但省略 createdAt/updatedAt（服务端生成） |
-| `UpdateSceneRoleSchema` | partial | — | name?, description?, relatedChapters? | 全字段可选 |
-| `SceneRolesFileSchema` | file | schemaVersion: "1", sceneRoles[] | — | 空目录 → 返回 [] |
+| Schema | 定义 |
+|--------|------|
+| `SceneRoleSchema` | object — 必填: name(string, min 1), createdAt, updatedAt(datetime); 可选: description(默认""), relatedChapters(number[] 默认[]). name 作为文件名 `roles/scene/<name>.md` |
+| `CreateSceneRoleSchema` | object — 必填: name; 可选: description?, relatedChapters?. 省略 createdAt/updatedAt（服务端生成） |
+| `UpdateSceneRoleSchema` | partial — 可选: name?, description?, relatedChapters?. 全字段可选 |
+| `SceneRolesFileSchema` | file — 必填: schemaVersion("1"), sceneRoles[]. 空目录 → 返回 [] |
 
 **Character Tier (层级枚举)**:
 
@@ -180,10 +180,7 @@ idle ──→ loading ──→ loaded                                 │
 
 | 页面组件 | 路由 | data-testid 前缀 | 说明 |
 |----------|------|------------------|------|
-| `CharacterTiering` | `/#/characters/:bookId/tiers` | — | 主页面：标题 + Tier Tabs + 角色列表 |
-| Tier Tab Bar | (内嵌) | — | 5 级 Tab 切换栏 + "全部" Tab |
-| Character Row | (内嵌) | — | 角色行：Badge + name + description + 操作 |
-| Tier Legend | (内嵌) | — | 底部分层图例 |
+| `CharacterTiering` | `/#/characters/:bookId/tiers` | — | 主页面：标题 + 5 级 Tier Tabs + 角色列表 + 图例 |
 
 ### 4.2 交互流程
 
@@ -211,14 +208,7 @@ idle ──→ loading ──→ loaded                                 │
 
 ### 4.3 关键 data-testid
 
-| 元素 | data-testid | 用途 |
-|------|-------------|------|
-| 加载 spinner | `border-4 border-primary/20 border-t-primary rounded-full animate-spin` | 加载状态 |
-| Tier Tab 按钮 | `.rounded-md.text-sm` 按钮组 | Tab 切换交互 |
-| 角色行 | `.group.flex.items-center.gap-3.rounded-lg.border` | 角色列表项 |
-| Tier Badge | `.w-6.h-6.rounded-full` | 层级标记 |
-| 空 Tab 提示 | `text=该层级暂无角色` | 空数据断言 |
-| Tier Legend | `.border-t.border-border` 底部区域 | 图例存在性 |
+> **注意**: CharacterTiering 组件当前不使用 `data-testid` 属性。E2E 测试使用 CSS 类选择器和文本断言（如 `.rounded-md.text-sm` Tab 按钮、`text=该层级暂无角色` 空状态提示）。
 
 ---
 

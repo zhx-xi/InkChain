@@ -70,15 +70,15 @@ Skill 配置管理是 InkChain 的**AI 技能注册和编排中枢**。每个 Sk
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `SkillConfigSchema` | object | id(kebab-case), category(writing/analysis/world/character/utility) | triggers[], injection, params{}, enabled, description, prompt | id 正则: `/^[a-z0-9][a-z0-9-]*$/`; category 默认 utility; enabled 默认 true |
-| `TriggerConfigSchema` | object | type(manual/condition) | condition | — |
-| `InjectionConfigSchema` | object | — | mode(append/prepend/replace), target(system_prompt/user_prompt/context), priority(1-100) | mode 默认 append; target 默认 system_prompt; priority 默认 50 |
-| `ParamDefSchema` | object | key, label, type(string/number/boolean/select) | required, defaultValue, options[] | required 默认 false |
-| `SkillConfigUpdateSchema` | partial | — | 任意字段(id 不可变) | 省略了 id 字段; partial update |
-| `StoredSkillConfig` | interface | config, source(builtin/project), path | — | source 标识来源; project 优先于 builtin |
-| `ApiSkillResponse` | interface | config, source | path | project 来源带 path |
+| Schema | 定义 |
+|--------|------|
+| `SkillConfigSchema` | object — 必填: id(kebab-case), category(writing/analysis/world/character/utility); 可选: triggers[], injection, params{}, enabled, description, prompt. id 正则: `/^[a-z0-9][a-z0-9-]*$/`, category 默认 utility, enabled 默认 true |
+| `TriggerConfigSchema` | object — 必填: type(manual/condition); 可选: condition |
+| `InjectionConfigSchema` | object — 可选: mode(append/prepend/replace), target(system_prompt/user_prompt/context), priority(1-100). mode 默认 append, target 默认 system_prompt, priority 默认 50 |
+| `ParamDefSchema` | object — 必填: key, label, type(string/number/boolean/select); 可选: required, defaultValue, options[]. required 默认 false |
+| `SkillConfigUpdateSchema` | partial — 可选: 任意字段(id 不可变). 省略了 id 字段, partial update |
+| `StoredSkillConfig` | interface — 必填: config, source(builtin/project), path. source 标识来源, project 优先于 builtin |
+| `ApiSkillResponse` | interface — 必填: config, source; 可选: path. project 来源带 path |
 
 ### 2.3 状态转换
 
@@ -151,11 +151,7 @@ project 已创建 ────────────────────�
 
 | 页面组件 | 路由 | data-testid 前缀 | 说明 |
 |----------|------|------------------|------|
-| `SkillListPage` | `/#/skills` | `sk-` | Skill 主页面，含卡片列表 + 搜索 + 分类筛选 |
-| `SkillCreateDialog` | Dialog | — | 创建 Skill 表单 |
-| `SkillEditDialog` | Dialog | — | 编辑 Skill 表单 |
-| `SkillDetailPanel` | 内嵌 | — | Skill 详情展示(参数/触发器/注入配置) |
-| `VersionHistoryPanel` | 内嵌 | — | 版本历史列表 + 恢复操作 |
+| `SkillListPage` | `/#/skills` | `sk-` | Skill 主页面，含卡片列表 + 搜索 + 分类筛选，内置创建/编辑/详情/版本历史子功能 |
 
 ### 4.2 交互流程
 
@@ -175,10 +171,14 @@ Skill 卡片: [名称] [分类标签] [builtin badge] [启用开关] [编辑] [�
 
 | 元素 | data-testid | 用途 |
 |------|-------------|------|
-| 创建按钮 | `sk-create-btn` / `sk-btn-create-skill` | 创建 Skill 入口 |
-| 搜索输入 | `sk-search-input` | 搜索 Skill |
-| 启用开关 | 基于 `data-testid*='toggle'` / `[role='switch']` | 启/禁用 |
-| 分类筛选 | 基于 `data-testid*='category'` | 分类筛选下拉 |
+| 创建按钮 | `sk-btn-create-skill` | 创建 Skill 入口 |
+| 编辑按钮 | `sk-btn-edit-skill` | 编辑 Skill 操作 |
+| 技能列表 | `sk-list-skills` | 技能卡片容器 |
+| 内置标记 | `sk-tag-builtin` | 区分 builtin/project 来源 |
+| 错误状态 | `sk-state-error` | 错误提示容器 |
+| 加载状态 | `sk-state-loading` | 加载动画容器 |
+| 空状态 | `sk-state-empty` | 空数据提示 |
+| 技能卡片 | `sk-card-<id>` | 单个技能卡片(动态 id) |
 
 ---
 
