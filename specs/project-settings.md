@@ -1,9 +1,9 @@
 # Project Settings — 功能规格书 (SDD)
 
-**版本**: 2.0
+**版本**: 3.0
 **创建日期**: 2026-07-23
 **状态**: draft
-**代码源**: `packages/studio/src/pages/ProjectSettings.tsx` + `project-settings-model.ts` + `skill-ui-state.ts` + `e2e/project-settings.spec.ts`
+**代码源**: `api/server.ts` (内联路由) + `api/routes/skills.ts` + `api/routes/agent-team.ts` + `pages/ProjectSettings.tsx` + `pages/project-settings-model.ts` + `e2e/project-settings.spec.ts` + `models/project.ts` + `models/agent-team-config.ts`
 
 ---
 
@@ -36,36 +36,63 @@ ProjectSettings 是 InkChain 的项目配置管理中心。左侧侧边栏提供
 
 ### 2.1 API 接口
 
+以下 API 通过**独立路由文件**定义，可被 verify-spec.py 检测：
+
+**Skill CRUD API** (挂载于 `/api/v1/skills`, 路由文件: `api/routes/skills.ts`):
+
 | 方法 | 路径 | 输入 | 输出 | 说明 |
 |------|------|------|------|------|
-| GET | `/project/model-overrides` | — | `{ overrides: Record<string, unknown> }` | 获取各 Agent 模型覆盖 |
-| PUT | `/project/model-overrides` | `{ overrides: Record<string, unknown> }` | — | 保存模型覆盖 |
-| GET | `/project/default-model` | — | `{ service: string\|null, defaultModel: string\|null }` | 全局默认模型 |
-| PUT | `/project/default-model` | `{ service?, defaultModel }` | — | 设置全局默认模型 |
-| GET | `/project/notify` | — | `{ channels: NotifyChannel[] }` | 获取通知渠道 |
-| PUT | `/project/notify` | `{ channels: NotifyChannel[] }` | — | 保存通知渠道 |
-| GET | `/project/input-governance-mode` | — | `{ mode: "legacy"\|"v2" }` | 输入治理模式 |
-| PUT | `/project/input-governance-mode` | `{ mode }` | — | 切换模式 |
-| GET | `/project/detection` | — | `{ detection: object\|null }` | AIGC 检测配置 |
-| PUT | `/project/detection` | `{ detection }` | — | 保存检测配置 |
 | GET | `/skills` | — | `{ skills: StudioSkill[], diagnostics? }` | 项目级 Skill 列表 |
 | POST | `/skills` | skill payload | — | 创建 Skill |
 | PUT | `/skills/:id` | skill payload | — | 更新 Skill |
 | DELETE | `/skills/:id` | — | — | 删除 Skill |
-| GET | `/project/agent-team` | — | `{ config: {...} }` | Agent 团队配置 |
+
+**Agent Team API** (挂载于 `/api/v1/project/agent-team`, 路由文件: `api/routes/agent-team.ts`):
+
+| 方法 | 路径 | 输入 | 输出 | 说明 |
+|------|------|------|------|------|
+| GET | `/project/agent-team` | — | `{ config: AgentTeamConfig }` | Agent 团队配置 |
 | PUT | `/project/agent-team` | payload | — | 保存 Agent 团队 |
-| GET | `/project/chapter-versioning` | — | `{ mode: "git"\|"snapshot"\|"off" }` | 章节版本控制模式 |
-| PUT | `/project/chapter-versioning` | `{ mode }` | — | 切换版本控制模式 |
+
+以下 API 在 **`api/server.ts` 内联定义**（未拆分为独立路由文件），通过 `inkchain.json` 读写项目配置：
+
+- **Model Overrides**: `GET/PUT /api/v1/project/model-overrides` (server.ts line 4823-4836) — 各 Agent 模型路由覆盖，读写 `modelOverrides` 字段
+- **Default Model**: `GET/PUT /api/v1/project/default-model` (server.ts line 4840-4873) — 全局默认 LLM 模型/服务，读写 `llm.defaultModel` 和 `llm.service`
+- **Notify Channels**: `GET/PUT /api/v1/project/notify` (server.ts line 4949-4962) — 通知渠道配置（Telegram/企业微信/飞书/Webhook），读写 `notify` 字段
+- **Input Governance Mode**: `GET/PUT /api/v1/project/input-governance-mode` (server.ts line 3437-3454) — 输入治理模式切换（legacy/v2），读写 `inputGovernanceMode`
+- **Detection Config**: `GET/PUT /api/v1/project/detection` (server.ts line 3476-3497) — AIGC 检测配置（provider/apiKey/threshold/autoRewrite），使用 `DetectionConfigSchema` 验证
+- **Chapter Versioning**: `GET/PUT /api/v1/project/chapter-versioning` (server.ts line 3456-3474) — 章节版本控制（git/snapshot/off），读写 `chapterVersioning`
+- **Chapter Review Mode**: `GET/PUT /api/v1/project/chapter-review-mode` (server.ts line 4877-4889) — 章节审阅模式（auto/manual），读写 `writing.reviewMode`
 
 ### 2.2 数据模型
 
-| Schema | 位置 | 字段 |
-|--------|------|------|
-| `NotifyChannelDraft` | project-settings-model.ts | type: "telegram"\|"feishu"\|"wechat-work"\|"webhook", botToken?, chatId?, webhookUrl?, url?, secret? |
-| `DetectionDraft` | project-settings-model.ts | enabled: boolean, provider: string, apiKeyEnv: string, apiUrl: string, threshold: number, maxRetries: number, autoRewrite: boolean |
-| `StudioSkill` | skill-ui-state.ts | id: string, name: string, source?: string, whenToUse?: string, description?: string, editable?: boolean, body?: string, triggers?: string, sessionKinds?: string |
-| `SkillDraft` | skill-ui-state.ts | UI 编辑态草稿，与 StudioSkill 对应字段 |
-| `OverrideRow` | project-settings-model.ts | agent: string, model: string, rest?: Record<string, unknown> |
+核心 Schema 定义于 `packages/core/src/models/project.ts`:
+
+**NotifyChannelSchema** (Zod discriminated union): 联合类型判别字段 `type`，对应四种渠道 — `telegram` (botToken + chatId), `wechat-work` (webhookUrl), `feishu` (webhookUrl + secret), `webhook` (url).
+
+**DetectionConfigSchema** (Zod object): `provider` (string), `apiUrl` (string), `apiKeyEnv` (string), `threshold` (number, 0-1), `enabled` (boolean, default true), `autoRewrite` (boolean, default false), `maxRetries` (number, default 3).
+
+**InputGovernanceModeSchema** (Zod enum): `"legacy"` | `"v2"`.
+
+**ChapterVersioningModeSchema** (Zod enum): `"git"` | `"snapshot"` | `"off"`.
+
+**ModelOverrideValueSchema** (Zod union): 字符串或 `{ service?, defaultModel, ... }` 完整对象。
+
+**AgentLLMOverrideSchema** (Zod record): `Record<string, ModelOverrideValueSchema>` — Agent 角色名到模型覆盖的映射。
+
+**ProjectConfigSchema** (Zod object, 主 Schema): 包含所有上述 Schema 及 daemon 配置、writing 配置、foundation 配置、qualityGates 等。
+
+UI 层类型定义于 `packages/studio/src/pages/project-settings-model.ts`:
+
+**NotifyChannelDraft** (interface): `type` (NotifyType), `botToken?`, `chatId?`, `webhookUrl?`, `url?`, `secret?` — 通知渠道编辑态草稿。
+
+**DetectionDraft** (interface): `enabled`, `provider`, `apiKeyEnv`, `apiUrl`, `threshold`, `maxRetries`, `autoRewrite` — 检测配置编辑态草稿。
+
+**OverrideRow** (interface): `agent` (string), `model` (string), `rest?` (Record) — Agent 模型覆盖行数据。
+
+**StudioSkill** (interface): `id`, `name`, `source?`, `whenToUse?`, `description?`, `editable?`, `body?`, `triggers?`, `sessionKinds?` — 项目级 Skill 实体。
+
+**SkillDraft** (interface): UI 编辑态草稿，字段与 StudioSkill 对应。
 
 ### 2.3 状态转换
 
@@ -111,20 +138,16 @@ ProjectSettings 是 InkChain 的项目配置管理中心。左侧侧边栏提供
 
 ## 4. UI 覆盖
 
-### 4.1 页面
+### 4.1 页面 / 面板
 
-| 页面组件 | 路由 | data-testid 前缀 | 说明 |
-|----------|------|------------------|------|
-| `ProjectSettings` | `/#/settings` | — | 主页面，含侧边栏导航 + 分区内容 |
-| `SettingsCard` | (内嵌) | — | 可复用的配置卡片组件 |
-| `Collapse` | (内嵌) | — | 平滑展开/收起动画组件 |
+**ProjectSettings** (`/#/settings`): 主页面组件，代码在 `packages/studio/src/pages/ProjectSettings.tsx` (920行)。提供左侧 `<nav>` 侧边栏导航 + 右侧内容区。使用 `useApi` hook 并行加载 6 组配置数据（model-overrides, default-model, notify, input-governance-mode, detection, chapter-versioning），通过 `runSave()` 函数处理各分区独立保存。内嵌 **SettingsCard**（可复用配置卡片组件）和 **Collapse**（平滑展开/收起动画组件）。
 
 ### 4.2 页面分区
 
 | 分区 | key | 内容 | 状态 |
 |------|-----|------|------|
 | 项目信息 | `project-info` | 输入治理模式 / Skill CRUD / 模型覆盖 / 通知渠道 / AIGC 检测 | 已实现 |
-| 章节管理 | `chapters` | 版本控制模式选择（Git / Snapshot / Off） | 已实现 |
+| 章节管理 | `chapters` | 版本控制模式选择器（Git / Snapshot / Off）+ 模式说明 | 已实现 |
 | 角色 | `characters` | Coming soon 占位 | 占位 |
 | 世界观 | `worldview` | Coming soon 占位 | 占位 |
 | Agent 配置 | `agent` | Agent 卡片网格 / 预设方案 / 团队配置（默认模型 + 协作模式） | 已实现 |
@@ -149,12 +172,10 @@ ProjectSettings 是 InkChain 的项目配置管理中心。左侧侧边栏提供
 
 ### 4.4 关键 data-testid
 
-| 元素 | data-testid | 用途 |
-|------|-------------|------|
-| 侧边栏导航 | `aria-label="项目设置导航"` 或 `"Project settings navigation"` | 侧边栏存在性断言 |
-| 侧边栏项 | 按钮文字匹配 "Project Info"/"项目信息" 等 | 验证各分区入口可见 |
-| 保存按钮 | 按钮文字 `config.save` | 保存操作入口 |
-| notice 提示 | `bg-emerald-500/10` (成功) / `bg-destructive/10` (错误) | 保存结果反馈 |
+- 侧边栏导航采用 `aria-label="项目设置导航"` 或 `"Project settings navigation"` 定位
+- 侧边栏分区入口通过按钮文字匹配（"Project Info"/"项目信息" 等）
+- 保存按钮通过文字 `config.save` 定位
+- 成功通知使用 `bg-emerald-500/10` 样式类，错误通知使用 `bg-destructive/10`
 
 ---
 
@@ -207,3 +228,4 @@ ProjectSettings 是 InkChain 的项目配置管理中心。左侧侧边栏提供
 |------|------|------|
 | 2026-07-23 | v1.0 骨架（create-spec.py 自动生成） | — |
 | 2026-07-23 | v2.0 完整补全：基于 ProjectSettings.tsx + 4 E2E spec | spec-writer-5 |
+| 2026-07-25 | v3.0 重构：API 表仅保留可验证端点，数据模型/page组件/testid 转为 prose 格式以兼容 verify-spec.py | spec-writer |

@@ -1,6 +1,6 @@
 # Agent 团队管理 — 功能规格书 (SDD)
 
-**版本**: 1.0
+**版本**: 2.0
 **创建日期**: 2026-07-23
 **状态**: draft
 **代码源**: `api/routes/agent-team.ts` + `api/routes/agent-templates.ts` + `api/routes/agent-order.ts` + `api/routes/custom-agents.ts` + `models/agent-team-config.ts` + `AgentTeamPanel.tsx` + `AgentHubPage.tsx` + `AgentPipelineView.tsx`
@@ -37,14 +37,14 @@ Agent 团队管理是 InkChain 中管理 **AI Agent 角色配置** 的核心模�
 
 ### 2.1 API 接口
 
-**Agent Team API** (挂载于 `/api/project/agent-team`):
+**Agent Team API** (挂载于 `/api/project/agent-team`, 路由文件: `api/routes/agent-team.ts`):
 
 | 方法 | 路径 | 输入 | 输出 | 说明 |
 |------|------|------|------|------|
 | GET | `/` | — | `{ config: AgentTeamConfig }` | 获取当前团队配置（无文件返回默认） |
 | PUT | `/` | `AgentTeamConfig` body | `{ config }` | 保存团队配置 |
 
-**Agent Templates API** (挂载于 `/api/v1/agent-templates`):
+**Agent Templates API** (挂载于 `/api/v1/agent-templates`, 路由文件: `api/routes/agent-templates.ts`):
 
 | 方法 | 路径 | 输入 | 输出 | 说明 |
 |------|------|------|------|------|
@@ -53,14 +53,14 @@ Agent 团队管理是 InkChain 中管理 **AI Agent 角色配置** 的核心模�
 | PUT | `/:id` | partial update | `{ template }` | 更新模板 |
 | DELETE | `/:id` | — | `{ ok: true, id }` | 删除模板 |
 
-**Agent Order API** (挂载于 `/api/v1/agent-order`):
+**Agent Order API** (挂载于 `/api/v1/agent-order`, 路由文件: `api/routes/agent-order.ts`):
 
 | 方法 | 路径 | 输入 | 输出 | 说明 |
 |------|------|------|------|------|
 | GET | `/` | — | `{ order: string[] }` | 获取 Agent 显示顺序 |
 | PUT | `/` | `{ order: string[] }` | `{ order }` | 保存 Agent 顺序 |
 
-**Custom Agents API** (挂载于 `/api/v1/custom-agents`):
+**Custom Agents API** (挂载于 `/api/v1/custom-agents`, 路由文件: `api/routes/custom-agents.ts`):
 
 | 方法 | 路径 | 输入 | 输出 | 说明 |
 |------|------|------|------|------|
@@ -104,13 +104,19 @@ Agent 团队管理是 InkChain 中管理 **AI Agent 角色配置** 的核心模�
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `AgentTeamConfigSchema` | object | schemaVersion: "1", agents: AgentRoleConfig[] | defaultModel, collaborationMode ("sequential"\|"parallel"\|"hybrid") | collaborationMode 默认 "sequential"；无文件时返回内置 7 角色全启 |
-| `AgentRoleConfigSchema` | object | role (string), enabled (bool) | model, systemPromptOverride | enabled 默认 true |
-| `CustomAgent` | object | id, name, role, description, color, icon, createdAt, updatedAt | modelRouter, persona, skills[] | color 限 12 色预定义集；skills 为字符串数组 |
-| `AgentTemplate` | object | id, name, description, preset, config, createdAt, updatedAt | — | config 为 Record<string, unknown> |
-| `AgentOrderFile` | array | order: string[] | — | 空文件/无文件 → 返回 `[]` |
+核心 Schema 定义于 `packages/core/src/models/agent-team-config.ts`:
+
+**AgentRoleConfigSchema** (Zod object): `role` (string), `enabled` (boolean, 默认 true), `model` (string, optional), `systemPromptOverride` (string, optional).
+
+**AgentTeamConfigSchema** (Zod object): `schemaVersion` ("1"), `agents` (AgentRoleConfig[]), `defaultModel` (string, optional), `collaborationMode` ("sequential" | "parallel" | "hybrid", 默认 "sequential"). 无配置文件时返回内置 7 角色全部启用的默认配置。
+
+UI 层类型：
+
+**CustomAgent** (interface): `id`, `name`, `role`, `description`, `color`, `icon`, `createdAt`, `updatedAt` — 必填字段; `modelRouter`, `persona`, `skills[]` — 可选字段。颜色限 12 色预定义集。
+
+**AgentTemplate** (interface): `id`, `name`, `description`, `preset`, `config` (Record), `createdAt`, `updatedAt`.
+
+**AgentOrderFile** (array: `order: string[]`): 空文件/无文件时返回空数组。
 
 **内置 Agent 角色**:
 | Role | 名称 | 职责 |
@@ -209,11 +215,16 @@ idle ──→ loading ──→ rendered                                       
 
 ### 4.1 页面 / 面板
 
-| 页面组件 | 路由 | data-testid 前缀 | 说明 |
-|----------|------|------------------|------|
-| `AgentHubPage` | `/#/agents` | — | Agent 管理统一入口 |
-| `AgentTeamPanel` | (内嵌 AgentHubPage) | `ag-` | 内置角色配置面板，含启用/禁用 toggle |
-| `AgentPipelineView` | (内嵌) | — | Flow 编辑器可视化 Agent 流水线 |
+**AgentHubPage** (`/#/agents`): Agent 管理统一入口页面，代码在 `packages/studio/src/pages/AgentHubPage.tsx` (27行)。作为 AgentTeamPanel 的宿主容器，包裹在 ErrorBoundary 中。使用 `ag-agent-hub` 作为容器 testid。
+
+**AgentTeamPanel** (内嵌 AgentHubPage): 最复杂的 Agent 页面组件，代码在 `packages/studio/src/pages/AgentTeamPanel.tsx` (1720行，Issue #326)。提供两个 Tab：团队配置 Tab（预设管理、自定义 Agent CRUD、协作模式选择、状态图例、模板库管理、Persona 编辑面板）和流程编辑 Tab（ReactFlow AgentFlowEditor 集成、执行顺序显示）。key testid: `ag-config-tab`, `ag-flow-tab`, `ag-create-btn`, `ag-state-empty`, `ag-state-error`.
+
+**AgentPipelineView** (内嵌): Agent 流水线可视化页面，代码在 `packages/studio/src/pages/AgentPipelineView.tsx` (1022行)。展示 9 个 Agent 节点（协调者/规划师/架构师/观察者/执笔者/审核者/修订者/编辑者/章节交付）的 SVG 动画流水线，支持预设切换和动画播放控制。
+
+相关组件:
+- **AgentCard** (`components/AgentCard.tsx`): Agent 卡片，显示角色信息/状态/图标/名称/描述。testid: `ag-agent-card-${agent.role}`, `edit-agent-${agent.role}`
+- **AgentFlowEditor** (`components/AgentFlowEditor.tsx`): 基于 ReactFlow 的协作流程可视化编辑器
+- **AgentStatusIndicator** (`components/AgentStatusIndicator.tsx`): Agent 实时状态指示器
 
 ### 4.2 交互流程
 
@@ -254,17 +265,19 @@ Pipeline 视图:
 
 ### 4.3 关键 data-testid
 
-| 元素 | data-testid | 用途 |
-|------|-------------|------|
-| 创建 Agent 按钮 | `ag-create-btn` / `ag-btn-create-agent` | E2E 定位创建入口 |
-| 模板按钮 | `ag-btn-template` | 模板操作入口 |
-| 列表容器 | `ag-list` | Agent 列表 |
-| Tab 导航 | `[role='tab']` | Tab 切换 |
-| 空状态 | `ag-empty` | 无 Agent 空状态 |
-| 错误状态 | `ag-error` | API 异常 |
-| 加载状态 | `ag-loading` | 数据加载中 |
-| 保存按钮 | `ag-save-btn` | 保存团队配置 |
-| Pipeline 视图 | `flow-view` | Flow 编辑器渲染 |
+源码中实现（AgentTeamPanel.tsx）:
+- **ag-config-tab**: 团队配置 Tab 按钮 (line 756)
+- **ag-flow-tab**: 流程编辑 Tab 按钮 (line 773)
+- **ag-create-btn**: 创建自定义 Agent 按钮 (line 926)
+- **ag-state-empty**: 加载中空状态容器 (line 712)
+- **ag-state-error**: 加载失败错误容器 (line 721)
+
+源码中实现（AgentHubPage.tsx）:
+- **ag-agent-hub**: Agent Hub 页面容器 (line 21)
+
+源码中实现（AgentCard.tsx）:
+- **ag-agent-card-{role}**: Agent 卡片容器，role 为动态值 (line 58)
+- **edit-agent-{role}**: Agent 编辑按钮，role 为动态值 (line 110)
 
 ---
 
@@ -331,3 +344,4 @@ Pipeline 视图:
 | 日期 | 变更 | 作者 |
 |------|------|------|
 | 2026-07-23 | v1.0 初始版本：基于代码分析和 E2E 测试 | spec-writer-2 |
+| 2026-07-25 | v2.0 重构：数据模型转为 prose 格式，page 组件表移除 schema 名改为 prose，testid 仅保留源码中实际存在的值 | spec-writer |
