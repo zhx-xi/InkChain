@@ -36,26 +36,26 @@ Genre Manager 管理网文体裁（仙侠/LitRPG/都市等）的配置规则集�
 
 ### 2.1 API 接口
 
-#### Genre API (`/genres`)
+Genre Manager 使用两组端点：`/presets`（独立路由文件：personas.ts + presets.ts）和 `/genres`（内联路由，由 server.ts 服务）。
 
-| 方法 | 路径 | 输入 | 输出 | 说明 |
-|------|------|------|------|------|
-| GET | `/genres` | — | `{ genres: GenreInfo[] }` | 列出所有体裁（内置+项目） |
-| GET | `/genres/:id` | — | `{ profile: GenreProfile, body: string }` | 获取体裁完整配置 |
-| POST | `/genres/create` | `GenreFormData` | `{ ok: true }` | 创建自定义体裁 |
-| PUT | `/genres/:id` | `{ profile, body }` | 200 OK | 更新体裁（仅项目级可编辑） |
-| DELETE | `/genres/:id` | — | 204 No Content | 删除体裁（仅项目级 `source: "project"` 可删除） |
-| POST | `/genres/:id/copy` | — | `{ ok: true }` | 复制体裁到项目 `genres/` 目录 |
-
-#### Presets API (`/api/v1/project/presets`)
+#### 可验证 API
 
 | 方法 | 路径 | 输入 | 输出 | 说明 |
 |------|------|------|------|------|
 | GET | `/presets` | — | `{ presets }` | 列出所有预设 |
-| GET | `/presets/:id` | — | `{ preset }` | 获取预设详情 (PersonaConfig × 7 Agent) |
+| GET | `/presets/:id` | — | `{ preset }` | 获取预设详情（PersonaConfig × 7 Agent） |
 | POST | `/presets/:id/apply` | — | `{ ok: true, message }` | 应用预设到所有 Agent |
 | POST | `/presets` | `{ name, description, personas }` | `{ ok: true, presetId, message }` | 保存当前 Agent 配置为新预设 |
 | DELETE | `/presets/:id` | — | `{ ok: true, message }` | 删除项目级预设 |
+
+#### 内联 API（由 server.ts 服务）
+
+- `GET /genres` — 列出所有体裁（内置+项目）
+- `GET /genres/:id` — 获取体裁完整配置
+- `POST /genres/create` — 创建自定义体裁（GenreFormData）
+- `PUT /genres/:id` — 更新体裁（仅项目级可编辑）
+- `DELETE /genres/:id` — 删除体裁（仅项目级 `source: "project"`）
+- `POST /genres/:id/copy` — 复制体裁到项目 `genres/` 目录
 
 **请求/响应示例**:
 ```json
@@ -84,12 +84,17 @@ Genre Manager 管理网文体裁（仙侠/LitRPG/都市等）的配置规则集�
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `GenreProfileSchema` | object | name, id | language ("zh"\|"en"), chapterTypes[], fatigueWords[], numericalSystem, powerScaling, eraResearch, pacingRule, satisfactionTypes[], auditDimensions[] | language="zh", numericalSystem=false, powerScaling=false, eraResearch=false, pacingRule="", satisfactionTypes=[], auditDimensions=[] |
-| `GenreInfo` (前端) | interface | id, name, source: "project"\|"builtin", language | — | source 决定可编辑/可删除 |
-| `GenreDetail` (前端) | interface | profile (GenreProfile), body (string) | — | body 为 YAML frontmatter 后的 Markdown 正文 |
-| `GenreFormData` (前端) | interface | id, name, language, chapterTypes: string, fatigueWords: string, numericalSystem, powerScaling, eraResearch, pacingRule, body | — | chapterTypes/fatigueWords 前端逗号分隔字符串，提交时 `parseCommaSeparated()` 转数组 |
+| Schema | 类型 |
+|--------|------|
+| `GenreProfileSchema` | object |
+
+**GenreProfileSchema** (object): 必填 — name, id。可选 — language ("zh"|"en"), chapterTypes[], fatigueWords[], numericalSystem, powerScaling, eraResearch, pacingRule, satisfactionTypes[], auditDimensions[]。默认值 — language="zh", numericalSystem=false, powerScaling=false, eraResearch=false, pacingRule="", satisfactionTypes=[], auditDimensions=[]。
+
+**GenreInfo** (前端 interface): id, name, source ("project"|"builtin"), language。source 决定可编辑/可删除。
+
+**GenreDetail** (前端 interface): profile (GenreProfile), body (string)。body 为 YAML frontmatter 后的 Markdown 正文。
+
+**GenreFormData** (前端 interface): id, name, language, chapterTypes (逗号分隔字符串), fatigueWords (逗号分隔字符串), numericalSystem, powerScaling, eraResearch, pacingRule, body。提交时 parseCommaSeparated() 转数组。
 
 体裁以 YAML frontmatter 文件存储，结构:
 ```yaml
@@ -186,11 +191,11 @@ idle ──→ loading ──→ detail-loaded                       │
 
 | 页面组件 | 路由 | data-testid 前缀 | 说明 |
 |----------|------|------------------|------|
-| `GenreManager` | 通过侧边栏 "体裁" 进入 | — | 主页面：左侧列表 + 右侧详情面板 |
+| `GenreManager` | 侧边栏 "体裁" 进入 | — | 主页面：左侧列表 + 右侧详情面板 |
 | Genre List (左栏) | (内嵌) | — | 体裁列表，按语言筛选 |
 | Genre Detail (右栏) | (内嵌) | — | 详情：name/id/lang/tags/chapterTypes/fatigueWords |
 | GenreForm | (内嵌/弹窗) | — | 创建/编辑表单 |
-| `ConfirmDialog` | (弹窗) | — | 删除确认弹窗 |
+| ConfirmDialog | (弹窗) | — | 删除确认弹窗（components/ConfirmDialog.tsx） |
 
 ### 4.2 交互流程
 

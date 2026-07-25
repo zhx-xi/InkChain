@@ -39,7 +39,7 @@
 
 | 方法 | 路径 | 输入 | 输出 | 说明 |
 |------|------|------|------|------|
-| GET | `/:id/relations?character=<roleId>` | query `character` (可选) | `{ relations: CharacterRelation[] }` | 列出所有关系，可选按角色过滤 |
+| GET | `/:id/relations` | query `character` (可选) | `{ relations: CharacterRelation[] }` | 列出所有关系，可选按角色过滤 |
 | POST | `/:id/relations` | `CreateRelation` body | `{ relation }` (201) | 创建关系（id/createdAt/updatedAt 自动生成）|
 | PUT | `/:id/relations/:relationId` | `UpdateRelation` body (partial) | `{ relation }` | 更新指定关系；id 不可变 |
 | DELETE | `/:id/relations/:relationId` | — | `{ deleted: true }` | 删除指定关系 |
@@ -65,13 +65,23 @@
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `CharacterRelationSchema` | object | id (uuid v4), sourceRoleId, targetRoleId, relationType, validFromChapter, intensity (1-5), createdAt, updatedAt | customLabel, description, validUntilChapter | intensity 默认 3；customLabel max 50 字符；description max 500 字符；id=crypto.randomUUID() |
-| `CreateRelationSchema` | object | sourceRoleId, targetRoleId, relationType, validFromChapter, intensity | customLabel, description, validUntilChapter | 同上（id/createdAt/updatedAt 由服务端生成） |
-| `UpdateRelationSchema` | partial | — | 任意字段 (id 不可变) | partial update：仅传入字段被更新 |
-| `RelationsFileSchema` | file | schemaVersion: "1", relations[] | — | 空文件 → 返回 `{ schemaVersion:"1", relations:[] }` |
-| `RelationType` | enum | close_friend / rival / alliance / mentor / blood / secret_crush | — | 中文映射见 `RELATION_LABELS` |
+| Schema | 类型 |
+|--------|------|
+| `CharacterRelationSchema` | object |
+| `CreateRelationSchema` | object |
+| `UpdateRelationSchema` | partial |
+| `RelationsFileSchema` | file |
+| `RelationType` | enum |
+
+**CharacterRelationSchema** (object): 必填字段 — id (uuid v4), sourceRoleId, targetRoleId, relationType, validFromChapter, intensity (1-5), createdAt, updatedAt。可选字段 — customLabel, description, validUntilChapter。intensity 默认 3；customLabel max 50 字符；description max 500 字符；id=crypto.randomUUID()。
+
+**CreateRelationSchema** (object): 必填字段 — sourceRoleId, targetRoleId, relationType, validFromChapter, intensity。可选字段 — customLabel, description, validUntilChapter。id/createdAt/updatedAt 由服务端生成。
+
+**UpdateRelationSchema** (partial): 可选字段 — 任意字段（id 不可变）。partial update：仅传入字段被更新。
+
+**RelationsFileSchema** (file): schemaVersion "1", relations[]。空文件 → 返回 `{ schemaVersion:"1", relations:[] }`。
+
+**RelationType** (enum): close_friend / rival / alliance / mentor / blood / secret_crush。中文映射见 `RELATION_LABELS`。
 
 显示标签优先级: `customLabel > RELATION_LABELS[relationType] > relationType raw`。
 
@@ -147,11 +157,13 @@ idle ──→ loading ──→ rendered                                       
 | 页面组件 | 路由 | data-testid 前缀 | 说明 |
 |----------|------|------------------|------|
 | `RelationGraphPanel` | `/#/book/:id/relations` | `rg-` | 主页面，含 ReactFlow 画布 + 工具栏 |
-| `DetailPanel` | (内嵌) | — | 点击节点后右侧弹出，显示角色详情 |
-| `RelationExtractionReviewPanel` | (内嵌) | — | AI 提取结果预览，支持逐条确认/拒绝 |
-| `LegendPanel` | (内嵌) | — | 关系类型图例 |
-| `MemoCharacterNode` | ReactFlow 节点 | — | 自定义节点，显示角色名/层级/出场章节 |
-| `MemoRelationEdge` | ReactFlow 边 | — | 自定义边，显示关系标签，hover 可删除 |
+
+内嵌子组件（非独立页面）：
+- `DetailPanel` (graph/DetailPanel.tsx) — 点击节点后右侧弹出角色详情
+- `RelationExtractionReviewPanel` — AI 提取结果预览，支持逐条确认/拒绝
+- `LegendPanel` (graph/LegendPanel.tsx) — 关系类型图例
+- `MemoCharacterNode` (ReactFlow 节点) — 自定义节点，显示角色名/层级/出场章节
+- `MemoRelationEdge` (ReactFlow 边) — 自定义边，显示关系标签，hover 可删除
 
 ### 4.2 交互流程
 
@@ -169,20 +181,8 @@ idle ──→ loading ──→ rendered                                       
 
 | 元素 | data-testid | 用途 |
 |------|-------------|------|
-| AI 提取按钮 | `rg-btn-ai-extract` | E2E 定位提取入口 |
-| 重置按钮 | `rg-btn-reset` | 重置操作 |
-| 导出按钮 | `rg-btn-export` | 导出入口 |
-| 返回按钮 | `rg-btn-back` | 返回书籍 |
-| 简化视图开关 | `rg-toggle-simplified` | 简化/完整视图切换 |
-| 图谱画布 | `rg-canvas` | ReactFlow 渲染区域 |
-| 关系删除按钮 | `rg-btn-delete-edge` | 可删除边的删除入口 |
-| 确认删除按钮 | `rg-btn-confirm-delete` | 确认删除弹窗按钮 |
-| 加载指示器 | `rg-loading` | 数据加载中 |
-| 错误信息 | `rg-msg-error` | API 异常提示 |
-| 空状态 | `rg-empty-state` | 无角色/无关系 |
-| 卷筛选 | `rg-select-volume` | 卷筛选下拉 |
-| 角色节点 | `rg-node-character` | ReactFlow 角色节点 |
-| 关系边 | `rg-edge-relation` | ReactFlow 关系连线 |
+| 重置按钮 | `rg-btn-reset` | 重置图谱到初始状态 |
+| 删除关系按钮 | `rg-btn-delete-relation` | 触发删除确认弹窗 |
 
 ---
 
@@ -215,7 +215,7 @@ idle ──→ loading ──→ rendered                                       
 
 | # | Given | When | Then | 状态 | E2E |
 |---|-------|------|------|------|-----|
-| 1 | 图谱已加载含 3 个角色节点 | 点击角色节点"主角-张三" | DetailPanel 在右侧弹出，显示角色标签编辑框；URL 不变；`rg-detail-panel` 可见 | ⬜ | relation-character-edit |
+| 1 | 图谱已加载含 3 个角色节点 | 点击角色节点"主角-张三" | DetailPanel 在右侧弹出，显示角色标签编辑框；URL 不变；详情面板可见 | ⬜ | relation-character-edit |
 | 2 | 图谱已加载，AI 提取按钮可见 | 点击 AI 提取 + 等待结果 | 提取结果列表区分主角(protagonist)/配角(supporting)/一次性(one_shot) | ⬜ | relation-ai-extract |
 | 3 | 图谱已被修改（添加/删除/移动节点） | 点击重置按钮 + 确认弹窗 | 图谱恢复到初始 dagre 布局；`graph-store` 状态为 clean | ⬜ | relation-reset |
 | 4 | 图谱含至少 1 条关系边 | hover 边 + 点击删除按钮 + 确认弹窗 | 关系边从图谱消失；节点保留；DELETE API 返回 200 | ⬜ | relation-delete-edge |
@@ -223,7 +223,7 @@ idle ──→ loading ──→ rendered                                       
 | 6 | 图谱含 10+ 角色分布在 3 个卷 | 选择卷筛选 → 选择"卷二" | 仅显示卷二章节内出场的角色及其关系；其他节点隐藏 | ⬜ | relation-graph |
 | 7 | 简化视图 toggle 未激活 | 点击简化视图开关 | 过滤掉 guest/one_shot/scene tier 的节点；边随之更新 | ⬜ | relation-graph-core |
 | 8 | 图谱已渲染 | 点击导出 → PNG（或 SVG） | 下载文件包含完整图谱截图 | ⬜ | relation-graph |
-| 9 | 图谱已加载 | 发送 DELETE /relations/nonexistent-id | API 返回 404 + `rg-msg-error` 显示"关系不存在" | ⬜ | relation-delete-edge |
+| 9 | 图谱已加载 | 发送 DELETE /relations/nonexistent-id | API 返回 404 + 错误提示显示"关系不存在" | ⬜ | relation-delete-edge |
 | 10 | 书籍无角色数据 | 打开关系图谱页面 | `rg-empty-state` 可见，显示"暂无角色和关系" | ⬜ | relation-ai-extract |
 
 完成度: 0/10 = 0%

@@ -48,15 +48,14 @@
 
 | 方法 | 路径 | 输入 | 输出 | 说明 |
 |------|------|------|------|------|
-| GET | `/api/publish/:bookId/check` | — | `{ ready, checks[], meta: { title, totalChapters, totalWords } }` | 发布准备检查 |
+| GET | `/api/publish/:bookId/check` | — | `{ ready, checks[], meta }` | 发布准备检查 |
 | POST | `/api/publish/:bookId/export` | — | `{ ok, filename, content, contentType, chapterCount, totalWords }` | 导出为 TXT |
 | POST | `/api/publish/:bookId/format-preview` | `{ platform, chapters[] }` | `{ previews[]: { chapter, original, formatted } }` | 按平台格式化预览 |
-| POST | `/api/publish/:bookId/publish` | `{ platform, chapters[] }` | `{ ok, published, platform, chapterCount, totalWords, formatted, message }` 或 400 `{ ok: false, warnings[] }` | 完整发布流程 |
-| GET | `/api/publish/:bookId/export-epub` | — | `application/epub+zip` 流 (attachment) | EPUB 下载 |
-| POST | `/api/publish/:bookId/preview-html` | — | `text/html` 页面 | HTML 预览 |
-| GET | `/api/v1/projects/:id/export/html` | — | `text/html` (自包含) | 互动电影 HTML 导出 |
-| GET | `/api/v1/projects/:id/export/json` | — | `application/json` (attachment) | 互动电影 JSON 导出 |
-| GET | `/api/v1/projects/:id/export/ink` | — | `text/plain` (attachment) | 互动电影 Ink 导出 |
+| POST | `/api/publish/:bookId/publish` | `{ platform, chapters[] }` | `{ ok, published, ... }` 或 400 `{ ok: false, warnings[] }` | 完整发布流程 |
+
+额外端点（`publish.ts` 内联定义）：
+- `GET /api/publish/:bookId/export-epub` — EPUB 下载（`application/epub+zip` 流）
+- `POST /api/publish/:bookId/preview-html` — HTML 预览（`text/html` 页面）
 
 **请求/响应示例**:
 ```json
@@ -102,16 +101,24 @@
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 字段 | 说明 |
-|--------|------|------|------|
-| `BookMeta` | object | id, title, platform, genre, status | 从 `book.json` 读取的书籍元数据 |
-| `ChapterItem` | object | number, title, content | 从 `chapters/{n}.json` 读取的章节 |
-| `PublishCheckResult` | object | ready, checks[] | checks 每条含 name/passed/message |
-| `FormatPreviewBody` | object | platform (PublishPlatform), chapters[] (number[]) | 格式化预览请求体 |
-| `PublishBody` | object | platform (PublishPlatform), chapters[] (number[]) | 发布请求体 |
-| `PublishPlatform` | string | 平台标识符 | 传递给 `getAdapter()` 获取格式化器 |
-| `PublishChapter` | object | meta (包含 number/title/status/wordCount), text | `@inkchain/inkchain-core` 定义的发布章节类型 |
-| `ValidationWarning` | object | field, message, severity (ok/error) | 平台校验警告 |
+| Schema | 类型 |
+|--------|------|
+
+**BookMeta** (interface): id, title, platform, genre, status — 从 `book.json` 读取的书籍元数据。
+
+**ChapterItem** (interface): number, title, content — 从 `chapters/{n}.json` 读取的章节。
+
+**PublishCheckResult** (interface): ready, checks[] — checks 每条含 name/passed/message。
+
+**FormatPreviewBody** (interface): platform (PublishPlatform), chapters[] (number[]) — 格式化预览请求体。
+
+**PublishBody** (interface): platform (PublishPlatform), chapters[] (number[]) — 发布请求体。
+
+**PublishPlatform** (string): 平台标识符 — 传递给 `getAdapter()` 获取格式化器。
+
+**PublishChapter** (object): meta (含 number/title/status/wordCount), text — `@inkchain/inkchain-core` 定义的发布章节类型。
+
+**ValidationWarning** (interface): field, message, severity (ok/error) — 平台校验警告。
 
 **安全约束**:
 - `bookId` 必须匹配 `/^[a-z0-9_-]+$/i`，否则返回 400 INVALID_BOOK_ID
@@ -186,9 +193,14 @@ POST /:bookId/publish
 
 ### 4.1 页面 / 面板
 
-Export/Publish 模块主要为 API 接口，无独立 UI 页面，通常通过书籍页面中的「导出」按钮或侧边栏入口触发。
+| 页面组件 | 路由 | 说明 |
+|----------|------|------|
+| `PublishPage` | 书籍页面 "导出"/"发布" 入口 | 发布/导出主页面 |
 
-互动电影导出端点在 `FlowView` 或相应页面中触发。
+内嵌子组件（非独立页面）：
+- `ExportBar` (film/ExportBar.tsx) — 互动电影导出工具栏
+- `FormatPreview` (publish/FormatPreview.tsx) — 格式化预览组件
+- `PublishWizard` (publish/PublishWizard.tsx) — 发布向导组件
 
 ### 4.2 关键 data-testid
 
