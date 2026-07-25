@@ -68,12 +68,13 @@
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `AuditIssue` | interface | type(continuity/logic/character/style/pacing/grammar/other), severity(info/warning/error), description, chapterNumber | location | — |
-| `ChapterAuditResult` | interface | chapterNumber, status(pending/pass/warn/fail/approved), issues[] | lastAuditedAt, approvedAt, contentHash(SHA-256), mode(rule/ai) | status 默认 pending |
-| `AuditStatus` | union | pending / pass / warn / fail / approved | — | pending=未审计; pass=通过; warn=有警告; fail=错误; approved=已批准 |
-| `AuditMode` | union | rule / ai | — | rule: 规则审计(快); ai: AI 深度审计(慢) |
+**AuditIssue** (interface): `type` (continuity|logic|character|style|pacing|grammar|other), `severity` (info|warning|error), `description`, `chapterNumber`, `location` (optional).
+
+**ChapterAuditResult** (interface): `chapterNumber`, `status` (pending|pass|warn|fail|approved), `issues[]`, `lastAuditedAt` (optional), `approvedAt` (optional), `contentHash` (optional, SHA-256), `mode` (optional, rule|ai). Status 默认 `pending`.
+
+**AuditStatus** (union): `pending` | `pass` | `warn` | `fail` | `approved`. pending=未审计; pass=通过; warn=有警告; fail=错误; approved=已批准.
+
+**AuditMode** (union): `rule` | `ai`. rule=规则审计(快); ai=AI 深度审计(慢).
 
 章节内容哈希: `createHash("sha256").update(chapterContent, "utf-8").digest("hex")` — 用于缓存验签。
 
@@ -143,12 +144,7 @@ warn / fail ──────────────────────�
 
 ### 4.1 页面 / 面板
 
-| 页面组件 | 路由 | data-testid 前缀 | 说明 |
-|----------|------|------------------|------|
-| `AuditPage` | `/#/audit/:bookId` | `au-` | 主页面，含章节审计状态表格 + 工具栏 |
-| `BatchAuditPanel` | 内嵌 | — | 批量审计进度面板 |
-| `FixPreviewDialog` | Dialog | — | 修复建议预览 + 选择性应用 |
-| `ModeSelector` | Select | — | 审计模式选择(rule/ai) |
+**AuditPage** (`/#/audit/:bookId`): 主页面，含章节审计状态表格、统计摘要卡片（SummaryCard）、卷筛选下拉、批量审计工具栏、章节状态色标（pending/pass/warn/fail/approved）、操作按钮（ActionButton）、内容查看器（ContextViewer）。代码: `packages/studio/src/pages/AuditPage.tsx`。
 
 ### 4.2 交互流程
 
@@ -165,15 +161,12 @@ warn / fail ──────────────────────�
 
 ### 4.3 关键 data-testid
 
-| 元素 | data-testid | 用途 |
-|------|-------------|------|
-| 批量审计按钮 | `au-batch-audit-btn` / `au-btn-batch-audit` | 批量审计入口 |
-| 审计模式选择 | 基于 `data-testid*='mode'` | 选择 rule/ai |
-| 卷筛选 | 基于 `data-testid*='volume'` | 卷筛选下拉 |
-| 修复按钮 | `au-auto-fix-btn` / `au-btn-apply-fix` | 一键修复入口 |
-| 加载状态 | `au-loading-spinner` / `au-state-loading` | 加载中 |
-| 错误状态 | `au-error-state` / `au-state-error` | API 异常 |
-| 空状态 | `au-empty-state` / `au-state-empty` | 无章节时 |
+源码中实现（`AuditPage.tsx`）:
+- **au-table-audit-list**: 章节审计列表容器（line 675）
+- **au-table-summary**: 统计摘要卡片网格（line 544）
+- **au-state-all-passed**: 全部章节通过状态容器（line 543）
+- **au-badge-status-{chapterNumber}**: 每章状态色标（line 745, 动态）
+- **au-btn-approve-{chapterNumber}**: 单章批准按钮（line 859, 动态, 通过 ActionButton testId prop）
 
 ---
 

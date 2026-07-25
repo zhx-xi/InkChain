@@ -91,13 +91,17 @@
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `BookSessionSchema` | object | sessionId (string min 1), bookId (nullable), status ("active"\|"archived"), createdAt, updatedAt | sessionKind, playMode, title (nullable, default null), archivedAt, archiveReason, messages (default []), creationDraft, draftRounds (default []), events (default []), currentExecution | status 默认 "active"；合并时源会话被清空 |
-| `SessionKindSchema` | enum | chat / book-create / book / short / play / script / storyboard / interactive-film / edit / interactive-film-authoring | — | 决定会话的行为上下文 |
-| `InteractionMessageSchema` | object | role ("user"\|"assistant"\|"system"), content, timestamp | thinking, toolExecutions | 支持思考链和工具执行步骤 |
-| `BookCreationDraftSchema` | object | concept (string min 1) | title, genre, platform, language, targetChapters, chapterWordCount, blurb, worldPremise, settingNotes, protagonist, supportingCast, conflictCore, volumeOutline, constraints, authorIntent, currentFocus, nextQuestion, missingFields (default []), readyToCreate (default false) | 用于新书创建的渐进式草稿 |
-| `SessionListItem` | object | id, title, status, messageCount, createdAt, updatedAt | archivedAt, tags | 客户端友好格式 |
+**BookSessionSchema** (object): `sessionId` (string min 1), `bookId` (nullable), `status` ("active"|"archived"), `createdAt`, `updatedAt` 必填; `sessionKind`, `playMode`, `title` (nullable, default null), `archivedAt`, `archiveReason`, `messages` (default []), `creationDraft`, `draftRounds` (default []), `events` (default []), `currentExecution` 可选. status 默认 "active"; 合并时源会话被清空. 定义于 `packages/core/src/interaction/session.ts`.
+
+**SessionKindSchema** (enum): `chat` | `book-create` | `book` | `short` | `play` | `script` | `storyboard` | `interactive-film` | `edit` | `interactive-film-authoring`. 决定会话的行为上下文.
+
+**InteractionMessageSchema** (object): `role` ("user"|"assistant"|"system"), `content`, `timestamp` 必填; `thinking`, `toolExecutions` 可选. 支持思考链和工具执行步骤.
+
+**BookCreationDraftSchema** (object): `concept` (string min 1) 必填; `title`, `genre`, `platform`, `language`, `targetChapters`, `chapterWordCount`, `blurb`, `worldPremise`, `settingNotes`, `protagonist`, `supportingCast`, `conflictCore`, `volumeOutline`, `constraints`, `authorIntent`, `currentFocus`, `nextQuestion`, `missingFields` (default []), `readyToCreate` (default false) 可选. 用于新书创建的渐进式草稿.
+
+**SessionListItem** (object): `id`, `title`, `status`, `messageCount`, `createdAt`, `updatedAt` 必填; `archivedAt`, `tags` 可选. 客户端友好格式.
+
+所有 Schema 定义于 `packages/core/src/interaction/session.ts`，从 `@inkchain/inkchain-core` 统一导出。
 
 ### 2.3 状态转换
 
@@ -180,15 +184,9 @@ idle ──→ loading ──→ ready                                         �
 
 ### 4.1 页面 / 面板
 
-| 页面组件 | 路由 | data-testid 前缀 | 说明 |
-|----------|------|------------------|------|
-| `ChatPage` | `/#/chat` | — | 主聊天界面，含消息列表、输入框、会话选择器 |
-| `ArchivePage` | `/#/archive` | — | 归档会话列表，支持解档/删除/批量操作 |
-| `AgentStatusIndicator` | (内嵌 ChatPage) | — | 显示 AI Agent 当前状态（idle/thinking/writing） |
-| `WritingProgress` | (内嵌 ChatPage) | — | 显示写作 Pipeline 进度（分阶段） |
-| `ToolExecutionSteps` | (内嵌 ChatPage) | — | 显示 AI 工具调用步骤 |
-| `QuickActions` | (内嵌 ChatPage) | — | 快捷操作按钮（续写/审核/生成等） |
-| `PlayHud` | (内嵌 ChatPage) | — | 互动剧本的 HUD 界面 |
+**ChatPage** (`/#/chat`): 主聊天界面，含消息列表、输入框、会话选择器、SSE 流式 AI 回复渲染、技能选择器、模型选择器、AgentStatusIndicator / WritingProgress / ToolExecutionSteps / QuickActions / PlayHud 内嵌组件。代码: `packages/studio/src/pages/ChatPage.tsx`。
+
+**ArchivePage** (`/#/archive`): 归档会话列表，支持解档/删除/批量操作/搜索/排序/标签筛选。代码: `packages/studio/src/pages/ArchivePage.tsx`。
 
 ### 4.2 交互流程
 
