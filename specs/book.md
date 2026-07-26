@@ -60,15 +60,21 @@
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `BookConfigSchema` | object | id, title, platform(tomato/feilu/qidian/other), genre, status(incubating/outlining/active/paused/completed/dropped), createdAt, updatedAt | targetChapters, chapterWordCount, language(zh/en), parentBookId, fanficMode(canon/au/ooc/cp), worldId, worldIds[], writing.reviewMode, volumes[] | targetChapters 默认 200; chapterWordCount 默认 3000 |
-| `PlatformSchema` | enum | tomato / feilu / qidian / other | — | normalizePlatformId: 支持"番茄"/"起点"/"飞卢"等中文别名 |
-| `BookStatusSchema` | enum | incubating / outlining / active / paused / completed / dropped | — | 状态流转手动控制 |
-| `FanficModeSchema` | enum | canon(正典) / au(平行宇宙) / ooc(角色脱离设定) / cp(配对被) | 仅 parentBookId 存在时有效 | — |
-| `ChapterStyleProfile` | interface | chapterNumber, title, avgSentenceLength, sentenceLengthStdDev, avgParagraphLength, vocabularyDiversity, wordCount | topPatterns[], rhetoricalFeatures[] | 从章节 markdown 文本分析出 |
-| `StyleAnalyzeResult` | interface | chapters[], comparison[], averageProfile, anomalies[] | failedChapters[] | anomalies: 偏离均值 >50% 的维度 |
-| `CompareResult` | interface | chapterNumber, title, profile, deviationFromAverage | — | deviationFromAverage 含 4 维度偏差值 |
+核心 Schema 定义于 `packages/core/src/models/book.ts`:
+
+**BookConfigSchema** (Zod object): `id` (string), `title` (string), `platform` (tomato/feilu/qidian/other enum), `genre` (string), `status` (incubating/outlining/active/paused/completed/dropped enum), `createdAt`, `updatedAt`. 可选字段: `targetChapters` (默认 200), `chapterWordCount` (默认 3000), `language` (zh/en), `parentBookId`, `fanficMode` (canon/au/ooc/cp), `worldId`, `worldIds[]`, `writing.reviewMode`, `volumes[]`.
+
+**PlatformSchema** (Zod enum): `tomato | feilu | qidian | other`. normalizePlatformId 支持"番茄"/"起点"/"飞卢"等中文别名。
+
+**BookStatusSchema** (Zod enum): `incubating | outlining | active | paused | completed | dropped`. 状态流转手动控制。
+
+**FanficModeSchema** (Zod enum): `canon` (正典) | `au` (平行宇宙) | `ooc` (角色脱离设定) | `cp` (配对被)。仅 parentBookId 存在时有效。
+
+**ChapterStyleProfile** (interface): `chapterNumber`, `title`, `avgSentenceLength`, `sentenceLengthStdDev`, `avgParagraphLength`, `vocabularyDiversity`, `wordCount`. 可选: `topPatterns[]`, `rhetoricalFeatures[]`. 从章节 markdown 文本分析得出。
+
+**StyleAnalyzeResult** (interface): `chapters[]` (ChapterStyleProfile), `comparison[]`, `averageProfile`, `anomalies[]`. 可选: `failedChapters[]`. anomalies 为偏离均值 >50% 的维度。
+
+**CompareResult** (interface): `chapterNumber`, `title`, `profile`, `deviationFromAverage` (含 4 维度偏差值).
 
 ### 2.3 状态转换
 
@@ -134,12 +140,13 @@ idle ──→ loading ──→ rendered                                   │
 
 ### 4.1 页面 / 面板
 
-| 页面组件 | 路由 | data-testid 前缀 | 说明 |
-|----------|------|------------------|------|
-| `BookCreate` | `/#/book/new` | `bc-` | 创建书籍向导（标题/平台/分类/字数/语言） |
-| `BookDetail` | `/#/book/:id` | `bd-` | 书籍详情页（状态/元数据/卷列表/世界观） |
-| `BookStylePage` | `/#/book/:id/style` | `bs-` | 风格分析页（章节选择/分析结果/异常高亮） |
-| `Dashboard` | `/#/` | — | 首页仪表板（书籍列表卡片） |
+**BookCreate** (`/#/book/new`): 创建书籍向导，代码在 `packages/studio/src/pages/BookCreate.tsx`。包含标题/平台/分类/字数/语言表单字段，支持同人模式（parentBookId + fanficMode）。使用 `bc-` 前缀的 testid 定位。
+
+**BookDetail** (`/#/book/:id`): 书籍详情页，代码在 `packages/studio/src/pages/BookDetail.tsx`。显示状态/元数据/卷列表/世界观关联信息。使用 `bd-` 前缀的 testid 定位。
+
+**BookStylePage** (`/#/book/:id/style`): 风格分析页，代码在 `packages/studio/src/pages/BookStylePage.tsx`。章节选择→分析→图表+异常高亮。使用 `bs-` 前缀的 testid 定位。
+
+**Dashboard** (`/#/`): 首页仪表板，显示书籍列表卡片。无独立 data-testid 前缀。
 
 ### 4.2 交互流程
 
