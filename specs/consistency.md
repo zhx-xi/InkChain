@@ -76,16 +76,23 @@
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `ConsistencyIssue` | object | type (IssueType), severity (IssueSeverity), description, sources[] | suggestion | sources 字符串数组；type ∈ {character_contradiction, relationship_break, setting_conflict, timeline_paradox} |
-| `IssueSeverity` | enum | high / medium / low | — | high="必须修复", medium="建议关注", low="提示" |
-| `IssueType` | enum | character_contradiction / relationship_break / setting_conflict / timeline_paradox | — | character_contradiction="角色矛盾", relationship_break="关系断裂", setting_conflict="设定冲突", timeline_paradox="时间线悖论" |
-| `ConsistencyReport` | object | issues[], summary, score (0-100) | — | score 100 表示无问题 |
-| `StyleConsistencyDimension` | object | name, label, score (0-100), status (ok/warn/good), note | — | 四个维度: vocabulary, sentence-length, dialogue-ratio, modifier-density |
-| `StyleAnomaly` | object | index, tag (length/modifier/dialogue), tagLabel, paragraphIndex, description, quote, detail, diffPercent, ignored | — | tag 决定标签颜色：length=rose, modifier=amber, dialogue=emerald |
-| `StyleConsistencyResult` | object | score (0-100), dimensions[], anomalies[], baselineLabel, targetLabel, sensitivity (0-2) | — | sensitivity 0=低/1=中/2=高；阈值分别为 0.25/0.15/0.08 |
-| `IssueStatus` (UI only) | enum | pending / confirmed / ignored | — | 本地不持久化，刷新后恢复 pending |
+核心类型定义于 `packages/core/src/ai/consistency-report.ts`，均为 TypeScript interface/type（非 Zod schema）:
+
+**ConsistencyIssue** (interface): `type` (IssueType), `severity` (IssueSeverity), `description` (string), `sources` (string[]), `suggestion` (string, optional). type 取值为 character_contradiction（角色矛盾）、relationship_break（关系断裂）、setting_conflict（设定冲突）、timeline_paradox（时间线悖论）。
+
+**IssueSeverity** (type): `"high" | "medium" | "low"`. high=必须修复, medium=建议关注, low=提示。
+
+**IssueType** (type): `"character_contradiction" | "relationship_break" | "setting_conflict" | "timeline_paradox"`.
+
+**ConsistencyReport** (interface): `issues` (ConsistencyIssue[]), `summary` (string), `score` (0-100 数字), `checkedAt` (ISO 字符串). score 100 表示无问题；通过 `calculateScore()` 根据问题严重程度扣分（high=-15, medium=-8, low=-3）。
+
+**StyleConsistencyDimension** (UI 类型): `name`, `label`, `score` (0-100), `status` (ok/warn/good), `note`. 四个维度: vocabulary（词汇分布）、sentence-length（句式长度）、dialogue-ratio（对话比例）、modifier-density（修饰语密度）。
+
+**StyleAnomaly** (UI 类型): `index`, `tag` (length/modifier/dialogue), `tagLabel`, `paragraphIndex`, `description`, `quote`, `detail`, `diffPercent`, `ignored`. tag 决定标签颜色：length=rose, modifier=amber, dialogue=emerald。
+
+**StyleConsistencyResult** (UI 类型): `score` (0-100), `dimensions` (StyleConsistencyDimension[]), `anomalies` (StyleAnomaly[]), `baselineLabel`, `targetLabel`, `sensitivity` (0-2). sensitivity 0=低(阈值0.25)/1=中(阈值0.15)/2=高(阈值0.08)。
+
+**IssueStatus** (UI only, 不持久化): `"pending" | "confirmed" | "ignored"`. 刷新后恢复 pending。
 
 ### 2.3 状态转换
 
@@ -176,10 +183,9 @@ idle ──→ loading ──→ rendered                                   │
 
 ### 4.1 页面 / 面板
 
-| 页面组件 | 路由 | data-testid 前缀 | 说明 |
-|----------|------|------------------|------|
-| `ConsistencyCheck` | `/#/consistency/:bookId` | 无统一前缀（内联组件） | 叙事一致性检查主页，含 StatCard + 筛选栏 + IssueCard 列表 + FloatNotif |
-| `ConsistencyPanel` | `/#/style/:bookId` | 无统一前缀（内联组件） | 文风统一检测页，含 RingGauge + DimensionBars + AnomalyList + SensitivitySlider |
+**ConsistencyCheck** (`/#/consistency/:bookId`): 叙事一致性检查主页，代码在 `packages/studio/src/pages/ConsistencyCheck.tsx` (Issue #276)。包含 StatCard 统计面板 + 筛选栏（类型/严重度）+ IssueCard 列表 + 浮动待处理通知。无显式 `data-testid` —— E2E 测试通过语义选择器断言（`h2:has-text("叙事一致性检查")`, `button[title="重新扫描"]`, `button:has-text("重试")`）。
+
+**ConsistencyPanel** (`/#/style/:bookId`): 文风统一检测页，代码在 `packages/studio/src/pages/ConsistencyPanel.tsx`。包含 RingGauge（评分环形图）+ 4 个 DimensionBar + AnomalyList（异常段落列表）+ SensitivitySlider（灵敏度调节）。API 失败时静默降级到 Mock 数据。
 
 ### 4.2 交互流程
 
