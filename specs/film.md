@@ -51,14 +51,19 @@
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `StoryGraph` | object | schemaVersion (1), projectId, title, nodes[], endings[], variables[] | worldAnchor, characters, playMode | nodes 至少含一个 start 节点 |
-| `StoryNode` | object | id, type ("start"\|"story"\|"branch"), sceneDesc | choices[], imagePath, authorNotes | type 决定节点行为 |
-| `StoryChoice` | object | id, label, targetNodeId | condition (变量条件) | 用于分支选择 |
-| `PlayEntity` | object | id, type (actor/location/item/evidence/clue/claim/proof_chain/organization/rule/scene/event), label | summary, status, createdEventId, updatedEventId | 范式世界观实体系统 |
-| `PlayActionIntent` | object | actionKind (look/say/move/do/wait), intent, manner, risk, ambiguity | targetEntityLabel, targetLocationLabel, secondaryActions | LLM 输出解析，lenient 容错 |
-| `WorldAnchor` | object | storyCore | theme, genre, durationMinutes, worldRules | 电影世界观锚点 |
+核心类型定义于 `packages/core/src/models/play.ts`:
+
+**StoryGraph** (object): `schemaVersion` (1), `projectId`, `title`, `nodes[]`, `endings[]`, `variables[]`. 可选: `worldAnchor`, `characters`, `playMode`. nodes 至少含一个 start 节点。存储为 `<projectRoot>/.inkos/interactive-film/<projectId>.json`。
+
+**StoryNode** (object): `id`, `type` ("start"|"story"|"branch"), `sceneDesc`. 可选: `choices[]`, `imagePath`, `authorNotes`. type 决定节点行为。
+
+**StoryChoice** (object): `id`, `label`, `targetNodeId`. 可选: `condition` (变量条件)。用于分支选择。
+
+**PlayEntity** (object): `id`, `type` (actor/location/item/evidence/clue/claim/proof_chain/organization/rule/scene/event), `label`. 可选: `summary`, `status`, `createdEventId`, `updatedEventId`. 范式世界观实体系统。
+
+**PlayActionIntent** (object): `actionKind` (look/say/move/do/wait), `intent`, `manner`, `risk`, `ambiguity`. 可选: `targetEntityLabel`, `targetLocationLabel`, `secondaryActions`. LLM 输出解析，lenient 容错。
+
+**WorldAnchor** (object): `storyCore`. 可选: `theme`, `genre`, `durationMinutes`, `worldRules`. 电影世界观锚点。
 
 **创作阶段 (Phases)**:
 
@@ -158,16 +163,21 @@ idle ──→ loading (加载 StoryGraph) ──→ rendered
 
 ### 4.1 页面 / 面板
 
-| 页面组件 | 路由 | data-testid 前缀 | 说明 |
-|----------|------|------------------|------|
-| `FilmWizard` | `/#/studio/film/:id` | `film-wizard` | 5 阶段创作向导主页面 |
-| `FlowView` | (内嵌 FilmWizard) | `flow-view` | 流程图可视化 |
-| `StoryGraphTree` | (内嵌 FilmWizard) | `film-tree` | 树视图节点编辑 |
-| `StoryPlayer` | (内嵌 FilmWizard) | `player-` | 互动故事播放器 |
-| `WorldAnchorView` | (内嵌 FilmWizard) | `film-world` | 世界观锚点展示 |
-| `ChatPage` | (内嵌 FilmWizard) | — | AI 对话辅助创作 |
-| `AnalysisPanel` | (内嵌 FilmWizard) | — | 阶段分析面板 |
-| `ExportBar` | (内嵌 FilmWizard) | — | 导出工具栏 |
+**FilmWizard** (`/#/studio/film/:id`): 5 阶段创作向导主页面，代码在 `packages/studio/src/pages/FilmWizard.tsx`。使用 `film-wizard` 作为容器 testid。阶段步骤: wizard-step-world / wizard-step-structure / wizard-step-validate。
+
+**FlowView** (内嵌 FilmWizard): 流程图可视化，使用 `flow-view` 容器 testid。代码在 `packages/studio/src/pages/FlowView.tsx`。
+
+**StoryGraphTree** (内嵌 FilmWizard): 树视图节点编辑，使用 `film-tree` 容器 testid。代码在 `packages/studio/src/pages/StoryGraphTree.tsx`。
+
+**StoryPlayer** (内嵌 FilmWizard): 互动故事播放器，使用 `player-` 前缀 testid。关键 testid: player-start, player-screen, player-image。
+
+**WorldAnchorView** (内嵌 FilmWizard): 世界观锚点展示，使用 `film-world` testid。
+
+**ChatPage** (内嵌 FilmWizard): AI 对话辅助创作页面。
+
+**AnalysisPanel** (内嵌 FilmWizard): 阶段分析面板，使用 `validation-panel` testid。
+
+**ExportBar** (内嵌 FilmWizard): 导出工具栏。
 
 ### 4.2 交互流程
 

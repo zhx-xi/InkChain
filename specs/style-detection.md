@@ -104,15 +104,21 @@ Style Detection 模块提供三层文风检测能力：**代码初筛**（按章
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `StyleProfile` | interface | avgSentenceLength, sentenceLengthStdDev, avgParagraphLength, paragraphLengthRange{min,max}, vocabularyDiversity, topPatterns[], rhetoricalFeatures[] | sourceName, analyzedAt | — |
-| `EnhancedStyleProfile` | extends StyleProfile | id, language | autoAnalyzed | 存储为 `data/style-profiles/<id>.json` |
-| `DetectionHistoryEntry` | interface | chapterNumber, timestamp, provider, score, action:"detect"\|"rewrite", attempt | — | 写入 `detection_history.json` |
-| `DetectionStats` | interface | totalDetections, totalRewrites, avgOriginalScore, avgFinalScore, avgScoreReduction, passRate, chapterBreakdown[] | — | 聚合统计 |
-| `StyleConsistencyDimension` | interface | name, label, score, status:"ok"\|"warn"\|"good", note | — | 单维度分析结果 |
-| `StyleAnomaly` | interface | index, tag:"length"\|"modifier"\|"dialogue", tagLabel, paragraphIndex, description, quote, detail, diffPercent, ignored | — | 异常段落详情 |
-| `StyleConsistencyResult` | interface | score, dimensions[], anomalies[], baselineLabel, targetLabel, sensitivity (0-2) | — | 聚合一致性分析结果 |
+核心类型定义于 `packages/core/src/models/`:
+
+**StyleProfile** (interface): `avgSentenceLength`, `sentenceLengthStdDev`, `avgParagraphLength`, `paragraphLengthRange` (含 min/max), `vocabularyDiversity`, `topPatterns[]`, `rhetoricalFeatures[]`. 可选: `sourceName`, `analyzedAt`.
+
+**EnhancedStyleProfile** (extends StyleProfile): `id`, `language`. 可选: `autoAnalyzed`. 存储为 `data/style-profiles/<id>.json`。
+
+**DetectionHistoryEntry** (interface): `chapterNumber`, `timestamp`, `provider`, `score`, `action` ("detect"|"rewrite"), `attempt`. 写入 `detection_history.json`。
+
+**DetectionStats** (interface): `totalDetections`, `totalRewrites`, `avgOriginalScore`, `avgFinalScore`, `avgScoreReduction`, `passRate`, `chapterBreakdown[]`. 聚合统计。
+
+**StyleConsistencyDimension** (interface): `name`, `label`, `score`, `status` ("ok"|"warn"|"good"), `note`. 单维度分析结果。
+
+**StyleAnomaly** (interface): `index`, `tag` ("length"|"modifier"|"dialogue"), `tagLabel`, `paragraphIndex`, `description`, `quote`, `detail`, `diffPercent`, `ignored`. 异常段落详情。
+
+**StyleConsistencyResult** (interface): `score`, `dimensions[]`, `anomalies[]`, `baselineLabel`, `targetLabel`, `sensitivity` (0-2). 聚合一致性分析结果。
 
 **sensitivity 参数含义**:
 - `0`: 低敏感度 — 仅检测最显著的异常
@@ -195,12 +201,13 @@ idle ──→ prescreening ──→ prescreened                        │
 
 ### 4.1 页面 / 面板
 
-| 页面组件 | 路由 | data-testid 前缀 | 说明 |
-|----------|------|------------------|------|
-| Style Manager | 通过侧边栏 "文风" 按钮进入 | — | 主页面：textarea 输入 + 分析/初筛/导出操作 |
-| Style Profile List | (内嵌) | — | 已保存档案列表 |
-| Prescreen Results | (内嵌) | — | 代码初筛结果（章节级指标 + 异常标记） |
-| Consistency Panel | (内嵌) | — | 风格一致性维度得分 + 异常列表 |
+**Style Manager**: 文风检测主页面，通过侧边栏"文风"按钮进入。代码在 `packages/studio/src/pages/` 下。包含 textarea 输入 + 分析/初筛/导出操作区。空文本时分析按钮 disabled。
+
+**Style Profile List** (内嵌): 已保存的 Style Profile 档案列表，支持查看和删除。
+
+**Prescreen Results** (内嵌): 代码初筛结果展示区。多章节模式显示章节级指标列表 + 异常标记（标签"异常"）+ "AI深度检测异常章节"按钮。单章节模式仅显示全局指标。
+
+**Consistency Panel** (内嵌): 风格一致性分析面板，显示 4 维度得分（vocabulary/sentence-length/dialogue-ratio/modifier-density）+ 异常段落列表（含 tag/quote/diffPercent）。
 
 ### 4.2 交互流程
 
