@@ -91,13 +91,17 @@
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `ForeshadowingSchema` | object | id (string min 1), bookId (string min 1), title (string min 1) | description (default ""), type (default "情节伏笔"), createdChapter (default 0, int >=0), expectedPayoffChapter (nullable, default null), status (default "active"), payoffChapter (nullable, default null), lastMentionedChapter (default 0), relatedElements (default []), notes (default "") | type 枚举: 情节伏笔/角色伏笔/物品伏笔/设定伏笔；status 枚举: active/paid_off/abandoned |
-| `ForeshadowingCreateSchema` | object | id, title | 同 ForeshadowingSchema 其余字段 | 最小创建只需 id + title |
-| `ForeshadowingUpdateSchema` | object | — | 任意字段 (id 不可变) | 显式 optional，不使用 .partial() 避免默认值覆盖 |
-| `ForeshadowingTypeEnum` | enum | 情节伏笔 / 角色伏笔 / 物品伏笔 / 设定伏笔 | — | — |
-| `ForeshadowingStatusEnum` | enum | active / paid_off / abandoned | — | — |
+核心 Schema 定义于 `packages/core/src/models/foreshadowing.ts`:
+
+**ForeshadowingSchema** (Zod object): 必填字段 — `id` (string min 1), `bookId` (string min 1), `title` (string min 1)。可选字段 — `description` (默认 ""), `type` (默认 "情节伏笔"), `createdChapter` (默认 0, int ≥0), `expectedPayoffChapter` (nullable, 默认 null), `status` (默认 "active"), `payoffChapter` (nullable, 默认 null), `lastMentionedChapter` (默认 0), `relatedElements` (默认 []), `notes` (默认 "")。type 枚举: 情节伏笔/角色伏笔/物品伏笔/设定伏笔；status 枚举: active/paid_off/abandoned。
+
+**ForeshadowingCreateSchema** (Zod object): 必填 — `id`, `title`；其余字段同 ForeshadowingSchema。最小创建只需 id + title。
+
+**ForeshadowingUpdateSchema** (Zod object): 所有字段可选 (id 不可变)。显式 optional 定义，不使用 .partial() 避免默认值覆盖。
+
+**ForeshadowingTypeEnum**: `情节伏笔` / `角色伏笔` / `物品伏笔` / `设定伏笔`。
+
+**ForeshadowingStatusEnum**: `active` / `paid_off` / `abandoned`。
 
 **持久化**: 存储在 `<projectRoot>/.inkos/foreshadowing/<id>.json`，通过 IndexManager 管理索引。
 
@@ -179,9 +183,7 @@ idle ──→ loading ──→ rendered
 
 ### 4.1 页面 / 面板
 
-| 页面组件 | 路由 | data-testid 前缀 | 说明 |
-|----------|------|------------------|------|
-| `ForeshadowingPage` | `/#/foreshadowing/:bookId` | `fs-` | 主页面，支持 3 种视图模式 |
+**ForeshadowingPage** (`/#/foreshadowing/:bookId`): 伏笔管理主页面，代码在 `packages/studio/src/pages/ForeshadowingPage.tsx`。支持三种视图模式（列表/卡片/关系图），提供 CRUD、AI 提取、批量操作、搜索筛选、遗忘检测等能力。使用 `fs-` 作为 data-testid 前缀。
 
 ### 4.2 交互流程
 

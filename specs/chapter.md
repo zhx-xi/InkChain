@@ -94,17 +94,15 @@
 
 **章节模型** (`models/chapter.ts`):
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `ChapterMetaSchema` | object | number (int, >=1), title, status, createdAt, updatedAt | wordCount (default 0), auditIssues (default []), lengthWarnings (default []), reviewNote, detectionScore (0-1), detectionProvider, detectedAt, lengthTelemetry, tokenUsage, volumeId (nullable) | wordCount 默认 0；detectionScore 范围 [0,1]；volumeId 可设为 null |
-| `ChapterStatusSchema` | enum | card-generated / drafting / drafted / auditing / audit-passed / audit-failed / state-degraded / revising / ready-for-review / approved / rejected / published / imported | — | 完整生命周期状态链 |
+**ChapterMetaSchema** (Zod object): 必填字段 — `number` (int ≥1), `title` (string), `status` (enum), `createdAt`, `updatedAt`。可选字段 — `wordCount` (默认 0), `auditIssues` (默认 []), `lengthWarnings` (默认 []), `reviewNote`, `detectionScore` (0-1), `detectionProvider`, `detectedAt`, `lengthTelemetry`, `tokenUsage`, `volumeId` (nullable)。
+
+**ChapterStatusSchema** (Zod enum): `card-generated` / `drafting` / `drafted` / `auditing` / `audit-passed` / `audit-failed` / `state-degraded` / `revising` / `ready-for-review` / `approved` / `rejected` / `published` / `imported` — 完整生命周期状态链。
 
 **分卷模型** (`models/volume.ts`):
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `VolumeSchema` | object | id (string min 1), title (string min 1), order (int >=0), createdAt, updatedAt | description (default ""), status (default "draft") | status 枚举: draft / active / completed |
-| `VolumeStatusSchema` | enum | draft / active / completed | — | — |
+**VolumeSchema** (Zod object): 必填字段 — `id` (string min 1), `title` (string min 1), `order` (int ≥0), `createdAt`, `updatedAt`。可选字段 — `description` (默认 ""), `status` (默认 "draft")。status 枚举: `draft` / `active` / `completed`。
+
+**VolumeStatusSchema** (Zod enum): `draft` / `active` / `completed`。
 
 **持久化**:
 - 版本数据存储在 `story/state/versions/` 目录下，按 `chapter-{num}/` 子目录组织
@@ -232,12 +230,13 @@ idle ──→ step-1 (场景描述) ──→ step-2 (关联实体) ──→ s
 
 ### 4.1 页面 / 面板
 
-| 页面组件 | 路由 | data-testid 前缀 | 说明 |
-|----------|------|------------------|------|
-| `ChapterReader` | `/#/book/:id/read/:num` | — | 章节阅读/编辑，纸质排版风格，含审批通过/拒绝 |
-| `ChapterWizard` | `/#/chapter-wizard/:id` | `chapter-wizard` | 4 步 AI 生成管道：场景→实体→参数→审核 |
-| `VolumeManagement` | (内嵌 BookDetail) | — | 分卷列表，创建/编辑/删除/排序 |
-| `ImmersiveWritingPanel` | (ChapterReader 覆盖层) | — | 沉浸式写作模式，全屏编辑器 |
+**ChapterReader** (`/#/book/:id/read/:num`): 章节阅读/编辑组件，代码在 `packages/studio/src/pages/ChapterReader.tsx`。提供纸质排版风格的沉浸式阅读体验，支持内容编辑、审批通过/拒绝、沉浸写作模式。
+
+**ChapterWizard** (`/#/chapter-wizard/:id`): 4 步 AI 生成管道组件，代码在 `packages/studio/src/pages/ChapterWizard.tsx`。步骤：场景描述 → 关联实体 → 生成参数 → 逐段审核。使用 `chapter-wizard` 作为容器 testid。
+
+**VolumeManagement**: 分卷管理区域，内嵌于 BookDetail 侧边栏。支持分卷列表展示、创建/编辑/删除/排序操作。
+
+**ImmersiveWritingPanel**: 沉浸式写作覆盖层，全屏编辑器模式，由 ChapterReader 触发。
 
 ### 4.2 交互流程
 

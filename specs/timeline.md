@@ -65,11 +65,13 @@
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `TimelineEventSchema` | object | id, timestamp(ISO datetime), eventType, title, chapter(int≥0), importance(1-5) | description, relatedCharacters[], regionId, tags[], timestamp | id=crypto.randomUUID(); importance 默认 3; description 默认 "" |
-| `CharacterTimelineFileSchema` | object | — | events[], version | events 默认 []; version 默认 1; 损坏文件→返回 {events:[], version:1} |
-| `eventType` | string | plot / character / world | — | 颜色映射: plot→蓝, character→绿, world→橙, 其他→灰 |
+核心 Schema 定义于 `packages/core/src/models/character-timeline.ts`:
+
+**TimelineEventSchema** (Zod object): 必填字段 — `id` (crypto.randomUUID() 自动生成), `timestamp` (ISO datetime), `eventType` (string), `title` (string), `chapter` (int ≥0), `importance` (int 1-5, 默认 3)。可选字段 — `description` (默认 ""), `relatedCharacters` (string[], 默认 []), `regionId` (string, optional), `tags` (string[])。
+
+**CharacterTimelineFileSchema** (Zod object): 顶层持久化结构。可选字段 — `events` (TimelineEvent[], 默认 []), `version` (int, 默认 1)。损坏文件时返回 `{events:[], version:1}`。
+
+**eventType** 枚举值: `plot` / `character` / `world`。颜色映射: plot→蓝, character→绿, world→橙, 其他→灰。
 
 importance 显示: 1="微不足道", 2="次要", 3="普通", 4="重要", 5="核心"；星级用 ★/☆ 渲染。
 
@@ -145,17 +147,19 @@ idle ──→ loading ──→ rendered                                   │
 
 ### 4.1 页面 / 面板
 
-| 页面组件 | 路由 | data-testid 前缀 | 说明 |
-|----------|------|------------------|------|
-| `TimelinePage` | `/#/timeline/:bookId` | `tl-` | 主页面，含 ReactFlow 画布 + 工具栏 + 底部状态栏 |
-| `TimelineEventNode` | ReactFlow 节点 | `tl-event-node` | 自定义事件节点，显示标题/类型/重要度/角色 |
-| `OverflowIndicatorNode` | ReactFlow 节点 | `tl-cell-overflow-btn-` | 折叠标识，点击展开该单元格所有事件 |
-| `ChapterHeaderNode` | ReactFlow 节点 | — | X 轴章节标签（第 N 章） |
-| `CharacterHeaderNode` | ReactFlow 节点 | — | Y 轴角色标签 |
-| `EventEditDialog` | 内嵌 Dialog | — | 创建/编辑事件表单（标题/描述/类型/章节/重要度/角色/标签） |
-| `AI Extract Modal` | 全屏遮罩 | — | AI 提取面板，输入章节范围 + 预览/勾选/应用结果 |
-| `ContextMenu` | 绝对定位 | — | 右键菜单（编辑/删除） |
-| `DeleteConfirm` | Dialog | — | 删除确认弹窗 |
+**TimelinePage** (`/#/timeline/:bookId`): 主页面组件，代码在 `packages/studio/src/pages/TimelinePage.tsx`。包含 ReactFlow 画布 + 工具栏 + 底部状态栏。使用 `tl-` 作为 data-testid 前缀。
+
+ReactFlow 自定义节点（均在 TimelinePage.tsx 内定义）:
+- **TimelineEventNode**: 自定义事件节点，显示标题/类型/重要度/角色。testid: `tl-event-node`
+- **OverflowIndicatorNode**: 折叠标识节点，点击展开该单元格所有事件。testid: `tl-cell-overflow-btn-{cellKey}`
+- **ChapterHeaderNode**: X 轴章节标签（第 N 章）
+- **CharacterHeaderNode**: Y 轴角色标签
+
+内嵌组件:
+- **EventEditDialog**: 创建/编辑事件表单（标题/描述/类型/章节/重要度/角色/标签）
+- **AI Extract Modal**: 全屏遮罩，AI 提取面板，输入章节范围 + 预览/勾选/应用结果
+- **ContextMenu**: 绝对定位右键菜单（编辑/删除）
+- **DeleteConfirm**: 删除确认弹窗
 
 ### 4.2 交互流程
 
