@@ -92,25 +92,29 @@ Publish 模块提供从 InkChain 作品到外部发布平台的导出能力。�
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 必填字段 | 可选字段 | 默认值 / 校验 |
-|--------|------|----------|---------|--------------|
-| `BookMeta` (内部) | interface | id, title, platform, genre, status | — | 从 `book.json` 读取 |
-| `PublishCheckResult` | interface | ready (boolean), checks[] (name/passed/message), meta (title/totalChapters/totalWords) | — | 5 项检查 |
-| `PublishExportResponse` | interface | ok, filename, content, contentType, chapterCount, totalWords | — | content 为 `\r\n` 分隔的 TXT 文本 |
-| `FormatPreviewBody` | interface | platform (PublishPlatform), chapters (number[]) | — | 章节数校验：> 0 |
-| `PublishBody` | interface | platform (PublishPlatform), chapters (number[]) | — | 同上 |
-| `PublishPlatform` | type | — | — | "qidian" \| "tomato" \| "feilu" \| "other" |
-| `PublishChapter` | interface | meta (chapterMeta), text (string) | — | 章节元信息 + 文本内容 |
-| `ValidationWarning` | interface | field, message, severity: "ok" \| "error" | — | 发布校验警告 |
+核心数据定义于 `packages/studio/src/api/routes/publish.ts`:
 
-**平台信息**:
+**BookMeta** (内部 interface): `id`, `title`, `platform`, `genre`, `status` — 从 `book.json` 读取，不对外暴露。
 
-| 平台 Key | 名称 | 状态 | 描述 |
-|----------|------|------|------|
-| `qidian` | 起点中文网 | experimental | 国内最大的原创文学平台，支持 TXT 格式导入 |
-| `tomato` | 番茄小说 | planned | 免费阅读平台，支持 TXT/EPUB 格式导入 |
-| `feilu` | 飞卢小说网 | planned | 付费阅读平台，需适配专属格式 |
-| `other` | 其他平台 | experimental | 通用 TXT 导出格式 |
+**PublishCheckResult** (interface): `ready` (boolean), `checks[]` (数组，每项含 name/passed/message), `meta` (含 title/totalChapters/totalWords)。5 项就绪检查结果。
+
+**PublishExportResponse** (interface): `ok`, `filename`, `content`, `contentType`, `chapterCount`, `totalWords`。content 为 `\r\n` 分隔的 TXT 文本。
+
+**FormatPreviewBody** (interface): `platform` (PublishPlatform), `chapters` (number[])。章节数校验：> 0。
+
+**PublishBody** (interface): `platform` (PublishPlatform), `chapters` (number[])。同 FormatPreviewBody 结构。
+
+**PublishPlatform** (type): `"qidian" | "tomato" | "feilu" | "other"`。支持的发布平台枚举。
+
+**PublishChapter** (interface): `meta` (chapterMeta), `text` (string)。章节元信息 + 文本内容。
+
+**ValidationWarning** (interface): `field`, `message`, `severity: "ok" | "error"`。发布校验警告结构。
+
+**平台状态**:
+- `qidian` (起点中文网): experimental — 支持 TXT 格式导入
+- `tomato` (番茄小说): planned — 规划中
+- `feilu` (飞卢小说网): planned — 规划中
+- `other` (其他平台): experimental — 通用 TXT 导出
 
 **就绪检查规则**:
 1. 书名 ≥ 2 字符
@@ -210,12 +214,12 @@ checkLoaded ──→ 选择章节 ──→ POST /publish
 
 ### 4.1 页面 / 面板
 
-| 页面组件 | 路由 | data-testid 前缀 | 说明 |
-|----------|------|------------------|------|
-| `PublishPage` | 通过侧边栏 "发布" 进入 | — | 主页面：返回按钮 + 平台选择器 + 检查清单 + 导出区 |
-| Platform Selector | (内嵌) | — | 4 平台网格卡片 |
-| Publish Checklist | (内嵌) | — | 5 项检查逐项渲染 + 汇总统计 |
-| Export Section | (内嵌) | — | TXT 导出 / EPUB 下载 / HTML 预览 按钮组 |
+**PublishPage** (通过侧边栏"发布"进入): 跨平台发布主页面，代码在 `packages/studio/src/pages/PublishPage.tsx`。包含返回按钮（ArrowLeft → nav.toBook）+ 平台选择器（4 平台网格卡片，planned 状态 disabled）+ 就绪检查清单（5 项逐项渲染，含 Loader2 加载态 + 汇总统计）+ 导出区（TXT 导出 / EPUB 下载 / HTML 预览按钮组）。使用 `useApi` 和 `fetchJson` 调用 `/api/v1/publish` 路由下的各端点。
+
+内嵌子组件（非独立页面，无独立路由）:
+- **Platform Selector**: 4 平台网格卡片，`qidian`/`other` 可用，`tomato`/`feilu` 为 planned 状态（disabled + opacity-40 + cursor-not-allowed）
+- **Publish Checklist**: 5 项检查逐项渲染（书名/题材/章节数/总字数/平台兼容性），每项含 ✓/⚠ icon + 通过/未通过 tag + message
+- **Export Section**: TXT 导出（Download icon, 导出时 disabled）→ Blob URL 下载；EPUB 下载（BookOpen icon）→ `<a download>` 链接；HTML 预览（Eye icon）→ window.open 新窗口
 
 ### 4.2 交互流程
 
