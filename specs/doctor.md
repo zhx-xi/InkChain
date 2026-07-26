@@ -34,13 +34,11 @@ Doctor 是 InkChain 的系统诊断工具，通过 `/doctor` API 查询 5 项核
 
 ### 2.1 API 接口
 
-| 方法 | 路径 | 输入 | 输出 | 说明 |
-|------|------|------|------|------|
-| GET | `/doctor` | — | `DoctorChecks` (JSON) | 返回 5 项检查布尔值 + bookCount |
+`GET /api/v1/doctor` — 内联端点（定义于 `packages/studio/src/api/server.ts`，无独立路由文件）。返回 5 项健康检查 + 书籍计数。无请求参数。
 
 **请求/响应示例**:
 ```json
-// GET /doctor → 200 OK
+// GET /api/v1/doctor → 200 OK
 { "inkosJson": true, "projectEnv": true, "globalEnv": false,
   "booksDir": true, "llmConnected": false, "bookCount": 3 }
 
@@ -50,12 +48,10 @@ Doctor 是 InkChain 的系统诊断工具，通过 `/doctor` API 查询 5 项核
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 字段 | 说明 |
-|--------|------|------|------|
-| `DoctorChecks` | interface (TypeScript, 无 Zod) | inkosJson: boolean, projectEnv: boolean, globalEnv: boolean, booksDir: boolean, llmConnected: boolean, bookCount: number | 前端类型定义，无对应 core 模型 |
+**DoctorChecks** (TypeScript interface, 无 Zod): 纯前端类型定义，包含 6 个字段 — `inkosJson` (boolean), `projectEnv` (boolean), `globalEnv` (boolean), `booksDir` (boolean), `llmConnected` (boolean), `bookCount` (number)。无对应 core 模型，由 `/doctor` 内联端点一次性返回。
 
-- 所有字段均为只读，由后端 `/doctor` 端点一次性返回。
-- 无持久化存储；每次进入页面通过 `useApi` hook 获取。
+- 所有字段均为只读，无持久化存储。
+- 每次进入页面通过 `useApi` hook 获取。
 
 ### 2.3 状态转换
 
@@ -92,9 +88,14 @@ idle ──→ loading ──→ rendered
 
 ### 4.1 页面
 
-| 页面组件 | 路由 | data-testid 前缀 | 说明 |
-|----------|------|------------------|------|
-| `DoctorView` | `/#/doctor`（通过侧边栏"诊断"进入） | — | 主页面，含面包屑 + 检查列表 + 汇总 |
+| 页面组件 | 路由 | 说明 |
+|----------|------|------|
+| `DoctorView` | `/#/doctor`（通过侧边栏"诊断"进入） | 系统健康检查主页面，代码在 `packages/studio/src/pages/DoctorView.tsx`。调用 `/api/v1/doctor` 内联端点（定义于 server.ts），使用 Stethoscope 图标 + 面包屑导航。渲染 5 项健康检查结果 |
+
+内嵌 UI 元素（非独立页面组件，直接渲染在 DoctorView 中）:
+- 5 行 CheckRow：每行 CheckCircle2 / XCircle + 标签 + 可选详情
+- 汇总区：全部通过时绿色"所有检查通过"，部分失败时橙色"部分检查未通过"
+- "重新检查"按钮：触发 refetch() 重新调用 API
 
 ### 4.2 交互流程
 

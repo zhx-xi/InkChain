@@ -34,13 +34,11 @@ LogViewer 是 InkChain 的运行时日志查看器。通过 `/logs` API 获取�
 
 ### 2.1 API 接口
 
-| 方法 | 路径 | 输入 | 输出 | 说明 |
-|------|------|------|------|------|
-| GET | `/logs` | — | `{ entries: LogEntry[] }` | 返回近期日志条目数组 |
+`GET /api/v1/logs` — 内联端点（定义于 `packages/studio/src/api/server.ts`，无独立路由文件）。读取 `inkos.log` 文件最后 100 行，逐行 JSON.parse 后返回 `{ entries: LogEntry[] }`。文件不存在或解析失败时返回 `{ entries: [] }`。
 
 **请求/响应示例**:
 ```json
-// GET /logs → 200
+// GET /api/v1/logs → 200
 { "entries": [
     { "level": "info", "tag": "system", "message": "Application started",
       "timestamp": "2026-07-09T08:00:00.000Z" },
@@ -54,13 +52,12 @@ LogViewer 是 InkChain 的运行时日志查看器。通过 `/logs` API 获取�
 
 ### 2.2 数据模型
 
-| Schema | 类型 | 字段 | 默认值 / 校验 |
-|--------|------|------|--------------|
-| `LogEntry` | interface (TypeScript, 无 Zod) | level?: string, tag?: string, message: string, timestamp?: string | message 必填；其余可选 |
-| 级别颜色映射 | `LEVEL_COLORS` 常量 | error → text-destructive, warn → text-amber-500, info → text-primary/70, debug → text-muted-foreground/50 | 未知级别回退到 text-muted-foreground |
+**LogEntry** (TypeScript interface, 无 Zod): 纯前端类型定义，字段包含 `level` (string, optional), `tag` (string, optional), `message` (string, 必填), `timestamp` (string, optional)。无对应 core 模型。
 
-- 无对应 core 模型；纯前端类型定义。
+**级别颜色映射** (`LEVEL_COLORS` 常量): `error` → text-destructive, `warn` → text-amber-500, `info` → text-primary/70, `debug` → text-muted-foreground/50。未知级别回退到 `text-muted-foreground`。
+
 - 无持久化存储；每次进入/刷新通过 `useApi` hook 获取。
+- 后端读取 `inkos.log` 文件，返回最后 100 行 JSON 日志。
 
 ### 2.3 状态转换
 
@@ -97,9 +94,14 @@ idle ──→ loading ──→ rendered
 
 ### 4.1 页面
 
-| 页面组件 | 路由 | data-testid 前缀 | 说明 |
-|----------|------|------------------|------|
-| `LogViewer` | `/#/logs`（通过侧边栏"系统 → 日志"进入） | — | 主页面，含面包屑 + 刷新按钮 + 日志列表 |
+| 页面组件 | 路由 | 说明 |
+|----------|------|------|
+| `LogViewer` | `/#/logs`（通过侧边栏"系统 → 日志"进入） | 运行时日志查看器主页面，代码在 `packages/studio/src/pages/LogViewer.tsx`。调用 `/api/v1/logs` 内联端点，读取 inkos.log 返回最后 100 行。使用等宽字体分行渲染每条日志：时间戳 \| 级别（大写，四色）\| [tag] \| 消息正文 |
+
+内嵌 UI 元素（非独立页面组件，直接渲染在 LogViewer 中）:
+- 日志条目行：每条日志按 error(红)/warn(琥珀)/info(蓝灰)/debug(灰) 四色标识级别
+- "刷新"按钮：触发 refetch() 重新拉取日志
+- 空状态："暂无日志"斜体占位（entries.length === 0 时显示）
 
 ### 4.2 交互流程
 
